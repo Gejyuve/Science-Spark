@@ -1,6 +1,10 @@
 import Link from "next/link";
 import ThemeToggle from "./components/ThemeToggle";
 import { getUser, displayName } from "@/lib/auth";
+import { sql, ensureSchema } from "@/lib/db";
+import { fmtDate } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 
 const nav = [
   { icon: "💧", label: "Урсгал", active: true },
@@ -11,37 +15,18 @@ const nav = [
   { icon: "❔", label: "Тусламж" },
 ];
 
-const posts = [
-  {
-    tag: "Нийтлэл",
-    title: "Пи тоо ба Пифилологи гэж юу вэ?",
-    text: "Тойргийн урт, түүний диаметртэй харьцаагаар тодорхойлогддог энэ тоо 3.14159-өөр эхэлдэг.",
-    author: "Б.Тэмүүлэн",
-    date: "2025.03.14",
-    sparks: 190,
-  },
-  {
-    tag: "Асуулт",
-    title: "Пи тооны хэдэн оронг цээжилж болох вэ?",
-    text: "Дэлхийн рекорд, цээжлэх арга техникийн талаар хэлэлцье.",
-    author: "Д.Анар",
-    date: "2025.09.30",
-    sparks: 42,
-  },
-  {
-    tag: "Мэдээ",
-    title: "Одон орны ажиглалтын шинэ төв нээгдлээ",
-    text: "Судлаач, оюутнуудад зориулсан нээлттэй ажиглалтын талбай ажиллаж эхэллээ.",
-    author: "Ж.Баяржавхлан",
-    date: "2025.10.14",
-    sparks: 87,
-  },
-];
-
 export default async function Home() {
   let user = null;
+  let posts = [];
   try {
     user = await getUser();
+    await ensureSchema();
+    posts = await sql`
+      SELECT p.id, p.kind, p.title, p.body, p.created_at, u.initial, u.first_name,
+        (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
+      FROM posts p JOIN users u ON u.id = p.author_id
+      ORDER BY p.created_at DESC LIMIT 30`;
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
   }
@@ -68,17 +53,22 @@ export default async function Home() {
       </aside>
 
       <main className="feed">
-        <div className="composer">Өнөөдөр ямар оч асаах гэж байна даа?</div>
+        <Link href={user ? "/write" : "/login"} className="composer">
+          {user ? "Өнөөдөр ямар оч асаах гэж байна даа?" : "Нийтлэл бичихийн тулд нэвтэрнэ үү"}
+        </Link>
+        {posts.length === 0 && (
+          <div className="card"><p>Одоохондоо нийтлэл алга. Эхний очийг та асаагаарай ✦</p></div>
+        )}
         {posts.map((p) => (
-          <article key={p.title} className="card">
-            <span className="chip">{p.tag}</span>
-            <h2>{p.title}</h2>
-            <p>{p.text}</p>
+          <article key={p.id} className="card">
+            <span className="chip">{p.kind}</span>
+            <h2><Link href={`/post/${p.id}`}>{p.title}</Link></h2>
+            <p>{p.body.length > 180 ? p.body.slice(0, 180) + "…" : p.body}</p>
             <div className="meta">
-              <span>{p.author}</span>
+              <span>{p.initial}.{p.first_name}</span>
               <span>·</span>
-              <span>{p.date}</span>
-              <span className="spark">✦ {p.sparks}</span>
+              <span>{fmtDate(p.created_at)}</span>
+              <span className="spark">✦ {p.sparks} · 💬 {p.comments}</span>
             </div>
           </article>
         ))}
