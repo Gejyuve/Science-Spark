@@ -34,7 +34,7 @@ export default async function PostPage({ params }) {
         <span className="chip">{post.kind}</span>
         <h1>{post.title}</h1>
         <p className="meta">
-          <span>{post.initial}.{post.first_name}</span><span>·</span><span>{fmtDate(post.created_at)}</span>
+          <Link href={`/u/${post.author_id}`}>{post.initial}.{post.first_name}</Link><span>·</span><span>{fmtDate(post.created_at)}</span>
         </p>
         <div className="body">{post.body}</div>
 
@@ -47,13 +47,14 @@ export default async function PostPage({ params }) {
             </form>
           )}
           {mine && <span className="muted">Та оч өгсөн</span>}
+          {isAuthor && <Link className="btn ghost" href={`/post/${post.id}/edit`}>Засах</Link>}
           {!user && <Link className="btn ghost" href="/login">Оч өгөхийн тулд нэвтрэх</Link>}
         </div>
 
         <h3>Сэтгэгдэл ({comments.length})</h3>
         {comments.map((c) => (
           <div key={c.id} className="comment">
-            <b>{c.initial}.{c.first_name}</b> <span className="muted">· {fmtDate(c.created_at)}</span>
+            <b><Link href={`/u/${c.author_id}`}>{c.initial}.{c.first_name}</Link></b> <span className="muted">· {fmtDate(c.created_at)}</span>
             <div>{c.body}</div>
           </div>
         ))}

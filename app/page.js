@@ -22,7 +22,7 @@ export default async function Home() {
     user = await getUser();
     await ensureSchema();
     posts = await sql`
-      SELECT p.id, p.kind, p.title, p.body, p.created_at, u.initial, u.first_name,
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.created_at, u.initial, u.first_name,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
       FROM posts p JOIN users u ON u.id = p.author_id
@@ -34,7 +34,9 @@ export default async function Home() {
     <div className="shell">
       <aside className="side left">
         <div className="brand">✦ Science Spark</div>
-        <input className="search" placeholder="Хайх" aria-label="Хайх" />
+        <form action="/search" method="get">
+          <input className="search" name="q" placeholder="Хайх" aria-label="Хайх" />
+        </form>
         <nav>
           {nav.map((n) => (
             <a key={n.label} href="#" className={"nav-item" + (n.active ? " active" : "")}>
@@ -65,7 +67,7 @@ export default async function Home() {
             <h2><Link href={`/post/${p.id}`}>{p.title}</Link></h2>
             <p>{p.body.length > 180 ? p.body.slice(0, 180) + "…" : p.body}</p>
             <div className="meta">
-              <span>{p.initial}.{p.first_name}</span>
+              <Link href={`/u/${p.author_id}`}>{p.initial}.{p.first_name}</Link>
               <span>·</span>
               <span>{fmtDate(p.created_at)}</span>
               <span className="spark">✦ {p.sparks} · 💬 {p.comments}</span>

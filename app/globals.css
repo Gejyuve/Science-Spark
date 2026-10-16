@@ -163,3 +163,10 @@ nav { display: flex; flex-direction: column; gap: 4px; }
 .actions { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .comment { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
 .comment-form { display: flex; flex-direction: column; gap: 10px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.stack input { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font-size: 15px; }
+.stats.four { grid-template-columns: repeat(4, 1fr); }
+.btn.danger { color: #c7332b; border-color: #c7332b; }
+:root[data-theme="dark"] .btn.danger { color: #ec797d; border-color: #ec797d; }
+.meta a, .comment a { color: inherit; }
+.comment a:hover, .meta a:hover { color: var(--teal); }

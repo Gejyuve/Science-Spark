@@ -55,3 +55,43 @@ export async function sparkPost(formData) {
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
 }
+
+export async function updatePost(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
+  const title = String(formData.get("title") || "").trim().slice(0, 200);
+  const body = String(formData.get("body") || "").trim().slice(0, 20000);
+  if (!Number.isInteger(postId) || !title || !body) redirect("/");
+  await ensureSchema();
+  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body}
+            WHERE id = ${postId} AND author_id = ${user.id}`;
+  revalidatePath(`/post/${postId}`);
+  revalidatePath("/");
+  redirect(`/post/${postId}`);
+}
+
+export async function deletePost(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) redirect("/");
+  await ensureSchema();
+  await sql`DELETE FROM posts WHERE id = ${postId} AND author_id = ${user.id}`;
+  revalidatePath("/");
+  redirect("/");
+}
+
+export async function toggleFollow(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const target = Number(formData.get("user_id"));
+  if (!Number.isInteger(target) || target === user.id) return;
+  await ensureSchema();
+  const del = await sql`DELETE FROM follows WHERE follower_id = ${user.id} AND followee_id = ${target} RETURNING 1`;
+  if (!del.length) {
+    await sql`INSERT INTO follows (follower_id, followee_id) VALUES (${user.id}, ${target}) ON CONFLICT DO NOTHING`;
+  }
+  revalidatePath(`/u/${target}`);
+}
