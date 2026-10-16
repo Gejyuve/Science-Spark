@@ -112,3 +112,39 @@ nav { display: flex; flex-direction: column; gap: 4px; }
   .nav-item { white-space: nowrap; }
   .theme-toggle { margin-left: auto; }
 }
+
+/* ---- Бүртгэл / нэвтрэлт / профайл ---- */
+.btn {
+  display: inline-block; text-align: center; padding: 11px 16px; border-radius: 12px;
+  border: 1px solid transparent; background: var(--teal); color: var(--on-teal);
+  font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: none;
+}
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--border); }
+.auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.auth-card {
+  width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 28px; box-shadow: var(--shadow);
+}
+.auth-card h1 { margin: 0; font-size: 24px; }
+.auth-card label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); flex: 1; }
+.auth-card input {
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--ink); font-size: 15px;
+}
+.auth-card .row { display: flex; gap: 10px; }
+.auth-card .narrow { flex: 0 0 120px; }
+.auth-card a { color: var(--teal); }
+.error {
+  margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  background: #ffe9ea; color: #b3261e;
+}
+:root[data-theme="dark"] .error { background: #450c0f; color: #ec797d; }
+.avatar {
+  width: 64px; height: 64px; border-radius: 50%; background: var(--teal); color: var(--on-teal);
+  display: grid; place-items: center; font-size: 28px; font-weight: 700;
+}
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stats div { background: var(--surface-2); border-radius: 14px; padding: 12px; text-align: center; }
+.stats b { display: block; font-size: 16px; }
+.stats span { font-size: 12px; color: var(--muted); }

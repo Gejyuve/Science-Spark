@@ -1,0 +1,47 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { sql, ensureSchema } from "@/lib/db";
+import { hashPassword, verifyPassword, createSession, destroySession } from "@/lib/auth";
+
+const back = (path, msg) => redirect(`${path}?error=${encodeURIComponent(msg)}`);
+
+export async function register(formData) {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const password = String(formData.get("password") || "");
+  const initial = String(formData.get("initial") || "").trim().slice(0, 1).toUpperCase();
+  const first = String(formData.get("first_name") || "").trim();
+
+  if (!initial || !first) back("/register", "Овгийн эхний үсэг болон нэрээ бөглөнө үү");
+  if (!/^\S+@\S+\.\S+$/.test(email)) back("/register", "Имэйл хаяг буруу байна");
+  if (password.length < 8) back("/register", "Нууц үг хамгийн багадаа 8 тэмдэгт байна");
+
+  await ensureSchema();
+  const exists = await sql`SELECT 1 FROM users WHERE email = ${email}`;
+  if (exists.length) back("/register", "Энэ имэйл бүртгэлтэй байна");
+
+  const nameFirst = first[0].toUpperCase() + first.slice(1);
+  const rows = await sql`
+    INSERT INTO users (email, password_hash, initial, first_name)
+    VALUES (${email}, ${hashPassword(password)}, ${initial}, ${nameFirst})
+    RETURNING id`;
+  await createSession(rows[0].id);
+  redirect("/profile");
+}
+
+export async function login(formData) {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const password = String(formData.get("password") || "");
+  await ensureSchema();
+  const rows = await sql`SELECT id, password_hash FROM users WHERE email = ${email}`;
+  if (!rows.length || !verifyPassword(password, rows[0].password_hash)) {
+    back("/login", "Имэйл эсвэл нууц үг буруу байна");
+  }
+  await createSession(rows[0].id);
+  redirect("/profile");
+}
+
+export async function logout() {
+  await destroySession();
+  redirect("/");
+}

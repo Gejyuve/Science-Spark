@@ -1,4 +1,6 @@
+import Link from "next/link";
 import ThemeToggle from "./components/ThemeToggle";
+import { getUser, displayName } from "@/lib/auth";
 
 const nav = [
   { icon: "💧", label: "Урсгал", active: true },
@@ -36,7 +38,13 @@ const posts = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  let user = null;
+  try {
+    user = await getUser();
+  } catch (e) {
+    // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
+  }
   return (
     <div className="shell">
       <aside className="side left">
@@ -51,6 +59,11 @@ export default function Home() {
           ))}
         </nav>
         <div className="grow" />
+        {user ? (
+          <Link href="/profile" className="btn ghost">👤 {displayName(user)}</Link>
+        ) : (
+          <Link href="/login" className="btn">Нэвтрэх</Link>
+        )}
         <ThemeToggle />
       </aside>
 
