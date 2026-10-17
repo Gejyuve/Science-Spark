@@ -26,6 +26,32 @@ function Counted({ name, max, rows, placeholder, required, latinCheck }) {
   );
 }
 
+// Огноо + цаг тусдаа: хагас цаг тутмаар сонгоно, анхааруулга монголоор
+const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}`);
+const msg = (text) => ({
+  onInvalid: (e) => e.target.setCustomValidity(text),
+  onInput: (e) => e.target.setCustomValidity(""),
+});
+function DateTime({ icon, label, name, minDate, onDate }) {
+  const [d, setD] = useState("");
+  const [t, setT] = useState("");
+  return (
+    <label className="cp-field cp-dtf">
+      <Ic n={icon} />
+      <span className="cp-dt">{label} *</span>
+      <input type="date" required value={d} min={minDate || undefined} aria-label={`${label} огноо`}
+        {...msg(minDate && d && d < minDate ? "Дуусах огноо эхлэхээс өмнө байж болохгүй" : "Огноогоо бүрэн сонгоно уу (он, сар, өдөр)")}
+        onChange={(e) => { setD(e.target.value); onDate && onDate(e.target.value); e.target.setCustomValidity(""); }} />
+      <select required value={t} aria-label={`${label} цаг`} {...msg("Цагаа сонгоно уу")}
+        onChange={(e) => { setT(e.target.value); e.target.setCustomValidity(""); }}>
+        <option value="" disabled>Цаг</option>
+        {TIMES.map((x) => <option key={x}>{x}</option>)}
+      </select>
+      <input type="hidden" name={name} value={d && t ? `${d}T${t}` : ""} />
+    </label>
+  );
+}
+
 function Field({ icon, children }) {
   return <label className="cp-field"><Ic n={icon} />{children}</label>;
 }
@@ -113,8 +139,8 @@ export default function Composer({ loggedIn, initial, error }) {
             </select>
             <Ic n="f_chev" />
           </Field>
-          <Field icon="f_date"><span className="cp-dt">Эхлэх *</span><input name="starts_at" type="datetime-local" required aria-label="Эхлэх огноо, цаг *" onChange={(e) => setStart(e.target.value)} /></Field>
-          <Field icon="f_clock"><span className="cp-dt">Дуусах *</span><input name="ends_at" type="datetime-local" required min={start || undefined} aria-label="Дуусах огноо, цаг *" /></Field>
+          <DateTime icon="f_date" label="Эхлэх" name="starts_at" onDate={setStart} />
+          <DateTime icon="f_clock" label="Дуусах" name="ends_at" minDate={start} />
           <Field icon="f_globe">
             <select name="format" required defaultValue="">
               <option value="" disabled>Хэлбэр: Онлайн / Танхим / Хосолсон *</option>
