@@ -68,7 +68,7 @@ export default async function PublicProfile({ params, searchParams }) {
     pending: all.filter((p) => p.status === "pending" || p.status === "approved"),
     replied: all.filter((p) => p.status === "rejected" || p.status === "removed"),
   };
-  const current = groups[tab] ? tab : "published";
+  const current = groups[tab] && (isMe || tab === "published") ? tab : "published";
   // Төрлийн сонгогч (Figma 680:563): сонгосон төлөв доторх төрлөөр шүүнэ
   const base = groups[current] || [];
   const KIND_LIST = ["Нийтлэл", "Мэдээ", "Асуулт", "Бодрол", "Эвент", "Зарлал"];
