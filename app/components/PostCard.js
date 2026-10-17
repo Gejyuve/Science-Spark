@@ -37,7 +37,7 @@ export default function PostCard({ p, viewer, following }) {
             <img className="ic" src="/icons/comment.svg" width={25} height={24} alt="Сэтгэгдэл" />{p.comments}
           </Link>
           <Link href={`/post/${p.id}${isQuestion ? "#comments" : ""}`} className="ss-pill">
-            {isQuestion ? "Хариулах" : p.kind === "Эвент" ? "Дэлгэрэнгүй" : "Унших"}
+            {isQuestion ? "Хариулах" : ["Эвент", "Зарлал"].includes(p.kind) ? "Дэлгэрэнгүй" : "Унших"}
           </Link>
           <span className="ss-grow" />
           {viewer ? (
@@ -88,7 +88,7 @@ export default function PostCard({ p, viewer, following }) {
             </div>
           </div>
           <Link href={`/post/${p.id}`} className="evc-cover" aria-hidden="true" tabIndex={-1}>
-            {p.image_id ? <img src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <EventCover type={m.type} starts={m.starts_at} />}
+            {p.image_id ? <img src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <EventCover type={m.type || (isEv ? null : "Зарлал")} starts={isEv ? m.starts_at : null} />}
           </Link>
         </div>
         {actions}

@@ -142,7 +142,7 @@ function AnnTop({ post, m }) {
             <span key={ic} className="evd-row"><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" />{v}</span>
           ))}
         </div>
-        {post.image_id && <div className="evd-cover"><img src={`/img/${post.image_id}`} alt="" /></div>}
+        <div className="evd-cover">{post.image_id ? <img src={`/img/${post.image_id}`} alt="" /> : <EventCover type={m.type || "Зарлал"} />}</div>
       </div>
       <h1 className="ar-title evd-title">{post.title}</h1>
     </>
