@@ -50,6 +50,10 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
     const x = (w + 40) * k < cw ? (cw - (w - 140) * k) / 2 - 20 * k : 70;
     setView({ k, x, y: (ch - h * k) / 2 });
   }, [w, h]);
+  // Нарийн дэлгэцэнд эхэндээ цөөн салаа нээнэ
+  useEffect(() => {
+    if (box.current && box.current.clientWidth < 760 && !focus) setOpen(new Set(["", "nat"]));
+  }, [focus]);
   useEffect(() => { fit(); }, [fit]);
   useEffect(() => {
     const on = () => fit();

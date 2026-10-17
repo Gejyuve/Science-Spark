@@ -1960,7 +1960,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .tg-zoom { position: absolute; left: 24px; bottom: 28px; display: flex; flex-direction: column; gap: 2px; padding: 4px; border-radius: 14px; background: var(--surface); box-shadow: 0 4px 14px rgba(15, 42, 51, .12); }
 .tg-zoom button { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--ink); font-size: 20px; line-height: 1; cursor: pointer; }
 .tg-zoom button:hover { background: var(--surface-2); }
-.tg-hint { position: absolute; right: 18px; bottom: 12px; margin: 0; font-size: 11px; color: var(--muted); pointer-events: none; }
+.tg-hint { position: absolute; right: 18px; top: 12px; margin: 0; font-size: 11px; color: var(--muted); pointer-events: none; }
 /* Салбарын хуудас */
 .ct-hero { position: relative; overflow: hidden; padding: 22px 28px; border-radius: 24px; background: linear-gradient(120deg, #09a596 0%, #1fbfae 55%, #5fe0d0 100%); color: #fff; box-shadow: 0 10px 24px rgba(0, 168, 155, .22); }
 .ct-hero.big { padding: 34px 30px 46px; }
