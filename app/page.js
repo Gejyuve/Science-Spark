@@ -5,11 +5,19 @@ import { sql, ensureSchema } from "@/lib/db";
 import Shell from "./components/Shell";
 import PostCard from "./components/PostCard";
 import { followingSet } from "./components/Bits";
+import TimeMenu from "./components/TimeMenu";
 
 export const dynamic = "force-dynamic";
 
+// [утга, нэр, цаг]
+const PERIODS = [["24h", "24 цаг", 24], ["7d", "7 хоног", 168], ["1m", "1 сар", 720], ["6m", "6 сар", 4320], ["1y", "1 жил", 8760], ["all", "Бүх хугацаа", null]];
+
 export default async function Home({ searchParams }) {
-  const { tab, compose, error, f } = await searchParams;
+  const { tab, compose, error, f, t } = await searchParams;
+  // Цагийн шүүлтүүр: анхдагч 24 цаг
+  const period = PERIODS.find((x) => x[0] === t) || PERIODS[0];
+  const hours = period[2];
+  const tq = period[0] === "24h" ? "" : `t=${period[0]}`;
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
   const ann = f === "ann"; // Зарлалууд
   const top = f === "top"; // Сүүлийн 24 цагт хамгийн их оч авсан
@@ -31,8 +39,7 @@ export default async function Home({ searchParams }) {
         ta.id AS ta_id, ta.body AS ta_body, ta.author_id AS ta_author, ta.initial AS ta_initial, ta.first_name AS ta_first,
         ta.points AS ta_points, ta.followers AS ta_followers, ta.avatar AS ta_avatar,
         EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved,
-        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked,
-        (SELECT COUNT(*) FROM sparks WHERE post_id = p.id AND created_at > now() - interval '24 hours')::int AS sparks24
+        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked
       FROM posts p JOIN users u ON u.id = p.author_id
       -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
       LEFT JOIN LATERAL (
@@ -47,24 +54,28 @@ export default async function Home({ searchParams }) {
       WHERE p.status = 'published'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
+        -- Цагийн шүүлтүүр (санамсаргүй, зарлалд хамаарахгүй). Хандалт өндөр: тухайн хугацаанд оч авсан
+        AND (${rand || ann}::boolean OR (CASE WHEN ${top}::boolean
+             THEN EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))
+             ELSE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) END))
         AND (${!following || !user}::boolean OR p.author_id IN
              (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))
       ORDER BY
         -- Санамсаргүй: үзээгүй контент нь эхэнд, дотроо холилдсон
         CASE WHEN ${rand}::boolean THEN EXISTS (SELECT 1 FROM post_views v WHERE v.post_id = p.id AND v.viewer = ${user ? "u:" + user.id : ""}) END ASC NULLS LAST,
         CASE WHEN ${rand}::boolean THEN md5(p.id::text || ${seed}) END ASC NULLS LAST,
-        CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id AND created_at > now() - interval '24 hours') END DESC NULLS LAST,
+        CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))) END DESC NULLS LAST,
         CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id) END DESC NULLS LAST,
         p.created_at DESC
       LIMIT 30`;
-    // Шүүлтүүр бүрийн сүүлийн 24 цагийн контентын тоо
+    // Шүүлтүүр бүрийн сонгосон хугацааны контентын тоо
     const [c] = await sql`
       SELECT
-        COUNT(*) FILTER (WHERE p.created_at > now() - interval '24 hours')::int AS all,
-        COUNT(*) FILTER (WHERE p.created_at > now() - interval '24 hours'
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)))::int AS all,
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int))
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
-        COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND s.created_at > now() - interval '24 hours'))::int AS top,
-        COUNT(*) FILTER (WHERE p.created_at > now() - interval '24 hours' AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa
+        COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))))::int AS top,
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa
       FROM posts p WHERE p.status = 'published'`;
     counts = c;
   } catch (e) {
@@ -81,20 +92,33 @@ export default async function Home({ searchParams }) {
         </div>
       ) : (
         <nav className="ss-filters" aria-label="Шүүлтүүр">
-          {[
-            ["all", "/", <>Бүгд <small>сүүлийн 24 цаг</small></>, counts.all],
-            ["following", user ? "/?tab=following" : "/login", "Дагаж буй", user ? counts.following : null],
-            ["top", "/?f=top", "Хандалт өндөр", counts.top],
-            ["qa", "/?f=qa", "Хэн юу гэв?", counts.qa],
-            ["rand", `/?f=rand&r=${seed.slice(0, 8)}`, <>Сэгсрээд өг <span aria-hidden="true">⚄</span></>, null],
-          ].map(([k, href, label, n]) => {
-            const on = k === "all" ? !qa && !top && !rand && !following : k === "following" ? following && !!user : k === "top" ? top : k === "qa" ? qa : rand;
-            return (
-              <Link key={k} href={href} className={on ? "on" : ""} prefetch={k === "rand" ? false : undefined}>
-                {label}{n !== null && <em>{n}</em>}
-              </Link>
-            );
-          })}
+          <div className="ss-fscroll">
+            {[
+              ["all", "", "Бүгд", counts.all],
+              ["following", user ? "tab=following" : null, "Дагаж буй", user ? counts.following : null],
+              ["top", "f=top", "Хандалт өндөр", counts.top],
+              ["qa", "f=qa", "Хэн юу гэв?", counts.qa],
+              ["rand", `f=rand&r=${seed.slice(0, 8)}`, <>Сэгсрээд өг <span aria-hidden="true">⚄</span></>, null],
+            ].map(([k, q, label, n]) => {
+              const on = k === "all" ? !qa && !top && !rand && !following : k === "following" ? following && !!user : k === "top" ? top : k === "qa" ? qa : rand;
+              const qs = q === null ? null : [q, k === "rand" ? "" : tq].filter(Boolean).join("&");
+              const href = qs === null ? "/login" : qs ? `/?${qs}` : "/";
+              return (
+                <Link key={k} href={href} className={on ? "on" : ""} prefetch={k === "rand" ? false : undefined}>
+                  {label}{n !== null && <em>{n}</em>}
+                </Link>
+              );
+            })}
+          </div>
+          {!rand && (
+            <TimeMenu
+              label={period[1]}
+              options={PERIODS.map(([v, name]) => {
+                const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
+                return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
+              })}
+            />
+          )}
         </nav>
       )}
       {posts.length === 0 && (
@@ -102,10 +126,14 @@ export default async function Home({ searchParams }) {
           <p className="ss-empty">
             {ann
               ? "Одоохондоо зарлал алга."
+              : hours && !rand && posts.length === 0 && (qa || top || following)
+              ? `Сонгосон хугацаанд (${period[1]}) энд контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
               : qa
               ? "Одоохондоо асуулт, бодрол алга. Эхнийхийг нь та асуугаарай ✦"
               : following && user
               ? "Дагаж буй хүмүүсийн нийтлэл алга. Сонирхолтой хүмүүсийг дагаарай."
+              : hours && !rand
+              ? `Сүүлийн ${period[1]}т шинэ контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
               : "Одоохондоо нийтлэл алга. Эхний очийг та асаагаарай ✦"}
           </p>
         </div>
