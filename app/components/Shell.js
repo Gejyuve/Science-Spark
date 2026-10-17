@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import Composer from "./Composer";
+import { logout } from "../auth/actions";
 import { sql } from "@/lib/db";
 import { displayName, isStaff, needsName } from "@/lib/auth";
 import { unreadCount } from "@/lib/notify";
@@ -125,6 +126,11 @@ async function RightRail({ user }) {
             {user.role === "superadmin" && (
               <Link href="/admin" className="ss-action">{I("shield", 18)}<span>Супер админ</span>{I("arrow", 14)}</Link>
             )}
+            <form action={logout}>
+              <button type="submit" className="ss-action ss-logout">
+                <img src="/icons/logout.svg" width={18} height={18} alt="" /><span>Гарах</span>
+              </button>
+            </form>
           </div>
         </div>
       ) : (

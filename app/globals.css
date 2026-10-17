@@ -771,3 +771,6 @@ details.mod summary { cursor: pointer; }
 .cp-area.bad { border-color: #e5484d; }
 .cp-latin { font-style: normal; font-size: 12px; color: #e5484d; }
 .cp-ask-row .cp-area .cp-latin { display: block; }
+.ss-logout { width: 100%; border: 0; cursor: pointer; font-family: inherit; text-align: left; color: #c7332b; }
+.ss-logout:hover { background: #ffeceb; }
+:root[data-theme="dark"] .ss-logout { color: #ec797d; }
