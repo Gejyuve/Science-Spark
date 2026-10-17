@@ -21,7 +21,8 @@ export default async function Home({ searchParams }) {
         COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
         (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers,
         ta.id AS ta_id, ta.body AS ta_body, ta.author_id AS ta_author, ta.initial AS ta_initial, ta.first_name AS ta_first,
-        ta.points AS ta_points, ta.followers AS ta_followers
+        ta.points AS ta_points, ta.followers AS ta_followers,
+        EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved
       FROM posts p JOIN users u ON u.id = p.author_id
       -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
       LEFT JOIN LATERAL (

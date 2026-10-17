@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
-import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment } from "../../posts/actions";
+import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave } from "../../posts/actions";
+import Share from "../../components/Share";
+import LogicReport from "../../components/LogicReport";
 import Shell from "../../components/Shell";
 import { Avatar, Stat, When } from "../../components/Bits";
 
@@ -94,7 +96,7 @@ function CommentNode({ c, kids, user, postId, canReply, depth }) {
 // Figma: Нийтлэл · Харагдах хуудас
 export default async function PostPage({ params, searchParams }) {
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, ok } = await searchParams;
   const postId = Number(id);
   if (!Number.isInteger(postId)) notFound();
   await ensureSchema();
@@ -132,6 +134,9 @@ export default async function PostPage({ params, searchParams }) {
   const kids = {};
   for (const c of comments) if (c.parent_id) (kids[c.parent_id] ||= []).push(c);
   const roots = comments.filter((c) => !c.parent_id);
+  const saved = user
+    ? (await sql`SELECT 1 FROM saves WHERE post_id = ${postId} AND user_id = ${user.id}`).length > 0
+    : false;
   const mine = user
     ? (await sql`SELECT 1 FROM sparks WHERE post_id = ${postId} AND user_id = ${user.id}`).length > 0
     : false;
@@ -164,6 +169,7 @@ export default async function PostPage({ params, searchParams }) {
             {!["Асуулт", "Бодрол"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
             {error && <p className="error">{error}</p>}
+            {ok && <p className="notice">{ok}</p>}
             {!published && post.status !== "approved" && (
               <p className={post.status === "pending" ? "notice" : "error"}>
                 {post.status === "rejected"
@@ -253,27 +259,38 @@ export default async function PostPage({ params, searchParams }) {
 
             <div className="ar-divider" />
             <div className="ar-reactions">
-              <span className="ar-react teal"><img src="/icons/sparkle.svg" width={21} height={23} alt="Оч" />{post.sparks}</span>
-              <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment18.svg" width={18} height={18} alt="Сэтгэгдэл" />{comments.length}</a>
-              {published && user && !isAuthor && !mine && (
+              {published && user && !isAuthor && !mine ? (
                 <form action={sparkPost}>
                   <input type="hidden" name="post_id" value={post.id} />
-                  <button className="ar-gift" type="submit">
-                    <img src="/icons/gift.svg" width={15} height={15} alt="" />Оч өгөх
+                  <button type="submit" className="ar-react teal ar-sparkbtn" title="Оч өгөх">
+                    <img src="/icons/sparkle.svg" width={21} height={23} alt="Оч өгөх" />{post.sparks}
                   </button>
                 </form>
+              ) : published && !user ? (
+                <Link href="/login" className="ar-react teal ar-sparkbtn" title="Оч өгөх"><img src="/icons/sparkle.svg" width={21} height={23} alt="Оч" />{post.sparks}</Link>
+              ) : (
+                <span className={"ar-react teal" + (mine ? " given" : "")} title={mine ? "Та оч өгсөн" : "Оч"}><img src="/icons/sparkle.svg" width={21} height={23} alt="Оч" />{post.sparks}</span>
               )}
-              {mine && <span className="ar-gift done"><img src="/icons/gift.svg" width={15} height={15} alt="" />Оч өгсөн</span>}
-              {published && !user && (
-                <Link href="/login" className="ar-gift"><img src="/icons/gift.svg" width={15} height={15} alt="" />Оч өгөх</Link>
-              )}
-              <span className="ar-flag soon" title="Тун удахгүй">
-                <img src="/icons/flag.svg" width={14} height={14} alt="" />Логик алдаа мэдэгд
-              </span>
+              <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment18.svg" width={18} height={18} alt="Сэтгэгдэл" />{comments.length}</a>
+              {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
+              {published && (user ? (
+                <form action={toggleSave}>
+                  <input type="hidden" name="post_id" value={post.id} />
+                  <button type="submit" className="ar-iconbtn" title={saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={saved}>
+                    <img className={saved ? "" : "ic"} src={`/icons/${saved ? "saved20" : "save20"}.svg`} width={20} height={20} alt={saved ? "Хадгалсан" : "Хадгалах"} />
+                  </button>
+                </form>
+              ) : (
+                <Link href="/login" className="ar-iconbtn" title="Хадгалах"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></Link>
+              ))}
+              {published && <Share path={`/post/${post.id}`} title={post.title} />}
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
-              <span className="ar-iconbtn soon" title="Хадгалах · тун удахгүй"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></span>
-              <span className="ar-iconbtn soon" title="Хуваалцах · тун удахгүй"><img className="ic" src="/icons/share20.svg" width={20} height={20} alt="Хуваалцах" /></span>
+              {published && (
+                <span className="ar-gift soon" title="Оч хандивлах · тун удахгүй">
+                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Оч хандивлах
+                </span>
+              )}
             </div>
             <div className="ar-divider" />
 

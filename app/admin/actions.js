@@ -143,3 +143,20 @@ export async function decideRequest(formData) {
   revalidatePath("/admin", "layout");
   back(from, op === "approve" ? "Хянагчийн эрх нээлээ" : "Татгалзлаа", true);
 }
+
+// Логик алдааны мэдэгдлийг шийдвэрлэх
+export async function decideLogic(formData) {
+  const me = await requireSection("logic");
+  const from = safe(String(formData.get("from") || "/admin/logic"));
+  const id = Number(formData.get("id"));
+  const op = String(formData.get("op"));
+  const note = String(formData.get("note") || "").trim().slice(0, 300) || null;
+  if (!Number.isInteger(id) || !["resolved", "dismissed"].includes(op)) back(from, "Буруу хүсэлт");
+  const [r] = await sql`UPDATE logic_reports SET status = ${op}, note = ${note}, resolved_by = ${me.id}, resolved_at = now()
+                        WHERE id = ${id} AND status = 'open' RETURNING user_id, post_id`;
+  if (!r) back(from, "Энэ мэдэгдэл шийдвэрлэгдсэн байна");
+  await audit({ actorId: me.id, category: "content", action: `Логик алдааны мэдэгдэл: ${op === "resolved" ? "засагдсан" : "алдаа биш"}${note ? ` (${note})` : ""}`, targetType: "post", targetId: r.post_id });
+  await notify({ userId: r.user_id, kind: op === "resolved" ? "logic_ok" : "logic_no", actorId: me.id, postId: r.post_id, note });
+  revalidatePath("/admin", "layout");
+  back(from, "Шийдвэрлэлээ", true);
+}

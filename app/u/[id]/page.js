@@ -40,13 +40,26 @@ export default async function PublicProfile({ params, searchParams }) {
 
   const all = await sql`
     SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, u.initial, u.first_name,
+      EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS saved,
       (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
       (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
     FROM posts p JOIN users u ON u.id = p.author_id
     WHERE p.author_id = ${uid} AND (p.status = 'published' OR ${isMe}::boolean)
     ORDER BY p.created_at DESC LIMIT 100`;
   for (const p of all) { p.author_points = u.points; p.author_followers = u.followers; }
+  const savedList = isMe
+    ? await sql`
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, a.initial, a.first_name, true AS saved,
+        (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
+        COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = a.id), 0)::int AS author_points,
+        (SELECT COUNT(*) FROM follows WHERE followee_id = a.id)::int AS author_followers
+      FROM saves s JOIN posts p ON p.id = s.post_id JOIN users a ON a.id = p.author_id
+      WHERE s.user_id = ${uid} AND p.status = 'published'
+      ORDER BY s.created_at DESC LIMIT 100`
+    : [];
   const groups = {
+    saved: isMe ? savedList : null,
     all,
     published: all.filter((p) => p.status === "published"),
     pending: all.filter((p) => p.status === "pending" || p.status === "approved"),
@@ -151,10 +164,11 @@ export default async function PublicProfile({ params, searchParams }) {
         {isMe && <TabLink k="pending" icon="t_wait" label="Редакцын хяналт хүлээж байгаа" count={groups.pending.length} warn />}
         {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length} />}
         <span className="ss-grow" />
-        {isMe && <span className="pu-tab soon" title="Тун удахгүй"><img src="/icons/t_saved.svg" width={16} height={16} alt="" />Хадгалсан</span>}
+        {isMe && <TabLink k="saved" icon="t_saved" label="Хадгалсан" count={groups.saved.length} />}
       </div>
 
-      {list.length === 0 && <div className="ss-card"><p className="ss-empty">Нийтлэл алга.</p></div>}
+      {current === "saved" && <p className="pu-savednote">Хадгалсан контент зөвхөн танд харагдана · {list.length} контент</p>}
+      {list.length === 0 && <div className="ss-card"><p className="ss-empty">{current === "saved" ? "Хадгалсан контент алга. Нийтлэл дээрх хадгалах дүрсээр хадгална." : "Нийтлэл алга."}</p></div>}
       {list.map((p) => (
         <div key={p.id} className="pu-post">
           {p.status !== "published" && (
@@ -162,7 +176,7 @@ export default async function PublicProfile({ params, searchParams }) {
               {p.status === "pending" ? "Редакцын хяналтад" : p.status === "approved" ? "Нийтлэхэд бэлэн" : p.status === "rejected" ? "Засвар хийхээр буцаасан" : "Нуугдсан"}
             </span>
           )}
-          <PostCard p={p} />
+          <PostCard p={p} viewer={me} />
         </div>
       ))}
     </Shell>

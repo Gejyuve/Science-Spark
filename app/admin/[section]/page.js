@@ -3,7 +3,6 @@ import { SECTIONS, requireSection } from "@/lib/admin";
 import Head from "../_c/Head";
 
 const TEXT = {
-  logic: "Нийтлэл дэх логик, баримтын алдааны мэдээллийг хүлээн авч шийдвэрлэх хэсэг.",
   settings: "Түвшний босго, очны дүрэм, хязгаарлалтын тохиргоо.",
 };
 

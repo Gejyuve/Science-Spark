@@ -2,6 +2,8 @@ import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { fmtEventRange } from "@/lib/events";
 import { Avatar, Stat, When } from "./Bits";
+import Share from "./Share";
+import { toggleSave } from "../posts/actions";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
 export default function PostCard({ p, viewer }) {
@@ -48,12 +50,17 @@ export default function PostCard({ p, viewer }) {
           {isQuestion ? "Хариулах" : "Унших"}
         </Link>
         <span className="ss-grow" />
-        <span className="ss-icon-btn soon" title="Хадгалах · тун удахгүй">
-          <img className="ic" src="/icons/save.svg" width={25} height={24} alt="Хадгалах" />
-        </span>
-        <Link href={`/post/${p.id}`} className="ss-icon-btn" title="Хуваалцах">
-          <img className="ic" src="/icons/ashare.svg" width={25} height={24} alt="Хуваалцах" />
-        </Link>
+        {viewer ? (
+          <form action={toggleSave}>
+            <input type="hidden" name="post_id" value={p.id} />
+            <button type="submit" className="ss-icon-btn" title={p.saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={!!p.saved}>
+              <img className={p.saved ? "" : "ic"} src={`/icons/${p.saved ? "saved20" : "save"}.svg`} width={p.saved ? 22 : 25} height={p.saved ? 22 : 24} alt="Хадгалах" />
+            </button>
+          </form>
+        ) : (
+          <Link href="/login" className="ss-icon-btn" title="Хадгалах"><img className="ic" src="/icons/save.svg" width={25} height={24} alt="Хадгалах" /></Link>
+        )}
+        <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} />
       </div>
       {isQuestion && (p.ta_id ? (
         <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">

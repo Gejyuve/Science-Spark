@@ -16,13 +16,16 @@ export default async function AdminLayout({ children }) {
 
   let pending = 0;
   let requests = 0;
+  let logic = 0;
   try {
     const [c] = await sql`SELECT (SELECT COUNT(*) FROM posts WHERE status = 'pending')::int AS p,
-      (SELECT COUNT(*) FROM reviewer_requests WHERE status = 'pending')::int AS r`;
+      (SELECT COUNT(*) FROM reviewer_requests WHERE status = 'pending')::int AS r,
+      (SELECT COUNT(*) FROM logic_reports WHERE status = 'open')::int AS l`;
     pending = c.p;
     requests = c.r;
+    logic = c.l;
   } catch (e) {}
-  const badges = { content: pending, requests };
+  const badges = { content: pending, requests, logic };
   const items = SECTIONS.filter((s) => canSee(user, s.key)).map((s) => ({ ...s, badge: badges[s.key] || null }));
   return (
     <div className="adm">

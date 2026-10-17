@@ -315,3 +315,41 @@ export async function likeComment(formData) {
   revalidatePath(`/post/${c.post_id}`);
   revalidatePath("/");
 }
+
+// Хадгалах / хадгалснаас хасах
+export async function toggleSave(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) return;
+  await ensureSchema();
+  const del = await sql`DELETE FROM saves WHERE post_id = ${postId} AND user_id = ${user.id} RETURNING 1`;
+  if (!del.length) {
+    const ok = await sql`SELECT 1 FROM posts WHERE id = ${postId} AND status = 'published'`;
+    if (ok.length) await sql`INSERT INTO saves (post_id, user_id) VALUES (${postId}, ${user.id}) ON CONFLICT DO NOTHING`;
+  }
+  revalidatePath(`/post/${postId}`);
+  revalidatePath("/");
+  revalidatePath(`/u/${user.id}`);
+}
+
+// Логик алдаа мэдэгдэх: редакцад очно. Нэг хүн нэг нийтлэлд нэг нээлттэй мэдэгдэлтэй.
+export async function reportLogic(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) redirect("/");
+  const back = (k, m) => redirect(`/post/${postId}?${k}=${encodeURIComponent(m)}`);
+  if (user.restricted_at) back("error", "Таны эрх хязгаарлагдсан байна");
+  const body = String(formData.get("body") || "").trim().slice(0, 200);
+  if (body.length < 10) back("error", "Алдааны тайлбараа дор хаяж 10 тэмдэгтээр бичнэ үү");
+  await ensureSchema();
+  const [p] = await sql`SELECT author_id, title FROM posts WHERE id = ${postId} AND status = 'published'`;
+  if (!p) back("error", "Нийтлэл олдсонгүй");
+  if (p.author_id === user.id) back("error", "Өөрийн нийтлэлийг засах боломжтой");
+  const r = await sql`INSERT INTO logic_reports (post_id, user_id, body) VALUES (${postId}, ${user.id}, ${body})
+                      ON CONFLICT (post_id, user_id) WHERE status = 'open' DO NOTHING RETURNING id`;
+  if (!r.length) back("error", "Та энэ нийтлэлд мэдэгдэл илгээсэн байна. Шийдвэрлэгдэхийг хүлээнэ үү");
+  await audit({ actorId: user.id, category: "content", action: "Логик алдаа мэдэгдсэн", targetType: "post", targetId: postId, targetLabel: p.title });
+  back("ok", "Баярлалаа! Таны мэдэгдэл редакцад очлоо. Шийдвэрлэгдэхэд мэдэгдэл ирнэ.");
+}
