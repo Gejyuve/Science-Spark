@@ -3,16 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
-import { EVENT_TYPES, EVENT_FORMATS } from "@/lib/format";
+import { EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
 const Ic = ({ n, s = 18 }) => <img className="ic" src={`/icons/${n}.svg`} width={s} height={s} alt="" />;
 
-function Counted({ name, max, rows, placeholder, required }) {
+function Counted({ name, max, rows, placeholder, required, latinCheck }) {
   const [v, setV] = useState("");
+  const tooLatin = latinCheck && latinShare(v) > LATIN_LIMIT;
   return (
-    <div className="cp-area">
-      <textarea name={name} maxLength={max} rows={rows} value={v} onChange={(e) => setV(e.target.value)} placeholder={placeholder} required={required} />
+    <div className={"cp-area" + (tooLatin ? " bad" : "")}>
+      <textarea
+        name={name} maxLength={max} rows={rows} value={v} placeholder={placeholder} required={required}
+        onChange={(e) => {
+          setV(e.target.value);
+          e.target.setCustomValidity(latinCheck && latinShare(e.target.value) > LATIN_LIMIT ? "Латин үсэг 25%-аас хэтэрсэн байна" : "");
+        }}
+      />
+      {tooLatin && <em className="cp-latin">Агуулгын 25%-аас илүү нь латин үсэг байна. Кириллээр бичнэ үү.</em>}
       <span>{v.length} / {max}</span>
     </div>
   );
@@ -57,7 +65,7 @@ export default function Composer({ loggedIn, initial, error }) {
         <input type="hidden" name="kind" value="Асуулт" />
         <div className="cp-ask-row">
           <img src="/icons/person.svg" width={32} height={32} alt="" />
-          <Counted name="body" max={300} rows={3} required placeholder="Хариултаас илүү асуултаар нь хүнийг амархан таньж болно.   -Voltaire" />
+          <Counted name="body" max={300} rows={3} required latinCheck placeholder="Хариултаас илүү асуултаар нь хүнийг амархан таньж болно.   -Voltaire" />
         </div>
         <div className="cp-actions"><span className="ss-grow" /><button type="submit" className="cp-btn">Асуух</button></div>
       </form>
@@ -78,7 +86,7 @@ export default function Composer({ loggedIn, initial, error }) {
       <form action={quickPost} className="cp-panel">
         <input type="hidden" name="kind" value="Бодрол" />
         <Head icon="sh_bulb" title="Бодрол" />
-        <Counted name="body" max={300} rows={5} required placeholder={"Би сэтгэж байна, тиймээс би оршиж байна...\n\n-Рене Декарт"} />
+        <Counted name="body" max={300} rows={5} required latinCheck placeholder={"Би сэтгэж байна, тиймээс би оршиж байна...\n\n-Рене Декарт"} />
         <div className="cp-split">
           <ImageSlot title="Зураг нэмэх (1 ширхэг)" hint="2:1 · өргөн · тун удахгүй" wide />
           <div className="cp-col">

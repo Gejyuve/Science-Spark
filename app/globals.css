@@ -768,3 +768,6 @@ details.mod summary { cursor: pointer; }
   .ar-meta div { grid-template-columns: 20px 1fr; }
   .ar-meta b, .ar-meta a { grid-column: 2; }
 }
+.cp-area.bad { border-color: #e5484d; }
+.cp-latin { font-style: normal; font-size: 12px; color: #e5484d; }
+.cp-ask-row .cp-area .cp-latin { display: block; }

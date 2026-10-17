@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
-import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS } from "@/lib/format";
+import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
@@ -214,6 +214,7 @@ export async function quickPost(formData) {
   if (kind === "Асуулт" || kind === "Бодрол") {
     body = t("body", 300);
     if (!body) fail("Агуулгаа бичнэ үү");
+    if (latinShare(body) > LATIN_LIMIT) fail("Агуулгын 25%-аас илүү нь латин үсгээр бичигдсэн байна. Кириллээр бичнэ үү");
     title = short(body.split("\n")[0]);
     if (kind === "Бодрол") meta.source = url(t("source", 300));
   } else if (kind === "Эвент") {
