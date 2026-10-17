@@ -14,7 +14,7 @@ export default function Head({ user, title, sub, search, q, hidden = {} }) {
         <form action={search} method="get" className="adm-search">
           {Object.entries(hidden).map(([k, v]) => v ? <input key={k} type="hidden" name={k} value={v} /> : null)}
           <img className="ic" src="/icons/search.svg" width={16} height={16} alt="" />
-          <input name="q" defaultValue={q || ""} placeholder="Хайх…" aria-label="Хайх" />
+          <input className="adm-q" name="q" defaultValue={q || ""} placeholder="Хайх…" aria-label="Хайх" />
         </form>
       )}
       <span className="adm-me">

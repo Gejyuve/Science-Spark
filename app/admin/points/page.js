@@ -80,7 +80,7 @@ export default async function Points({ searchParams }) {
                 <tr key={i}>
                   <td><Link href={`/u/${l.id}`}>{who(l)}</Link></td>
                   <td className={l.delta < 0 ? "adm-neg" : "adm-pos"}>{l.delta > 0 ? "+" : ""}{l.delta}</td>
-                  <td>{l.reason.startsWith("admin:") ? <>🛡 {l.reason.slice(6)}</> : l.reason}</td>
+                  <td className="adm-wrap">{l.reason.startsWith("admin:") ? <>🛡 {l.reason.slice(6)}</> : l.reason.startsWith("profile:") ? "Профайл бөглөсөн" : l.reason}</td>
                   <td>{ago(l.created_at)}</td>
                 </tr>
               ))}

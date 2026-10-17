@@ -39,7 +39,7 @@ export default async function Audit({ searchParams }) {
                   <td className="adm-mono">{fmt(a.created_at)}</td>
                   <td>{a.actor_id ? who(a) : "Систем"}</td>
                   <td><Chip>{CAT[a.category] || a.category}</Chip></td>
-                  <td>{a.action}</td>
+                  <td className="adm-wrap">{a.action}</td>
                   <td>
                     {a.target_type === "user" && a.target_id ? <a href={`/admin/users/${a.target_id}`}>{a.target_label}</a>
                       : a.target_type === "post" && a.target_id ? <a href={`/post/${a.target_id}`}>{a.target_label}</a>
