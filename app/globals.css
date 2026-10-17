@@ -907,7 +907,7 @@ details.mod summary { cursor: pointer; }
 .adm-feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .adm-feed li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text); }
 .adm-feed li:first-child { border-top: 0; }
-.adm-feed li > span, .adm-feed li > a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.adm-feed li > span:not(.adm-dot), .adm-feed li > a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .adm-feed a { color: var(--ink); text-decoration: none; }
 .adm-feed b { color: var(--ink); }
 .adm-feed small { color: var(--muted); font-size: 11px; white-space: nowrap; }
