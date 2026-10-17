@@ -423,3 +423,66 @@ details.mod summary { cursor: pointer; }
   .au-types { gap: 8px; }
   .au-row .au-field:first-child { flex-basis: 96px; }
 }
+
+/* ===== Figma: Нийтлэл · Харагдах хуудас ===== */
+.ar-col { width: 100%; max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.ar-pagebar { display: flex; gap: 8px; align-items: center; }
+.ar-home, .ar-back {
+  height: 40px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0, 26, 38, 0.08); display: grid; place-items: center; text-decoration: none;
+}
+.ar-home { width: 40px; overflow: hidden; }
+.ar-back { padding: 0 16px; color: var(--ink); font-weight: 500; font-size: 13px; }
+.ar-card { background: var(--surface); border-radius: 24px; box-shadow: 0 8px 32px rgba(51, 89, 102, 0.07); overflow: hidden; }
+.ar-strip { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0; }
+.ar-strip span { display: inline-flex; gap: 8px; align-items: center; color: var(--text); font-weight: 500; font-size: 13px; }
+.ar-content { display: flex; flex-direction: column; gap: 22px; padding: 20px 48px 40px; }
+.ar-chips { display: flex; gap: 8px; }
+.ar-chip { padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: 500; background: var(--surface-2); color: var(--text); }
+.ar-chip.main { background: #00a89b; color: #fff; font-weight: 600; font-size: 12.5px; }
+.ar-title { margin: 0; font-size: 40px; line-height: 50px; font-weight: 700; color: var(--ink); }
+.ar-lead { margin: 0; font-size: 18px; line-height: 28px; color: var(--text); white-space: pre-wrap; }
+.ar-text { margin: 0; font-size: 17px; line-height: 30px; color: #293b47; white-space: pre-wrap; }
+.ar-divider { height: 1px; background: var(--border); }
+.ar-credits { display: flex; gap: 24px; }
+.ar-credits > div { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.ar-label { font-weight: 600; font-size: 13px; color: #708c9e; }
+.ar-reactions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.ar-react { display: inline-flex; align-items: center; gap: 8px; padding: 10px 0; font-weight: 600; font-size: 14.5px; color: var(--ink); text-decoration: none; }
+.ar-react.teal { color: #008075; font-weight: 500; }
+.ar-gift {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; cursor: pointer;
+  border: 1px solid #b8e5de; background: #e5f7f5; color: #008075; font-family: inherit; font-weight: 600; font-size: 12px; text-decoration: none;
+}
+.ar-gift.done { cursor: default; opacity: .8; }
+.ar-flag {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: #708c9e; font-weight: 600; font-size: 12.5px; text-decoration: none;
+}
+.ar-iconbtn { display: grid; place-items: center; width: 24px; height: 24px; }
+.ar-compose { display: flex; align-items: center; gap: 12px; }
+.ar-compose input {
+  flex: 1; min-width: 0; height: 44px; padding: 0 18px; border-radius: 22px; border: 0; outline: none;
+  background: #f4f8fa; font-family: inherit; font-size: 14px; color: var(--ink);
+}
+.ar-compose input::placeholder { color: #99b0bd; }
+.ar-compose button {
+  border: 0; cursor: pointer; padding: 12px 20px; border-radius: 22px; background: #00a89b; color: #fff;
+  font-family: inherit; font-weight: 600; font-size: 13.5px;
+}
+.ar-comment { display: flex; flex-direction: column; gap: 10px; }
+.ar-comment p { margin: 0; font-size: 15px; line-height: 24px; color: #293b47; white-space: pre-wrap; }
+.ar-cactions { display: flex; align-items: center; gap: 16px; }
+.ar-cdate { font-size: 12px; color: #708c9e; }
+.ar-link { border: 0; background: none; padding: 0; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 12.5px; color: #708c9e; }
+.ar-link:hover { color: #c7332b; }
+.ar-content .stack input { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); font-family: inherit; }
+:root[data-theme="dark"] .ar-text, :root[data-theme="dark"] .ar-comment p { color: var(--text); }
+:root[data-theme="dark"] .ar-compose input { background: var(--surface-2); }
+@media (max-width: 760px) {
+  .ar-content { padding: 16px 18px 28px; gap: 18px; }
+  .ar-strip { padding: 14px 18px 0; }
+  .ar-title { font-size: 28px; line-height: 36px; }
+  .ar-credits { flex-direction: column; gap: 14px; }
+  .ar-reactions { gap: 12px; }
+}
