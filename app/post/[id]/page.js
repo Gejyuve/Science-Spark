@@ -112,6 +112,7 @@ export default async function PostPage({ params, searchParams }) {
   const post = posts[0];
   const isAuthor = !!user && user.id === post.author_id;
   const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
+  const isQ = post.kind === "Асуулт";
   const published = post.status === "published";
   if (!published && !isAuthor && !isStaff(user)) notFound();
 
@@ -163,6 +164,15 @@ export default async function PostPage({ params, searchParams }) {
           </div>
 
           <div className="ar-content">
+            {isQ && (
+              <Link href={`/u/${post.author_id}`} className="ss-person ar-qauthor">
+                <Avatar user={author} size={40} />
+                <div>
+                  <b>{post.initial}.{post.first_name}</b>
+                  <Stat points={post.author_points} followers={post.author_followers} />
+                </div>
+              </Link>
+            )}
             <div className="ar-chips">
               <span className="ar-chip main">{post.kind}</span>
             </div>
@@ -222,7 +232,11 @@ export default async function PostPage({ params, searchParams }) {
                 <div className="ar-divider" />
               </>
             )}
-            {rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)}
+            {isQ ? (
+              <div className="ar-qbox">{post.body}</div>
+            ) : (
+              rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)
+            )}
             <MetaBlock kind={post.kind} m={post.meta || {}} />
             {post.kind === "Эвент" && published && googleCalUrl(post.title, post.meta || {}, post.body, `https://science-spark-sable.vercel.app/post/${post.id}`) && (
               <div className="ev-addcal">
@@ -232,7 +246,7 @@ export default async function PostPage({ params, searchParams }) {
               </div>
             )}
 
-            <div className="ar-credits">
+            {!isQ && <div className="ar-credits">
               <div>
                 <span className="ar-label">Бичсэн:</span>
                 <Link href={`/u/${post.author_id}`} className="ss-person">
@@ -255,7 +269,7 @@ export default async function PostPage({ params, searchParams }) {
                   </Link>
                 </div>
               )}
-            </div>
+            </div>}
 
             <div className="ar-divider" />
             <div className="ar-reactions">
@@ -273,6 +287,14 @@ export default async function PostPage({ params, searchParams }) {
               )}
               <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment18.svg" width={18} height={18} alt="Сэтгэгдэл" />{comments.length}</a>
               {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
+              {published && <Share path={`/post/${post.id}`} title={post.title} />}
+              {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
+              <span className="ss-grow" />
+              {published && !isQ && (
+                <span className="ar-gift soon" title="Оч хандивлах · тун удахгүй">
+                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Оч хандивлах
+                </span>
+              )}
               {published && (user ? (
                 <form action={toggleSave}>
                   <input type="hidden" name="post_id" value={post.id} />
@@ -283,14 +305,6 @@ export default async function PostPage({ params, searchParams }) {
               ) : (
                 <Link href="/login" className="ar-iconbtn" title="Хадгалах"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></Link>
               ))}
-              {published && <Share path={`/post/${post.id}`} title={post.title} />}
-              {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
-              <span className="ss-grow" />
-              {published && (
-                <span className="ar-gift soon" title="Оч хандивлах · тун удахгүй">
-                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Оч хандивлах
-                </span>
-              )}
             </div>
             <div className="ar-divider" />
 

@@ -1246,3 +1246,8 @@ details.mod summary { cursor: pointer; }
 }
 .sh-pop.sh-right { left: auto; right: -8px; }
 .sh-pop.sh-right::after { left: auto; right: 16px; }
+/* Асуулт · Дэлгэрэнгүй (Figma 476:288) */
+.ar-qauthor { margin-bottom: 14px; }
+.ar-qbox { margin: 14px 0 6px; padding: 18px 22px; border-radius: 18px; background: var(--surface-2); color: var(--ink); font-size: 16px; font-weight: 600; line-height: 1.6; white-space: pre-wrap; }
+.ar-reactions { gap: 10px; }
+.ar-reactions > .ar-react { margin-right: 4px; }
