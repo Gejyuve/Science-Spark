@@ -9,9 +9,10 @@ export default function Share({ path, title, size = 20, icon = "share20", align 
   const [url, setUrl] = useState(path);
   const box = useRef(null);
   const timer = useRef(null);
+  const pinned = useRef(false);
   useEffect(() => setUrl(new URL(path, window.location.origin).toString()), [path]);
   useEffect(() => {
-    if (!open) return;
+    if (!open) { pinned.current = false; return; }
     const close = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
     const esc = (e) => e.key === "Escape" && setOpen(false);
     document.addEventListener("pointerdown", close);
@@ -19,7 +20,7 @@ export default function Share({ path, title, size = 20, icon = "share20", align 
     return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", esc); };
   }, [open]);
   const enter = (e) => { if (e.pointerType === "mouse") { clearTimeout(timer.current); setOpen(true); } };
-  const leave = (e) => { if (e.pointerType === "mouse") timer.current = setTimeout(() => setOpen(false), 250); };
+  const leave = (e) => { if (e.pointerType === "mouse" && !pinned.current) timer.current = setTimeout(() => setOpen(false), 300); };
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(title || "Science Spark");
   const links = [
@@ -43,7 +44,7 @@ export default function Share({ path, title, size = 20, icon = "share20", align 
   };
   return (
     <span className="sh-wrap" ref={box} onPointerEnter={enter} onPointerLeave={leave}>
-      <button type="button" className="ar-iconbtn" aria-label="Хуваалцах" aria-expanded={open} onClick={() => { clearTimeout(timer.current); setOpen(true); }}>
+      <button type="button" className="ar-iconbtn" aria-label="Хуваалцах" aria-expanded={open} onClick={() => { clearTimeout(timer.current); pinned.current = true; setOpen(true); }}>
         <img className="ic" src={`/icons/${icon}.svg`} width={size} height={size} alt="" />
       </button>
       {open && (
