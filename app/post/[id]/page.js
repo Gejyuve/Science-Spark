@@ -6,7 +6,7 @@ import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment } from "../../posts/actions";
 import Shell from "../../components/Shell";
-import { Avatar, Stat } from "../../components/Bits";
+import { Avatar, Stat, When } from "../../components/Bits";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +80,7 @@ function CommentNode({ c, kids, user, postId, canReply, depth }) {
             <button className="ar-link" type="submit">Устгах</button>
           </form>
         )}
-        <span className="ar-cdate">{fmtDate(c.created_at)}</span>
+        <When d={c.created_at} size={12} className="ar-cdate" />
       </div>
       {children.length > 0 && (
         <div className="ar-replies">
@@ -153,7 +153,8 @@ export default async function PostPage({ params, searchParams }) {
 
         <article className="ar-card">
           <div className="ar-strip">
-            <span><img className="ic" src="/icons/date16.svg" width={16} height={16} alt="" />{fmtDate(post.created_at)}</span>
+            <span className="ss-grow" />
+            <When d={post.created_at} size={16} className="ar-when" />
           </div>
 
           <div className="ar-content">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { fmtEventRange } from "@/lib/events";
-import { Avatar, Stat } from "./Bits";
+import { Avatar, Stat, When } from "./Bits";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
 export default function PostCard({ p, viewer }) {
@@ -19,10 +19,7 @@ export default function PostCard({ p, viewer }) {
     <article className="ss-card">
       <div className="ss-card-top">
         <span className="ss-kind">{p.kind}</span>
-        <span className="ss-date">
-          <img className="ic" src="/icons/date.svg" width={13} height={12} alt="" />
-          {fmtDate(p.created_at)}
-        </span>
+        <When d={p.created_at} />
       </div>
       <Link href={`/u/${p.author_id}`} className="ss-person">
         <Avatar user={author} size={40} />

@@ -1,3 +1,5 @@
+import { relTime } from "@/lib/format";
+
 // Жижиг дахин ашиглах хэсгүүд: аватар, оч/дагагчийн тоо
 const COLORS = ["#37C3B3", "#5B8DEF", "#F59E0B", "#E5484D", "#8E6CEF", "#00A89B", "#EF6C9C"];
 
@@ -30,6 +32,17 @@ export function Stat({ points = 0, followers = 0 }) {
       <i>·</i>
       <img src="/icons/followers.svg" width={13} height={13} alt="" />
       <span>{fmtK(followers)}</span>
+    </span>
+  );
+}
+
+// Огноо эсвэл "3 цаг" — дүрстэй
+export function When({ d, size = 14, className = "ss-date" }) {
+  const r = relTime(d);
+  return (
+    <span className={className} title={new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).slice(0, 16)}>
+      <img className="ic" src={`/icons/${r.recent ? "f_clock" : "date16"}.svg`} width={size} height={size} alt="" />
+      {r.text}
     </span>
   );
 }

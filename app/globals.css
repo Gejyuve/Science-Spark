@@ -1186,3 +1186,4 @@ details.mod summary { cursor: pointer; }
 .ar-replies { display: flex; flex-direction: column; gap: 16px; margin: 6px 0 0 34px; }
 .ar-comment.reply { position: relative; }
 .ar-comment.reply > .ss-curve { left: -26px; top: -4px; width: 20px; height: 22px; }
+.ar-cdate { display: inline-flex; gap: 4px; align-items: center; }
