@@ -1244,5 +1244,5 @@ details.mod summary { cursor: pointer; }
 @media (max-width: 760px) {
   .sh-pop { width: min(300px, calc(100vw - 40px)); }
 }
-.sh-pop.right { left: auto; right: -8px; }
-.sh-pop.right::after { left: auto; right: 16px; }
+.sh-pop.sh-right { left: auto; right: -8px; }
+.sh-pop.sh-right::after { left: auto; right: 16px; }

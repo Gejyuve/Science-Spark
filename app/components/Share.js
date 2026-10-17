@@ -48,7 +48,7 @@ export default function Share({ path, title, size = 20, icon = "share20", align 
         <img className="ic" src={`/icons/${icon}.svg`} width={size} height={size} alt="" />
       </button>
       {open && (
-        <span className={"sh-pop " + align} role="menu">
+        <span className={"sh-pop sh-" + align} role="menu">
           <b>Хуваалцах</b>
           <span className="sh-row">
             {links.map(([ic, label, href]) => (
