@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 // Хуваалцах: хулгана тавихад (эсвэл дарахад) сошиал сүлжээ, холбоос хуулах цонх гарна
-export default function Share({ path, title, size = 20, icon = "share20" }) {
+export default function Share({ path, title, size = 20, icon = "share20", align = "left" }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState(path);
@@ -47,12 +47,12 @@ export default function Share({ path, title, size = 20, icon = "share20" }) {
         <img className="ic" src={`/icons/${icon}.svg`} width={size} height={size} alt="" />
       </button>
       {open && (
-        <span className="sh-pop" role="menu">
+        <span className={"sh-pop " + align} role="menu">
           <b>Хуваалцах</b>
           <span className="sh-row">
             {links.map(([ic, label, href]) => (
               <a key={label} href={href} target={ic === "sh_mail" ? undefined : "_blank"} rel="noopener noreferrer" className="sh-item" title={label}>
-                <img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" />
+                <i><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" /></i>
                 <small>{label}</small>
               </a>
             ))}

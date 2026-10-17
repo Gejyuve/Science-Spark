@@ -60,7 +60,7 @@ export default function PostCard({ p, viewer }) {
         ) : (
           <Link href="/login" className="ss-icon-btn" title="Хадгалах"><img className="ic" src="/icons/save.svg" width={25} height={24} alt="Хадгалах" /></Link>
         )}
-        <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} />
+        <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} align="right" />
       </div>
       {isQuestion && (p.ta_id ? (
         <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">

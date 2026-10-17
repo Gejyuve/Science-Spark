@@ -1201,16 +1201,16 @@ details.mod summary { cursor: pointer; }
 .ss-actionbar form { display: contents; }
 
 .sh-wrap { position: relative; display: inline-flex; }
-.sh-pop { position: absolute; right: -8px; bottom: calc(100% + 8px); z-index: 30; width: 300px; display: flex; flex-direction: column; gap: 10px;
+.sh-pop { position: absolute; left: -12px; bottom: calc(100% + 8px); z-index: 30; width: 300px; display: flex; flex-direction: column; gap: 10px;
   padding: 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(18, 35, 46, .18); }
-.sh-pop::after { content: ""; position: absolute; right: 18px; bottom: -6px; width: 12px; height: 12px; background: var(--surface); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: rotate(45deg); }
+.sh-pop::after { content: ""; position: absolute; left: 22px; bottom: -6px; width: 12px; height: 12px; background: var(--surface); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: rotate(45deg); }
 .sh-pop > b { font-size: 13px; color: var(--ink); }
 .sh-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .sh-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; text-decoration: none; }
-.sh-item img { width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: var(--surface-2); box-sizing: border-box; }
+.sh-item i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); }
 .sh-item small { font-size: 10px; color: var(--muted); }
 .sh-item:hover { background: var(--surface-2); }
-.sh-item:hover img { background: var(--teal-bg); }
+.sh-item:hover i { background: var(--teal-bg); }
 .sh-link { display: flex; gap: 6px; }
 .sh-link input { flex: 1; min-width: 0; height: 34px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: 12px; }
 .sh-link button, .sh-native { height: 34px; padding: 0 12px; border-radius: 10px; border: 0; background: #00a89b; color: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
@@ -1244,3 +1244,5 @@ details.mod summary { cursor: pointer; }
 @media (max-width: 760px) {
   .sh-pop { width: min(300px, calc(100vw - 40px)); }
 }
+.sh-pop.right { left: auto; right: -8px; }
+.sh-pop.right::after { left: auto; right: 16px; }
