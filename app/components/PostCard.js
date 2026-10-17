@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fmtDate, KIND_HREF } from "@/lib/format";
-import { fmtEventRange } from "@/lib/events";
+import { fmtEventRange, spanText, validLocal } from "@/lib/events";
+import EventCover from "./EventCover";
 import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
 import { toggleSave, sparkPost } from "../posts/actions";
@@ -16,7 +17,74 @@ export default function PostCard({ p, viewer, following }) {
     ? [m.valid_until && ["f_date", `Хүчинтэй: ${m.valid_until}`], m.contact && ["f_phone", m.contact]]
     : [];
   const excerpt = p.body.length > 320 ? p.body.slice(0, 320) + "…" : p.body;
-  const author = { id: p.author_id, initial: p.initial, first_name: p.first_name };
+  const actions = (
+        <div className="ss-actionbar">
+          {viewer && viewer.id !== p.author_id && !p.sparked ? (
+            <form action={sparkPost}>
+              <input type="hidden" name="post_id" value={p.id} />
+              <button type="submit" className="ss-count ss-sparkbtn" title="Оч өгөх">
+                <img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч өгөх" />{p.sparks}
+              </button>
+            </form>
+          ) : !viewer ? (
+            <Link href="/login" className="ss-count ss-sparkbtn" title="Оч өгөх"><img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч" />{p.sparks}</Link>
+          ) : (
+            <span className={"ss-count" + (p.sparked ? " sparked" : "")} title={p.sparked ? "Та оч өгсөн" : "Оч"}>
+              <img className={p.sparked ? "" : "ic"} src={`/icons/${p.sparked ? "sparkle" : "aspark"}.svg`} width={p.sparked ? 23 : 25} height={24} alt="Оч" />{p.sparks}
+            </span>
+          )}
+          <Link href={`/post/${p.id}#comments`} className="ss-count">
+            <img className="ic" src="/icons/comment.svg" width={25} height={24} alt="Сэтгэгдэл" />{p.comments}
+          </Link>
+          <Link href={`/post/${p.id}${isQuestion ? "#comments" : ""}`} className="ss-pill">
+            {isQuestion ? "Хариулах" : p.kind === "Эвент" ? "Дэлгэрэнгүй" : "Унших"}
+          </Link>
+          <span className="ss-grow" />
+          {viewer ? (
+            <form action={toggleSave}>
+              <input type="hidden" name="post_id" value={p.id} />
+              <button type="submit" className="ss-icon-btn" title={p.saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={!!p.saved}>
+                <img className={p.saved ? "" : "ic"} src={`/icons/${p.saved ? "saved20" : "save"}.svg`} width={p.saved ? 22 : 25} height={p.saved ? 22 : 24} alt="Хадгалах" />
+              </button>
+            </form>
+          ) : (
+            <Link href="/login" className="ss-icon-btn" title="Хадгалах"><img className="ic" src="/icons/save.svg" width={25} height={24} alt="Хадгалах" /></Link>
+          )}
+          <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} align="right" />
+        </div>
+  );
+  // Эвент: Figma (Эвент · 20:2) карт — зүүнд мэдээлэл, баруунд дөрвөлжин зураг
+  if (p.kind === "Эвент") {
+    const ev = [
+      ["f_date", fmtEventRange(m)],
+      validLocal(m.starts_at) && ["f_clock", `Үргэлжлэх хугацаа: ${validLocal(m.ends_at) ? spanText(m.starts_at, m.ends_at) : m.duration || "—"}`],
+      m.price && ["f_ticket", m.price],
+      m.capacity && ["f_people", `${m.capacity} хүн`],
+    ].filter(Boolean);
+    return (
+      <article className="ss-card pc">
+        <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
+        <div className="ev-card">
+          <div className="ev-card-main">
+            <div className="ss-card-top">
+              <span className="ev-crumb"><Link href="/events" className="ss-kind">Эвент</Link> · {m.type || "Бусад"}</span>
+              <When d={p.created_at} />
+            </div>
+            <span className="ev-where"><img className="ic" src="/icons/f_pin.svg" width={14} height={14} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
+            <Link href={`/post/${p.id}`} className="ev-title">{p.title}</Link>
+            <p className="ev-excerpt">{p.body.length > 220 ? p.body.slice(0, 220) + "…" : p.body}</p>
+            <div className="ev-facts">
+              {ev.map(([ic, v]) => <span key={ic}><img className="ic" src={`/icons/${ic}.svg`} width={16} height={16} alt="" />{v}</span>)}
+            </div>
+            {actions}
+          </div>
+          <Link href={`/post/${p.id}`} className="ev-cover-link" aria-hidden="true" tabIndex={-1}>
+            {p.image_id ? <img className="ev-photo" src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <EventCover type={m.type} starts={m.starts_at} />}
+          </Link>
+        </div>
+      </article>
+    );
+  }
   return (
     <article className="ss-card pc">
       <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
@@ -39,40 +107,7 @@ export default function PostCard({ p, viewer, following }) {
           </span>
         )}
       </Link>
-      <div className="ss-actionbar">
-        {viewer && viewer.id !== p.author_id && !p.sparked ? (
-          <form action={sparkPost}>
-            <input type="hidden" name="post_id" value={p.id} />
-            <button type="submit" className="ss-count ss-sparkbtn" title="Оч өгөх">
-              <img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч өгөх" />{p.sparks}
-            </button>
-          </form>
-        ) : !viewer ? (
-          <Link href="/login" className="ss-count ss-sparkbtn" title="Оч өгөх"><img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч" />{p.sparks}</Link>
-        ) : (
-          <span className={"ss-count" + (p.sparked ? " sparked" : "")} title={p.sparked ? "Та оч өгсөн" : "Оч"}>
-            <img className={p.sparked ? "" : "ic"} src={`/icons/${p.sparked ? "sparkle" : "aspark"}.svg`} width={p.sparked ? 23 : 25} height={24} alt="Оч" />{p.sparks}
-          </span>
-        )}
-        <Link href={`/post/${p.id}#comments`} className="ss-count">
-          <img className="ic" src="/icons/comment.svg" width={25} height={24} alt="Сэтгэгдэл" />{p.comments}
-        </Link>
-        <Link href={`/post/${p.id}${isQuestion ? "#comments" : ""}`} className="ss-pill">
-          {isQuestion ? "Хариулах" : "Унших"}
-        </Link>
-        <span className="ss-grow" />
-        {viewer ? (
-          <form action={toggleSave}>
-            <input type="hidden" name="post_id" value={p.id} />
-            <button type="submit" className="ss-icon-btn" title={p.saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={!!p.saved}>
-              <img className={p.saved ? "" : "ic"} src={`/icons/${p.saved ? "saved20" : "save"}.svg`} width={p.saved ? 22 : 25} height={p.saved ? 22 : 24} alt="Хадгалах" />
-            </button>
-          </form>
-        ) : (
-          <Link href="/login" className="ss-icon-btn" title="Хадгалах"><img className="ic" src="/icons/save.svg" width={25} height={24} alt="Хадгалах" /></Link>
-        )}
-        <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} align="right" />
-      </div>
+      {actions}
       {isQuestion && (p.ta_id ? (
         <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">
           <span className="ss-curve" aria-hidden="true" />

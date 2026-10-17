@@ -23,7 +23,7 @@ const SOCIAL_ICON = { facebook: "s_fb", instagram: "s_ig", x: "s_x", linkedin: "
 // Figma: Нийтийн профайл
 export default async function PublicProfile({ params, searchParams }) {
   const { id } = await params;
-  const { tab = "all" } = await searchParams;
+  const { tab = "published", k: kindParam = "" } = await searchParams;
   const uid = Number(id);
   if (!Number.isInteger(uid)) notFound();
   await ensureSchema();
@@ -68,8 +68,20 @@ export default async function PublicProfile({ params, searchParams }) {
     pending: all.filter((p) => p.status === "pending" || p.status === "approved"),
     replied: all.filter((p) => p.status === "rejected" || p.status === "removed"),
   };
-  const current = groups[tab] ? tab : "all";
-  const list = groups[current];
+  const current = groups[tab] ? tab : "published";
+  // Төрлийн сонгогч (Figma 680:563): сонгосон төлөв доторх төрлөөр шүүнэ
+  const base = groups[current] || [];
+  const KIND_LIST = ["Нийтлэл", "Мэдээ", "Асуулт", "Бодрол", "Эвент", "Зарлал"];
+  const kind = KIND_LIST.includes(kindParam) ? kindParam : "";
+  const kindCounts = Object.fromEntries(KIND_LIST.map((x) => [x, base.filter((p) => p.kind === x).length]));
+  const list = kind ? base.filter((p) => p.kind === kind) : base;
+  const href = (t, kk) => {
+    const q = new URLSearchParams();
+    if (t && t !== "published") q.set("tab", t);
+    if (kk) q.set("k", kk);
+    const s = q.toString();
+    return `/u/${uid}${s ? `?${s}` : ""}`;
+  };
 
   const following = me && !isMe
     ? (await sql`SELECT 1 FROM follows WHERE follower_id = ${me.id} AND followee_id = ${uid}`).length > 0
@@ -106,7 +118,7 @@ export default async function PublicProfile({ params, searchParams }) {
     </div>
   );
   const TabLink = ({ k, icon, label, count, warn }) => (
-    <Link href={`/u/${uid}${k === "all" ? "" : `?tab=${k}`}`} className={"pu-tab" + (current === k ? " on" : "")}>
+    <Link href={href(k, kind)} className={"pu-tab" + (current === k ? " on" : "")}>
       {icon && <img src={`/icons/${icon}.svg`} width={16} height={16} alt="" />}
       {label}
       {count > 0 && <em className={warn ? "warn" : ""}>{count}</em>}
@@ -162,8 +174,16 @@ export default async function PublicProfile({ params, searchParams }) {
       </section>
 
       <div className="pu-tabs">
-        <TabLink k="all" label="Бүгд" count={groups.all.length} />
-        <TabLink k="published" icon={current === "published" ? "t_pub" : null} label="Нийтлэгдсэн" />
+        <details className="pu-kind">
+          <summary>{kind || "Бүгд"} <em>{kind ? kindCounts[kind] : base.length}</em><img className="ic" src="/icons/chevdown.svg" width={14} height={14} alt="" /></summary>
+          <div className="pu-kind-menu">
+            <Link href={href(current, "")} className={kind ? "" : "on"}>Бүгд <em>{base.length}</em>{!kind && <i>✓</i>}</Link>
+            {KIND_LIST.map((x) => (
+              <Link key={x} href={href(current, x)} className={kind === x ? "on" : ""}>{x} <em>{kindCounts[x]}</em>{kind === x && <i>✓</i>}</Link>
+            ))}
+          </div>
+        </details>
+        <TabLink k="published" icon={current === "published" ? "t_pub" : null} label="Нийтлэгдсэн" count={groups.published.length} />
         {isMe && <TabLink k="pending" icon="t_wait" label="Редакцын хяналт хүлээж байгаа" count={groups.pending.length} warn />}
         {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length} />}
         <span className="ss-grow" />
@@ -171,7 +191,7 @@ export default async function PublicProfile({ params, searchParams }) {
       </div>
 
       {current === "saved" && <p className="pu-savednote">Хадгалсан контент зөвхөн танд харагдана · {list.length} контент</p>}
-      {list.length === 0 && <div className="ss-card"><p className="ss-empty">{current === "saved" ? "Хадгалсан контент алга. Нийтлэл дээрх хадгалах дүрсээр хадгална." : "Нийтлэл алга."}</p></div>}
+      {list.length === 0 && <div className="ss-card"><p className="ss-empty">{current === "saved" ? "Хадгалсан контент алга. Нийтлэл дээрх хадгалах дүрсээр хадгална." : kind ? `${kind} алга.` : "Нийтлэл алга."}</p></div>}
       {list.map((p) => (
         <div key={p.id} className="pu-post">
           {p.status !== "published" && (

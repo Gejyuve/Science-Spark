@@ -1446,3 +1446,14 @@ a.ss-kind:hover { text-decoration: underline; }
 }
 .tip.tip-l::after { right: auto; left: 0; }
 .ss-card.pc .tip { z-index: 2; }
+/* Профайл: төрлийн сонгогч (Figma 680:563) */
+.pu-kind { position: relative; }
+.pu-kind > summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #37c3b3; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
+.pu-kind > summary::-webkit-details-marker { display: none; }
+.pu-kind > summary em, .pu-kind-menu em { font-style: normal; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--teal-bg); color: #00a89b; }
+.pu-kind-menu { position: absolute; left: 0; top: calc(100% + 6px); z-index: 30; width: 240px; padding: 6px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 14px 36px rgba(18, 35, 46, .16); display: flex; flex-direction: column; }
+.pu-kind-menu a { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; color: var(--ink); font-size: 13px; text-decoration: none; }
+.pu-kind-menu a em { margin-left: auto; background: var(--surface-2); color: var(--muted); }
+.pu-kind-menu a i { font-style: normal; color: #00a89b; font-weight: 700; }
+.pu-kind-menu a:hover { background: var(--surface-2); }
+.pu-kind-menu a.on { background: var(--teal-bg); font-weight: 700; }
