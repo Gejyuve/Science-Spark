@@ -16,13 +16,13 @@ export async function register(formData) {
   const exists = await sql`SELECT 1 FROM users WHERE email = ${email}`;
   if (exists.length) back("/register", "Энэ имэйл бүртгэлтэй байна");
 
-  // Овог, нэрийг дараагийн алхамд (/welcome) асууна.
+  // Овог, нэрийг бүртгүүлсний дараах профайл үүсгэх хуудсанд (/profile/edit) асууна.
   const rows = await sql`
     INSERT INTO users (email, password_hash, initial, first_name)
     VALUES (${email}, ${hashPassword(password)}, '', '')
     RETURNING id`;
   await createSession(rows[0].id);
-  redirect("/welcome");
+  redirect("/profile/edit");
 }
 
 export async function login(formData) {
@@ -65,19 +65,4 @@ export async function changePassword(formData) {
   await sql`DELETE FROM sessions WHERE user_id = ${user.id}`;
   await createSession(user.id);
   done("Нууц үг солигдлоо", true);
-}
-
-// Бүртгүүлсний дараах алхам: олон нийтэд харагдах нэр (жишээ нь А.Доржпалам)
-export async function saveName(formData) {
-  const user = await getUser();
-  if (!user) redirect("/login");
-  const initial = String(formData.get("initial") || "").trim().slice(0, 1).toUpperCase();
-  const first = String(formData.get("first_name") || "").trim();
-  // Хувь хүний нэр зөвхөн кирилл үсгээр (латин үсэг хориотой)
-  if (!/^[А-ЯЁӨҮ]$/.test(initial) || !/^[А-ЯЁӨҮа-яёөү-]{2,30}$/.test(first)) {
-    back("/welcome", "Овгийн эхний үсэг, нэрээ кирилл үсгээр бичнэ үү");
-  }
-  const nameFirst = first[0].toUpperCase() + first.slice(1);
-  await sql`UPDATE users SET initial = ${initial}, first_name = ${nameFirst} WHERE id = ${user.id}`;
-  redirect("/");
 }

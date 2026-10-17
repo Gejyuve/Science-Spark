@@ -111,7 +111,7 @@ async function RightRail({ user }) {
             </div>
           </Link>
           <div className="ss-actions">
-            <Link href="/profile" className="ss-action">{I("gear", 18)}<span>Тохиргоо</span>{I("arrow", 14)}</Link>
+            <Link href="/profile/edit" className="ss-action">{I("gear", 18)}<span>Тохиргоо</span>{I("arrow", 14)}</Link>
             <Link href="/notifications" className="ss-action">
               {I("bell", 18)}<span>Мэдэгдэл</span>
               {unread > 0 && <em className="ss-badge red">{unread}</em>}
@@ -160,7 +160,7 @@ async function RightRail({ user }) {
 }
 
 export default async function Shell({ user, active, children, header = true }) {
-  if (needsName(user)) redirect("/welcome");
+  if (needsName(user)) redirect("/profile/edit");
   return (
     <div className="ss-shell">
       <Sidebar active={active} />
