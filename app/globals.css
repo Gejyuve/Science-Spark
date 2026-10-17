@@ -1548,3 +1548,4 @@ a.ss-kind:hover { text-decoration: underline; }
 @media (max-width: 760px) { .evc-cover { aspect-ratio: 2 / 1; min-height: 0; } }
 .ss-reshuffle { color: #00a89b; font-size: 13px; font-weight: 700; text-decoration: none; }
 .ss-reshuffle:hover { text-decoration: underline; }
+.ss-reshuffle { white-space: nowrap; }

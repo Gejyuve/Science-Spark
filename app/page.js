@@ -73,7 +73,7 @@ export default async function Home({ searchParams }) {
         <div className="ss-topbar"><span aria-hidden="true">✦</span>Сүүлийн 24 цагийн хамгийн их оч авсан контентууд</div>
       )}
       {rand && (
-        <div className="ss-topbar"><span aria-hidden="true">⚄</span>Санамсаргүй дарааллаар · таны үзээгүй контент эхэнд
+        <div className="ss-topbar"><span aria-hidden="true">⚄</span>Санамсаргүй дараалал
           <span className="ss-grow" /><Link href={`/?f=rand&r=${seed.slice(0, 8)}`} className="ss-reshuffle">Дахин холих</Link></div>
       )}
       {ann && (
