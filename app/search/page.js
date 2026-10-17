@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
+import { getUser } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
+import Shell from "../components/Shell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хайлт · Science Spark" };
 
 export default async function SearchPage({ searchParams }) {
+  const user = await getUser();
   const { q = "" } = await searchParams;
   const term = String(q).trim().slice(0, 100);
   await ensureSchema();
@@ -22,8 +25,8 @@ export default async function SearchPage({ searchParams }) {
       SELECT id, initial, first_name FROM users WHERE first_name ILIKE ${like} LIMIT 10`;
   }
   return (
-    <div className="auth-wrap top">
-      <div className="auth-card wide">
+    <Shell user={user} header={false}>
+      <div className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
         <form action="/search" method="get" className="stack">
           <input name="q" defaultValue={term} placeholder="Хайх…" autoFocus />
@@ -41,6 +44,6 @@ export default async function SearchPage({ searchParams }) {
           </div>
         ))}
       </div>
-    </div>
+    </Shell>
   );
 }

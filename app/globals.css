@@ -202,7 +202,7 @@ details.mod summary { cursor: pointer; }
 /* ===== Figma дизайн: нийтлэг бүтэц (ss-*) ===== */
 .ss-shell {
   display: grid; grid-template-columns: 274px minmax(0, 1100px) 274px;
-  gap: 40px; justify-content: center; padding: 24px; min-height: 100vh; align-items: start;
+  gap: 40px; justify-content: center; padding: 24px; min-height: 100vh; align-items: start; align-content: start;
 }
 .ss-side {
   position: sticky; top: 24px; height: calc(100vh - 48px); display: flex; flex-direction: column;
@@ -351,3 +351,23 @@ details.mod summary { cursor: pointer; }
   .ss-card { padding: 14px 16px 16px; }
   .ss-actionbar { gap: 10px; }
 }
+
+/* Дотоод хуудсууд (нийтлэл, профайл, хайлт…) шинэ бүтэц дотор */
+.ss-page { padding: 28px 32px; gap: 14px; }
+.ss-page h1 { margin: 0; font-size: 26px; color: var(--ink); }
+.ss-page h3 { margin: 10px 0 0; color: var(--ink); }
+.ss-page a { color: var(--teal); }
+.ss-page .body { color: var(--text); font-size: 16px; }
+.ss-page label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.ss-page input, .ss-page select, .ss-page textarea {
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--ink); font-size: 15px; font-family: inherit;
+}
+.ss-page .btn { border-radius: 14px; }
+.ss-page .btn:not(.ghost) { background: var(--accent); }
+.ss-page .chip { background: transparent; color: var(--accent); padding: 0; font-weight: 500; font-size: 13px; }
+.ss-page .avatar { background: var(--accent); }
+.ss-page .stats div { background: var(--surface-2); }
+.ss-page .comment, .ss-page .actions, .ss-page .notif { border-color: #edf2f5; }
+.ss-page .credits a, .ss-page .meta a, .ss-page .comment a { color: var(--text); }
+@media (max-width: 760px) { .ss-page { padding: 18px 16px; } }

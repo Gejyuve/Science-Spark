@@ -4,6 +4,7 @@ import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment } from "../../posts/actions";
+import Shell from "../../components/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -37,8 +38,8 @@ export default async function PostPage({ params, searchParams }) {
     : false;
 
   return (
-    <div className="auth-wrap top">
-      <article className="auth-card wide">
+    <Shell user={user} header={false}>
+      <article className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
         <span className="chip">{post.kind}</span>
         <h1>{post.title}</h1>
@@ -113,6 +114,6 @@ export default async function PostPage({ params, searchParams }) {
           </details>
         )}
       </article>
-    </div>
+    </Shell>
   );
 }

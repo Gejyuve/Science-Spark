@@ -5,6 +5,7 @@ import { getUser } from "@/lib/auth";
 import { levelFor } from "@/lib/levels";
 import { fmtDate } from "@/lib/format";
 import { toggleFollow } from "../../posts/actions";
+import Shell from "../../components/Shell";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +33,8 @@ export default async function PublicProfile({ params }) {
     : false;
 
   return (
-    <div className="auth-wrap top">
-      <div className="auth-card wide">
+    <Shell user={me} header={false}>
+      <div className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
         <div className="avatar">{u.first_name[0]}</div>
         <h1>{u.initial}.{u.first_name}</h1>
@@ -62,6 +63,6 @@ export default async function PublicProfile({ params }) {
         ))}
         {posts.length === 0 && <p className="muted">Нийтлэл алга.</p>}
       </div>
-    </div>
+    </Shell>
   );
 }

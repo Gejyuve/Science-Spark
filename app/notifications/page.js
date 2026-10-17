@@ -5,6 +5,7 @@ import { getUser } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { NOTIFY_TEXT } from "@/lib/notify";
 import { markAllRead } from "../posts/actions";
+import Shell from "../components/Shell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Мэдэгдэл · Science Spark" };
@@ -24,8 +25,8 @@ export default async function NotificationsPage() {
   const unread = items.filter((n) => !n.read_at).length;
 
   return (
-    <div className="auth-wrap top">
-      <div className="auth-card wide">
+    <Shell user={user} header={false}>
+      <div className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
         <h1>Мэдэгдэл</h1>
         {unread > 0 && (
@@ -50,6 +51,6 @@ export default async function NotificationsPage() {
           </div>
         ))}
       </div>
-    </div>
+    </Shell>
   );
 }

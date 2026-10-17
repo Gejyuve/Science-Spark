@@ -4,6 +4,7 @@ import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { reviewPost } from "../posts/actions";
+import Shell from "../components/Shell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хянах самбар · Science Spark" };
@@ -24,8 +25,8 @@ export default async function ReviewPage({ searchParams }) {
     WHERE p.reviewed_at IS NOT NULL ORDER BY p.reviewed_at DESC LIMIT 15`;
   const LABEL = { published: "батлагдсан", rejected: "татгалзсан", removed: "хасагдсан" };
   return (
-    <div className="auth-wrap top">
-      <div className="auth-card wide">
+    <Shell user={user} header={false}>
+      <div className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
         <h1>Хянах самбар</h1>
         {error && <p className="error">{error}</p>}
@@ -63,6 +64,6 @@ export default async function ReviewPage({ searchParams }) {
           </div>
         ))}
       </div>
-    </div>
+    </Shell>
   );
 }

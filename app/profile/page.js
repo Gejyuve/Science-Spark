@@ -4,6 +4,7 @@ import { getUser, displayName } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import { levelFor } from "@/lib/levels";
 import { logout, changePassword } from "../auth/actions";
+import Shell from "../components/Shell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Профайл · Science Spark" };
@@ -18,8 +19,8 @@ export default async function ProfilePage({ searchParams }) {
   const joined = new Date(user.created_at).toISOString().slice(0, 10).replaceAll("-", ".");
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
+    <Shell user={user} header={false}>
+      <div className="ss-card ss-page">
         <div className="avatar">{user.first_name[0]}</div>
         <h1>{displayName(user)}</h1>
         <p className="muted">{user.email}</p>
@@ -53,6 +54,6 @@ export default async function ProfilePage({ searchParams }) {
         <form action={logout}><button className="btn ghost" type="submit">Гарах</button></form>
         <p className="muted"><Link href="/">← Нүүр</Link></p>
       </div>
-    </div>
+    </Shell>
   );
 }

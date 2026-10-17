@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isSuperAdmin, ROLE_LABELS } from "@/lib/auth";
 import { setRole } from "../posts/actions";
+import Shell from "../components/Shell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Супер админ · Science Spark" };
@@ -19,8 +20,8 @@ export default async function AdminPage() {
   await ensureSchema();
   const users = await sql`SELECT id, initial, first_name, email, role FROM users ORDER BY id`;
   return (
-    <div className="auth-wrap top">
-      <div className="auth-card wide">
+    <Shell user={user} header={false}>
+      <div className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
         <h1>Хэрэглэгчид</h1>
         {users.map((u) => (
@@ -43,6 +44,6 @@ export default async function AdminPage() {
           </form>
         ))}
       </div>
-    </div>
+    </Shell>
   );
 }
