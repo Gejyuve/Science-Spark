@@ -2253,7 +2253,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 /* Бичих хуудас: зүүн талд бүтэц, баруун талд тоолуур (gejyuve.com/postcreate шиг) */
 .wr-layout { position: relative; z-index: 1; display: grid; grid-template-columns: 250px minmax(0, 840px) 250px; justify-content: center; gap: 24px; align-items: start; margin-top: 4px; }
 .wr-layout .wr-col { margin: 0; }
-.wr-side { position: sticky; top: 16px; }
+.wr-side { position: sticky; top: 16px; height: auto; padding: 0; border-radius: 0; background: none; box-shadow: none; border: 0; }
 .wo-outline { display: flex; flex-direction: column; gap: 12px; min-height: 300px; max-height: calc(100vh - 40px); overflow: auto; padding: 20px 18px; border-radius: 22px; background: var(--surface); box-shadow: var(--card-shadow); }
 .wo-outline > b { font-size: 14px; color: var(--ink); }
 .wo-outline ol { position: relative; list-style: none; margin: 0; padding: 0 0 0 4px; display: flex; flex-direction: column; gap: 4px; }
