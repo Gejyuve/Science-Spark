@@ -21,7 +21,7 @@ export default async function ProfilePage({ searchParams }) {
   return (
     <Shell user={user} header={false}>
       <div className="ss-card ss-page">
-        <div className="avatar">{user.first_name[0]}</div>
+        <div className="avatar">{(user.first_name || "?")[0]}</div>
         <h1>{displayName(user)}</h1>
         <p className="muted">{user.email}</p>
         {error && <p className="error">{error}</p>}

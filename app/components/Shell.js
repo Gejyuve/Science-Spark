@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import { sql } from "@/lib/db";
-import { displayName, isStaff } from "@/lib/auth";
+import { displayName, isStaff, needsName } from "@/lib/auth";
 import { unreadCount } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat } from "./Bits";
@@ -159,6 +160,7 @@ async function RightRail({ user }) {
 }
 
 export default async function Shell({ user, active, children, header = true }) {
+  if (needsName(user)) redirect("/welcome");
   return (
     <div className="ss-shell">
       <Sidebar active={active} />

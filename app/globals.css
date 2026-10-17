@@ -552,3 +552,4 @@ details.mod summary { cursor: pointer; }
   .wr-foot { padding: 16px 18px; }
   .wr-go { padding: 0 18px; font-size: 14px; }
 }
+.au-step { margin: -4px 0 0; font-size: 14px; color: var(--text); text-align: center; }

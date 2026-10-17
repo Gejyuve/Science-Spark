@@ -36,7 +36,7 @@ export default async function PublicProfile({ params }) {
     <Shell user={me} header={false}>
       <div className="ss-card ss-page">
         <p className="muted"><Link href="/">← Нүүр</Link></p>
-        <div className="avatar">{u.first_name[0]}</div>
+        <div className="avatar">{(u.first_name || "?")[0]}</div>
         <h1>{u.initial}.{u.first_name}</h1>
         <div className="stats four">
           <div><b>{u.points}</b><span>оч</span></div>

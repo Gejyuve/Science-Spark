@@ -9,14 +9,6 @@ const back = (path, msg) => redirect(`${path}?error=${encodeURIComponent(msg)}`)
 export async function register(formData) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
-  const initial = String(formData.get("initial") || "").trim().slice(0, 1).toUpperCase();
-  const first = String(formData.get("first_name") || "").trim();
-
-  if (!initial || !first) back("/register", "Овгийн эхний үсэг болон нэрээ бөглөнө үү");
-  // Хувь хүний нэр зөвхөн кирилл үсгээр (латин үсэг хориотой)
-  if (!/^[А-ЯЁӨҮ]$/.test(initial) || !/^[А-ЯЁӨҮа-яёөү-]{2,30}$/.test(first)) {
-    back("/register", "Овог, нэрээ кирилл үсгээр бичнэ үү");
-  }
   if (!/^\S+@\S+\.\S+$/.test(email)) back("/register", "Имэйл хаяг буруу байна");
   if (password.length < 8) back("/register", "Нууц үг хамгийн багадаа 8 тэмдэгт байна");
 
@@ -24,13 +16,13 @@ export async function register(formData) {
   const exists = await sql`SELECT 1 FROM users WHERE email = ${email}`;
   if (exists.length) back("/register", "Энэ имэйл бүртгэлтэй байна");
 
-  const nameFirst = first[0].toUpperCase() + first.slice(1);
+  // Овог, нэрийг дараагийн алхамд (/welcome) асууна.
   const rows = await sql`
     INSERT INTO users (email, password_hash, initial, first_name)
-    VALUES (${email}, ${hashPassword(password)}, ${initial}, ${nameFirst})
+    VALUES (${email}, ${hashPassword(password)}, '', '')
     RETURNING id`;
   await createSession(rows[0].id);
-  redirect("/profile");
+  redirect("/welcome");
 }
 
 export async function login(formData) {
@@ -50,7 +42,7 @@ export async function login(formData) {
   }
   await sql`DELETE FROM login_attempts WHERE email = ${email} OR created_at < now() - interval '1 day'`;
   await createSession(rows[0].id);
-  redirect("/profile");
+  redirect("/");
 }
 
 export async function logout() {
@@ -73,4 +65,19 @@ export async function changePassword(formData) {
   await sql`DELETE FROM sessions WHERE user_id = ${user.id}`;
   await createSession(user.id);
   done("Нууц үг солигдлоо", true);
+}
+
+// Бүртгүүлсний дараах алхам: олон нийтэд харагдах нэр (жишээ нь А.Доржпалам)
+export async function saveName(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const initial = String(formData.get("initial") || "").trim().slice(0, 1).toUpperCase();
+  const first = String(formData.get("first_name") || "").trim();
+  // Хувь хүний нэр зөвхөн кирилл үсгээр (латин үсэг хориотой)
+  if (!/^[А-ЯЁӨҮ]$/.test(initial) || !/^[А-ЯЁӨҮа-яёөү-]{2,30}$/.test(first)) {
+    back("/welcome", "Овгийн эхний үсэг, нэрээ кирилл үсгээр бичнэ үү");
+  }
+  const nameFirst = first[0].toUpperCase() + first.slice(1);
+  await sql`UPDATE users SET initial = ${initial}, first_name = ${nameFirst} WHERE id = ${user.id}`;
+  redirect("/");
 }

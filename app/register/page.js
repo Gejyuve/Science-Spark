@@ -17,10 +17,6 @@ export default async function RegisterPage({ searchParams }) {
         <span className="au-type soon" title="Тун удахгүй"><img src="/icons/torg.svg" width={34} height={34} alt="" />Байгууллага</span>
         <span className="au-type soon" title="Тун удахгүй"><img src="/icons/tclub.svg" width={34} height={34} alt="" />Клуб</span>
       </div>
-      <div className="au-row">
-        <Field icon={null} name="initial" maxLength={1} required placeholder="Овог (Х)" aria-label="Овгийн эхний үсэг" className="au-initial" />
-        <Field icon={null} name="first_name" required placeholder="Нэр" aria-label="Нэр" />
-      </div>
       <Field name="email" type="email" required autoComplete="email" placeholder="Мэйл" aria-label="Мэйл" />
       <Field icon={null} name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="Нууц үг (8+ тэмдэгт)" aria-label="Нууц үг" />
     </AuthCard>

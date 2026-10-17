@@ -3,13 +3,14 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, isSuperAdmin, isAdmin } from "@/lib/auth";
+import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { KINDS } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
+  if (needsName(user)) redirect("/welcome");
   const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
   const title = String(formData.get("title") || "").trim().slice(0, 200);
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
@@ -30,6 +31,7 @@ export async function createPost(formData) {
 export async function addComment(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
+  if (needsName(user)) redirect("/welcome");
   const postId = Number(formData.get("post_id"));
   const body = String(formData.get("body") || "").trim().slice(0, 2000);
   if (!Number.isInteger(postId) || !body) return;
