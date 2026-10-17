@@ -9,7 +9,7 @@ import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
 import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { ownImage } from "@/lib/images";
-import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
+import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
@@ -265,6 +265,7 @@ export async function quickPost(formData) {
     if (!title || !body || !meta.type || !meta.starts_at || !meta.ends_at || !meta.format || !meta.location || !meta.price || !meta.register) {
       fail("Одтой (*) бүх талбарыг бөглөнө үү");
     }
+    if (body.length < EVENT_BODY_MIN) fail(`Эвентийн тайлбарыг дор хаяж ${EVENT_BODY_MIN} тэмдэгтээр бичнэ үү`);
     if (!validLocal(meta.starts_at) || !validLocal(meta.ends_at)) fail("Эхлэх, дуусах огноо цагийг зөв оруулна уу");
     const span = toMin(meta.ends_at) - toMin(meta.starts_at);
     if (span <= 0) fail("Дуусах цаг эхлэх цагаас хойш байх ёстой");

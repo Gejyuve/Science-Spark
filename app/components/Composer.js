@@ -4,25 +4,25 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
 import ImageInput from "./ImageInput";
-import { EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
+import { EVENT_TYPES, EVENT_FORMATS, EVENT_BODY_MIN, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
 const Ic = ({ n, s = 18 }) => <img className="ic" src={`/icons/${n}.svg`} width={s} height={s} alt="" />;
 
-function Counted({ name, max, rows, placeholder, required, latinCheck }) {
+function Counted({ name, max, min = 0, rows, placeholder, required, latinCheck }) {
   const [v, setV] = useState("");
   const tooLatin = latinCheck && latinShare(v) > LATIN_LIMIT;
   return (
     <div className={"cp-area" + (tooLatin ? " bad" : "")}>
       <textarea
-        name={name} maxLength={max} rows={rows} value={v} placeholder={placeholder} required={required}
+        name={name} maxLength={max} minLength={min || undefined} rows={rows} value={v} placeholder={placeholder} required={required}
         onChange={(e) => {
           setV(e.target.value);
           e.target.setCustomValidity(latinCheck && latinShare(e.target.value) > LATIN_LIMIT ? LATIN_MSG : "");
         }}
       />
       {tooLatin && <em className="cp-latin">{LATIN_MSG}</em>}
-      <span>{v.length} / {max}</span>
+      <span className={min && v.trim().length < min ? "cp-short" : ""}>{min && v.trim().length < min ? `дор хаяж ${min} · ` : ""}{v.length} / {max}</span>
     </div>
   );
 }
@@ -162,7 +162,7 @@ export default function Composer({ loggedIn, initial, error }) {
           <Field icon="f_ticket"><input name="price" required maxLength={60} placeholder="Тасалбарын үнэ (₮ эсвэл үнэгүй) *" /></Field>
           <Field icon="f_people"><input name="capacity" inputMode="numeric" maxLength={10} placeholder="Бүртгэх хүний хязгаар (заавал биш)" /></Field>
         </div>
-        <Counted name="body" max={1000} rows={5} required latinCheck placeholder="Эвентийн дэлгэрэнгүй тайлбар… *" />
+        <Counted name="body" max={1000} min={EVENT_BODY_MIN} rows={5} required latinCheck placeholder={`Эвентийн дэлгэрэнгүй тайлбар (дор хаяж ${EVENT_BODY_MIN} тэмдэгт)… *`} />
         <Counted name="register" max={500} rows={3} required latinCheck placeholder="Бүртгүүлэх заавар (хэрхэн бүртгүүлэх, ямар мэдээлэл шаардах, холбоос хэзээ ирэх)… *" />
         <div className="cp-split">
           <div className="cp-col">

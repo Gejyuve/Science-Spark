@@ -68,7 +68,6 @@ export default function PostCard({ p, viewer, following }) {
           <span className="evc-crumb"><Link href="/events" className="ss-kind">Эвент</Link><i>·</i><span>{m.type || "Бусад"}</span></span>
           <When d={p.created_at} />
         </div>
-        <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
         <div className="evc-meta">
           <span><img className="ic" src="/icons/f_pin.svg" width={16} height={16} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
           <span className="tip" data-tip={`Энэ контентыг ${p.views || 0} хүн нээж үзсэн`}><img className="ic" src="/icons/eye.svg" width={16} height={16} alt="" />{p.views || 0}</span>

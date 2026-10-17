@@ -1502,3 +1502,6 @@ a.ss-kind:hover { text-decoration: underline; }
   .evc-cover { order: -1; min-height: 0; aspect-ratio: 2 / 1; }
   .evc-title { font-size: 19px; }
 }
+.cp-short { color: #c2400d; }
+.evc-cover { aspect-ratio: 1; min-height: 0; align-self: start; }
+.evc-text { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
