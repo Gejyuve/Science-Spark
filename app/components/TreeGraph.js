@@ -39,6 +39,15 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   const [open, setOpen] = useState(() => new Set(initialOpen));
   const [sel, setSel] = useState(focus);
   const [view, setView] = useState({ x: 40, y: 40, k: 1 });
+  const [full, setFull] = useState(false);
+  // Бүтэн дэлгэц: Esc дарж гарна, хуудас гүйхгүй
+  useEffect(() => {
+    if (!full) return;
+    const esc = (e) => e.key === "Escape" && setFull(false);
+    document.addEventListener("keydown", esc);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", esc); document.body.style.overflow = ""; };
+  }, [full]);
   const { nodes, links, w, h } = useMemo(() => layout(tree, open), [tree, open]);
 
   const fit = useCallback(() => {
@@ -54,7 +63,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   useEffect(() => {
     if (box.current && box.current.clientWidth < 760 && !focus) setOpen(new Set(["", "nat"]));
   }, [focus]);
-  useEffect(() => { fit(); }, [fit]);
+  useEffect(() => { fit(); }, [fit, full]);
   useEffect(() => {
     const on = () => fit();
     window.addEventListener("resize", on);
@@ -99,7 +108,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   }, []);
 
   return (
-    <section className="tg-card">
+    <section className={"tg-card" + (full ? " full" : "")}>
       <div ref={box} className={"tg-stage" + (drag.current ? " dragging" : "")} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
         <svg className="tg-svg" width="100%" height="100%" role="img" aria-label="Шинжлэх ухааны мод">
           <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
@@ -127,8 +136,10 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
         <div className="tg-zoom">
           <button type="button" onClick={() => zoom(1.2)} aria-label="Томруулах">+</button>
           <button type="button" onClick={() => zoom(1 / 1.2)} aria-label="Жижигрүүлэх">−</button>
-          <button type="button" onClick={fit} aria-label="Бүтэн харах">
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Бүтэн дэлгэцээс гарах" : "Бүтэн дэлгэцээр харах"} title={full ? "Бүтэн дэлгэцээс гарах (Esc)" : "Бүтэн дэлгэцээр харах"}>
+            {full
+              ? <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 1v4H1M13 5H9V1M9 13V9h4M1 9h4v4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              : <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
           </button>
         </div>
         <p className="tg-hint">Тойрог дээр дарж задлах · нэр дээр дарж салбарын нийтлэлүүдийг үзэх · чирж хөдөлгөх</p>
