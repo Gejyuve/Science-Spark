@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
+import { audit } from "@/lib/admin";
 import { hashPassword, verifyPassword, createSession, destroySession, getUser } from "@/lib/auth";
 
 const back = (path, msg) => redirect(`${path}?error=${encodeURIComponent(msg)}`);
@@ -38,6 +39,7 @@ export async function login(formData) {
   const rows = await sql`SELECT id, password_hash FROM users WHERE email = ${email}`;
   if (!rows.length || !verifyPassword(password, rows[0].password_hash)) {
     await sql`INSERT INTO login_attempts (email) VALUES (${email})`;
+    await audit({ category: "login", action: "Нэвтрэх оролдлого амжилтгүй", targetType: "email", targetLabel: email.replace(/^(.{2}).*(@.*)$/, "$1***$2"), ok: false });
     back("/login", "Имэйл эсвэл нууц үг буруу байна");
   }
   await sql`DELETE FROM login_attempts WHERE email = ${email} OR created_at < now() - interval '1 day'`;

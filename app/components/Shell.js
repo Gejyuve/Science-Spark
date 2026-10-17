@@ -4,7 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 import Composer from "./Composer";
 import { logout } from "../auth/actions";
 import { sql } from "@/lib/db";
-import { displayName, isStaff, needsName } from "@/lib/auth";
+import { displayName, isStaff, isAdmin, needsName } from "@/lib/auth";
 import { unreadCount } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat } from "./Bits";
@@ -20,7 +20,7 @@ const NAV = [
   { icon: "game", label: "Тоглоом" },
 ];
 
-function Sidebar({ active }) {
+function Sidebar({ active, user }) {
   return (
     <aside className="ss-side">
       <form action="/search" method="get" className="ss-search">
@@ -51,6 +51,14 @@ function Sidebar({ active }) {
         </span>
       </nav>
       <div className="ss-grow" />
+      {isStaff(user) && (
+        <div className="ss-staff">
+          <Link href="/review" className="ss-staff-btn"><img src="/icons/p_shield.svg" width={18} height={18} alt="" />Хяналт</Link>
+          {isAdmin(user) && (
+            <Link href="/admin" className="ss-staff-btn"><img src="/icons/p_crown.svg" width={18} height={18} alt="" />Редакц · Админ</Link>
+          )}
+        </div>
+      )}
       <ThemeToggle />
     </aside>
   );
@@ -123,8 +131,8 @@ async function RightRail({ user }) {
                 {I("arrow", 14)}
               </Link>
             )}
-            {user.role === "superadmin" && (
-              <Link href="/admin" className="ss-action">{I("shield", 18)}<span>Супер админ</span>{I("arrow", 14)}</Link>
+            {isAdmin(user) && (
+              <Link href="/admin" className="ss-action">{I("shield", 18)}<span>Админ боард</span>{I("arrow", 14)}</Link>
             )}
             <form action={logout}>
               <button type="submit" className="ss-action ss-logout">
@@ -162,7 +170,7 @@ export default async function Shell({ user, active, children, header = true, com
   if (needsName(user)) redirect("/profile/edit");
   return (
     <div className="ss-shell">
-      <Sidebar active={active} />
+      <Sidebar active={active} user={user} />
       <main className="ss-main">
         {header && <Header user={user} compact={header === "nav"} compose={compose} composeError={composeError} />}
         {children}

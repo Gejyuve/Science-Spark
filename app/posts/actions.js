@@ -5,11 +5,13 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
+import { audit } from "@/lib/admin";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
+  if (user.restricted_at) redirect(`/?error=${encodeURIComponent("Таны эрх хязгаарлагдсан байна")}`);
   if (needsName(user)) redirect("/profile/edit");
   const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
   const title = String(formData.get("title") || "").trim().slice(0, 200);
@@ -31,6 +33,7 @@ export async function createPost(formData) {
 export async function addComment(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
+  if (user.restricted_at) redirect(`/?error=${encodeURIComponent("Таны эрх хязгаарлагдсан байна")}`);
   if (needsName(user)) redirect("/profile/edit");
   const postId = Number(formData.get("post_id"));
   const body = String(formData.get("body") || "").trim().slice(0, 2000);
@@ -49,6 +52,7 @@ export async function addComment(formData) {
 export async function sparkPost(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
+  if (user.restricted_at) redirect(`/?error=${encodeURIComponent("Таны эрх хязгаарлагдсан байна")}`);
   const postId = Number(formData.get("post_id"));
   if (!Number.isInteger(postId)) return;
   await ensureSchema();
@@ -125,8 +129,9 @@ export async function reviewPost(formData) {
   const done = await sql`UPDATE posts SET status = ${decision}, reviewer_id = ${user.id},
             reviewed_at = now(), review_note = ${note}
             WHERE id = ${postId} AND author_id <> ${user.id} AND status = 'pending'
-            RETURNING author_id`;
+            RETURNING author_id, title`;
   if (done.length) {
+    await audit({ actorId: user.id, category: "content", action: decision === "published" ? "Нийтлэл баталсан" : `Нийтлэл буцаасан (${note})`, targetType: "post", targetId: postId, targetLabel: done[0].title });
     await notify({
       userId: done[0].author_id,
       kind: decision === "published" ? "approved" : "rejected",
@@ -164,8 +169,9 @@ export async function removePost(formData) {
   await ensureSchema();
   const done = await sql`UPDATE posts SET status = 'removed', reviewer_id = ${user.id},
             reviewed_at = now(), review_note = ${note}
-            WHERE id = ${postId} AND status = 'published' RETURNING author_id`;
+            WHERE id = ${postId} AND status = 'published' RETURNING author_id, title`;
   if (done.length) {
+    await audit({ actorId: user.id, category: "content", action: `Контент нуусан (${note})`, targetType: "post", targetId: postId, targetLabel: done[0].title });
     await notify({ userId: done[0].author_id, kind: "removed", actorId: user.id, postId, note });
   }
   revalidatePath(`/post/${postId}`);
@@ -202,6 +208,7 @@ export async function markAllRead() {
 export async function quickPost(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
+  if (user.restricted_at) redirect(`/?error=${encodeURIComponent("Таны эрх хязгаарлагдсан байна")}`);
   if (needsName(user)) redirect("/profile/edit");
   const kind = String(formData.get("kind"));
   if (!QUICK_KINDS.includes(kind)) redirect("/");
