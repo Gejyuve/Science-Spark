@@ -54,10 +54,10 @@ function Sidebar({ active }) {
   );
 }
 
-function Header({ user }) {
+function Header({ user, compact }) {
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
-    <header className="ss-header">
+    <header className={"ss-header" + (compact ? " compact" : "")}>
       <div className="ss-topnav">
         <span className="ss-round soon" title="Тун удахгүй">{I("hspark")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("dice")}</span>
@@ -69,6 +69,7 @@ function Header({ user }) {
         <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("club", 24)}</span>
       </div>
+      {!compact && <>
       <Link href={write()} className="ss-composer">
         {I("person", 32)}
         <span>{user ? "Өнөөдөр ямар оч асаах гэж байна даа?" : "Нийтлэл бичихийн тулд нэвтэрнэ үү"}</span>
@@ -78,6 +79,7 @@ function Header({ user }) {
         <Link href={write("Асуулт")}>{I("asktab")}<span>Асууя</span></Link>
         <Link href={write("Мэдээ")}>{I("share")}<span>Хуваалцъя</span></Link>
       </div>
+      </>}
     </header>
   );
 }
@@ -165,7 +167,7 @@ export default async function Shell({ user, active, children, header = true }) {
     <div className="ss-shell">
       <Sidebar active={active} />
       <main className="ss-main">
-        {header && <Header user={user} />}
+        {header && <Header user={user} compact={header === "nav"} />}
         {children}
       </main>
       <RightRail user={user} />

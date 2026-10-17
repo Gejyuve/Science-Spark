@@ -198,7 +198,7 @@ export default function ProfileForm({ user, profile, error, isNew }) {
 
       <section className="pf-card">
         <h2>Миний үзэл суртал</h2>
-        <p className="pf-sub">Зөвхөн танд харагдана</p>
+        <p className="pf-sub">Бөглөсөн тохиолдолд бусад хүмүүст харагдана</p>
         <Label k="origin_view" on={earned.origin_view}>Амьдралын үүслийн тухай үзэл</Label>
         <Select name="origin_view" options={OPTIONS.origin_view} value={p.origin_view} placeholder="Сонгоно уу" />
         <Label k="religion" on={earned.religion}>Шашны урсгал</Label>
