@@ -1539,3 +1539,7 @@ a.ss-kind:hover { text-decoration: underline; }
 .evc-url, .evd-url { color: var(--teal); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; position: relative; z-index: 2; }
 .anc .evc-meta > span:first-child:empty { visibility: hidden; }
 .cp-dtf.half { grid-column: auto; }
+/* Figma 754:2821 · Spark · 24 цаг */
+.ss-topbar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 18px; border-radius: 12px; background: #e6f7f5; border: 1px solid #c9eeea; color: #00796f; font-size: 14px; font-weight: 600; }
+.ss-topbar span { color: #00a89b; font-size: 15px; }
+:root[data-theme="dark"] .ss-topbar { background: rgba(0, 168, 155, .12); border-color: rgba(0, 168, 155, .3); color: #5ee6d0; }

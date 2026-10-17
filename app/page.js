@@ -11,6 +11,7 @@ export default async function Home({ searchParams }) {
   const { tab, compose, error, f } = await searchParams;
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
   const ann = f === "ann"; // Зарлалууд
+  const top = f === "top"; // Сүүлийн 24 цагт хамгийн их оч авсан
   const following = tab === "following";
   let user = null;
   let posts = [];
@@ -26,7 +27,8 @@ export default async function Home({ searchParams }) {
         ta.id AS ta_id, ta.body AS ta_body, ta.author_id AS ta_author, ta.initial AS ta_initial, ta.first_name AS ta_first,
         ta.points AS ta_points, ta.followers AS ta_followers, ta.avatar AS ta_avatar,
         EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved,
-        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked
+        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked,
+        (SELECT COUNT(*) FROM sparks WHERE post_id = p.id AND created_at > now() - interval '24 hours')::int AS sparks24
       FROM posts p JOIN users u ON u.id = p.author_id
       -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
       LEFT JOIN LATERAL (
@@ -43,19 +45,26 @@ export default async function Home({ searchParams }) {
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
         AND (${!following || !user}::boolean OR p.author_id IN
              (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))
-      ORDER BY p.created_at DESC LIMIT 30`;
+      ORDER BY
+        CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id AND created_at > now() - interval '24 hours') END DESC NULLS LAST,
+        CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id) END DESC NULLS LAST,
+        p.created_at DESC
+      LIMIT 30`;
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
   }
 
   const followSet = await followingSet(user);
   return (
-    <Shell user={user} active={qa ? "qa" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
+    <Shell user={user} active={qa ? "qa" : top ? "top" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {qa && (
         <div className="ss-feedtabs">
           <span className="on">Асуулт ба бодрол · сүүлд орсноор</span>
           <Link href="/">× Бүгдийг харах</Link>
         </div>
+      )}
+      {top && (
+        <div className="ss-topbar"><span aria-hidden="true">✦</span>Сүүлийн 24 цагийн хамгийн их оч авсан контентууд</div>
       )}
       {ann && (
         <div className="ss-feedtabs">
@@ -63,7 +72,7 @@ export default async function Home({ searchParams }) {
           <Link href="/">× Бүгдийг харах</Link>
         </div>
       )}
-      {user && !qa && !ann && (
+      {user && !qa && !ann && !top && (
         <div className="ss-feedtabs">
           <Link href="/" className={following ? "" : "on"}>Бүгд</Link>
           <Link href="/?tab=following" className={following ? "on" : ""}>Дагаж буй</Link>
