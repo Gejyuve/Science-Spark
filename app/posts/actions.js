@@ -42,10 +42,10 @@ export async function createPost(formData) {
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
     INSERT INTO posts (author_id, kind, title, subtitle, body, status, image_id, category, meta)
-    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending', ${await ownImage(user.id, formData.get("image"))}, ${category}, ${JSON.stringify(articleMeta(formData))}::jsonb)
+    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'draft', ${await ownImage(user.id, formData.get("image"))}, ${category}, ${JSON.stringify(articleMeta(formData))}::jsonb)
     RETURNING id`;
   revalidatePath("/");
-  redirect(`/post/${rows[0].id}`);
+  redirect(`/post/${rows[0].id}/preview`);
 }
 
 export async function addComment(formData) {
@@ -122,11 +122,25 @@ export async function updatePost(formData) {
   const imageId = await ownImage(user.id, formData.get("image"));
   await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
             meta = COALESCE(meta, '{}'::jsonb) || ${JSON.stringify(articleMeta(formData))}::jsonb,
-            status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
+            status = 'draft', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
             WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
-  redirect(`/post/${postId}`);
+  redirect(`/post/${postId}/preview`);
+}
+
+// Урьдчилж харсны дараа редакц руу илгээх (Figma 454:272)
+export async function submitDraft(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) redirect("/");
+  if (!formData.get("agree")) redirect(`/post/${postId}/preview?error=${encodeURIComponent("Дүрэм ба зарчмыг зөвшөөрнө үү")}`);
+  await ensureSchema();
+  const d = await sql`UPDATE posts SET status = 'pending', created_at = now() WHERE id = ${postId} AND author_id = ${user.id} AND status = 'draft' RETURNING id`;
+  revalidatePath("/review", "layout");
+  revalidatePath(`/u/${user.id}`);
+  redirect(d.length ? `/post/${postId}?ok=${encodeURIComponent("Редакц руу илгээлээ. Хянагдсаны дараа танд мэдэгдэл ирнэ.")}` : `/post/${postId}`);
 }
 
 export async function deletePost(formData) {

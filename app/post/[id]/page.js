@@ -414,7 +414,10 @@ export default async function PostPage({ params, searchParams }) {
 
             {error && <p className="error">{error}</p>}
             {ok && <p className="notice">{ok}</p>}
-            {!open && post.status !== "approved" && (
+            {post.status === "draft" && (
+              <p className="notice">Ноорог. {isAuthor ? <Link href={`/post/${post.id}/preview`}>Урьдчилж хараад редакц руу илгээх →</Link> : "Бичээч хараахан илгээгээгүй."}</p>
+            )}
+            {!open && post.status !== "approved" && post.status !== "draft" && (
               <p className={post.status === "pending" ? "notice" : "error"}>
                 {post.status === "rejected"
                   ? `Редакц засвар хийхээр буцаасан: ${post.review_note || ""}`

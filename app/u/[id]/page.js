@@ -65,7 +65,7 @@ export default async function PublicProfile({ params, searchParams }) {
     saved: isMe ? savedList : null,
     all,
     published: all.filter((p) => p.status === "published"),
-    pending: all.filter((p) => p.status === "pending" || p.status === "approved" || p.status === "discussion"),
+    pending: all.filter((p) => ["pending", "approved", "discussion", "draft"].includes(p.status)),
     replied: all.filter((p) => p.status === "rejected" || p.status === "removed"),
   };
   const current = groups[tab] && (isMe || tab === "published") ? tab : "published";

@@ -2175,3 +2175,36 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .tm-copyic { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: #00897e; cursor: pointer; }
 .tm-copyic:hover { background: #e3f6f3; }
 .tm-copyic.ok { background: #00a89b; border-color: #00a89b; color: #fff; }
+.wr-steps i { transition: background .3s; }
+.wr-steps span.done { color: #00897e; font-weight: 600; }
+.wr-steps span.done i { background: #00a89b; }
+/* Урьдчилж харах (Figma 454:272) */
+.pv-top { display: flex; align-items: center; gap: 14px; padding: 18px 22px; border-radius: 22px; background: var(--surface); box-shadow: var(--card-shadow); }
+.pv-eye { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: #e3f6f3; }
+.pv-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pv-tx b { font-size: 15px; color: var(--ink); }
+.pv-tx small { font-size: 12px; color: var(--muted); }
+.pv-back { flex: none; display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); color: var(--ink); font-size: 12.5px; font-weight: 700; text-decoration: none; }
+.pv-back:hover { background: #e3f6f3; color: #00796f; }
+.pv-wait { display: inline-block; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.pv-send { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 20px; border-radius: 22px; background: var(--surface); box-shadow: var(--card-shadow); }
+.pv-send .error { flex-basis: 100%; margin: 0; }
+.pv-agree { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.pv-agree input { width: 17px; height: 17px; accent-color: #00a89b; }
+.pv-agree a { color: #00897e; }
+/* Эх сурвалжийн хайрцаг */
+.md-sources { margin-top: 26px; padding: 16px 20px; border-radius: 16px; border-top: 0; background: var(--surface-2); }
+.md-sources h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; font-weight: 700; }
+.md-sources ol { gap: 10px; padding-left: 22px; }
+.md-sources li { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.md-sources li::marker { color: var(--muted); font-size: 12px; }
+.md-src-l { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.md-src-l a { color: #00897e; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+.md-src-l b { font-weight: 600; color: var(--ink); }
+.md-sources small { font-size: 11.5px; color: var(--muted); }
+.md-src-tag { font-style: normal; padding: 1px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; }
+.md-src-tag.t0 { background: #fff1e0; color: #c2410c; }
+.md-src-tag.t1 { background: #ececfd; color: #5d55d6; }
+.md-src-tag.t2 { background: #e3f6f3; color: #00796f; }
+.md-src-tag.t3 { background: #fdecef; color: #c0365e; }
+@media (max-width: 720px) { .pv-top { flex-wrap: wrap; } .pv-send .wr-go { width: 100%; justify-content: center; } }

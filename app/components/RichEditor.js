@@ -244,18 +244,24 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
   );
 }
 
+// Нийтлэлийн төгсгөлийн эх сурвалж (Figma 454:272)
+const SRC_TAG = { "Вэб хуудас": "Вэб", "Сэтгүүлийн өгүүлэл": "Өгүүлэл", "Судалгааны тайлан": "Тайлан" };
 export function Sources({ sources }) {
   return (
     <section className="md-sources" id="sources">
-      <h3>Эх сурвалж</h3>
+      <h3><img className="ic" src="/icons/f_link.svg" width={15} height={15} alt="" />Эх сурвалж</h3>
       <ol>
         {sources.map((s, i) => {
-          const f = formatSource(s);
+          const host = s.url ? String(s.url).replace(/^https?:\/\/(www\.)?/, "").split("/")[0] : null;
+          const meta = [s.author, host && s.type === "Вэб хуудас" ? host : null, s.type === "Вэб хуудас" ? null : s.type,
+            s.date && String(s.date).replace(/-/g, "."), s.pages && `${s.pages} х.`, s.lang && `${s.lang} хэл`].filter(Boolean).join(" · ");
           return (
             <li key={i} id={`src-${i + 1}`}>
-              {f.lead && <>{f.lead}. </>}
-              {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer nofollow"><i>{s.title}</i></a> : <i>{s.title}</i>}
-              {f.tail && <small> · {f.tail}</small>}
+              <span className="md-src-l">
+                <em className={"md-src-tag t" + (SOURCE_TYPES.indexOf(s.type) % 4)}>{SRC_TAG[s.type] || s.type}</em>
+                {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer nofollow">{s.title} ↗</a> : <b>{s.title}</b>}
+              </span>
+              {meta && <small>{meta}</small>}
             </li>
           );
         })}

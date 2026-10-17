@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KINDS } from "@/lib/format";
 import RichEditor from "./RichEditor";
+import WriteSteps from "./WriteSteps";
 import CatTools from "./CatTools";
 import ImageInput from "./ImageInput";
 import TopNav from "./TopNav";
@@ -15,9 +16,6 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
       <span className="au-blob a" aria-hidden="true" />
       <span className="au-blob b" aria-hidden="true" />
       <TopNav className="wr-nav" />
-      <div className="ar-pagebar wr-bar">
-        <Link href={post.id ? `/post/${post.id}` : "/"} className="ar-back">← Буцах</Link>
-      </div>
 
       <form action={action} className="wr-col">
         {post.id && <input type="hidden" name="post_id" value={post.id} />}
@@ -27,12 +25,8 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
             <img src="/icons/logo.svg" width={56} height={56} alt="" />
             <b>{heading}</b>
           </div>
-          <div className="wr-steps">
-            {["Гарчиг", "Төрөл", "Агуулга", "Илгээх"].map((s) => (
-              <span key={s}><i />{s}</span>
-            ))}
-          </div>
-          <p className="wr-note">Илгээсэн нийтлэл өөр хянагчийн шалгалтаар орж, батлагдсаны дараа нийтлэгдэнэ.</p>
+          <WriteSteps />
+          <p className="wr-note">Дараагийн алхамд нийтлэлээ урьдчилж хараад редакц руу илгээнэ. Илгээсэн нийтлэл өөр хянагчийн шалгалтаар орж, батлагдсаны дараа нийтлэгдэнэ.</p>
           {error && <p className="error">{error}</p>}
         </section>
 
@@ -90,7 +84,7 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
           {extra}
           <span className="ss-grow" />
           <button type="submit" className="wr-go">
-            Хянуулахаар илгээх
+            Урьдчилж харах
             <img src="/icons/arrowr.svg" width={19} height={19} alt="" />
           </button>
         </section>
