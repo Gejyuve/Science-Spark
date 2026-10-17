@@ -2066,3 +2066,5 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cq-acts { display: flex; gap: 8px; align-items: center; }
 .cq-acts input { flex: 1; }
 @media (max-width: 720px) { .tr-en { display: none; } .cq-grid { grid-template-columns: 1fr; } .cq-acts { flex-wrap: wrap; } }
+.tr-name { flex-shrink: 0; }
+.tr-en { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
