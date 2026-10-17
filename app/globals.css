@@ -1128,7 +1128,7 @@ details.mod summary { cursor: pointer; }
 .ev-legend ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
 .ev-legend li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
 .ev-legend i { flex: none; width: 10px; height: 10px; border-radius: 3px; background: hsl(var(--h) 65% 48%); }
-.ev-legend a { color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-legend a { flex: 1 1 auto; min-width: 80px; color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ev-legend small { margin-left: auto; flex: none; color: var(--muted); font-size: 11px; }
 .cp-dt { flex: none; font-size: 12px; font-weight: 600; color: var(--muted); }
 @media (max-width: 760px) {
