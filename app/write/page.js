@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { KINDS } from "@/lib/format";
 import { createPost } from "../posts/actions";
+import PostForm from "../components/PostForm";
 
 export const metadata = { title: "Бичих · Science Spark" };
 
@@ -10,23 +10,11 @@ export default async function WritePage({ searchParams }) {
   const user = await getUser();
   if (!user) redirect("/login");
   const { error, kind } = await searchParams;
-  const initialKind = KINDS.includes(kind) ? kind : "Нийтлэл";
   return (
-    <div className="auth-wrap">
-      <form className="auth-card wide" action={createPost}>
-        <h1>Шинэ нийтлэл</h1>
-        <p className="muted">Өөр хянагч батласны дараа бүгдэд харагдана.</p>
-        {error && <p className="error">{error}</p>}
-        <label>Төрөл
-          <select name="kind" defaultValue={initialKind}>
-            {KINDS.map((k) => <option key={k}>{k}</option>)}
-          </select>
-        </label>
-        <label>Гарчиг<input name="title" required maxLength={200} /></label>
-        <label>Агуулга<textarea name="body" required rows={10} /></label>
-        <button className="btn" type="submit">Хянуулахаар илгээх</button>
-        <p className="muted"><Link href="/">← Нүүр</Link></p>
-      </form>
-    </div>
+    <PostForm
+      action={createPost}
+      error={error}
+      post={{ kind: KINDS.includes(kind) ? kind : "Нийтлэл" }}
+    />
   );
 }

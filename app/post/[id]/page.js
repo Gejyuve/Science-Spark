@@ -50,7 +50,9 @@ export default async function PostPage({ params, searchParams }) {
     : false;
 
   const author = { id: post.author_id, initial: post.initial, first_name: post.first_name };
-  const [lead, ...rest] = post.body.split(/\n\s*\n/);
+  const paras = post.body.split(/\n\s*\n/);
+  const lead = post.subtitle || (paras.length > 1 ? paras[0] : null);
+  const rest = post.subtitle ? paras : paras.length > 1 ? paras.slice(1) : paras;
 
   return (
     <Shell user={user} header={false}>
@@ -87,15 +89,13 @@ export default async function PostPage({ params, searchParams }) {
               <p className="muted">Засаад хадгалбал дахин хянагчийн шалгалтад орно.</p>
             )}
 
-            {rest.length > 0 ? (
+            {lead && (
               <>
                 <p className="ar-lead">{lead}</p>
                 <div className="ar-divider" />
-                {rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)}
               </>
-            ) : (
-              <p className="ar-text">{post.body}</p>
             )}
+            {rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)}
 
             <div className="ar-credits">
               <div>

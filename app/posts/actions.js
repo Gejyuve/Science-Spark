@@ -13,14 +13,15 @@ export async function createPost(formData) {
   const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
   const title = String(formData.get("title") || "").trim().slice(0, 200);
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
+  const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   if (!title || !body) {
     redirect(`/write?error=${encodeURIComponent("Гарчиг болон агуулгаа бөглөнө үү")}`);
   }
   await ensureSchema();
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, body, status)
-    VALUES (${user.id}, ${kind}, ${title}, ${body}, 'pending')
+    INSERT INTO posts (author_id, kind, title, subtitle, body, status)
+    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending')
     RETURNING id`;
   revalidatePath("/");
   redirect(`/post/${rows[0].id}`);
@@ -69,10 +70,11 @@ export async function updatePost(formData) {
   const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
   const title = String(formData.get("title") || "").trim().slice(0, 200);
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
+  const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
   await ensureSchema();
   // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
-  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body},
+  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body},
             status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
             WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);
