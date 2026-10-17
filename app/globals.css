@@ -1555,3 +1555,40 @@ a.ss-kind:hover { text-decoration: underline; }
 .adm-main > .ss-header.static { margin-bottom: 4px; }
 @media (max-width: 720px) { .wr-nav, .adm-main > .ss-header.static { padding: 4px 8px; } }
 .wr-nav + .wr-bar { max-width: 840px; margin: 0 auto 4px; }
+
+/* Нүүрний шүүлтүүр: нэг нарийн ногоон шугам, урсах гэрэлтэй */
+.ss-filters {
+  position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none;
+  background: linear-gradient(100deg, #e3f7f4, #f4fcfb 30%, #d4f3ee 55%, #f4fcfb 80%, #e3f7f4); background-size: 300% 100%;
+  border: 1px solid rgba(0, 168, 155, .28); box-shadow: 0 0 0 0 rgba(0, 168, 155, .25);
+  animation: ssf-flow 9s ease-in-out infinite, ssf-glow 3.2s ease-in-out infinite;
+}
+.ss-filters::-webkit-scrollbar { display: none; }
+.ss-filters::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .75), transparent);
+  animation: ssf-shine 5.5s ease-in-out infinite;
+}
+.ss-filters a {
+  position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px;
+  border-radius: 999px; color: #0b5f58; font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background .2s, color .2s, transform .2s;
+}
+.ss-filters a:hover { background: rgba(255, 255, 255, .7); transform: translateY(-1px); }
+.ss-filters a small { font-size: 11.5px; font-weight: 500; opacity: .7; }
+.ss-filters a em {
+  font-style: normal; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; display: inline-grid; place-items: center;
+  background: rgba(0, 168, 155, .14); color: #00796f; font-size: 11.5px; font-weight: 700;
+}
+.ss-filters a.on { background: linear-gradient(135deg, #00a89b, #37c3b3); color: #fff; box-shadow: 0 4px 12px rgba(0, 168, 155, .35); }
+.ss-filters a.on small { opacity: .9; }
+.ss-filters a.on em { background: rgba(255, 255, 255, .25); color: #fff; }
+@keyframes ssf-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes ssf-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 168, 155, .0); } 50% { box-shadow: 0 0 14px 1px rgba(0, 168, 155, .22); } }
+@keyframes ssf-shine { 0% { left: -30%; } 60%, 100% { left: 130%; } }
+:root[data-theme="dark"] .ss-filters { background: linear-gradient(100deg, #0d2f2c, #123d39 30%, #0a4a44 55%, #123d39 80%, #0d2f2c); background-size: 300% 100%; border-color: rgba(94, 230, 208, .25); }
+:root[data-theme="dark"] .ss-filters::after { background: linear-gradient(90deg, transparent, rgba(94, 230, 208, .18), transparent); }
+:root[data-theme="dark"] .ss-filters a { color: #9ff0e2; }
+:root[data-theme="dark"] .ss-filters a:hover { background: rgba(255, 255, 255, .06); }
+:root[data-theme="dark"] .ss-filters a em { background: rgba(94, 230, 208, .15); color: #9ff0e2; }
+@media (prefers-reduced-motion: reduce) { .ss-filters, .ss-filters::after { animation: none; } }

@@ -18,6 +18,7 @@ export default async function Home({ searchParams }) {
   const following = tab === "following";
   let user = null;
   let posts = [];
+  let counts = { all: 0, following: 0, top: 0, qa: 0 };
   try {
     user = await getUser();
     await ensureSchema();
@@ -56,6 +57,16 @@ export default async function Home({ searchParams }) {
         CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id) END DESC NULLS LAST,
         p.created_at DESC
       LIMIT 30`;
+    // Шүүлтүүр бүрийн сүүлийн 24 цагийн контентын тоо
+    const [c] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE p.created_at > now() - interval '24 hours')::int AS all,
+        COUNT(*) FILTER (WHERE p.created_at > now() - interval '24 hours'
+          AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
+        COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND s.created_at > now() - interval '24 hours'))::int AS top,
+        COUNT(*) FILTER (WHERE p.created_at > now() - interval '24 hours' AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa
+      FROM posts p WHERE p.status = 'published'`;
+    counts = c;
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
   }
@@ -63,30 +74,28 @@ export default async function Home({ searchParams }) {
   const followSet = await followingSet(user);
   return (
     <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
-      {qa && (
-        <div className="ss-feedtabs">
-          <span className="on">Асуулт ба бодрол · сүүлд орсноор</span>
-          <Link href="/">× Бүгдийг харах</Link>
-        </div>
-      )}
-      {top && (
-        <div className="ss-topbar"><span aria-hidden="true">✦</span>Сүүлийн 24 цагийн хамгийн их оч авсан контентууд</div>
-      )}
-      {rand && (
-        <div className="ss-topbar"><span aria-hidden="true">⚄</span>Санамсаргүй дараалал
-          <span className="ss-grow" /><Link href={`/?f=rand&r=${seed.slice(0, 8)}`} className="ss-reshuffle">Дахин холих</Link></div>
-      )}
-      {ann && (
+      {ann ? (
         <div className="ss-feedtabs">
           <span className="on">Зарлал · сүүлд орсноор</span>
           <Link href="/">× Бүгдийг харах</Link>
         </div>
-      )}
-      {user && !qa && !ann && !top && !rand && (
-        <div className="ss-feedtabs">
-          <Link href="/" className={following ? "" : "on"}>Бүгд</Link>
-          <Link href="/?tab=following" className={following ? "on" : ""}>Дагаж буй</Link>
-        </div>
+      ) : (
+        <nav className="ss-filters" aria-label="Шүүлтүүр">
+          {[
+            ["all", "/", <>Бүгд <small>сүүлийн 24 цаг</small></>, counts.all],
+            ["following", user ? "/?tab=following" : "/login", "Дагаж буй", user ? counts.following : null],
+            ["top", "/?f=top", "Хандалт өндөр", counts.top],
+            ["qa", "/?f=qa", "Хэн юу гэв?", counts.qa],
+            ["rand", `/?f=rand&r=${seed.slice(0, 8)}`, <>Сэгсрээд өг <span aria-hidden="true">⚄</span></>, null],
+          ].map(([k, href, label, n]) => {
+            const on = k === "all" ? !qa && !top && !rand && !following : k === "following" ? following && !!user : k === "top" ? top : k === "qa" ? qa : rand;
+            return (
+              <Link key={k} href={href} className={on ? "on" : ""} prefetch={k === "rand" ? false : undefined}>
+                {label}{n !== null && <em>{n}</em>}
+              </Link>
+            );
+          })}
+        </nav>
       )}
       {posts.length === 0 && (
         <div className="ss-card">
