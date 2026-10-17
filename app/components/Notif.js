@@ -1,0 +1,78 @@
+import Link from "next/link";
+import { NOTIFY_TEXT, FROM_EDITORS } from "@/lib/notify";
+import { relTime } from "@/lib/format";
+import { Avatar } from "./Bits";
+import { toggleFollow } from "../posts/actions";
+
+const ICON = {
+  approved: ["f_shield", "ok"], reviewed: ["f_shield", "ok"], reviewer_ok: ["f_shield", "ok"],
+  rejected: ["logic", "warn"], reviewer_no: ["f_shield", "gray"], removed: ["logic", "bad"],
+  logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"],
+};
+const AVATAR_KINDS = ["follow", "comment", "reply"];
+
+// Улаанбаатарын өдрөөр бүлэглэнэ: Шинэ (уншаагүй) · Өнөөдөр · Өчигдөр · Энэ долоо хоног · Өмнө
+function groupOf(n) {
+  if (!n.read_at) return "Шинэ";
+  const day = (d) => Math.floor((new Date(d).getTime() + 8 * 3600000) / 86400000);
+  const diff = day(Date.now()) - day(n.created_at);
+  if (diff <= 0) return "Өнөөдөр";
+  if (diff === 1) return "Өчигдөр";
+  if (diff < 7) return "Энэ долоо хоног";
+  return "Өмнө";
+}
+
+function Item({ n }) {
+  const editors = FROM_EDITORS.includes(n.kind) || !n.actor_id;
+  const who = editors ? "Редакц" : `${n.initial}.${n.first_name}`;
+  const [ic, tone] = ICON[n.kind] || ["bell", "gray"];
+  return (
+    <div className={"nf-item" + (n.read_at ? "" : " unread")}>
+      <Link href={`/n/${n.id}`} className="nf-link" aria-label="Мэдэгдэл нээх" />
+      <span className="nf-ico">
+        {AVATAR_KINDS.includes(n.kind) && !editors ? (
+          <Avatar user={{ id: n.actor_id, first_name: n.first_name, avatar: n.avatar }} size={36} />
+        ) : (
+          <i className={"nf-badge " + tone}><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" /></i>
+        )}
+      </span>
+      <span className="nf-body">
+        <span className="nf-text">
+          <b>{who}</b> {NOTIFY_TEXT[n.kind] || n.kind}
+          {n.title && <>: «{n.title}»</>}
+        </span>
+        {n.note && <span className="nf-note">“{n.note}”</span>}
+        <small className={n.read_at ? "" : "fresh"}>{relTime(n.created_at).text}</small>
+        {n.kind === "follow" && !n.following_back && n.actor_id && (
+          <form action={toggleFollow} className="nf-act">
+            <input type="hidden" name="user_id" value={n.actor_id} />
+            <button type="submit">Дагах</button>
+          </form>
+        )}
+        {n.kind === "reviewed" && <Link href={`/n/${n.id}`} className="nf-act btn">Нийтлэх</Link>}
+        {n.kind === "reviewer_ok" && <Link href={`/n/${n.id}`} className="nf-act btn">Хяналт руу</Link>}
+      </span>
+      {!n.read_at && <i className="nf-dot" aria-label="Уншаагүй" />}
+    </div>
+  );
+}
+
+export function NotifList({ items, empty = "Мэдэгдэл алга." }) {
+  if (!items.length) return <p className="nf-empty">{empty}</p>;
+  const groups = [];
+  for (const n of items) {
+    const g = groupOf(n);
+    if (!groups.length || groups[groups.length - 1][0] !== g) groups.push([g, []]);
+    groups[groups.length - 1][1].push(n);
+  }
+  return (
+    <div className="nf-list">
+      {groups.map(([g, list], i) => (
+        <section key={g + i}>
+          <h4 className="nf-group">{g}</h4>
+          {list.map((n) => <Item key={n.id} n={n} />)}
+        </section>
+      ))}
+    </div>
+  );
+}

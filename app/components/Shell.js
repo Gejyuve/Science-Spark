@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import Composer from "./Composer";
 import { logout } from "../auth/actions";
+import { markAllRead } from "../posts/actions";
+import NotifMenu from "./NotifMenu";
+import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
 import { displayName, isAdmin, needsName, canReview } from "@/lib/auth";
-import { unreadCount } from "@/lib/notify";
+import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat, Person, followingSet } from "./Bits";
 
@@ -80,6 +83,7 @@ async function RightRail({ user }) {
   let top = [];
   let followers = 0;
   let unread = 0;
+  let notifs = [];
   const following = await followingSet(user);
   try {
     top = await sql`
@@ -91,6 +95,7 @@ async function RightRail({ user }) {
     if (user) {
       followers = (await sql`SELECT COUNT(*)::int AS n FROM follows WHERE followee_id = ${user.id}`)[0].n;
       unread = await unreadCount(user.id);
+      notifs = await listNotifications(user.id, { limit: 8 });
     }
   } catch (e) {}
 
@@ -107,11 +112,17 @@ async function RightRail({ user }) {
           </Link>
           <div className="ss-actions">
             <Link href="/profile/edit" className="ss-action">{I("gear", 18)}<span>Тохиргоо</span>{I("arrow", 14)}</Link>
-            <Link href="/notifications" className="ss-action">
-              {I("bell", 18)}<span>Мэдэгдэл</span>
-              {unread > 0 && <em className="ss-badge red">{unread}</em>}
-              {I("arrow", 14)}
-            </Link>
+            <NotifMenu trigger={<>{I("bell", 18)}<span>Мэдэгдэл</span>{unread > 0 && <em className="ss-badge red">{unread}</em>}{I("arrow", 14)}</>}>
+              <div className="nf-head">
+                <b>Мэдэгдэл</b>{unread > 0 && <em className="ss-badge red">{unread}</em>}
+                <span className="ss-grow" />
+                {unread > 0 && (
+                  <form action={markAllRead}><button type="submit" className="nf-readall">✓ Бүгдийг уншсан</button></form>
+                )}
+              </div>
+              <NotifList items={notifs} empty="Одоохондоо мэдэгдэл алга." />
+              <Link href="/notifications" className="nf-all">Бүх мэдэгдлийг харах</Link>
+            </NotifMenu>
             <Link href={`/u/${user.id}`} className="ss-action">
               {I("wallet", 18)}<span>Данс</span>
               <em className="ss-badge teal">{user.points.toLocaleString("en-US")} оч</em>

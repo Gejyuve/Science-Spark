@@ -1,55 +1,49 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { sql, ensureSchema } from "@/lib/db";
+import { ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { fmtDate } from "@/lib/format";
-import { NOTIFY_TEXT } from "@/lib/notify";
+import { listNotifications, unreadCount, NOTIF_TABS } from "@/lib/notify";
 import { markAllRead } from "../posts/actions";
 import Shell from "../components/Shell";
+import { NotifList } from "../components/Notif";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Мэдэгдэл · Science Spark" };
 
-export default async function NotificationsPage() {
+const PAGE = 30;
+
+// Figma 789:693 · Мэдэгдэл · Бүх мэдэгдэл
+export default async function NotificationsPage({ searchParams }) {
   const user = await getUser();
   if (!user) redirect("/login");
   await ensureSchema();
-  const items = await sql`
-    SELECT n.id, n.kind, n.note, n.read_at, n.created_at, n.post_id, n.actor_id,
-           a.initial, a.first_name, p.title
-    FROM notifications n
-    LEFT JOIN users a ON a.id = n.actor_id
-    LEFT JOIN posts p ON p.id = n.post_id
-    WHERE n.user_id = ${user.id}
-    ORDER BY n.created_at DESC LIMIT 100`;
-  const unread = items.filter((n) => !n.read_at).length;
-
+  const sp = await searchParams;
+  const tab = NOTIF_TABS.some(([k]) => k === sp.t) ? sp.t : "";
+  const before = Number(sp.before) || null;
+  const items = await listNotifications(user.id, { tab, before, limit: PAGE + 1 });
+  const more = items.length > PAGE;
+  const list = items.slice(0, PAGE);
+  const unread = await unreadCount(user.id);
+  const q = (o) => "/notifications?" + new URLSearchParams(Object.entries({ t: tab, ...o }).filter(([, v]) => v));
   return (
-    <Shell user={user} header={false}>
-      <div className="ss-card ss-page">
-        <p className="muted"><Link href="/">← Нүүр</Link></p>
-        <h1>Мэдэгдэл</h1>
-        {unread > 0 && (
-          <form action={markAllRead}>
-            <button className="btn ghost" type="submit">Бүгдийг уншсан болгох ({unread})</button>
-          </form>
-        )}
-        {items.length === 0 && <p className="muted">Мэдэгдэл алга.</p>}
-        {items.map((n) => (
-          <div key={n.id} className={"notif" + (n.read_at ? "" : " unread")}>
-            {n.actor_id ? (
-              <Link href={`/u/${n.actor_id}`}>{n.initial}.{n.first_name}</Link>
-            ) : (
-              <span>Хэн нэгэн</span>
-            )}{" "}
-            {NOTIFY_TEXT[n.kind] || n.kind}
-            {n.post_id && n.title && (
-              <>: <Link href={`/post/${n.post_id}`}>{n.title}</Link></>
-            )}
-            {n.note && <div className="muted">“{n.note}”</div>}
-            <div className="muted">{fmtDate(n.created_at)}</div>
-          </div>
-        ))}
+    <Shell user={user} header="nav">
+      <div className="ss-card nf-page">
+        <div className="nf-head">
+          <b>Мэдэгдэл</b>{unread > 0 && <em className="ss-badge red">{unread}</em>}
+          <span className="ss-grow" />
+          {unread > 0 && <form action={markAllRead}><button type="submit" className="nf-readall">✓ Бүгдийг уншсан</button></form>}
+          <Link href="/" className="nf-x" aria-label="Хаах">×</Link>
+        </div>
+        <div className="nf-tabs">
+          {NOTIF_TABS.map(([k, l]) => (
+            <Link key={k || "all"} href={q({ t: k })} className={tab === k ? "on" : ""}>
+              {l}{k === "unread" && unread > 0 && <em>{unread}</em>}
+            </Link>
+          ))}
+        </div>
+        <NotifList items={list} empty={tab === "unread" ? "Уншаагүй мэдэгдэл алга ✓" : "Мэдэгдэл алга."} />
+        {before && !more && list.length > 0 && <p className="nf-end">Бүх мэдэгдлийг үзлээ.</p>}
+        {more && <Link href={q({ before: list[list.length - 1].id })} className="nf-all">Өмнөх мэдэгдлүүдийг үзэх</Link>}
       </div>
     </Shell>
   );
