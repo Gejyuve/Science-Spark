@@ -108,6 +108,9 @@ export default async function PostPage({ params, searchParams }) {
                   : post.status === "removed"
                   ? `Админ нийтээс хассан: ${post.review_note || ""}`
                   : "Хянагчийн шалгалтад байна. Батлагдсаны дараа бусдад харагдана."}
+                {post.status === "pending" && isStaff(user) && !isAuthor && (
+                  <> <Link href={`/review/${post.id}`}>Хянах самбар нээх →</Link></>
+                )}
               </p>
             )}
             {!published && isAuthor && post.status !== "pending" && (
