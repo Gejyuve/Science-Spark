@@ -15,7 +15,7 @@ import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits"
 import { Langs, VoteBox } from "../../components/Terms";
 import { TERM_KIND, daysLeft, synonyms, shortUrl } from "@/lib/terms";
 import { crumbs } from "@/lib/tree";
-import { render } from "@/lib/md";
+import { render, outline } from "@/lib/md";
 import { Sources } from "../../components/RichEditor";
 
 export const dynamic = "force-dynamic";
@@ -363,6 +363,7 @@ export default async function PostPage({ params, searchParams }) {
   const lead = plain ? null : post.subtitle || (!isArticle && paras.length > 1 ? paras[0] : null);
   const rest = plain || post.subtitle || isArticle ? paras : paras.length > 1 ? paras.slice(1) : paras;
   const srcList = isArticle && Array.isArray(post.meta?.sources) ? post.meta.sources : [];
+  const heads = isArticle ? outline(post.body) : [];
   const cover = isArticle ? post.meta?.cover : null;
 
   return (
@@ -476,9 +477,17 @@ export default async function PostPage({ params, searchParams }) {
               <div className="ar-qbox">{post.body}</div>
             ) : (
               isArticle ? (
-                <div className="ar-body">
-                  {render(post.body, { text: glossary.length ? (s) => withTerms(s, glossary, usedTerms) : undefined })}
-                  {srcList.length > 0 && <Sources sources={srcList} />}
+                <div className={"ar-tocwrap" + (heads.length >= 2 ? " has" : "")}>
+                  {heads.length >= 2 && (
+                    <nav className="ar-toc" aria-label="Нийтлэлийн бүтэц">
+                      <b>Энэ нийтлэлд</b>
+                      <ol>{heads.map((x) => <li key={x.id} className={`l${x.level}`}><a href={`#${x.id}`}>{x.text}</a></li>)}</ol>
+                    </nav>
+                  )}
+                  <div className="ar-body">
+                    {render(post.body, { text: glossary.length ? (s) => withTerms(s, glossary, usedTerms) : undefined })}
+                    {srcList.length > 0 && <Sources sources={srcList} />}
+                  </div>
                 </div>
               ) : rest.map((para, i) => <p key={i} className="ar-text">{glossary.length ? withTerms(para, glossary, usedTerms) : para}</p>)
             )}

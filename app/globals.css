@@ -2211,3 +2211,42 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .re-bar .wr-count.ok { color: #00897e; font-weight: 600; }
 .re-bar .wr-count.bad { color: #c2400d; font-weight: 600; }
 .re-rule { margin: -4px 0 0; padding: 8px 12px; border-radius: 10px; background: #fff4e5; color: #c2400d; font-size: 12.5px; font-weight: 600; }
+/* Нийтлэл дундах зураг: нэг стандарт хэмжээ (16:9 хүрээ, зураг тайрахгүй багтаана) */
+.md-fig img { aspect-ratio: 16 / 9; height: auto; object-fit: contain; background: var(--surface-2); }
+.re-drop img { aspect-ratio: 16 / 9; width: 100%; max-height: none; object-fit: contain; }
+/* Бүтэц: засварлагч */
+.re-main { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 12px; align-items: start; }
+.re-main.pv { display: block; }
+.re-outline { position: sticky; top: 70px; display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow: auto; padding: 12px 10px 12px 14px; border-left: 3px solid #b9e6df; }
+.re-outline b { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.re-outline small { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+.re-outline ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.re-outline button { width: 100%; padding: 4px 6px; border: 0; border-radius: 6px; background: none; font: inherit; font-size: 12.5px; color: var(--ink); text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.re-outline button:hover { background: #e3f6f3; color: #00796f; }
+.re-outline .l1 button { font-weight: 700; }
+.re-outline .l2 button { padding-left: 14px; }
+.re-outline .l3 button { padding-left: 24px; font-size: 12px; color: var(--muted); }
+/* Бүтэц: нийтлэл */
+.ar-tocwrap.has { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 28px; align-items: start; }
+.ar-toc { position: sticky; top: 24px; padding: 4px 0 4px 14px; border-left: 3px solid #b9e6df; }
+.ar-toc b { display: block; margin-bottom: 8px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ar-toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ar-toc a { display: block; padding: 3px 0; font-size: 12.5px; line-height: 1.4; color: var(--ink); text-decoration: none; }
+.ar-toc a:hover { color: #00897e; }
+.ar-toc .l1 a { font-weight: 700; }
+.ar-toc .l2 a { padding-left: 10px; }
+.ar-toc .l3 a { padding-left: 20px; color: var(--muted); font-size: 12px; }
+.ar-body [id^="sec-"] { scroll-margin-top: 24px; }
+.wr-restored { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0; padding: 10px 14px; border-radius: 12px; background: #e3f6f3; color: #00796f; font-size: 13px; font-weight: 600; }
+.wr-restored button { margin-left: auto; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(0, 137, 126, .35); background: var(--surface); color: #00796f; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.wr-saved { font-size: 11.5px; color: var(--muted); }
+.wr-req { font-style: normal; margin-left: 6px; padding: 2px 8px; border-radius: 6px; background: #fdecec; color: #cc2633; font-size: 11px; font-weight: 700; vertical-align: middle; }
+@media (max-width: 1100px) {
+  .re-main { grid-template-columns: minmax(0, 1fr); }
+  .re-outline { position: static; max-height: none; flex-direction: row; flex-wrap: wrap; align-items: center; border-left: 0; padding: 0; }
+  .re-outline small { display: none; }
+  .re-outline ol { flex-direction: row; flex-wrap: wrap; }
+  .re-outline .l2 button, .re-outline .l3 button { padding-left: 6px; }
+  .ar-tocwrap.has { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .ar-toc { position: static; }
+}

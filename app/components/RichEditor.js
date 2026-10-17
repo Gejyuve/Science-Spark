@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES } from "@/lib/md";
+import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES, outline } from "@/lib/md";
 import { uploadImageFile } from "./ImageInput";
 import DictAdd from "./DictAdd";
 
@@ -74,6 +74,20 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
   useEffect(() => { ta.current?.setCustomValidity(text.trim() ? rule.error || "" : ""); }, [rule.error, text]);
   const [min, max] = WORD_RULES[kind] || WORD_RULES.Нийтлэл;
   const minutes = Math.max(1, Math.round(words / 180));
+  const heads = outline(text);
+  // Бүтэц дээр дарахад тухайн гарчгийн мөр рүү очно
+  const jump = (i) => {
+    const el = ta.current;
+    const re = /^\s*#{1,3}\s+.+$/gm;
+    let m, k = -1;
+    while ((m = re.exec(el.value))) { k++; if (k === i) break; }
+    if (!m) return;
+    el.focus();
+    el.setSelectionRange(m.index, m.index + m[0].length);
+    const before = el.value.slice(0, m.index).split("\n").length - 1;
+    const lh = parseFloat(getComputedStyle(el).lineHeight) || 26;
+    el.scrollTop = Math.max(0, before * lh - 60);
+  };
 
   // Сонгосон хэсгийг солих (Ctrl+Z ажиллахын тулд execCommand ашиглана)
   const replace = (start, end, insert, selFrom = null, selTo = null) => {
@@ -170,21 +184,39 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
         </span>
       </div>
 
-      <textarea
-        ref={ta}
-        name="body"
-        required
-        rows={18}
-        maxLength={40000}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={onKey}
-        onInvalid={() => setTab("write")}
-        placeholder={"Энд бичнэ үү…\n\nДогол мөр хооронд хоосон мөр үлдээнэ. Дээрх хэрэгслээр гарчиг, тод, налуу, ишлэл, зураг, холбоос нэмнэ."}
-        aria-label="Агуулга"
-        className="re-area"
-        hidden={tab !== "write"}
-      />
+      <div className={"re-main" + (tab === "write" ? "" : " pv")}>
+        {tab === "write" && (
+          <aside className="re-outline" aria-label="Нийтлэлийн бүтэц">
+            <b>Бүтэц</b>
+            {heads.length === 0 ? (
+              <small>H1, H2, H3 гарчиг нэмэхэд энд бүтэц харагдана.</small>
+            ) : (
+              <ol>
+                {heads.map((x, i) => (
+                  <li key={i} className={`l${x.level}`}>
+                    <button type="button" onClick={() => jump(i)} title={x.text}>{x.text || "—"}</button>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </aside>
+        )}
+        <textarea
+          ref={ta}
+          name="body"
+          required
+          rows={18}
+          maxLength={40000}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKey}
+          onInvalid={() => setTab("write")}
+          placeholder={"Энд бичнэ үү…\n\nДогол мөр хооронд хоосон мөр үлдээнэ. Дээрх хэрэгслээр гарчиг, тод, налуу, ишлэл, зураг, холбоос нэмнэ."}
+          aria-label="Агуулга"
+          className="re-area"
+          hidden={tab !== "write"}
+        />
+      </div>
       {text.trim() && rule.error && <p className="re-rule">{rule.error}</p>}
       {tab === "preview" && (
         <div className="re-preview ar-body">

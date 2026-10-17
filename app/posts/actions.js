@@ -40,6 +40,7 @@ export async function createPost(formData) {
   if (!validCategory(category)) redirect(`/write?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
   const rule = bodyRule(kind, body);
   if (rule.error) redirect(`/write?error=${encodeURIComponent(rule.error)}`);
+  if (!formData.get("image") || !String(formData.get("cover_source") || "").trim()) redirect(`/write?error=${encodeURIComponent("Ковер зураг болон түүний эх сурвалжийг заавал оруулна уу")}`);
   await ensureSchema();
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
@@ -121,6 +122,7 @@ export async function updatePost(formData) {
   if (!validCategory(category)) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
   const rule = bodyRule(kind, body);
   if (rule.error) redirect(`/post/${postId}/edit?error=${encodeURIComponent(rule.error)}`);
+  if (!formData.get("image") || !String(formData.get("cover_source") || "").trim()) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ковер зураг болон түүний эх сурвалжийг заавал оруулна уу")}`);
   await ensureSchema();
   // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
   const imageId = await ownImage(user.id, formData.get("image"));

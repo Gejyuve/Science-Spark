@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { crumbs } from "@/lib/tree";
-import { render } from "@/lib/md";
+import { render, outline } from "@/lib/md";
 import { submitDraft } from "../../../posts/actions";
 import Shell from "../../../components/Shell";
 import { Person } from "../../../components/Bits";
@@ -29,6 +29,7 @@ export default async function PreviewPage({ params, searchParams }) {
   if (post.status !== "draft") redirect(`/post/${postId}`);
   const m = post.meta || {};
   const sources = Array.isArray(m.sources) ? m.sources : [];
+  const heads = outline(post.body);
   return (
     <Shell user={user} header="nav">
       <div className="ar-col">
@@ -55,9 +56,17 @@ export default async function PreviewPage({ params, searchParams }) {
             </div>
             <h1 className="ar-title">{post.title}</h1>
             {post.subtitle && (<><p className="ar-lead">{post.subtitle}</p><div className="ar-divider" /></>)}
-            <div className="ar-body">
-              {render(post.body)}
-              {sources.length > 0 && <Sources sources={sources} />}
+            <div className={"ar-tocwrap" + (heads.length >= 2 ? " has" : "")}>
+              {heads.length >= 2 && (
+                <nav className="ar-toc" aria-label="Нийтлэлийн бүтэц">
+                  <b>Энэ нийтлэлд</b>
+                  <ol>{heads.map((x) => <li key={x.id} className={`l${x.level}`}><a href={`#${x.id}`}>{x.text}</a></li>)}</ol>
+                </nav>
+              )}
+              <div className="ar-body">
+                {render(post.body)}
+                {sources.length > 0 && <Sources sources={sources} />}
+              </div>
             </div>
             <div className="ar-credits">
               <div>
