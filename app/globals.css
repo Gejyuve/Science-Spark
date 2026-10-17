@@ -1565,9 +1565,9 @@ a.ss-kind:hover { text-decoration: underline; }
 }
 .ss-filters::-webkit-scrollbar { display: none; }
 .ss-filters::after {
-  content: ""; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .75), transparent);
-  animation: ssf-shine 5.5s ease-in-out infinite;
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(90deg, transparent 0 42%, rgba(255, 255, 255, .7) 50%, transparent 58% 100%) no-repeat;
+  background-size: 300% 100%; animation: ssf-shine 5.5s ease-in-out infinite;
 }
 .ss-filters a {
   position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px;
@@ -1585,9 +1585,9 @@ a.ss-kind:hover { text-decoration: underline; }
 .ss-filters a.on em { background: rgba(255, 255, 255, .25); color: #fff; }
 @keyframes ssf-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 @keyframes ssf-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 168, 155, .0); } 50% { box-shadow: 0 0 14px 1px rgba(0, 168, 155, .22); } }
-@keyframes ssf-shine { 0% { left: -30%; } 60%, 100% { left: 130%; } }
+@keyframes ssf-shine { 0% { background-position: 100% 0; } 60%, 100% { background-position: 0% 0; } }
 :root[data-theme="dark"] .ss-filters { background: linear-gradient(100deg, #0d2f2c, #123d39 30%, #0a4a44 55%, #123d39 80%, #0d2f2c); background-size: 300% 100%; border-color: rgba(94, 230, 208, .25); }
-:root[data-theme="dark"] .ss-filters::after { background: linear-gradient(90deg, transparent, rgba(94, 230, 208, .18), transparent); }
+:root[data-theme="dark"] .ss-filters::after { background-image: linear-gradient(90deg, transparent 0 42%, rgba(94, 230, 208, .18) 50%, transparent 58% 100%); }
 :root[data-theme="dark"] .ss-filters a { color: #9ff0e2; }
 :root[data-theme="dark"] .ss-filters a:hover { background: rgba(255, 255, 255, .06); }
 :root[data-theme="dark"] .ss-filters a em { background: rgba(94, 230, 208, .15); color: #9ff0e2; }
