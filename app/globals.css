@@ -1360,3 +1360,42 @@ a.och-brow:hover { background: var(--surface-2); }
 .ar-chip.link:hover { filter: brightness(1.08); }
 a.ss-kind { text-decoration: none; }
 a.ss-kind:hover { text-decoration: underline; }
+
+/* ── Зураг оруулах ── */
+.ii { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ii-box { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 14px; border: 1.5px dashed #37c3b3; border-radius: 14px; background: var(--teal-bg); color: var(--teal); font: inherit; cursor: pointer; overflow: hidden; text-align: center; }
+.ii-box b { font-size: 12px; }
+.ii-box small { font-size: 11px; color: var(--muted); }
+.ii-box:hover { filter: brightness(.97); }
+.ii.has .ii-box { padding: 0; border-style: solid; background: var(--surface-2); }
+.ii-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ii-acts { display: flex; gap: 6px; }
+.ii-acts button { height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.ii-acts button:last-child { color: #cc2633; }
+.ii-err { color: #cc2633; font-size: 12px; }
+.ii-spin { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .55); }
+.ii-spin::after { content: ""; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #37c3b3; border-top-color: transparent; animation: ii-rot .8s linear infinite; }
+@keyframes ii-rot { to { transform: rotate(360deg); } }
+/* Хэлбэр бүр */
+.ii-slot .ii-box { width: 130px; aspect-ratio: var(--ar, 1); }
+.ii-slot.wide .ii-box { width: 100%; aspect-ratio: var(--ar, 2.5); min-height: 110px; }
+.ii-drop .ii-box { aspect-ratio: var(--ar, 2.64); gap: 8px; }
+.ii-drop:not(.has) .ii-box { aspect-ratio: auto; min-height: 200px; }
+.ii-cover .ii-box { aspect-ratio: 4; min-height: 120px; }
+.ii-avatar .ii-box { width: 88px; height: 88px; padding: 0; border-radius: 50%; position: relative; }
+.ii-avatar:not(.has) .ii-box { border-style: dashed; }
+.ii-avatar .ii-box .pf-cam { position: absolute; right: 0; bottom: 0; }
+/* Харуулах */
+.ss-cardimg { display: block; width: 100%; max-height: 420px; object-fit: cover; border-radius: 14px; margin-top: 10px; }
+.ss-cardimg.sq { width: min(100%, 320px); aspect-ratio: 1; }
+.ar-cover { display: block; width: 100%; aspect-ratio: 740 / 280; object-fit: cover; margin-top: 12px; }
+.ar-img { display: block; width: 100%; max-height: 520px; object-fit: cover; border-radius: 16px; margin: 12px 0; }
+.ar-img.sq { width: min(100%, 420px); aspect-ratio: 1; }
+.ar-program { margin: 12px 0; }
+.ar-program figcaption { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.ar-program img { display: block; width: 100%; border-radius: 14px; }
+.rv-imgs { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.rv-imgs img { max-width: 100%; max-height: 320px; border-radius: 12px; }
+.ev-photo { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
+@media (max-width: 760px) { .ev-photo { aspect-ratio: 2 / 1; } }
+:root[data-theme="dark"] .ii-spin { background: rgba(0, 0, 0, .45); }

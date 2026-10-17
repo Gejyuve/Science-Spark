@@ -83,7 +83,7 @@ async function RightRail({ user }) {
   const following = await followingSet(user);
   try {
     top = await sql`
-      SELECT u.id, u.initial, u.first_name, SUM(l.delta)::int AS points,
+      SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar, SUM(l.delta)::int AS points,
              (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id)::int AS followers
       FROM points_ledger l JOIN users u ON u.id = l.user_id
       GROUP BY u.id HAVING SUM(l.delta) > 0
@@ -146,7 +146,7 @@ async function RightRail({ user }) {
         <p className="ss-panel-title orange">🔥 Асаж буй оч</p>
         {top.length === 0 && <p className="muted">Одоохондоо оч цуглуулсан хүн алга.</p>}
         {top.map((t) => (
-          <Person key={t.id} id={t.id} initial={t.initial} first_name={t.first_name} points={t.points} followers={t.followers} viewer={user} following={following} />
+          <Person key={t.id} id={t.id} initial={t.initial} first_name={t.first_name} avatar={t.avatar} points={t.points} followers={t.followers} viewer={user} following={following} />
         ))}
       </div>
     </aside>

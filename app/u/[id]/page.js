@@ -30,7 +30,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const me = await getUser();
   const myFollowing = await followingSet(me);
   const rows = await sql`
-    SELECT u.id, u.initial, u.first_name, u.surname, u.email, u.created_at,
+    SELECT u.id, u.initial, u.first_name, u.surname, u.avatar_id AS avatar, u.email, u.created_at,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers
     FROM users u WHERE u.id = ${uid}`;
@@ -40,7 +40,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const pr = (await sql`SELECT * FROM profiles WHERE user_id = ${uid}`)[0] || {};
 
   const all = await sql`
-    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, u.initial, u.first_name,
+    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.image_id, p.created_at, u.initial, u.first_name, u.avatar_id AS avatar,
       EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS saved,
       EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS sparked,
       (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
@@ -51,7 +51,7 @@ export default async function PublicProfile({ params, searchParams }) {
   for (const p of all) { p.author_points = u.points; p.author_followers = u.followers; }
   const savedList = isMe
     ? await sql`
-      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, a.initial, a.first_name, true AS saved,
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.image_id, p.created_at, a.initial, a.first_name, a.avatar_id AS avatar, true AS saved,
         EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${uid}) AS sparked,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
@@ -116,7 +116,7 @@ export default async function PublicProfile({ params, searchParams }) {
   return (
     <Shell user={me} header="nav">
       <section className="pu-card">
-        <div className="pu-cover" />
+        <div className="pu-cover" style={pr.cover_id ? { backgroundImage: `url(/img/${pr.cover_id})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} />
         <div className="pu-top">
           <span className="pu-avatar"><Avatar user={u} size={96} /></span>
           <div className="pu-name">

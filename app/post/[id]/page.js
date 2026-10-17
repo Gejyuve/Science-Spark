@@ -46,7 +46,7 @@ function CommentNode({ c, kids, user, postId, canReply, depth, following }) {
   return (
     <div className={"ar-comment" + (depth ? " reply" : "")} id={`c${c.id}`}>
       {depth > 0 && <span className="ss-curve" aria-hidden="true" />}
-      <Person id={c.author_id} initial={c.initial} first_name={c.first_name} points={c.points} followers={c.followers} size={depth ? 32 : 40} viewer={user} following={following} />
+      <Person id={c.author_id} initial={c.initial} first_name={c.first_name} avatar={c.avatar} points={c.points} followers={c.followers} size={depth ? 32 : 40} viewer={user} following={following} />
       <p>{c.body}</p>
       <div className="ar-cactions">
         {user && c.author_id !== user.id ? (
@@ -99,7 +99,7 @@ export default async function PostPage({ params, searchParams }) {
   const user = await getUser();
 
   const posts = await sql`
-    SELECT p.*, u.initial, u.first_name,
+    SELECT p.*, u.initial, u.first_name, u.avatar_id AS avatar,
            (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
            (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers
@@ -128,14 +128,14 @@ export default async function PostPage({ params, searchParams }) {
 
   const reviewer = post.reviewer_id
     ? (await sql`
-        SELECT u.id, u.initial, u.first_name,
+        SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar,
                COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
                (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers
         FROM users u WHERE u.id = ${post.reviewer_id}`)[0]
     : null;
 
   const comments = await sql`
-    SELECT c.*, u.initial, u.first_name,
+    SELECT c.*, u.initial, u.first_name, u.avatar_id AS avatar,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
            (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers,
            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id)::int AS likes,
@@ -177,9 +177,10 @@ export default async function PostPage({ params, searchParams }) {
             </span>
           </div>
 
+          {post.image_id && isArticle && <img className="ar-cover" src={`/img/${post.image_id}`} alt="" />}
           <div className="ar-content">
             {isQ && (
-              <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
+              <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
             )}
             <div className="ar-chips">
               {KIND_HREF[post.kind]
@@ -247,7 +248,9 @@ export default async function PostPage({ params, searchParams }) {
             ) : (
               rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)
             )}
+            {post.image_id && !isArticle && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
             <MetaBlock kind={post.kind} m={post.meta || {}} />
+            {post.meta?.program && <figure className="ar-program"><figcaption>Хөтөлбөр</figcaption><img src={`/img/${post.meta.program}`} alt="Хөтөлбөр" /></figure>}
             {post.kind === "Эвент" && published && googleCalUrl(post.title, post.meta || {}, post.body, `https://science-spark-sable.vercel.app/post/${post.id}`) && (
               <div className="ev-addcal">
                 <span>Календарьт нэмэх:</span>
@@ -259,12 +262,12 @@ export default async function PostPage({ params, searchParams }) {
             {!isQ && <div className="ar-credits">
               <div>
                 <span className="ar-label">Бичсэн:</span>
-                <Person id={post.author_id} initial={post.initial} first_name={post.first_name} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
+                <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
               </div>
               {published && reviewer && (
                 <div>
                   <span className="ar-label">Хянасан:</span>
-                  <Person id={reviewer.id} initial={reviewer.initial} first_name={reviewer.first_name} points={reviewer.points} followers={reviewer.followers} viewer={user} following={following} />
+                  <Person id={reviewer.id} initial={reviewer.initial} first_name={reviewer.first_name} avatar={reviewer.avatar} points={reviewer.points} followers={reviewer.followers} viewer={user} following={following} />
                 </div>
               )}
             </div>}

@@ -1,5 +1,7 @@
 "use client";
 
+import ImageInput from "../../components/ImageInput";
+
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { saveProfile } from "../actions";
@@ -81,17 +83,17 @@ export default function ProfileForm({ user, profile, error, isNew }) {
       </section>
 
       <section className="pf-card">
-        <div className="pf-cover soon" title="Тун удахгүй">
+        <ImageInput name="cover" aspect={4} maxW={1920} variant="cover" initial={p.cover_id || null}>
           <img src="/icons/camera18.svg" width={18} height={18} alt="" />
           <b>Ковер зураг нэмэх</b>
-          <small>1920 × 480 · JPG, PNG · тун удахгүй</small>
+          <small>1920 × 480 · JPG, PNG, WEBP</small>
           <Pts k="cover" />
-        </div>
+        </ImageInput>
         <div className="pf-photo">
-          <span className="pf-avatar soon" title="Тун удахгүй">
+          <ImageInput name="avatar" aspect={1} maxW={480} variant="avatar" initial={user.avatar || null}>
             <img src="/icons/person40.svg" width={40} height={40} alt="" />
             <span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>
-          </span>
+          </ImageInput>
           <div><b>Нүүр зураг</b><Pts k="photo" /></div>
         </div>
         <label className="pf-email">

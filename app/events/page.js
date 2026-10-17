@@ -59,7 +59,7 @@ export default async function Events({ searchParams }) {
         AND COALESCE(meta->>'ends_at', meta->>'starts_at') >= ${lo}
       ORDER BY meta->>'starts_at', id`;
     upcoming = await sql`
-      SELECT p.id, p.title, p.body, p.meta, p.created_at, u.initial, u.first_name,
+      SELECT p.id, p.title, p.body, p.meta, p.image_id, p.created_at, u.initial, u.first_name,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
       FROM posts p JOIN users u ON u.id = p.author_id
@@ -199,7 +199,7 @@ export default async function Events({ searchParams }) {
                 <a href={`/post/${e.id}/ics`} className="ss-icon-btn" title="Календарьт нэмэх"><img className="ic" src="/icons/f_date.svg" width={20} height={20} alt="Календарьт нэмэх" /></a>
               </div>
             </div>
-            <Link href={`/post/${e.id}`} className="ev-cover-link" aria-hidden="true" tabIndex={-1}><Cover type={m.type} starts={m.starts_at} /></Link>
+            <Link href={`/post/${e.id}`} className="ev-cover-link" aria-hidden="true" tabIndex={-1}>{e.image_id ? <img className="ev-photo" src={`/img/${e.image_id}`} alt="" loading="lazy" /> : <Cover type={m.type} starts={m.starts_at} />}</Link>
           </article>
         );
       })}

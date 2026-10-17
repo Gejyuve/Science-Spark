@@ -51,6 +51,15 @@ export default async function ReviewPost({ params, searchParams }) {
       <Flash error={error} />
       <div className="rv-cols">
         <div className="rv-mainc">
+          {(p.image_id || m.program) && (
+            <section className="adm-card rv-sec">
+              <b className="rv-h">Зураг</b>
+              <div className="rv-imgs">
+                {p.image_id && <img src={`/img/${p.image_id}`} alt="Ковер" />}
+                {m.program && <img src={`/img/${m.program}`} alt="Хөтөлбөр" />}
+              </div>
+            </section>
+          )}
           {editable ? (
             <>
               <section className="adm-card rv-sec">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
+import ImageInput from "./ImageInput";
 import { EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
@@ -66,14 +67,8 @@ function Field({ icon, children }) {
   return <label className="cp-field"><Ic n={icon} />{children}</label>;
 }
 
-function ImageSlot({ title, hint, wide }) {
-  return (
-    <div className={"cp-img soon" + (wide ? " wide" : "")} title="Зураг оруулах боломж тун удахгүй">
-      <Ic n="sh_img" s={22} />
-      <b>{title}</b>
-      <small>{hint}</small>
-    </div>
-  );
+function ImageSlot({ name, title, hint, wide, aspect }) {
+  return <ImageInput name={name} aspect={aspect} maxW={aspect && aspect <= 1 ? 1080 : 1600} variant={wide ? "slot wide" : "slot"} title={title} hint={hint} />;
 }
 
 function Head({ icon, title, right }) {
@@ -127,7 +122,7 @@ export default function Composer({ loggedIn, initial, error }) {
         <Head icon="sh_bulb" title="Бодрол" />
         <Counted name="body" max={300} rows={5} required latinCheck placeholder={"Би сэтгэж байна, тиймээс би оршиж байна...\n\n-Рене Декарт"} />
         <div className="cp-split">
-          <ImageSlot title="Зураг нэмэх (1 ширхэг)" hint="2:1 · өргөн · тун удахгүй" wide />
+          <ImageSlot name="image" aspect={2} title="Зураг нэмэх (1 ширхэг)" hint="2:1 · өргөн" wide />
           <div className="cp-col">
             <span className="cp-label">Эх сурвалж</span>
             <Field icon="f_link"><input name="source" type="url" maxLength={300} placeholder="Эх сурвалжийн холбоос (https://…)" /></Field>
@@ -172,11 +167,11 @@ export default function Composer({ loggedIn, initial, error }) {
         <div className="cp-split">
           <div className="cp-col">
             <span className="cp-label">Ковер зураг</span>
-            <div className="cp-row"><ImageSlot title="Зураг нэмэх" hint="1:1 · тун удахгүй" /><small className="cp-hint">Дөрвөлжин (1:1) хэмжээтэй, зөвхөн 1 зураг оруулна.</small></div>
+            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" /><small className="cp-hint">Дөрвөлжин (1:1) хэмжээтэй, зөвхөн 1 зураг оруулна.</small></div>
           </div>
           <div className="cp-col">
             <span className="cp-label">Хөтөлбөрийн зураг <em className="cp-opt">Заавал биш</em></span>
-            <ImageSlot title="Хөтөлбөрийн зураг нэмэх" hint="Хүсвэл тайлбар дээрээ бичиж болно · тун удахгүй" wide />
+            <ImageSlot name="program" title="Хөтөлбөрийн зураг нэмэх" hint="Хүсвэл тайлбар дээрээ бичиж болно" wide />
           </div>
         </div>
         <span className="cp-label">Бүртгэлийн холбоос / эх сурвалж (заавал биш)</span>
@@ -201,7 +196,7 @@ export default function Composer({ loggedIn, initial, error }) {
         </div>
         <Counted name="body" max={500} rows={4} required latinCheck placeholder="Зарлалын агуулга…" />
         <div className="cp-split">
-          <ImageSlot title="Зураг" hint="1:1 харьцаа · тун удахгүй" />
+          <ImageSlot name="image" aspect={1} title="Зураг" hint="1:1 харьцаа" />
           <div className="cp-col">
             <span className="cp-label">Эх сурвалж</span>
             <Field icon="f_link"><input name="source" type="url" maxLength={300} placeholder="Холбоос эсвэл эх сурвалж" /></Field>

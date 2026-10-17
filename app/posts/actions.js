@@ -8,6 +8,7 @@ import { notify } from "@/lib/notify";
 import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
 import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
+import { ownImage } from "@/lib/images";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 export async function createPost(formData) {
@@ -25,8 +26,8 @@ export async function createPost(formData) {
   await ensureSchema();
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, subtitle, body, status)
-    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending')
+    INSERT INTO posts (author_id, kind, title, subtitle, body, status, image_id)
+    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending', ${await ownImage(user.id, formData.get("image"))})
     RETURNING id`;
   revalidatePath("/");
   redirect(`/post/${rows[0].id}`);
@@ -101,7 +102,8 @@ export async function updatePost(formData) {
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
   await ensureSchema();
   // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
-  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body},
+  const imageId = await ownImage(user.id, formData.get("image"));
+  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId},
             status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
             WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);
@@ -278,10 +280,11 @@ export async function quickPost(formData) {
   // Тайлбар текстүүд: 30%-аас илүү латин бол хүлээж авахгүй (гарчиг, нэрэнд хамаарахгүй)
   if (latinShare(body) > LATIN_LIMIT || (meta.register && latinShare(meta.register) > LATIN_LIMIT)) fail(LATIN_MSG);
   await ensureSchema();
+  if (kind === "Эвент") meta.program = await ownImage(user.id, formData.get("program"));
   const status = INSTANT_KINDS.includes(kind) ? "published" : "pending";
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, body, status, meta)
-    VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb)
+    INSERT INTO posts (author_id, kind, title, body, status, meta, image_id)
+    VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${kind === "Асуулт" ? null : await ownImage(user.id, formData.get("image"))})
     RETURNING id`;
   revalidatePath("/");
   redirect(status === "published" ? "/" : `/post/${rows[0].id}`);

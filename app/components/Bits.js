@@ -14,6 +14,9 @@ export function fmtK(n) {
 }
 
 export function Avatar({ user, size = 40 }) {
+  if (user?.avatar) {
+    return <img className="ss-avatar" src={`/img/${user.avatar}`} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
+  }
   const id = Number(user?.id) || 0;
   const letter = (user?.first_name || "?")[0];
   return (
@@ -86,10 +89,10 @@ export function FollowBtn({ id, viewer, following }) {
 }
 
 // Товч профайл: зураг, нэр, оч · дагагч, дагах товч
-export function Person({ id, initial, first_name, points = 0, followers = 0, size = 40, viewer, following, className = "" }) {
+export function Person({ id, initial, first_name, avatar = null, points = 0, followers = 0, size = 40, viewer, following, className = "" }) {
   return (
     <div className={"ss-person " + className}>
-      <Link href={`/u/${id}`} className="ss-person-av"><Avatar user={{ id, first_name }} size={size} /></Link>
+      <Link href={`/u/${id}`} className="ss-person-av"><Avatar user={{ id, first_name, avatar }} size={size} /></Link>
       <div>
         <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? `${initial}.${first_name}` : "Шинэ хэрэглэгч"}</b></Link>
         <span className="ss-statrow">

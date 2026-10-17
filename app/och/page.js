@@ -45,7 +45,7 @@ export default async function Och({ searchParams }) {
     user = await getUser();
     await ensureSchema();
     top = await sql`
-      SELECT u.id, u.initial, u.first_name,
+      SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar,
         COALESCE(SUM(l.delta) FILTER (WHERE ${period[2]}::text IS NULL OR l.created_at > now() - ${period[2] || "0 days"}::interval), 0)::int AS gained,
         COALESCE(SUM(l.delta), 0)::int AS total
       FROM users u JOIN points_ledger l ON l.user_id = u.id

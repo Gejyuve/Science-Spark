@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KINDS } from "@/lib/format";
 import ContentField from "./ContentField";
+import ImageInput from "./ImageInput";
 
 // Figma: Нийтлэл бичих. Шинэ болон засах хуудсанд хоёуланд нь ашиглана.
 export default function PostForm({ action, post = {}, error, extra, heading = "Мэдлэг бол хуваалцах тусам арвижих баялаг юм." }) {
@@ -37,12 +38,12 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
           <div className="wr-sec-head">
             <div><h2>Нийтлэлийн ковер</h2><p>Нийтлэлийн нүүр зураг. 740×280 харьцаатай зураг тохиромжтой.</p></div>
           </div>
-          <div className="wr-drop soon" title="Тун удахгүй">
+          <ImageInput name="image" aspect={740 / 280} maxW={1600} variant="drop" initial={post.image_id || null}>
             <span className="wr-ring"><img src="/icons/imgadd.svg" width={26} height={26} alt="" /></span>
-            <b>Ковер зураг оруулах боломж тун удахгүй нэмэгдэнэ</b>
+            <b>Ковер зураг нэмэх</b>
             <span className="wr-pick"><img src="/icons/plus16.svg" width={16} height={16} alt="" />Зураг сонгох</span>
-            <small>JPEG, PNG зэрэг өргөтгөлтэй файл · 740×280 харьцаатай</small>
-          </div>
+            <small>JPG, PNG, WEBP · 740×280 харьцаагаар автоматаар тайрна</small>
+          </ImageInput>
         </section>
 
         <section className="wr-card">

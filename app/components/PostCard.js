@@ -24,10 +24,13 @@ export default function PostCard({ p, viewer, following }) {
         {KIND_HREF[p.kind] ? <Link href={KIND_HREF[p.kind]} className="ss-kind">{p.kind}</Link> : <span className="ss-kind">{p.kind}</span>}
         <When d={p.created_at} />
       </div>
-      <Person id={p.author_id} initial={p.initial} first_name={p.first_name} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
+      <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
       <Link href={`/post/${p.id}`} className="ss-card-body">
         {!isShort && <h2>{p.title}</h2>}
         <p>{excerpt}</p>
+        {p.image_id && (
+          <img className={"ss-cardimg" + (["Эвент", "Зарлал"].includes(p.kind) ? " sq" : "")} src={`/img/${p.image_id}`} alt="" loading="lazy" />
+        )}
         {facts.filter(Boolean).length > 0 && (
           <span className="ss-facts">
             {facts.filter(Boolean).map(([ic, v]) => (
@@ -74,7 +77,7 @@ export default function PostCard({ p, viewer, following }) {
         <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">
           <span className="ss-curve" aria-hidden="true" />
           <span className="ss-answer-who">
-            <Avatar user={{ id: p.ta_author, first_name: p.ta_first }} size={36} />
+            <Avatar user={{ id: p.ta_author, first_name: p.ta_first, avatar: p.ta_avatar }} size={36} />
             <span>
               <b>{p.ta_initial}.{p.ta_first}</b>
               <Stat points={p.ta_points} followers={p.ta_followers} link={false} />
