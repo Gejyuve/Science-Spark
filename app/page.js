@@ -51,7 +51,7 @@ export default async function Home({ searchParams }) {
         ORDER BY (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) DESC, c.created_at DESC, c.id DESC
         LIMIT 1
       ) ta ON true
-      WHERE p.status = 'published'
+      WHERE p.status = 'published' AND p.kind <> 'Үг'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
         -- Цагийн шүүлтүүр (санамсаргүй, зарлалд хамаарахгүй). Хандалт өндөр: тухайн хугацаанд оч авсан
@@ -76,7 +76,7 @@ export default async function Home({ searchParams }) {
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
         COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))))::int AS top,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa
-      FROM posts p WHERE p.status = 'published'`;
+      FROM posts p WHERE p.status = 'published' AND p.kind <> 'Үг'`;
     counts = c;
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ

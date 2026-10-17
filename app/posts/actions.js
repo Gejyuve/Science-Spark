@@ -42,7 +42,7 @@ export async function addComment(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 2000);
   if (!Number.isInteger(postId) || !body) return;
   await ensureSchema();
-  const ok = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status = 'published'`;
+  const ok = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!ok.length) return;
   // Хариулт: эцэг сэтгэгдэл мөн нийтлэлд байх ёстой. 3-аас гүн бол 2-р түвшинд залгана.
   let parent = Number(formData.get("parent_id")) || null;
@@ -76,7 +76,7 @@ export async function sparkPost(formData) {
   const postId = Number(formData.get("post_id"));
   if (!Number.isInteger(postId)) return;
   await ensureSchema();
-  const post = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status = 'published'`;
+  const post = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!post.length || post[0].author_id === user.id) return;
   const ins = await sql`
     INSERT INTO sparks (post_id, user_id) VALUES (${postId}, ${user.id})
@@ -327,7 +327,7 @@ export async function likeComment(formData) {
   if (!Number.isInteger(id)) return;
   await ensureSchema();
   const [c] = await sql`SELECT c.author_id, c.post_id FROM comments c JOIN posts p ON p.id = c.post_id
-                        WHERE c.id = ${id} AND p.status = 'published'`;
+                        WHERE c.id = ${id} AND p.status IN ('published', 'discussion')`;
   if (!c || c.author_id === user.id) return;
   // Хариултад оч: өгсөн хүнд +5, хариултын эзэнд +1. Буцаавал очийг мөн буцаана.
   const del = await sql`DELETE FROM comment_likes WHERE comment_id = ${id} AND user_id = ${user.id} RETURNING 1`;
@@ -356,7 +356,7 @@ export async function toggleSave(formData) {
   await ensureSchema();
   const del = await sql`DELETE FROM saves WHERE post_id = ${postId} AND user_id = ${user.id} RETURNING 1`;
   if (!del.length) {
-    const ok = await sql`SELECT 1 FROM posts WHERE id = ${postId} AND status = 'published'`;
+    const ok = await sql`SELECT 1 FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
     if (ok.length) await sql`INSERT INTO saves (post_id, user_id) VALUES (${postId}, ${user.id}) ON CONFLICT DO NOTHING`;
   }
   revalidatePath(`/post/${postId}`);

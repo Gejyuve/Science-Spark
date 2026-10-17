@@ -3,6 +3,7 @@ import { KINDS } from "@/lib/format";
 import ContentField from "./ContentField";
 import ImageInput from "./ImageInput";
 import TopNav from "./TopNav";
+import DictAdd from "./DictAdd";
 
 // Figma: Нийтлэл бичих. Шинэ болон засах хуудсанд хоёуланд нь ашиглана.
 export default function PostForm({ action, post = {}, error, extra, heading = "Мэдлэг бол хуваалцах тусам арвижих баялаг юм." }) {
@@ -70,7 +71,7 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
             <ContentField defaultValue={post.body || ""} />
           </div>
           <div className="wr-inserts">
-            <span className="wr-insert soon" title="Тун удахгүй"><img src="/icons/book18.svg" width={18} height={18} alt="" />Шинэ үгийн тайлбар нэмэх</span>
+            <DictAdd className="wr-insert" label="Шинэ үгийн тайлбар нэмэх" icon={<img src="/icons/book18.svg" width={18} height={18} alt="" />} />
             <span className="wr-insert soon" title="Тун удахгүй"><img src="/icons/link18.svg" width={18} height={18} alt="" />Эх сурвалж нэмэх</span>
           </div>
         </section>

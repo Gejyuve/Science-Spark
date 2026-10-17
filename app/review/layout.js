@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, canReview, needsName } from "@/lib/auth";
 import { levelFor } from "@/lib/levels";
+import { canApproveWords } from "@/lib/terms";
 import AdminNav from "../admin/_c/AdminNav";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export default async function ReviewLayout({ children }) {
     : [
         { key: "become", label: "Хянагч болох", icon: "a_reviewers", href: "/review", exact: true, match: "^/review/exam" },
         { key: "rules", label: "Хянагчийн дүрэм", icon: "a_requests", href: "/review/rules" },
+        ...(canApproveWords(user) ? [{ key: "words", label: "Шинэ үг зөвшөөрөх", icon: "a_content", href: "/review?t=words", match: "^/review/word" }] : []),
       ];
   const chip = staff
     ? `${user.role === "reviewer" ? "ХЯНАГЧ" : "РЕДАКЦ"} · ТҮВШИН ${lv}`

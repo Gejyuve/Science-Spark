@@ -65,13 +65,13 @@ export default async function PublicProfile({ params, searchParams }) {
     saved: isMe ? savedList : null,
     all,
     published: all.filter((p) => p.status === "published"),
-    pending: all.filter((p) => p.status === "pending" || p.status === "approved"),
+    pending: all.filter((p) => p.status === "pending" || p.status === "approved" || p.status === "discussion"),
     replied: all.filter((p) => p.status === "rejected" || p.status === "removed"),
   };
   const current = groups[tab] && (isMe || tab === "published") ? tab : "published";
   // Төрлийн сонгогч (Figma 680:563): сонгосон төлөв доторх төрлөөр шүүнэ
   const base = groups[current] || [];
-  const KIND_LIST = ["Нийтлэл", "Мэдээ", "Асуулт", "Бодрол", "Эвент", "Зарлал"];
+  const KIND_LIST = ["Нийтлэл", "Мэдээ", "Асуулт", "Бодрол", "Эвент", "Зарлал", "Үг"];
   const kind = KIND_LIST.includes(kindParam) ? kindParam : "";
   const kindCounts = Object.fromEntries(KIND_LIST.map((x) => [x, base.filter((p) => p.kind === x).length]));
   const list = kind ? base.filter((p) => p.kind === kind) : base;

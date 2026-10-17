@@ -5,6 +5,7 @@ import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
 import { toggleFollow } from "../posts/actions";
 import Shell from "../components/Shell";
+import DictAdd from "../components/DictAdd";
 import { Avatar, fmtK, followingSet } from "../components/Bits";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +19,12 @@ const TABS = [
   ["qa", "Асуулт"],
   ["event", "Эвент"],
   ["ann", "Зарлал"],
+  ["dict", "Толь"],
   ["user", "Хэрэглэгч"],
 ];
-const KIND_OF = { Нийтлэл: "article", Мэдээ: "news", Асуулт: "qa", Бодрол: "qa", Эвент: "event", Зарлал: "ann" };
-const SECTION = { article: "Нийтлэл", news: "Мэдээ", qa: "Асуулт", event: "Эвент", ann: "Зарлал", user: "Хэрэглэгч" };
-const PREVIEW = { article: 4, news: 2, qa: 3, event: 2, ann: 2, user: 2 };
+const KIND_OF = { Нийтлэл: "article", Мэдээ: "news", Асуулт: "qa", Бодрол: "qa", Эвент: "event", Зарлал: "ann", Үг: "dict" };
+const SECTION = { article: "Нийтлэл", news: "Мэдээ", qa: "Асуулт", event: "Эвент", ann: "Зарлал", dict: "Толь", user: "Хэрэглэгч" };
+const PREVIEW = { article: 4, news: 2, qa: 3, event: 2, ann: 2, dict: 4, user: 2 };
 const SYMBOLS = ["π", "∞", "Σ", "√", "Δ", "λ", "Ω", "∫"];
 const TONES = ["teal", "orange", "violet", "pink"];
 
@@ -101,7 +103,8 @@ export default async function SearchPage({ searchParams }) {
              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)::int AS answers,
              (p.title ILIKE ${like})::int AS in_title
       FROM posts p JOIN users u ON u.id = p.author_id
-      WHERE p.status = 'published' AND (p.title ILIKE ${like} OR p.body ILIKE ${like})
+      WHERE p.status = 'published' AND (p.title ILIKE ${like} OR p.body ILIKE ${like}
+        OR (p.kind = 'Үг' AND (p.meta->>'en' ILIKE ${like} OR p.meta->>'ru' ILIKE ${like})))
       ORDER BY in_title DESC, p.created_at DESC LIMIT 100`;
     people = await sql`
       SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar,
@@ -113,7 +116,7 @@ export default async function SearchPage({ searchParams }) {
       ORDER BY points DESC LIMIT 20`;
   }
   const following = await followingSet(user);
-  const groups = { article: [], news: [], qa: [], event: [], ann: [], user: people };
+  const groups = { article: [], news: [], qa: [], event: [], ann: [], dict: [], user: people };
   for (const p of posts) groups[KIND_OF[p.kind] || "article"].push(p);
   const total = posts.length + people.length;
   const count = (k) => (k === "all" ? total : groups[k].length);
@@ -148,7 +151,7 @@ export default async function SearchPage({ searchParams }) {
           <p>"{term}" хайлтаар юу ч олдсонгүй. Өөр түлхүүр үгээр хайх эсвэл асуулт асууж үзээрэй.</p>
           <div>
             <Link href={user ? "/?compose=Асуулт" : "/login"} className="sr-btn">Асуулт асуух</Link>
-            <span className="sr-btn ghost soon" title="Тун удахгүй">Үг Толь-д санал болгох</span>
+            <DictAdd className="sr-btn ghost" label="Үг Толь-д санал болгох" loggedIn={!!user} />
           </div>
         </div>
       )}
@@ -157,7 +160,7 @@ export default async function SearchPage({ searchParams }) {
         <div className="sr-empty">
           <span className="sr-empty-ic"><img className="ic" src="/icons/search.svg" width={22} height={22} alt="" /></span>
           <b>Юу хайх вэ?</b>
-          <p>Нийтлэл, мэдээ, асуулт, эвент, зарлал болон хэрэглэгчдээс хайна.</p>
+          <p>Нийтлэл, мэдээ, асуулт, эвент, зарлал, Толь-ийн нэр томьёо болон хэрэглэгчдээс хайна.</p>
         </div>
       )}
 
@@ -209,6 +212,23 @@ export default async function SearchPage({ searchParams }) {
                   <small>{p.initial}.{p.first_name} · {fmtDate(p.created_at)}{p.kind === "Бодрол" ? " · Бодрол" : ""}</small>
                 </span>
                 <em>{p.answers} {p.kind === "Асуулт" ? "хариулт" : "сэтгэгдэл"}</em>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {visible("dict") && (
+        <section className="sr-sec">
+          {head("dict")}
+          <div className="sr-grid2">
+            {show("dict").map((p) => (
+              <Link key={p.id} href={`/post/${p.id}`} className="sr-term">
+                <span className="sr-tsq">{(p.title || "?").charAt(0).toUpperCase()}</span>
+                <span className="sr-utext">
+                  <span className="sr-uname"><b><Hl text={p.title} term={term} /></b>{p.meta?.en && <em className="sr-en">EN · <Hl text={p.meta.en} term={term} /></em>}</span>
+                  <small className="sr-tdef"><Hl text={snippet(p.body, term, 90)} term={term} /></small>
+                </span>
               </Link>
             ))}
           </div>

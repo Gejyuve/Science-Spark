@@ -5,19 +5,22 @@ import { ago } from "@/lib/admin";
 import { fmtDate } from "@/lib/format";
 import { examState, MAX_FAILS, PASS_SCORE } from "@/lib/exam";
 import Head, { Stat, Tabs, Chip, Flash, who } from "../admin/_c/Head";
+import { TERM_KIND, canApproveWords, daysLeft, SUPPORT_NEEDED } from "@/lib/terms";
 
 const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент", "Зарлал"] };
 
 export default async function ReviewHome({ searchParams }) {
   const user = await getUser();
   const sp = await searchParams;
-  return isStaff(user) ? <Queue user={user} sp={sp} /> : <Become user={user} sp={sp} />;
+  if (isStaff(user) || (sp.t === "words" && canApproveWords(user))) return <Queue user={user} sp={sp} />;
+  return <Become user={user} sp={sp} />;
 }
 
 // Хянагчийн хяналтын жагсаалт (Figma 628:1121, 628:1294)
 async function Queue({ user, sp }) {
-  const t = sp.t === "events" ? "events" : "posts";
-  const kinds = GROUPS[t];
+  const words = canApproveWords(user);
+  const t = sp.t === "words" ? "words" : !isStaff(user) ? "words" : sp.t === "events" ? "events" : "posts";
+  const kinds = GROUPS[t] || [];
   const rows = await sql`
     SELECT p.id, p.kind, p.title, p.created_at, p.author_id, u.initial, u.first_name, u.email, u.account_type
     FROM posts p JOIN users u ON u.id = p.author_id
@@ -27,6 +30,7 @@ async function Queue({ user, sp }) {
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND author_id <> ${user.id})::int AS pending,
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.posts}))::int AS posts,
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.events}))::int AS events,
+      (SELECT COUNT(*) FROM posts WHERE status = 'discussion' AND kind = ${TERM_KIND})::int AS words,
       (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND reviewed_at > date_trunc('day', now()))::int AS today,
       (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND status IN ('published','approved','rejected'))::int AS total,
       (SELECT COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM reviewed_at - created_at)) / 360) / 10, 0)
@@ -42,8 +46,9 @@ async function Queue({ user, sp }) {
         <Stat label="Дундаж хугацаа" value={`${s.avg_h} цаг`} note="ирснээс шийдвэр хүртэл" />
         <Stat label="Нийт хянасан" value={s.total} />
       </div>
-      <Tabs cur={t === "posts" ? "" : "events"} href={(k) => (k ? "/review?t=events" : "/review")}
-        tabs={[["", "Нийтлэл, мэдээ", s.posts], ["events", "Эвент, зарлал", s.events]]} />
+      <Tabs cur={t === "posts" ? "" : t} href={(k) => (k ? `/review?t=${k}` : "/review")}
+        tabs={[...(isStaff(user) ? [["", "Нийтлэл, мэдээ", s.posts], ["events", "Эвент, зарлал", s.events]] : []), ["words", "Шинэ үг", s.words]]} />
+      {t === "words" ? <Words user={user} can={words} /> : (
       <section className="adm-card flush">
         <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : "Эвент, зарлал"} ({rows.length})</b></div>
         {rows.length === 0 ? (
@@ -76,7 +81,54 @@ async function Queue({ user, sp }) {
             : "Асуудалтай эвент, зарлалыг зөвшөөрсөн нь илэрвэл редакц оч хасаж болно. Огноо, байршил, холбоосыг заавал шалгаарай."}
         </p>
       </section>
+      )}
     </>
+  );
+}
+
+// Шинэ үг: хэлэлцүүлэгт байгаа нэр томьёо (Figma 628:1294, 692:746). Түвшин 5+ зөвшөөрнө.
+async function Words({ user, can }) {
+  const rows = await sql`
+    SELECT p.id, p.title, p.meta, p.created_at, p.author_id, u.initial, u.first_name, u.email, u.account_type,
+           (SELECT COUNT(*) FROM term_votes WHERE post_id = p.id AND vote = 1)::int AS up,
+           (SELECT COUNT(*) FROM term_votes WHERE post_id = p.id AND vote = -1)::int AS down,
+           (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
+    FROM posts p JOIN users u ON u.id = p.author_id
+    WHERE p.status = 'discussion' AND p.kind = ${TERM_KIND}
+    ORDER BY p.created_at ASC`;
+  return (
+    <section className="adm-card flush">
+      <div className="adm-card-head pad"><b>Шинэ үг ({rows.length})</b></div>
+      {rows.length === 0 ? (
+        <p className="adm-empty">Хэлэлцэж буй үг алга ✓</p>
+      ) : (
+        <table className="adm-table">
+          <thead><tr><th>Нэр томьёо</th><th>Дэвшүүлсэн</th><th>Дэмжлэг</th><th>Хэлэлцүүлэг</th><th></th></tr></thead>
+          <tbody>
+            {rows.map((p) => {
+              const total = p.up + p.down;
+              const pct = total ? Math.round((100 * p.up) / total) : 0;
+              const left = daysLeft(p.meta, p.created_at);
+              const own = p.author_id === user.id;
+              return (
+                <tr key={p.id}>
+                  <td className="adm-strong adm-clip">{p.title} <span className="adm-muted small">· {p.meta?.en}</span></td>
+                  <td>{who(p)}</td>
+                  <td><Chip tone={total && pct >= SUPPORT_NEEDED * 100 ? "ok" : total ? "bad" : "gray"}>{total ? `${pct}% · ${p.up}/${total}` : "Санал алга"}</Chip></td>
+                  <td>{left ? `${left} хоног үлдсэн` : <Chip tone="teal">Дууссан</Chip>} · {p.comments} сэтгэгдэл</td>
+                  <td className="adm-right">
+                    {own ? <Chip tone="gray">Өөрийн</Chip> : can ? <Link href={`/review/word/${p.id}`} className="adm-btn teal">Хянах</Link> : <Chip tone="gray">Түвшин 5+</Chip>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      <p className="adm-banner inset">
+        Шинэ үгийг Түвшин 5+ хэрэглэгч ба редакц зөвшөөрнө. Хэлэлцүүлэгт {Math.round(SUPPORT_NEEDED * 100)}%-иас дээш дэмжлэг авсан, орчуулга, эх сурвалж нь зөв үгийг батлаарай. Батлагдвал нэмсэн хүнд +30 оч.
+      </p>
+    </section>
   );
 }
 

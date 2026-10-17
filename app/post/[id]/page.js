@@ -12,6 +12,8 @@ import EventCover from "../../components/EventCover";
 import LogicReport from "../../components/LogicReport";
 import Shell from "../../components/Shell";
 import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits";
+import { Langs, VoteBox } from "../../components/Terms";
+import { TERM_KIND, daysLeft, synonyms, shortUrl } from "@/lib/terms";
 
 export const dynamic = "force-dynamic";
 
@@ -149,6 +151,88 @@ function AnnTop({ post, m }) {
   );
 }
 
+// Нийтлэл доторх Толь-ийн нэр томьёог тодруулж, дээр нь очиход тайлбарыг харуулна (Figma 552:400)
+function withTerms(text, terms, used) {
+  let nodes = [text];
+  for (const t of terms) {
+    if (used.has(t.id)) continue;
+    const needle = t.title.toLowerCase();
+    const next = [];
+    let done = false;
+    for (const n of nodes) {
+      if (done || typeof n !== "string") { next.push(n); continue; }
+      const k = n.toLowerCase().indexOf(needle);
+      if (k === -1) { next.push(n); continue; }
+      next.push(n.slice(0, k));
+      next.push(
+        <span key={`t${t.id}`} className="tm-term" tabIndex={0}>
+          <Link href={`/post/${t.id}`}>{n.slice(k, k + needle.length)}</Link>
+          <span className="tm-pop" role="tooltip">
+            <span className="tm-card">
+              <span className="tm-card-top"><b>{t.title}</b><em className="tm-badge"><img src="/icons/dict.svg" width={11} height={11} alt="" />Толь</em></span>
+              <span className="tm-langs">{t.meta?.en && <span><i>EN</i>{t.meta.en}</span>}{t.meta?.ru && <span><i>RU</i>{t.meta.ru}</span>}{t.meta?.la && <span><i>LA</i>{t.meta.la}</span>}</span>
+              <span className="tm-p">{t.body.length > 220 ? t.body.slice(0, 220) + "…" : t.body}</span>
+              {synonyms(t.meta).length > 0 && <small><span>Ижил утгатай:</span> <b>{synonyms(t.meta).join(", ")}</b></small>}
+              <span className="tm-card-foot">{t.meta?.source ? <span className="tm-src">↗ {shortUrl(t.meta.source).split("/")[0]}</span> : <span />}<Link href={`/post/${t.id}`} className="tm-go">Толь руу →</Link></span>
+            </span>
+          </span>
+        </span>
+      );
+      next.push(n.slice(k + needle.length));
+      used.add(t.id);
+      done = true;
+    }
+    nodes = next;
+  }
+  return nodes;
+}
+
+// Figma 557:409 / 567:708 · Толь · Дэлгэрэнгүй
+function TermBody({ post, m, paras, user, following, reviewer, votes }) {
+  const syn = synonyms(m);
+  const disc = post.status === "discussion";
+  const refs = String(m.refs || "").split(/\n|;/).map((x) => x.trim()).filter(Boolean);
+  return (
+    <>
+      <div className="ar-chips"><Link href="/dict" className="ar-chip main link tl-chip"><img src="/icons/dict.svg" width={12} height={12} alt="" />Толь</Link></div>
+      <h1 className="ar-title tl-h1">{post.title}</h1>
+      <Langs m={m} big />
+      <div className="tl-body">
+        <h3>Тайлбар</h3>
+        {paras.map((x, i) => <p key={i} className="ar-text">{x}</p>)}
+        {syn.length > 0 && (
+          <>
+            <h3>Ижил утгатай өөр монгол үг</h3>
+            <div className="tl-syns">{syn.map((x) => <span key={x}>{x}</span>)}</div>
+          </>
+        )}
+        {(m.source || refs.length > 0) && (
+          <>
+            <h3>Эх сурвалж</h3>
+            <div className="tl-src">
+              {m.source && <a href={m.source} target="_blank" rel="noopener noreferrer nofollow"><img className="ic" src="/icons/f_link.svg" width={15} height={15} alt="" />{shortUrl(m.source)} ↗</a>}
+              {refs.map((r) => <span key={r}><img className="ic" src="/icons/book18.svg" width={15} height={15} alt="" />{r}</span>)}
+            </div>
+          </>
+        )}
+      </div>
+      <div className="ar-credits">
+        <div>
+          <span className="ar-label">{disc ? "Дэвшүүлсэн:" : "Нэмсэн:"}</span>
+          <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
+        </div>
+        {!disc && reviewer && (
+          <div>
+            <span className="ar-label">Хянасан:</span>
+            <Person id={reviewer.id} initial={reviewer.initial} first_name={reviewer.first_name} avatar={reviewer.avatar} points={reviewer.points} followers={reviewer.followers} viewer={user} following={following} />
+          </div>
+        )}
+      </div>
+      {disc && <VoteBox t={{ id: post.id, author_id: post.author_id, ...votes }} user={user} back={`/post/${post.id}`} detail />}
+    </>
+  );
+}
+
 // Эвентийн үндсэн хэсэг: тайлбар, хөтөлбөр, газрын зураг, бүртгүүлэх заавар
 function EventBody({ post, m, paras, published }) {
   const url = `https://science-spark-sable.vercel.app/post/${post.id}`;
@@ -210,7 +294,7 @@ export default async function PostPage({ params, searchParams }) {
   const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
   // Үзсэн хүний тоо: нийтлэгдсэн контентыг зохиогчоос бусад хүн анх нээхэд +1
   let views = post.views || 0;
-  if (post.status === "published" && !isAuthor) {
+  if ((post.status === "published" || (post.kind === TERM_KIND && post.status === "discussion")) && !isAuthor) {
     try {
       let viewer = user ? `u:${user.id}` : null;
       if (!viewer) {
@@ -225,8 +309,16 @@ export default async function PostPage({ params, searchParams }) {
   const isQ = post.kind === "Асуулт";
   const isEvent = post.kind === "Эвент";
   const isAnn = post.kind === "Зарлал";
+  const isTerm = post.kind === TERM_KIND;
   const published = post.status === "published";
-  if (!published && !isAuthor && !isStaff(user)) notFound();
+  // Хэлэлцэж буй үг нийтэд нээлттэй: санал, сэтгэгдэл, хадгалах, хуваалцах боломжтой
+  const open = published || (isTerm && post.status === "discussion");
+  if (!open && !isAuthor && !isStaff(user)) notFound();
+  const votes = isTerm
+    ? (await sql`SELECT COUNT(*) FILTER (WHERE vote = 1)::int AS up, COUNT(*) FILTER (WHERE vote = -1)::int AS down,
+                        MAX(CASE WHEN user_id = ${user ? user.id : 0} THEN vote END)::int AS my_vote
+                 FROM term_votes WHERE post_id = ${post.id}`)[0]
+    : null;
 
   const reviewer = post.reviewer_id
     ? (await sql`
@@ -257,6 +349,12 @@ export default async function PostPage({ params, searchParams }) {
 
   const author = { id: post.author_id, initial: post.initial, first_name: post.first_name };
   const paras = post.body.split(/\n\s*\n/);
+  const glossary = isArticle
+    ? await sql`SELECT id, title, body, meta FROM posts WHERE kind = ${TERM_KIND} AND status = 'published'
+                AND char_length(title) >= 3 AND position(lower(title) in lower(${post.body})) > 0
+                ORDER BY char_length(title) DESC LIMIT 40`
+    : [];
+  const usedTerms = new Set();
   const plain = post.kind === "Зарлал"; // зарлал: бүх догол мөр ижил
   const lead = plain ? null : post.subtitle || (paras.length > 1 ? paras[0] : null);
   const rest = plain || post.subtitle ? paras : paras.length > 1 ? paras.slice(1) : paras;
@@ -265,12 +363,18 @@ export default async function PostPage({ params, searchParams }) {
     <Shell user={user} header={false}>
       <div className="ar-col">
         <div className="ar-pagebar">
-          <Link href="/" className="ar-back">← Буцах</Link>
+          <Link href={isTerm ? "/dict" : "/"} className="ar-back">← Буцах</Link>
         </div>
 
         <article className="ar-card">
           <div className="ar-strip">
-            <When d={post.created_at} size={16} className="ar-when" align="left" />
+            {isTerm && post.status === "discussion" ? (
+              <span className="tl-strip orange"><img src="/icons/f_clock.svg" width={14} height={14} alt="" />Хэлэлцэж байна · {daysLeft(post.meta, post.created_at) ? `${daysLeft(post.meta, post.created_at)} хоног үлдсэн` : "хугацаа дууссан, зөвшөөрөгчийг хүлээж байна"}</span>
+            ) : isTerm && published ? (
+              <span className="tl-strip">✓ Батлагдсан {fmtDate(post.meta?.approved_at || post.reviewed_at)}</span>
+            ) : (
+              <When d={post.created_at} size={16} className="ar-when" align="left" />
+            )}
             <span className="ss-grow" />
             <span className="ar-views tip" data-tip={`Энэ контентыг ${views.toLocaleString("en-US")} хүн нээж үзсэн`} tabIndex={0}>
               <img className="ic" src="/icons/eye.svg" width={16} height={16} alt="Үзсэн" />{views.toLocaleString("en-US")}
@@ -284,16 +388,17 @@ export default async function PostPage({ params, searchParams }) {
             )}
             {isEvent && <EventTop post={post} m={post.meta || {}} />}
             {isAnn && <AnnTop post={post} m={post.meta || {}} />}
-            {!isEvent && !isAnn && <div className="ar-chips">
+            {isTerm && <TermBody post={post} m={post.meta || {}} paras={paras} user={user} following={following} reviewer={reviewer} votes={votes} />}
+            {!isEvent && !isAnn && !isTerm && <div className="ar-chips">
               {KIND_HREF[post.kind]
                 ? <Link href={KIND_HREF[post.kind]} className="ar-chip main link">{post.kind}</Link>
                 : <span className="ar-chip main">{post.kind}</span>}
             </div>}
-            {!["Асуулт", "Бодрол", "Эвент", "Зарлал"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
+            {!["Асуулт", "Бодрол", "Эвент", "Зарлал", TERM_KIND].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
             {error && <p className="error">{error}</p>}
             {ok && <p className="notice">{ok}</p>}
-            {!published && post.status !== "approved" && (
+            {!open && post.status !== "approved" && (
               <p className={post.status === "pending" ? "notice" : "error"}>
                 {post.status === "rejected"
                   ? `Редакц засвар хийхээр буцаасан: ${post.review_note || ""}`
@@ -339,7 +444,7 @@ export default async function PostPage({ params, searchParams }) {
               <p className="muted">Засаад хадгалбал дахин редакцын хяналтад орно.</p>
             )}
 
-            {isEvent ? (
+            {isTerm ? null : isEvent ? (
               <EventBody post={post} m={post.meta || {}} paras={paras} published={published} />
             ) : <>
             {lead && (
@@ -351,7 +456,7 @@ export default async function PostPage({ params, searchParams }) {
             {isQ ? (
               <div className="ar-qbox">{post.body}</div>
             ) : (
-              rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)
+              rest.map((para, i) => <p key={i} className="ar-text">{glossary.length ? withTerms(para, glossary, usedTerms) : para}</p>)
             )}
             {post.image_id && !isArticle && !isAnn && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
             {!isAnn && <MetaBlock kind={post.kind} m={post.meta || {}} />}
@@ -365,7 +470,7 @@ export default async function PostPage({ params, searchParams }) {
             )}
             </>}
 
-            {!isQ && <div className="ar-credits">
+            {!isQ && !isTerm && <div className="ar-credits">
               <div>
                 <span className="ar-label">{isAnn ? "Зарласан:" : "Бичсэн:"}</span>
                 <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
@@ -381,14 +486,14 @@ export default async function PostPage({ params, searchParams }) {
             <div className="ar-divider" />
             <div className="ar-reactions">
               <span className="ar-left">
-                {published && user && !isAuthor && !mine ? (
+                {open && user && !isAuthor && !mine ? (
                   <form action={sparkPost}>
                     <input type="hidden" name="post_id" value={post.id} />
                     <button type="submit" className="ar-react teal ar-sparkbtn" title="Оч өгөх">
                       <img src="/icons/sparkle.svg" width={24} height={26} alt="Оч өгөх" />{post.sparks}
                     </button>
                   </form>
-                ) : published && !user ? (
+                ) : open && !user ? (
                   <Link href="/login" className="ar-react teal ar-sparkbtn" title="Оч өгөх"><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</Link>
                 ) : (
                   <span className={"ar-react teal" + (mine ? " given" : "")} title={mine ? "Та оч өгсөн" : "Оч"}><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</span>
@@ -404,7 +509,7 @@ export default async function PostPage({ params, searchParams }) {
               )}
               <span className="ar-right">
                 {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
-                {published && (user ? (
+                {open && (user ? (
                   <form action={toggleSave}>
                     <input type="hidden" name="post_id" value={post.id} />
                     <button type="submit" className="ar-iconbtn" title={saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={saved}>
@@ -414,17 +519,25 @@ export default async function PostPage({ params, searchParams }) {
                 ) : (
                   <Link href="/login" className="ar-iconbtn" title="Хадгалах"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></Link>
                 ))}
-                {published && <Share path={`/post/${post.id}`} title={post.title} align="right" />}
+                {open && <Share path={`/post/${post.id}`} title={post.title} align="right" />}
               </span>
             </div>
             <div className="ar-divider" />
 
             <div id="comments" />
-            {published && (user ? (
+            {isTerm && (
+              <div className="tl-dhead">
+                <h2>Хэлэлцүүлэг <em>{comments.length}</em>
+                  {published && <span className="tl-arch"><img className="ic" src="/icons/save18.svg" width={12} height={12} alt="" />Архив · Дэвшүүлсэн {fmtDate(post.created_at)}</span>}
+                </h2>
+                <small>Орчуулга, тайлбар, ижил утгатай үгийг хамтдаа сайжруулах орон зай.</small>
+              </div>
+            )}
+            {open && (user ? (
               <form action={addComment} className="ar-compose">
                 <input type="hidden" name="post_id" value={post.id} />
                 <Avatar user={user} size={40} />
-                <input name="body" required maxLength={2000} placeholder={post.kind === "Асуулт" ? "Хариултаа бичнэ үү…" : "Сэтгэгдэл бичих…"} aria-label="Сэтгэгдэл" />
+                <input name="body" required maxLength={2000} placeholder={post.kind === "Асуулт" ? "Хариултаа бичнэ үү…" : isTerm ? "Санал, засвар, асуултаа бичнэ үү…" : "Сэтгэгдэл бичих…"} aria-label="Сэтгэгдэл" />
                 <button type="submit">{isQ ? "Хариулах" : "Илгээх"}</button>
               </form>
             ) : (
@@ -434,7 +547,7 @@ export default async function PostPage({ params, searchParams }) {
             {roots.map((c, i) => (
               <div key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
-                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={published} depth={0} following={following} />
+                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={open} depth={0} following={following} />
               </div>
             ))}
 
