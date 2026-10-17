@@ -1512,7 +1512,7 @@ a.ss-kind:hover { text-decoration: underline; }
 .evd-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .evd-chip { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; }
 .evd-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--ink); line-height: 1.4; }
-.evd-cover { border-radius: 20px; overflow: hidden; aspect-ratio: 1; }
+.evd-cover { border-radius: 20px; overflow: hidden; aspect-ratio: 1; align-self: stretch; }
 .evd-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .evd-cover .ev-cover { height: 100%; aspect-ratio: auto; border-radius: 0; }
 .evd-title { margin-top: 4px; }
