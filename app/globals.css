@@ -1558,7 +1558,7 @@ a.ss-kind:hover { text-decoration: underline; }
 
 /* Нүүрний шүүлтүүр: нэг нарийн ногоон шугам, урсах гэрэлтэй */
 .ss-filters {
-  position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none;
+  position: relative; display: flex; flex-direction: row; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none;
   background: linear-gradient(100deg, #e3f7f4, #f4fcfb 30%, #d4f3ee 55%, #f4fcfb 80%, #e3f7f4); background-size: 300% 100%;
   border: 1px solid rgba(0, 168, 155, .28); box-shadow: 0 0 0 0 rgba(0, 168, 155, .25);
   animation: ssf-flow 9s ease-in-out infinite, ssf-glow 3.2s ease-in-out infinite;
