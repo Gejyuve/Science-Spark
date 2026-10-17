@@ -65,7 +65,7 @@ function Header({ user, compact, compose, composeError, active }) {
     <header className={"ss-header" + (compact ? " compact" : "")}>
       <div className="ss-topnav">
         <Link className={"ss-round" + (active === "top" ? " on" : "")} href="/?f=top" title="Сүүлийн 24 цагийн топ">{I("hspark")}</Link>
-        <span className="ss-round soon" title="Тун удахгүй">{I("dice")}</span>
+        <Link className={"ss-round" + (active === "rand" ? " on" : "")} href="/?f=rand" title="Санамсаргүй" prefetch={false}>{I("dice")}</Link>
         <Link className={"ss-round" + (active === "qa" ? " on" : "")} href="/?f=qa" title="Асуулт ба бодрол">{I("ask", 24)}</Link>
         <Link href="/" className="ss-logo" aria-label="Нүүр">
           <img src="/icons/logo.svg" width={74} height={74} alt="Science Spark" />

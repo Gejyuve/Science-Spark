@@ -1546,3 +1546,5 @@ a.ss-kind:hover { text-decoration: underline; }
 /* Нарийн дэлгэцэд картын зураг хүрээнээс гарахгүй */
 .evc-cover { aspect-ratio: auto; width: 100%; min-width: 0; min-height: 260px; }
 @media (max-width: 760px) { .evc-cover { aspect-ratio: 2 / 1; min-height: 0; } }
+.ss-reshuffle { color: #00a89b; font-size: 13px; font-weight: 700; text-decoration: none; }
+.ss-reshuffle:hover { text-decoration: underline; }

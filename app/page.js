@@ -1,4 +1,5 @@
 import Link from "next/link";
+import crypto from "node:crypto";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import Shell from "./components/Shell";
@@ -12,6 +13,8 @@ export default async function Home({ searchParams }) {
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
   const ann = f === "ann"; // Зарлалууд
   const top = f === "top"; // Сүүлийн 24 цагт хамгийн их оч авсан
+  const rand = f === "rand"; // Санамсаргүй: хэрэглэгч бүрт, дарах бүрт өөр дараалал
+  const seed = crypto.randomUUID();
   const following = tab === "following";
   let user = null;
   let posts = [];
@@ -46,6 +49,9 @@ export default async function Home({ searchParams }) {
         AND (${!following || !user}::boolean OR p.author_id IN
              (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))
       ORDER BY
+        -- Санамсаргүй: үзээгүй контент нь эхэнд, дотроо холилдсон
+        CASE WHEN ${rand}::boolean THEN EXISTS (SELECT 1 FROM post_views v WHERE v.post_id = p.id AND v.viewer = ${user ? "u:" + user.id : ""}) END ASC NULLS LAST,
+        CASE WHEN ${rand}::boolean THEN md5(p.id::text || ${seed}) END ASC NULLS LAST,
         CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id AND created_at > now() - interval '24 hours') END DESC NULLS LAST,
         CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id) END DESC NULLS LAST,
         p.created_at DESC
@@ -56,7 +62,7 @@ export default async function Home({ searchParams }) {
 
   const followSet = await followingSet(user);
   return (
-    <Shell user={user} active={qa ? "qa" : top ? "top" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
+    <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {qa && (
         <div className="ss-feedtabs">
           <span className="on">Асуулт ба бодрол · сүүлд орсноор</span>
@@ -66,13 +72,17 @@ export default async function Home({ searchParams }) {
       {top && (
         <div className="ss-topbar"><span aria-hidden="true">✦</span>Сүүлийн 24 цагийн хамгийн их оч авсан контентууд</div>
       )}
+      {rand && (
+        <div className="ss-topbar"><span aria-hidden="true">⚄</span>Санамсаргүй дарааллаар · таны үзээгүй контент эхэнд
+          <span className="ss-grow" /><Link href={`/?f=rand&r=${seed.slice(0, 8)}`} className="ss-reshuffle">Дахин холих</Link></div>
+      )}
       {ann && (
         <div className="ss-feedtabs">
           <span className="on">Зарлал · сүүлд орсноор</span>
           <Link href="/">× Бүгдийг харах</Link>
         </div>
       )}
-      {user && !qa && !ann && !top && (
+      {user && !qa && !ann && !top && !rand && (
         <div className="ss-feedtabs">
           <Link href="/" className={following ? "" : "on"}>Бүгд</Link>
           <Link href="/?tab=following" className={following ? "on" : ""}>Дагаж буй</Link>
