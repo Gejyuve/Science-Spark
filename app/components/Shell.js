@@ -63,7 +63,7 @@ function Header({ user, compact, compose, composeError, active }) {
       <div className="ss-topnav">
         <span className="ss-round soon" title="Тун удахгүй">{I("hspark")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("dice")}</span>
-        <Link className="ss-round" href={user ? "/?compose=Асуулт" : "/login"} title="Асуух">{I("ask", 24)}</Link>
+        <Link className={"ss-round" + (active === "qa" ? " on" : "")} href="/?f=qa" title="Асуулт ба бодрол">{I("ask", 24)}</Link>
         <Link href="/" className="ss-logo" aria-label="Нүүр">
           <img src="/icons/logo.svg" width={74} height={74} alt="Science Spark" />
         </Link>
