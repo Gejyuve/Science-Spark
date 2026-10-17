@@ -10,20 +10,20 @@ export default function LogicReport({ postId, kind, title, loggedIn }) {
   if (!loggedIn) {
     return (
       <a href="/login" className="ar-iconbtn" title="Логик алдаа мэдэгдэх" aria-label="Логик алдаа мэдэгдэх">
-        <img className="ic" src="/icons/flag20.svg" width={22} height={22} alt="" />
+        <img className="ic" src="/icons/flag20.svg" width={20} height={20} alt="" />
       </a>
     );
   }
   return (
     <>
       <button type="button" className="ar-iconbtn" title="Логик алдаа мэдэгдэх" aria-label="Логик алдаа мэдэгдэх" onClick={() => dlg.current?.showModal()}>
-        <img className="ic" src="/icons/flag20.svg" width={22} height={22} alt="" />
+        <img className="ic" src="/icons/flag20.svg" width={20} height={20} alt="" />
       </button>
       <dialog ref={dlg} className="lr-dlg" onClick={(e) => e.target === dlg.current && dlg.current.close()}>
         <form action={reportLogic} className="lr-box">
           <input type="hidden" name="post_id" value={postId} />
           <div className="lr-head">
-            <span className="lr-ico"><img className="ic" src="/icons/flag20.svg" width={22} height={22} alt="" /></span>
+            <span className="lr-ico"><img className="ic" src="/icons/flag20.svg" width={20} height={20} alt="" /></span>
             <div>
               <b>Логик алдаа мэдэгдэх</b>
               <small>Энэ контентод байгаа логик, баримтын алдааг товч бичнэ үү.</small>

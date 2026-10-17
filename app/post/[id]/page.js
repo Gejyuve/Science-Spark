@@ -254,15 +254,15 @@ export default async function PostPage({ params, searchParams }) {
                 <form action={sparkPost}>
                   <input type="hidden" name="post_id" value={post.id} />
                   <button type="submit" className="ar-react teal ar-sparkbtn" title="Оч өгөх">
-                    <img src="/icons/sparkle.svg" width={21} height={23} alt="Оч өгөх" />{post.sparks}
+                    <img src="/icons/sparkle.svg" width={24} height={26} alt="Оч өгөх" />{post.sparks}
                   </button>
                 </form>
               ) : published && !user ? (
-                <Link href="/login" className="ar-react teal ar-sparkbtn" title="Оч өгөх"><img src="/icons/sparkle.svg" width={21} height={23} alt="Оч" />{post.sparks}</Link>
+                <Link href="/login" className="ar-react teal ar-sparkbtn" title="Оч өгөх"><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</Link>
               ) : (
-                <span className={"ar-react teal" + (mine ? " given" : "")} title={mine ? "Та оч өгсөн" : "Оч"}><img src="/icons/sparkle.svg" width={21} height={23} alt="Оч" />{post.sparks}</span>
+                <span className={"ar-react teal" + (mine ? " given" : "")} title={mine ? "Та оч өгсөн" : "Оч"}><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</span>
               )}
-              <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment18.svg" width={18} height={18} alt="Сэтгэгдэл" />{comments.length}</a>
+              <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment20.svg" width={20} height={20} alt="Сэтгэгдэл" />{comments.length}</a>
               {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
               {published && <Share path={`/post/${post.id}`} title={post.title} />}
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
