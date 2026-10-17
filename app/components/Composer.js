@@ -198,7 +198,7 @@ export default function Composer({ loggedIn, me, initial, error }) {
             </select>
             <Ic n="f_chev" />
           </Field>
-          <label className="cp-field cp-dtf">
+          <label className="cp-field cp-dtf half">
             <Ic n="f_date" />
             <span className="cp-dt">Хүртэл *</span>
             <input type="date" name="valid_until" required min={now.date || undefined} aria-label="Хүчинтэй хугацаа (хүртэл)"
