@@ -1554,3 +1554,4 @@ a.ss-kind:hover { text-decoration: underline; }
 .wr-nav { position: relative; z-index: 1; max-width: 840px; margin: 0 auto 14px; }
 .adm-main > .ss-header.static { margin-bottom: 4px; }
 @media (max-width: 720px) { .wr-nav, .adm-main > .ss-header.static { padding: 4px 8px; } }
+.wr-nav + .wr-bar { max-width: 840px; margin: 0 auto 4px; }
