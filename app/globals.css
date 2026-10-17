@@ -1902,3 +1902,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .sr-en { font-style: normal; padding: 2px 8px; border-radius: 6px; background: #e3f6f3; color: #00796f; font-size: 11px; font-weight: 700; }
 .sr-tdef { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ss-filters a em { min-width: 18px; padding: 0 5px; }
+.ss-filters { gap: 4px; }
+.ss-filters a, .ss-time-btn { font-size: 12.5px; }
+.ss-time-btn { padding: 0 10px; gap: 5px; }
