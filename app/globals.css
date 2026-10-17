@@ -486,3 +486,4 @@ details.mod summary { cursor: pointer; }
   .ar-credits { flex-direction: column; gap: 14px; }
   .ar-reactions { gap: 12px; }
 }
+.ar-content .muted a, .muted a { color: var(--teal); font-weight: 600; }
