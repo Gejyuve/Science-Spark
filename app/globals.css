@@ -2171,3 +2171,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .tm-copy input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); font: inherit; font-size: 12.5px; color: var(--ink); }
 .tm-btn.ok { background: #2f9e57; }
 .tm-done > div:last-child { flex-wrap: wrap; justify-content: center; }
+.tm-copy { margin-top: 4px; }
+.tm-copyic { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: #00897e; cursor: pointer; }
+.tm-copyic:hover { background: #e3f6f3; }
+.tm-copyic.ok { background: #00a89b; border-color: #00a89b; color: #fff; }
