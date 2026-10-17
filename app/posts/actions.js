@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff } from "@/lib/auth";
+import { getUser, isStaff, isSuperAdmin } from "@/lib/auth";
 import { KINDS } from "@/lib/format";
 
 export async function createPost(formData) {
@@ -16,13 +16,10 @@ export async function createPost(formData) {
     redirect(`/write?error=${encodeURIComponent("Гарчиг болон агуулгаа бөглөнө үү")}`);
   }
   await ensureSchema();
-  // Энгийн хэрэглэгчийн нийтлэл хянагч батлах хүртэл нийтлэгдэхгүй.
-  // Хянагч/админ өөрөө бичсэн бол шууд нийтлэгдэнэ.
-  const staff = isStaff(user);
+  // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, body, status, reviewer_id, reviewed_at)
-    VALUES (${user.id}, ${kind}, ${title}, ${body},
-            ${staff ? "published" : "pending"}, ${staff ? user.id : null}, ${staff ? new Date().toISOString() : null})
+    INSERT INTO posts (author_id, kind, title, body, status)
+    VALUES (${user.id}, ${kind}, ${title}, ${body}, 'pending')
     RETURNING id`;
   revalidatePath("/");
   redirect(`/post/${rows[0].id}`);
@@ -72,15 +69,10 @@ export async function updatePost(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
   await ensureSchema();
-  if (isStaff(user)) {
-    await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body}
-              WHERE id = ${postId} AND author_id = ${user.id}`;
-  } else {
-    // Засвар хийсэн нийтлэл дахин хянагчийн шалгалтад орно.
-    await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body},
-              status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
-              WHERE id = ${postId} AND author_id = ${user.id}`;
-  }
+  // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
+  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body},
+            status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
+            WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
   redirect(`/post/${postId}`);
@@ -132,12 +124,13 @@ export async function reviewPost(formData) {
 
 export async function setRole(formData) {
   const user = await getUser();
-  if (!user || user.role !== "admin") redirect("/");
+  if (!isSuperAdmin(user)) redirect("/");
   const target = Number(formData.get("user_id"));
   const role = String(formData.get("role"));
+  // Супер админ эрхийг зөвхөн SUPER_ADMIN_EMAILS-ээр олгоно, энд томилохгүй.
   if (!Number.isInteger(target) || !["user", "reviewer", "admin"].includes(role)) return;
   if (target === user.id) return; // өөрийн эрхийг өөрчлөхгүй
   await ensureSchema();
-  await sql`UPDATE users SET role = ${role} WHERE id = ${target}`;
+  await sql`UPDATE users SET role = ${role} WHERE id = ${target} AND role <> 'superadmin'`;
   revalidatePath("/admin");
 }

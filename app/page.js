@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "./components/ThemeToggle";
-import { getUser, displayName, isStaff } from "@/lib/auth";
+import { getUser, displayName, isStaff, isSuperAdmin } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
 
@@ -47,7 +47,7 @@ export default async function Home() {
           ))}
         </nav>
         {isStaff(user) && <Link href="/review" className="nav-item">🛡 Хянах самбар</Link>}
-        {user && user.role === "admin" && <Link href="/admin" className="nav-item">⚙ Админ</Link>}
+        {isSuperAdmin(user) && <Link href="/admin" className="nav-item">⚙ Супер админ</Link>}
         <div className="grow" />
         {user ? (
           <Link href="/profile" className="btn ghost">👤 {displayName(user)}</Link>

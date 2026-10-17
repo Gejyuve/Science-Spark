@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser } from "@/lib/auth";
+import { getUser, isSuperAdmin, ROLE_LABELS } from "@/lib/auth";
 import { setRole } from "../posts/actions";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Админ · Science Spark" };
+export const metadata = { title: "Супер админ · Science Spark" };
 
 const ROLES = [
   ["user", "Хэрэглэгч"],
@@ -15,7 +15,7 @@ const ROLES = [
 
 export default async function AdminPage() {
   const user = await getUser();
-  if (!user || user.role !== "admin") redirect("/");
+  if (!isSuperAdmin(user)) redirect("/");
   await ensureSchema();
   const users = await sql`SELECT id, initial, first_name, email, role FROM users ORDER BY id`;
   return (
@@ -30,8 +30,8 @@ export default async function AdminPage() {
               <b>{u.initial}.{u.first_name}</b>
               <div className="muted">{u.email}</div>
             </div>
-            {u.id === user.id ? (
-              <span className="muted">{ROLES.find((r) => r[0] === u.role)[1]} (та)</span>
+            {u.id === user.id || u.role === "superadmin" ? (
+              <span className="muted">{ROLE_LABELS[u.role]}{u.id === user.id ? " (та)" : ""}</span>
             ) : (
               <>
                 <select name="role" defaultValue={u.role}>
