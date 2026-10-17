@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { render, strip, SOURCE_TYPES, SOURCE_LANGS, formatSource } from "@/lib/md";
+import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES } from "@/lib/md";
 import { uploadImageFile } from "./ImageInput";
 import DictAdd from "./DictAdd";
 
@@ -58,7 +58,21 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
   const [dlg, setDlg] = useState(null); // "link" | "img" | "src" | {edit: i}
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const words = strip(text).trim() ? strip(text).trim().split(/\s+/).length : 0;
+  // Төрлөөс хамаарах үгийн тоо, латин үсгийн дүрэм
+  const [kind, setKind] = useState("Нийтлэл");
+  useEffect(() => {
+    const form = ta.current?.closest("form");
+    const sel = form?.querySelector('[name="kind"]');
+    if (!sel) return;
+    const on = () => setKind(sel.value);
+    on();
+    sel.addEventListener("change", on);
+    return () => sel.removeEventListener("change", on);
+  }, []);
+  const rule = bodyRule(kind, text);
+  const words = rule.n;
+  useEffect(() => { ta.current?.setCustomValidity(text.trim() ? rule.error || "" : ""); }, [rule.error, text]);
+  const [min, max] = WORD_RULES[kind] || WORD_RULES.Нийтлэл;
   const minutes = Math.max(1, Math.round(words / 180));
 
   // Сонгосон хэсгийг солих (Ctrl+Z ажиллахын тулд execCommand ашиглана)
@@ -151,7 +165,9 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
             <Tool title="Эх сурвалжийн ишлэл [1] оруулах" onClick={() => (sources.length ? setDlg("cite") : setDlg("src"))}>{I.cite}</Tool>
           </div>
         )}
-        <span className="wr-count">{words} үг · {minutes} мин унших</span>
+        <span className={"wr-count" + (text.trim() && rule.error ? " bad" : text.trim() ? " ok" : "")}>
+          {words} үг · {kind === "Мэдээ" ? `${min}–${max} үг` : "500+ үг"} · {minutes} мин
+        </span>
       </div>
 
       <textarea
@@ -163,11 +179,13 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKey}
+        onInvalid={() => setTab("write")}
         placeholder={"Энд бичнэ үү…\n\nДогол мөр хооронд хоосон мөр үлдээнэ. Дээрх хэрэгслээр гарчиг, тод, налуу, ишлэл, зураг, холбоос нэмнэ."}
         aria-label="Агуулга"
         className="re-area"
         hidden={tab !== "write"}
       />
+      {text.trim() && rule.error && <p className="re-rule">{rule.error}</p>}
       {tab === "preview" && (
         <div className="re-preview ar-body">
           {text.trim() ? render(text) : <p className="re-empty">Урьдчилж харах зүйл алга. «Бичих» таб дээр агуулгаа бичнэ үү.</p>}

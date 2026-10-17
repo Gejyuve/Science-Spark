@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { bodyRule } from "@/lib/md";
 
 // Бичих алхмууд: бөглөгдсөн алхам ногоорно (Гарчиг · Төрөл · Агуулга · Илгээх)
 export default function WriteSteps({ sent = false }) {
@@ -11,7 +12,7 @@ export default function WriteSteps({ sent = false }) {
     if (!form) return;
     const check = () => {
       const v = (n) => String(form.querySelector(`[name="${n}"]`)?.value || "").trim();
-      setDone({ title: v("title").length >= 3, kind: !!v("kind") && !!v("category"), body: v("body").length >= 50 });
+      setDone({ title: v("title").length >= 3, kind: !!v("kind") && !!v("category"), body: !!v("body") && !bodyRule(v("kind"), v("body")).error });
     };
     check();
     form.addEventListener("input", check);

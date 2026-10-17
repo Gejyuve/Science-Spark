@@ -2208,3 +2208,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .md-src-tag.t2 { background: #e3f6f3; color: #00796f; }
 .md-src-tag.t3 { background: #fdecef; color: #c0365e; }
 @media (max-width: 720px) { .pv-top { flex-wrap: wrap; } .pv-send .wr-go { width: 100%; justify-content: center; } }
+.re-bar .wr-count.ok { color: #00897e; font-weight: 600; }
+.re-bar .wr-count.bad { color: #c2400d; font-weight: 600; }
+.re-rule { margin: -4px 0 0; padding: 8px 12px; border-radius: 10px; background: #fff4e5; color: #c2400d; font-size: 12.5px; font-weight: 600; }

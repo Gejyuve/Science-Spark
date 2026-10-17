@@ -10,7 +10,7 @@ import { audit } from "@/lib/admin";
 import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { ownImage } from "@/lib/images";
 import { validCategory } from "@/lib/tree";
-import { cleanSources } from "@/lib/md";
+import { cleanSources, bodyRule } from "@/lib/md";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 
 // Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
@@ -38,6 +38,8 @@ export async function createPost(formData) {
     redirect(`/write?error=${encodeURIComponent("Гарчиг болон агуулгаа бөглөнө үү")}`);
   }
   if (!validCategory(category)) redirect(`/write?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
+  const rule = bodyRule(kind, body);
+  if (rule.error) redirect(`/write?error=${encodeURIComponent(rule.error)}`);
   await ensureSchema();
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
@@ -117,6 +119,8 @@ export async function updatePost(formData) {
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
   const category = String(formData.get("category") || "");
   if (!validCategory(category)) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
+  const rule = bodyRule(kind, body);
+  if (rule.error) redirect(`/post/${postId}/edit?error=${encodeURIComponent(rule.error)}`);
   await ensureSchema();
   // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
   const imageId = await ownImage(user.id, formData.get("image"));
@@ -137,6 +141,8 @@ export async function submitDraft(formData) {
   if (!Number.isInteger(postId)) redirect("/");
   if (!formData.get("agree")) redirect(`/post/${postId}/preview?error=${encodeURIComponent("Дүрэм ба зарчмыг зөвшөөрнө үү")}`);
   await ensureSchema();
+  const [dr] = await sql`SELECT kind, body FROM posts WHERE id = ${postId} AND author_id = ${user.id} AND status = 'draft'`;
+  if (dr && bodyRule(dr.kind, dr.body).error) redirect(`/post/${postId}/edit?error=${encodeURIComponent(bodyRule(dr.kind, dr.body).error)}`);
   const d = await sql`UPDATE posts SET status = 'pending', created_at = now() WHERE id = ${postId} AND author_id = ${user.id} AND status = 'draft' RETURNING id`;
   revalidatePath("/review", "layout");
   revalidatePath(`/u/${user.id}`);
