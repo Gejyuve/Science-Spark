@@ -14,6 +14,7 @@ import Shell from "../../components/Shell";
 import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits";
 import { Langs, VoteBox } from "../../components/Terms";
 import { TERM_KIND, daysLeft, synonyms, shortUrl } from "@/lib/terms";
+import { crumbs } from "@/lib/tree";
 
 export const dynamic = "force-dynamic";
 
@@ -393,6 +394,9 @@ export default async function PostPage({ params, searchParams }) {
               {KIND_HREF[post.kind]
                 ? <Link href={KIND_HREF[post.kind]} className="ar-chip main link">{post.kind}</Link>
                 : <span className="ar-chip main">{post.kind}</span>}
+              {post.category && crumbs(post.category).map((c) => (
+                <Link key={c.path} href={`/tree/${c.path}`} className="ar-chip cat">{c.name}</Link>
+              ))}
             </div>}
             {!["Асуулт", "Бодрол", "Эвент", "Зарлал", TERM_KIND].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 

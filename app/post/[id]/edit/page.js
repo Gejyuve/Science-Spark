@@ -8,8 +8,9 @@ import PostForm from "../../../components/PostForm";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Засах · Science Spark" };
 
-export default async function EditPage({ params }) {
+export default async function EditPage({ params, searchParams }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const postId = Number(id);
   if (!Number.isInteger(postId)) notFound();
   const user = await getUser();
@@ -23,6 +24,7 @@ export default async function EditPage({ params }) {
       <PostForm
         action={updatePost}
         post={post}
+        error={error}
         heading="Нийтлэлээ засварлах"
         extra={<Link href={`/post/${post.id}`} className="wr-cancel">Цуцлах</Link>}
       />

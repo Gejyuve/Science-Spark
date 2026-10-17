@@ -4,6 +4,8 @@ import ContentField from "./ContentField";
 import ImageInput from "./ImageInput";
 import TopNav from "./TopNav";
 import DictAdd from "./DictAdd";
+import CategoryPicker from "./CategoryPicker";
+import { plainTree } from "@/lib/tree";
 
 // Figma: Нийтлэл бичих. Шинэ болон засах хуудсанд хоёуланд нь ашиглана.
 export default function PostForm({ action, post = {}, error, extra, heading = "Мэдлэг бол хуваалцах тусам арвижих баялаг юм." }) {
@@ -61,6 +63,8 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
             </select>
             <img src="/icons/chevdown.svg" width={20} height={20} alt="" />
           </div>
+          <label className="wr-label">Ангилал сонгох <em>Заавал</em> <span className="wr-hint">Шинжлэх ухааны модны аль салбарт хамаарах вэ?</span></label>
+          <CategoryPicker tree={plainTree()} defaultValue={post.category || ""} />
         </section>
 
         <section className="wr-card">

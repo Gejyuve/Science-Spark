@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
 import { fmtEventRange, spanText, validLocal } from "@/lib/events";
 import EventCover from "./EventCover";
+import { nodeOf } from "@/lib/tree";
 import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
 import { toggleSave, sparkPost } from "../posts/actions";
@@ -99,7 +100,10 @@ export default function PostCard({ p, viewer, following }) {
     <article className="ss-card pc">
       <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
       <div className="ss-card-top">
-        {KIND_HREF[p.kind] ? <Link href={KIND_HREF[p.kind]} className="ss-kind">{p.kind}</Link> : <span className="ss-kind">{p.kind}</span>}
+        <span className="evc-crumb">
+          {KIND_HREF[p.kind] ? <Link href={KIND_HREF[p.kind]} className="ss-kind">{p.kind}</Link> : <span className="ss-kind">{p.kind}</span>}
+          {p.category && nodeOf(p.category) && <><i>·</i><Link href={`/tree/${p.category}`} className="pc-cat">{nodeOf(p.category).name}</Link></>}
+        </span>
         <When d={p.created_at} />
       </div>
       <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />

@@ -7,6 +7,8 @@ import { toggleFollow } from "../posts/actions";
 import Shell from "../components/Shell";
 import DictAdd from "../components/DictAdd";
 import { Avatar, fmtK, followingSet } from "../components/Bits";
+import { Hl, snippet, Cover, Byline } from "../components/Cards";
+import { NODES } from "@/lib/tree";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хайлт · Science Spark" };
@@ -25,57 +27,6 @@ const TABS = [
 const KIND_OF = { Нийтлэл: "article", Мэдээ: "news", Асуулт: "qa", Бодрол: "qa", Эвент: "event", Зарлал: "ann", Үг: "dict" };
 const SECTION = { article: "Нийтлэл", news: "Мэдээ", qa: "Асуулт", event: "Эвент", ann: "Зарлал", dict: "Толь", user: "Хэрэглэгч" };
 const PREVIEW = { article: 4, news: 2, qa: 3, event: 2, ann: 2, dict: 4, user: 2 };
-const SYMBOLS = ["π", "∞", "Σ", "√", "Δ", "λ", "Ω", "∫"];
-const TONES = ["teal", "orange", "violet", "pink"];
-
-// Хайсан үгийг тодруулна
-function Hl({ text, term }) {
-  if (!term) return text;
-  const t = String(text || "");
-  const low = t.toLowerCase();
-  const needle = term.toLowerCase();
-  const out = [];
-  let i = 0;
-  let k = 0;
-  while (needle && (k = low.indexOf(needle, i)) !== -1) {
-    if (k > i) out.push(t.slice(i, k));
-    out.push(<mark key={k} className="sr-hl">{t.slice(k, k + needle.length)}</mark>);
-    i = k + needle.length;
-  }
-  out.push(t.slice(i));
-  return out;
-}
-
-// Хайсан үг орсон хэсгийг тасдаж авна
-function snippet(body, term, len = 130) {
-  const b = String(body || "").replace(/\s+/g, " ").trim();
-  const k = term ? b.toLowerCase().indexOf(term.toLowerCase()) : -1;
-  if (b.length <= len) return b;
-  if (k < 60) return b.slice(0, len).replace(/\s+\S*$/, "") + "…";
-  const start = b.lastIndexOf(" ", k - 40) + 1;
-  return "…" + b.slice(start, start + len).replace(/\s+\S*$/, "") + "…";
-}
-
-function Cover({ p, cls }) {
-  const tone = TONES[p.id % TONES.length];
-  return (
-    <span className={`sr-cover ${cls} ${p.image_id ? "img" : tone}`}>
-      {p.image_id ? <img src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <><i className="sr-sym">{SYMBOLS[p.id % SYMBOLS.length]}</i><i className="sr-blob" /></>}
-      <em className={`sr-chip ${tone}`}>{p.kind}</em>
-    </span>
-  );
-}
-
-function Byline({ p }) {
-  return (
-    <span className="sr-by">
-      <Avatar user={{ id: p.author_id, first_name: p.first_name, avatar: p.avatar }} size={20} />
-      <b>{p.initial}.{p.first_name}</b>
-      <small>· {fmtDate(p.created_at)}</small>
-    </span>
-  );
-}
-
 function Head({ k, n, more, href }) {
   return (
     <div className="sr-head">
@@ -116,6 +67,7 @@ export default async function SearchPage({ searchParams }) {
       ORDER BY points DESC LIMIT 20`;
   }
   const following = await followingSet(user);
+  const cats = term ? [...NODES.values()].filter((n) => n.path && n.name.toLowerCase().includes(term.toLowerCase())).slice(0, 8) : [];
   const groups = { article: [], news: [], qa: [], event: [], ann: [], dict: [], user: people };
   for (const p of posts) groups[KIND_OF[p.kind] || "article"].push(p);
   const total = posts.length + people.length;
@@ -133,6 +85,12 @@ export default async function SearchPage({ searchParams }) {
         {tab !== "all" && <input type="hidden" name="type" value={tab} />}
       </form>
 
+      {term && cats.length > 0 && (
+        <div className="sr-cats">
+          <span>Мод:</span>
+          {cats.map((c) => <Link key={c.path} href={`/tree/${c.path}`}><Hl text={c.name} term={term} /></Link>)}
+        </div>
+      )}
       {term && total > 0 && (
         <>
           <nav className="sr-tabs" aria-label="Төрөл">

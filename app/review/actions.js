@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { validCategory } from "@/lib/tree";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, canReview } from "@/lib/auth";
 import { notify } from "@/lib/notify";
@@ -57,7 +58,7 @@ export async function decidePost(formData) {
   const id = Number(formData.get("post_id"));
   if (!Number.isInteger(id)) redirect("/review");
   const back = `/review/${id}`;
-  const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original FROM posts WHERE id = ${id}`;
+  const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original, category FROM posts WHERE id = ${id}`;
   if (!p || p.status !== "pending") go("/review", "error", "Энэ контент хянагдсан эсвэл олдсонгүй");
   if (p.author_id === user.id) go("/review", "error", "Өөрийн контентыг өөр хянагч хянана");
   const approve = formData.get("decision") === "approve";
@@ -79,19 +80,21 @@ export async function decidePost(formData) {
   const checks = formData.getAll("check").length;
   if (checks < (editable ? CHECKS_POST : CHECKS_EVENT)) go(back, "error", "Зөвшөөрөхийн өмнө хяналтын жагсаалтыг бүрэн тэмдэглэнэ үү");
 
-  let title = p.title, subtitle = p.subtitle, body = p.body, original = p.original;
+  let title = p.title, subtitle = p.subtitle, body = p.body, original = p.original, category = p.category;
   if (editable) {
     title = String(formData.get("title") || "").trim().slice(0, 200);
     subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
     body = String(formData.get("body") || "").trim().slice(0, 20000);
     if (!title || !body) go(back, "error", "Гарчиг, агуулга хоосон байж болохгүй");
+    const cat = String(formData.get("category") || "");
+    if (cat && validCategory(cat)) category = cat;
     const changed = title !== p.title || (subtitle || null) !== (p.subtitle || null) || body !== p.body;
     if (changed && !original) original = { title: p.title, subtitle: p.subtitle, body: p.body };
   }
   // Нийтлэл, мэдээ: бичээч рүү буцаж, бичээч өөрөө нийтэлнэ. Эвент, зарлал: шууд нийтлэгдэнэ.
   const next = editable ? "approved" : "published";
   const d = await sql`UPDATE posts SET status = ${next}, reviewer_id = ${user.id}, reviewed_at = now(), review_note = ${note},
-                        title = ${title}, subtitle = ${subtitle}, body = ${body},
+                        title = ${title}, subtitle = ${subtitle}, body = ${body}, category = ${category},
                         original = ${original ? JSON.stringify(original) : null}::jsonb
                       WHERE id = ${id} AND status = 'pending' AND author_id <> ${user.id} RETURNING id`;
   if (d.length) {

@@ -9,6 +9,7 @@ import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
 import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { ownImage } from "@/lib/images";
+import { validCategory } from "@/lib/tree";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 
 export async function createPost(formData) {
@@ -20,14 +21,16 @@ export async function createPost(formData) {
   const title = String(formData.get("title") || "").trim().slice(0, 200);
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
+  const category = String(formData.get("category") || "");
   if (!title || !body) {
     redirect(`/write?error=${encodeURIComponent("Гарчиг болон агуулгаа бөглөнө үү")}`);
   }
+  if (!validCategory(category)) redirect(`/write?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
   await ensureSchema();
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, subtitle, body, status, image_id)
-    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending', ${await ownImage(user.id, formData.get("image"))})
+    INSERT INTO posts (author_id, kind, title, subtitle, body, status, image_id, category)
+    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending', ${await ownImage(user.id, formData.get("image"))}, ${category})
     RETURNING id`;
   revalidatePath("/");
   redirect(`/post/${rows[0].id}`);
@@ -100,10 +103,12 @@ export async function updatePost(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
+  const category = String(formData.get("category") || "");
+  if (!validCategory(category)) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
   await ensureSchema();
   // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
   const imageId = await ownImage(user.id, formData.get("image"));
-  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId},
+  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
             status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
             WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);

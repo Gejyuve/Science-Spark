@@ -19,7 +19,7 @@ const I = (name, size = 22, alt = "") => (
 
 const NAV = [
   { icon: "feed", label: "Урсгал", href: "/" },
-  { icon: "tree", label: "Мод" },
+  { icon: "tree", label: "Мод", href: "/tree" },
   { icon: "dict", label: "Толь", href: "/dict" },
   { icon: "game", label: "Тоглоом" },
 ];

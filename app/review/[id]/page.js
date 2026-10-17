@@ -6,6 +6,8 @@ import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
 import { fmtEventRange } from "@/lib/events";
 import { decidePost } from "../actions";
+import CategoryPicker from "../../components/CategoryPicker";
+import { plainTree } from "@/lib/tree";
 import { Flash, Chip } from "../../admin/_c/Head";
 
 const CHECK_POST = ["Баримт, эх сурвалж шалгасан", "Зөв бичгийн дүрэм", "Зохиогчийн эрх, хуулбар", "Ангилал, гарчиг тохирсон", "Хэв маяг, ойлгомжтой байдал"];
@@ -62,6 +64,9 @@ export default async function ReviewPost({ params, searchParams }) {
                 <label className="rv-field"><span>Дэд гарчиг</span>
                   <textarea name="subtitle" defaultValue={p.subtitle || ""} maxLength={250} rows={2} />
                 </label>
+                <div className="rv-field"><span>Ангилал <i>Шаардлагатай бол засна</i></span>
+                  <CategoryPicker tree={plainTree()} defaultValue={p.category || ""} required={false} compact />
+                </div>
               </section>
               <section className="adm-card rv-sec">
                 <b className="rv-h">Агуулга</b>
