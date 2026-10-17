@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const COL = 260; // түвшин хоорондын зай
-const ROW = 40; // навч хоорондын зай
+const ROW = 44; // навч хоорондын зай
 const PAD = 70;
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 
@@ -45,8 +45,10 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
     const el = box.current;
     if (!el) return;
     const cw = el.clientWidth, ch = el.clientHeight;
-    const k = Math.min(1.15, Math.max(0.35, Math.min((cw - PAD) / (w + 40), (ch - PAD) / (h + 60))));
-    setView({ k, x: (cw - (w - 140) * k) / 2 - 20 * k, y: (ch - h * k) / 2 });
+    // Хэт жижигрэхгүй: бичиг уншигдахуйц (0.75-аас доош биш), илүү хэсгийг чирж үзнэ
+    const k = Math.min(1.1, Math.max(0.75, Math.min((cw - PAD) / (w + 40), (ch - PAD) / (h + 60))));
+    const x = (w + 40) * k < cw ? (cw - (w - 140) * k) / 2 - 20 * k : 70;
+    setView({ k, x, y: (ch - h * k) / 2 });
   }, [w, h]);
   useEffect(() => { fit(); }, [fit]);
   useEffect(() => {
