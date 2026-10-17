@@ -1157,3 +1157,19 @@ details.mod summary { cursor: pointer; }
 .ar-orig summary { cursor: pointer; color: var(--teal); font-weight: 600; }
 .ar-orig b, .ar-orig i { display: block; margin-top: 8px; color: var(--ink); }
 .ar-orig p { white-space: pre-wrap; }
+
+/* Асуултын шилдэг хариулт (Figma: Нүүр · Асуулт карт, Reply curve) */
+.ss-answer { position: relative; display: block; margin-top: 4px; padding: 6px 0 0 48px; text-decoration: none; color: inherit; }
+.ss-curve { position: absolute; left: 12px; top: 0; width: 26px; height: 28px; border-left: 2px solid #c8d5dd; border-bottom: 2px solid #c8d5dd; border-bottom-left-radius: 12px; }
+.ss-answer-who { display: flex; align-items: center; gap: 10px; }
+.ss-answer-who > span { display: flex; flex-direction: column; gap: 2px; }
+.ss-answer-who b { font-size: 14px; color: var(--ink); }
+.ss-answer p { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ss-answer-cta { font-size: 14px; color: var(--text); }
+.ss-answer.empty:hover .ss-answer-cta { color: var(--teal); }
+.ss-answer:hover b { color: var(--teal); }
+:root[data-theme="dark"] .ss-curve { border-color: #3a4852; }
+.ar-like { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ar-like span { font-size: 15px; line-height: 1; }
+.ar-like.on { border-color: #e5484d; color: #e5484d; }
+.ar-like.static { cursor: default; }

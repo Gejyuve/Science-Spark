@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
-import { addComment, sparkPost, removePost, deleteComment, publishOwn } from "../../posts/actions";
+import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment } from "../../posts/actions";
 import Shell from "../../components/Shell";
 import { Avatar, Stat } from "../../components/Bits";
 
@@ -69,7 +69,9 @@ export default async function PostPage({ params, searchParams }) {
   const comments = await sql`
     SELECT c.*, u.initial, u.first_name,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
-           (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers
+           (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers,
+           (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id)::int AS likes,
+           EXISTS (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ${user ? user.id : 0}) AS liked
     FROM comments c JOIN users u ON u.id = c.author_id
     WHERE c.post_id = ${postId} ORDER BY c.created_at`;
   const mine = user
@@ -231,7 +233,7 @@ export default async function PostPage({ params, searchParams }) {
             {comments.map((c, i) => (
               <div key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
-                <div className="ar-comment">
+                <div className="ar-comment" id={`c${c.id}`}>
                   <Link href={`/u/${c.author_id}`} className="ss-person">
                     <Avatar user={{ id: c.author_id, first_name: c.first_name }} size={40} />
                     <div>
@@ -241,6 +243,16 @@ export default async function PostPage({ params, searchParams }) {
                   </Link>
                   <p>{c.body}</p>
                   <div className="ar-cactions">
+                    {user && c.author_id !== user.id ? (
+                      <form action={likeComment}>
+                        <input type="hidden" name="comment_id" value={c.id} />
+                        <button type="submit" className={"ar-like" + (c.liked ? " on" : "")} title={c.liked ? "Лайкаа буцаах" : "Таалагдлаа"}>
+                          <span aria-hidden="true">{c.liked ? "♥" : "♡"}</span>{c.likes}
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="ar-like static"><span aria-hidden="true">♡</span>{c.likes}</span>
+                    )}
                     <span className="ss-grow" />
                     {user && (c.author_id === user.id || isAdmin(user)) && (
                       <form action={deleteComment}>

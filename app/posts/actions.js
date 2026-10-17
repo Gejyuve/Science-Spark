@@ -281,3 +281,20 @@ export async function publishOwn(formData) {
   revalidatePath(`/post/${postId}`);
   redirect(`/post/${postId}`);
 }
+
+// Хариултад лайк дарах / буцаах. Өөрийн хариултад дарах боломжгүй.
+export async function likeComment(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  if (user.restricted_at) redirect(`/?error=${encodeURIComponent("Таны эрх хязгаарлагдсан байна")}`);
+  const id = Number(formData.get("comment_id"));
+  if (!Number.isInteger(id)) return;
+  await ensureSchema();
+  const [c] = await sql`SELECT c.author_id, c.post_id FROM comments c JOIN posts p ON p.id = c.post_id
+                        WHERE c.id = ${id} AND p.status = 'published'`;
+  if (!c || c.author_id === user.id) return;
+  const del = await sql`DELETE FROM comment_likes WHERE comment_id = ${id} AND user_id = ${user.id} RETURNING 1`;
+  if (!del.length) await sql`INSERT INTO comment_likes (comment_id, user_id) VALUES (${id}, ${user.id}) ON CONFLICT DO NOTHING`;
+  revalidatePath(`/post/${c.post_id}`);
+  revalidatePath("/");
+}

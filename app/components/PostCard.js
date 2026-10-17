@@ -4,7 +4,7 @@ import { fmtEventRange } from "@/lib/events";
 import { Avatar, Stat } from "./Bits";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
-export default function PostCard({ p }) {
+export default function PostCard({ p, viewer }) {
   const isQuestion = p.kind === "Асуулт";
   const isShort = isQuestion || p.kind === "Бодрол";
   const m = p.meta || {};
@@ -58,6 +58,27 @@ export default function PostCard({ p }) {
           <img className="ic" src="/icons/ashare.svg" width={25} height={24} alt="Хуваалцах" />
         </Link>
       </div>
+      {isQuestion && (p.ta_id ? (
+        <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">
+          <span className="ss-curve" aria-hidden="true" />
+          <span className="ss-answer-who">
+            <Avatar user={{ id: p.ta_author, first_name: p.ta_first }} size={36} />
+            <span>
+              <b>{p.ta_initial}.{p.ta_first}</b>
+              <Stat points={p.ta_points} followers={p.ta_followers} />
+            </span>
+          </span>
+          <p>{p.ta_body}</p>
+        </Link>
+      ) : p.ta_id === null && (
+        <Link href={viewer ? `/post/${p.id}#comments` : "/login"} className="ss-answer empty">
+          <span className="ss-curve" aria-hidden="true" />
+          <span className="ss-answer-who">
+            <Avatar user={viewer || { id: 0, first_name: "?" }} size={36} />
+            <span className="ss-answer-cta">Анхны хариултыг та өг</span>
+          </span>
+        </Link>
+      ))}
     </article>
   );
 }
