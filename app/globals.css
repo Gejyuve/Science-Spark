@@ -292,11 +292,10 @@ details.mod summary { cursor: pointer; }
 
 .ss-person { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
 .ss-person > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ss-person b { font-weight: 600; font-size: 14px; color: var(--text); }
+.ss-person b { font-weight: 500; font-size: 13px; color: var(--text); }
 .ss-person:hover b { color: var(--teal); }
 .ss-avatar {
   flex: none; display: grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 700;
-  border: 1px solid #e5e7eb;
 }
 .ss-stat { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 600; font-size: 11px; }
 .ss-stat i { font-style: normal; color: var(--ink); font-weight: 700; font-size: 14px; margin: 0 2px; }
@@ -1163,7 +1162,7 @@ details.mod summary { cursor: pointer; }
 .ss-curve { position: absolute; left: 12px; top: 0; width: 26px; height: 28px; border-left: 2px solid #c8d5dd; border-bottom: 2px solid #c8d5dd; border-bottom-left-radius: 12px; }
 .ss-answer-who { display: flex; align-items: center; gap: 10px; }
 .ss-answer-who > span { display: flex; flex-direction: column; gap: 2px; }
-.ss-answer-who b { font-size: 14px; color: var(--ink); }
+.ss-answer-who b { font-size: 13px; font-weight: 500; color: var(--text); }
 .ss-answer p { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .ss-answer-cta { font-size: 14px; color: var(--text); }
 .ss-answer.empty:hover .ss-answer-cta { color: var(--teal); }
