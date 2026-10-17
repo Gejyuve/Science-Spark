@@ -1,0 +1,163 @@
+import Link from "next/link";
+import { getUser } from "@/lib/auth";
+import { sql, ensureSchema } from "@/lib/db";
+import { EVENT_TYPES } from "@/lib/format";
+import { nowLocal, monthGrid, addMonths, WD_SHORT, fmtEventDate, ymd } from "@/lib/events";
+import Shell from "../components/Shell";
+
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Эвент · Science Spark" };
+
+const TONE = { Лекц: "blue", Семинар: "blue", Хурал: "orange", Хакатон: "purple", Олимпиад: "purple", Уралдаан: "purple", Уулзалт: "teal", Өдөрлөг: "teal", Сургалт: "blue", Үзэсгэлэн: "orange", Аялал: "green", Бусад: "gray" };
+const GRAD = {
+  blue: "linear-gradient(135deg,#0b3a8f,#2f7be0 55%,#4cc3f5)",
+  purple: "linear-gradient(135deg,#5b2be0,#4b6cf0 55%,#22d3e6)",
+  orange: "linear-gradient(135deg,#c2400d,#f08a24 60%,#ffc65c)",
+  teal: "linear-gradient(135deg,#00695f,#00a89b 55%,#5ee6d0)",
+  green: "linear-gradient(135deg,#1d5e2f,#2f9e57 55%,#8fdc7a)",
+  gray: "linear-gradient(135deg,#2a3b47,#4f6676 60%,#8aa3b3)",
+};
+const MONTHS_AHEAD = 7;
+
+function Cover({ type, starts }) {
+  const tone = TONE[type] || "gray";
+  return (
+    <div className="ev-cover" style={{ background: GRAD[tone] }}>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <path d="M100 20 C108 80 120 92 180 100 C120 108 108 120 100 180 C92 120 80 108 20 100 C80 92 92 80 100 20Z" fill="#fff" opacity=".95" />
+        <path d="M30 40 c2 8 4 10 12 12 c-8 2 -10 4 -12 12 c-2 -8 -4 -10 -12 -12 c8 -2 10 -4 12 -12Z" fill="#fff" opacity=".8" />
+        <path d="M170 150 c2 7 3 8 10 10 c-7 2 -8 3 -10 10 c-2 -7 -3 -8 -10 -10 c7 -2 8 -3 10 -10Z" fill="#fff" opacity=".8" />
+      </svg>
+      <span>
+        <b>{(type || "Эвент").toUpperCase()}</b>
+        <small>{starts ? starts.replace("T", " · ").replaceAll("-", ".") : ""}</small>
+      </span>
+    </div>
+  );
+}
+
+export default async function Events({ searchParams }) {
+  const sp = await searchParams;
+  const now = nowLocal();
+  const months = Array.from({ length: MONTHS_AHEAD }, (_, k) => addMonths(now.y, now.m, k));
+  const sel = /^\d{4}-\d{2}$/.test(sp.m || "") ? { y: +sp.m.slice(0, 4), m: +sp.m.slice(5) } : { y: now.y, m: now.m };
+  const type = EVENT_TYPES.includes(sp.type) ? sp.type : "";
+  const grid = monthGrid(sel.y, sel.m);
+  let user = null, inMonth = [], upcoming = [], counts = [];
+  try {
+    user = await getUser();
+    await ensureSchema();
+    inMonth = await sql`
+      SELECT id, title, meta FROM posts
+      WHERE kind = 'Эвент' AND status = 'published'
+        AND meta->>'starts_at' >= ${grid[0].key} AND meta->>'starts_at' < ${grid[grid.length - 1].key + "T99"}
+      ORDER BY meta->>'starts_at'`;
+    upcoming = await sql`
+      SELECT p.id, p.title, p.body, p.meta, p.created_at, u.initial, u.first_name,
+        (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
+      FROM posts p JOIN users u ON u.id = p.author_id
+      WHERE p.kind = 'Эвент' AND p.status = 'published' AND p.meta->>'starts_at' >= ${now.day}
+        AND (${type} = '' OR p.meta->>'type' = ${type})
+      ORDER BY p.meta->>'starts_at' LIMIT 30`;
+    counts = await sql`
+      SELECT substr(meta->>'starts_at', 1, 7) AS ym, COUNT(*)::int AS n FROM posts
+      WHERE kind = 'Эвент' AND status = 'published' AND meta->>'starts_at' >= ${now.day.slice(0, 7)}
+      GROUP BY 1`;
+  } catch (e) {}
+  const perMonth = Object.fromEntries(counts.map((c) => [c.ym, c.n]));
+  const byDay = {};
+  for (const e of inMonth) (byDay[e.meta.starts_at.slice(0, 10)] ||= []).push(e);
+  const q = (o) => "/events?" + new URLSearchParams(Object.entries({ m: `${sel.y}-${String(sel.m).padStart(2, "0")}`, type, ...o }).filter(([, v]) => v));
+
+  return (
+    <Shell user={user} active="/events" header="nav">
+      <div className="ss-card ev-months">
+        {months.map((x, i) => {
+          const key = `${x.y}-${String(x.m).padStart(2, "0")}`;
+          const on = x.y === sel.y && x.m === sel.m;
+          const yearStart = i === 0 || x.m === 1;
+          return (
+            <Link key={key} href={q({ m: key })} className={"ev-month" + (on ? " on" : "") + (perMonth[key] ? " has" : "")}>
+              {yearStart && <i>{x.y} он</i>}
+              <b>{x.m}</b>
+              <small>{perMonth[key] ? `${perMonth[key]} эвент` : "сар"}</small>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="ss-card ev-cal">
+        <div className="ev-cal-head">
+          <b>{sel.y} оны {sel.m}-р сар</b>
+          <span className="ss-grow" />
+          <Link href={q({ m: (() => { const p = addMonths(sel.y, sel.m, -1); return `${p.y}-${String(p.m).padStart(2, "0")}`; })() })} className="ev-nav" aria-label="Өмнөх сар">‹</Link>
+          <Link href={q({ m: (() => { const p = addMonths(sel.y, sel.m, 1); return `${p.y}-${String(p.m).padStart(2, "0")}`; })() })} className="ev-nav" aria-label="Дараах сар">›</Link>
+        </div>
+        <div className="ev-grid">
+          {WD_SHORT.map((w) => <span key={w} className="ev-wd">{w}</span>)}
+          {grid.map((c) => {
+            const list = byDay[c.key] || [];
+            const today = c.key === now.day;
+            return (
+              <div key={c.key} className={"ev-day" + (c.out ? " out" : "") + (today ? " today" : "") + (c.key < now.day ? " past" : "")}>
+                <span className="ev-num">{c.d}</span>
+                {list.slice(0, 2).map((e) => (
+                  <Link key={e.id} href={`/post/${e.id}`} className={"ev-chip " + (TONE[e.meta.type] || "gray")} title={`${e.meta.starts_at.slice(11, 16)} · ${e.title}`}>
+                    {e.title}
+                  </Link>
+                ))}
+                {list.length > 2 && <small className="ev-more">+{list.length - 2}</small>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="ev-bar">
+        <b>Ойрын эвентүүд</b>
+        <span className="ss-grow" />
+        <small>Нийт {upcoming.length} эвент</small>
+        <Link href={user ? "/?compose=Эвент" : "/login"} className="ev-add">+ Эвент нэмэх</Link>
+      </div>
+      <div className="ev-filters">
+        <Link href={q({ type: "" })} className={type ? "" : "on"}>Бүгд</Link>
+        {EVENT_TYPES.map((t) => <Link key={t} href={q({ type: t })} className={type === t ? "on" : ""}>{t}</Link>)}
+      </div>
+
+      {upcoming.length === 0 && (
+        <div className="ss-card"><p className="ss-empty">{type ? `Ойрын хугацаанд «${type}» эвент алга.` : "Ойрын хугацаанд эвент алга. Эхний эвентийг та зарлаарай ✦"}</p></div>
+      )}
+      {upcoming.map((e) => {
+        const m = e.meta || {};
+        return (
+          <article key={e.id} className="ss-card ev-card">
+            <div className="ev-card-main">
+              <div className="ss-card-top">
+                <span className="ev-crumb"><em>Эвент</em> · {m.type || "Бусад"}</span>
+                <span className="ss-date">{e.initial}.{e.first_name}</span>
+              </div>
+              <span className="ev-where"><img className="ic" src="/icons/f_pin.svg" width={14} height={14} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
+              <Link href={`/post/${e.id}`} className="ev-title">{e.title}</Link>
+              <p className="ev-excerpt">{e.body.length > 220 ? e.body.slice(0, 220) + "…" : e.body}</p>
+              <div className="ev-facts">
+                <span><img className="ic" src="/icons/f_date.svg" width={16} height={16} alt="" />{fmtEventDate(m.starts_at)}</span>
+                {m.duration && <span><img className="ic" src="/icons/f_clock.svg" width={16} height={16} alt="" />Үргэлжлэх хугацаа: {m.duration}</span>}
+                {m.price && <span><img className="ic" src="/icons/f_ticket.svg" width={16} height={16} alt="" />{m.price}</span>}
+                {m.capacity && <span><img className="ic" src="/icons/f_people.svg" width={16} height={16} alt="" />{m.capacity} хүн</span>}
+              </div>
+              <div className="ss-actionbar">
+                <span className="ss-count"><img className="ic" src="/icons/aspark.svg" width={22} height={22} alt="Оч" />{e.sparks}</span>
+                <Link href={`/post/${e.id}#comments`} className="ss-count"><img className="ic" src="/icons/comment.svg" width={22} height={22} alt="Сэтгэгдэл" />{e.comments}</Link>
+                <Link href={`/post/${e.id}`} className="ss-pill">Дэлгэрэнгүй</Link>
+                <span className="ss-grow" />
+                <a href={`/post/${e.id}/ics`} className="ss-icon-btn" title="Календарьт нэмэх"><img className="ic" src="/icons/f_date.svg" width={20} height={20} alt="Календарьт нэмэх" /></a>
+              </div>
+            </div>
+            <Link href={`/post/${e.id}`} className="ev-cover-link" aria-hidden="true" tabIndex={-1}><Cover type={m.type} starts={m.starts_at} /></Link>
+          </article>
+        );
+      })}
+    </Shell>
+  );
+}

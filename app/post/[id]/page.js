@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { googleCalUrl } from "@/lib/events";
 import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
@@ -125,6 +126,13 @@ export default async function PostPage({ params, searchParams }) {
             )}
             {rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)}
             <MetaBlock kind={post.kind} m={post.meta || {}} />
+            {post.kind === "Эвент" && published && googleCalUrl(post.title, post.meta || {}, post.body, `https://science-spark-sable.vercel.app/post/${post.id}`) && (
+              <div className="ev-addcal">
+                <span>Календарьт нэмэх:</span>
+                <a href={googleCalUrl(post.title, post.meta || {}, post.body, `https://science-spark-sable.vercel.app/post/${post.id}`)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
+                <a href={`/post/${post.id}/ics`}>Утас / Outlook / Apple (.ics)</a>
+              </div>
+            )}
 
             <div className="ar-credits">
               <div>

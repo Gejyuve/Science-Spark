@@ -56,7 +56,7 @@ function Sidebar({ active }) {
   );
 }
 
-function Header({ user, compact, compose, composeError }) {
+function Header({ user, compact, compose, composeError, active }) {
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
@@ -67,7 +67,7 @@ function Header({ user, compact, compose, composeError }) {
         <Link href="/" className="ss-logo" aria-label="Нүүр">
           <img src="/icons/logo.svg" width={74} height={74} alt="Science Spark" />
         </Link>
-        <span className="ss-round soon" title="Тун удахгүй">{I("event", 24)}</span>
+        <Link className={"ss-round" + (active === "/events" ? " on" : "")} href="/events" title="Эвент">{I("event", 24)}</Link>
         <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("club", 24)}</span>
       </div>
@@ -164,7 +164,7 @@ export default async function Shell({ user, active, children, header = true, com
     <div className="ss-shell">
       <Sidebar active={active} />
       <main className="ss-main">
-        {header && <Header user={user} compact={header === "nav"} compose={compose} composeError={composeError} />}
+        {header && <Header user={user} compact={header === "nav"} compose={compose} composeError={composeError} active={active} />}
         {children}
       </main>
       <RightRail user={user} />
