@@ -83,16 +83,18 @@ export default function ProfileForm({ user, profile, error, isNew }) {
       </section>
 
       <section className="pf-card">
-        <ImageInput name="cover" aspect={4} maxW={1920} variant="cover" initial={p.cover_id || null}>
-          <img src="/icons/camera18.svg" width={18} height={18} alt="" />
-          <b>Ковер зураг нэмэх</b>
-          <small>1920 × 480 · JPG, PNG, WEBP</small>
-          <Pts k="cover" />
-        </ImageInput>
+        <div className="pf-coverwrap">
+          <ImageInput name="cover" aspect={3} maxW={1920} variant="cover" adjust initial={p.cover_id || null} initialSrc={p.cover_src || null} initialPos={p.cover_pos || null}>
+            <img src="/icons/camera18.svg" width={18} height={18} alt="" />
+            <b>Ковер зураг нэмэх</b>
+            <small>Өргөн зураг (3:1) · JPG, PNG, WEBP</small>
+          </ImageInput>
+          <span className="pf-cover-pts"><Pts k="cover" on={!!p.cover_id} /></span>
+        </div>
         <div className="pf-photo">
-          <ImageInput name="avatar" aspect={1} maxW={480} variant="avatar" initial={user.avatar || null}>
+          <ImageInput name="avatar" aspect={1} maxW={480} variant="avatar" adjust initial={user.avatar || null} initialSrc={user.avatar_src || null} initialPos={user.avatar_pos || null}
+            badge={<span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>}>
             <img src="/icons/person40.svg" width={40} height={40} alt="" />
-            <span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>
           </ImageInput>
           <div><b>Нүүр зураг</b><Pts k="photo" /></div>
         </div>

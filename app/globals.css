@@ -1366,12 +1366,9 @@ a.ss-kind:hover { text-decoration: underline; }
 .ii-box { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 14px; border: 1.5px dashed #37c3b3; border-radius: 14px; background: var(--teal-bg); color: var(--teal); font: inherit; cursor: pointer; overflow: hidden; text-align: center; }
 .ii-box b { font-size: 12px; }
 .ii-box small { font-size: 11px; color: var(--muted); }
-.ii-box:hover { filter: brightness(.97); }
+.ii:not(.has) .ii-box:hover { filter: brightness(.97); }
 .ii.has .ii-box { padding: 0; border-style: solid; background: var(--surface-2); }
 .ii-img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.ii-acts { display: flex; gap: 6px; }
-.ii-acts button { height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.ii-acts button:last-child { color: #cc2633; }
 .ii-err { color: #cc2633; font-size: 12px; }
 .ii-spin { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .55); }
 .ii-spin::after { content: ""; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #37c3b3; border-top-color: transparent; animation: ii-rot .8s linear infinite; }
@@ -1381,10 +1378,33 @@ a.ss-kind:hover { text-decoration: underline; }
 .ii-slot.wide .ii-box { width: 100%; aspect-ratio: var(--ar, 2.5); min-height: 110px; }
 .ii-drop .ii-box { aspect-ratio: var(--ar, 2.64); gap: 8px; }
 .ii-drop:not(.has) .ii-box { aspect-ratio: auto; min-height: 200px; }
-.ii-cover .ii-box { aspect-ratio: 4; min-height: 120px; }
-.ii-avatar .ii-box { width: 88px; height: 88px; padding: 0; border-radius: 50%; position: relative; }
-.ii-avatar:not(.has) .ii-box { border-style: dashed; }
-.ii-avatar .ii-box .pf-cam { position: absolute; right: 0; bottom: 0; }
+.ii-acts { position: absolute; top: 8px; right: 8px; z-index: 3; display: flex; gap: 6px; }
+.ii-acts button { height: 28px; padding: 0 12px; border-radius: 999px; border: 0; background: rgba(18, 35, 46, .72); color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px); }
+.ii-acts button:last-child { color: #ffb4b8; }
+.ii-slot .ii-acts { top: 6px; right: 6px; gap: 4px; }
+.ii-slot:not(.wide) .ii-acts button { height: 24px; padding: 0 8px; font-size: 11px; }
+.ii-hint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 2; padding: 4px 10px; border-radius: 999px; background: rgba(18, 35, 46, .6); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.ii.drag .ii-box { cursor: grab; touch-action: none; }
+.ii.drag .ii-box:active { cursor: grabbing; }
+.ii.drag:hover .ii-hint, .ii.drag:focus-within .ii-hint { opacity: 1; }
+.ii-img { user-select: none; -webkit-user-drag: none; pointer-events: none; }
+/* Профайл засах: ковер (3:1) ба нүүр зураг (тойрог) */
+.pf-coverwrap { position: relative; }
+.pf-cover-pts { position: absolute; left: 12px; top: 12px; z-index: 3; }
+.ii-cover .ii-box { aspect-ratio: 3; border-radius: 20px; border-color: #9ad9cf; background: #f3fbfa; gap: 6px; }
+.ii-cover .ii-box b { color: #00a89b; font-size: 13.5px; }
+.ii-cover.has .ii-box { border: 0; }
+.ii-avatar { position: relative; flex: none; }
+.ii-avatar .ii-box { width: 112px; height: 112px; padding: 0; border-radius: 50%; border: 5px solid var(--surface); background: #f3f6f8; box-shadow: 0 6px 18px rgba(51, 89, 102, .12); }
+.ii-avatar .ii-acts { top: auto; bottom: -34px; left: 50%; right: auto; transform: translateX(-50%); }
+.ii-avatar .ii-acts button { height: 24px; padding: 0 9px; font-size: 11px; }
+.ii-avatar .ii-hint { display: none; }
+.ii-badge { position: absolute; right: -2px; bottom: 4px; z-index: 4; padding: 0; border: 0; background: none; cursor: pointer; }
+.ii-badge .pf-cam { position: static; }
+.pf-photo { align-items: flex-end; margin-bottom: 40px; }
+.pf-photo > div { margin-top: 0; margin-bottom: 14px; }
+:root[data-theme="dark"] .ii-cover .ii-box { background: var(--teal-bg); border-color: #2a6a62; }
+:root[data-theme="dark"] .ii-avatar .ii-box { background: var(--surface-2); }
 /* Харуулах */
 .ss-cardimg { display: block; width: 100%; max-height: 420px; object-fit: cover; border-radius: 14px; margin-top: 10px; }
 .ss-cardimg.sq { width: min(100%, 320px); aspect-ratio: 1; }

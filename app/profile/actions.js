@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { ownImage } from "@/lib/images";
+import { ownImage, cleanPos } from "@/lib/images";
 import { checkName, capitalize, POINTS, OPTIONS, COUNTRIES, SOCIALS, countWords } from "@/lib/profile";
 
 const back = (msg) => redirect(`/profile/edit?error=${encodeURIComponent(msg)}`);
@@ -74,8 +74,13 @@ export async function saveProfile(formData) {
 
   const avatarId = await ownImage(user.id, formData.get("avatar"));
   const coverId = await ownImage(user.id, formData.get("cover"));
+  const avatarSrc = avatarId ? await ownImage(user.id, formData.get("avatar_src")) : null;
+  const coverSrc = coverId ? await ownImage(user.id, formData.get("cover_src")) : null;
+  const avatarPos = avatarSrc ? cleanPos(formData.get("avatar_pos")) : null;
+  const coverPos = coverSrc ? cleanPos(formData.get("cover_pos")) : null;
   await sql`UPDATE users SET surname = ${capitalize(surname)}, initial = ${surname[0].toUpperCase()},
-            first_name = ${capitalize(first)}, avatar_id = ${avatarId} WHERE id = ${user.id}`;
+            first_name = ${capitalize(first)}, avatar_id = ${avatarId},
+            avatar_src = ${avatarSrc}, avatar_pos = ${avatarPos} WHERE id = ${user.id}`;
   await sql`
     INSERT INTO profiles (user_id, email_public, gender, birth_date, about, birth_country, birth_city,
       live_country, live_city, education, school, orcid, profession, job, socials,
@@ -92,7 +97,7 @@ export async function saveProfile(formData) {
       socials = EXCLUDED.socials, origin_view = EXCLUDED.origin_view, religion = EXCLUDED.religion,
       belief = EXCLUDED.belief, politics = EXCLUDED.politics,
       agreed_at = COALESCE(profiles.agreed_at, EXCLUDED.agreed_at), updated_at = now()`;
-  await sql`UPDATE profiles SET cover_id = ${coverId} WHERE user_id = ${user.id}`;
+  await sql`UPDATE profiles SET cover_id = ${coverId}, cover_src = ${coverSrc}, cover_pos = ${coverPos} WHERE user_id = ${user.id}`;
 
   // Шинээр бөглөсөн талбар бүрд нэг удаа оч (очны дансанд бичигдэнэ)
   const filled = Object.keys(p).filter((k) => p[k]);
