@@ -102,6 +102,15 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
     const post = v[e] && v[e] !== "\n" ? "\n\n" : "\n";
     replace(s, e, pre + snippet + post);
   };
+  // Онцлох хайрцаг: гарчиг сонгогдсон байдлаар орно, шууд солих эсвэл мөрийг устгаж гарчиггүй болгоно
+  const noteBox = () => {
+    const { s, e, v, t } = sel();
+    const body = (t || "Энд онцлох баримтаа бичнэ үү").split("\n").map((l) => `!> ${l.replace(/^!>\s?/, "")}`).join("\n");
+    const pre = s > 0 && v[s - 1] !== "\n" ? "\n\n" : s > 1 && v[s - 2] !== "\n" ? "\n" : "";
+    const head = "!> # Сонирхолтой нь\n";
+    const from = s + pre.length + 5;
+    replace(s, e, pre + head + body + "\n", from, from + "Сонирхолтой нь".length);
+  };
   const cite = (n) => {
     const { s, e } = sel();
     replace(s, e, `[${n}]`);
@@ -135,7 +144,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
             <Tool title="Ишлэл" onClick={() => prefix("> ")}>{I.quote}</Tool>
             <Tool title="Жагсаалт" onClick={() => prefix("- ")}>{I.ul}</Tool>
             <Tool title="Дугаартай жагсаалт" onClick={() => prefix("", true)}>{I.ol}</Tool>
-            <Tool title="Сонирхолтой баримт (хайрцаг)" onClick={() => prefix("!> ")}>{I.note}</Tool>
+            <Tool title="Онцлох хайрцаг (гарчгийг нь сольж эсвэл устгаж болно)" onClick={noteBox}>{I.note}</Tool>
             <Tool title="Хуваах зураас" onClick={() => block("---")}>{I.hr}</Tool>
             <i className="re-sep" />
             <Tool title="Зураг оруулах" onClick={() => setDlg("img")}>{I.img}</Tool>
@@ -170,7 +179,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
         <ul>
           <li><code># Гарчиг</code> · <code>## Дэд гарчиг</code> · <code>### Жижиг гарчиг</code></li>
           <li><code>**тод**</code> · <code>*налуу*</code> · <code>==тодруулга==</code> · <code>[текст](https://холбоос)</code></li>
-          <li><code>&gt; ишлэл</code> (сүүлийн мөрөнд <code>— Нэр</code>) · <code>!&gt; сонирхолтой баримт</code></li>
+          <li><code>&gt; ишлэл</code> (сүүлийн мөрөнд <code>— Нэр</code>) · <code>!&gt; онцлох хайрцаг</code> (эхний мөр <code>!&gt; # Гарчиг</code> бол гарчигтай)</li>
           <li><code>- жагсаалт</code> · <code>1. дугаартай</code> · <code>---</code> зураас · <code>[1]</code> эх сурвалжийн ишлэл</li>
         </ul>
       </details>
@@ -198,7 +207,8 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
       )}
 
       <div className="wr-inserts">
-        <DictAdd className="wr-insert" label="Шинэ үгийн тайлбар нэмэх" loggedIn={loggedIn} icon={<img src="/icons/book18.svg" width={18} height={18} alt="" />} />
+        <DictAdd className="wr-insert" label="Шинэ үгийн тайлбар нэмэх" loggedIn={loggedIn} icon={<img src="/icons/book18.svg" width={18} height={18} alt="" />}
+          onInsert={(t) => { setTab("write"); requestAnimationFrame(() => { const { s, e, t: cur } = sel(); replace(s, e, `[${cur || t.title}](/post/${t.id})`); }); }} />
         <button type="button" className="wr-insert" onClick={() => setDlg("src")}><img src="/icons/link18.svg" width={18} height={18} alt="" />Эх сурвалж нэмэх</button>
       </div>
 

@@ -2157,3 +2157,17 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ar-coverfig figcaption { position: absolute; right: 12px; bottom: 10px; padding: 3px 9px; border-radius: 8px; background: rgba(15, 42, 51, .6); color: #fff; font-size: 11px; backdrop-filter: blur(4px); }
 .ar-coverfig figcaption a { color: #fff; }
 @media (max-width: 720px) { .wr-coversrc { grid-template-columns: 1fr; } .re-bar { position: static; } .md-h1 { font-size: 22px; } .md-h2 { font-size: 19px; } }
+
+/* Онцлох хайрцаг: сайтын ногоон өнгө, гарчиг заавал биш */
+.md-note { background: #e8f7f5; border: 1px solid #b9e6df; border-left: 4px solid #00a89b; border-radius: 6px 14px 14px 6px; }
+.md-note b { display: block; font-size: 13.5px; color: #00796f; }
+.md-note p { color: #0f3b37; }
+.md-note b + p { margin-top: 6px; }
+.md-note > p:first-child { margin-top: 0; }
+:root[data-theme="dark"] .md-note { background: rgba(0, 168, 155, .12); border-color: rgba(94, 230, 208, .3); border-left-color: #37c3b3; }
+:root[data-theme="dark"] .md-note b { color: #5ee6d0; }
+/* Шинэ үгийн холбоос хуулах */
+.tm-copy { display: flex; gap: 8px; width: 100%; max-width: 440px; }
+.tm-copy input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); font: inherit; font-size: 12.5px; color: var(--ink); }
+.tm-btn.ok { background: #2f9e57; }
+.tm-done > div:last-child { flex-wrap: wrap; justify-content: center; }
