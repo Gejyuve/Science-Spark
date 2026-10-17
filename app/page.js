@@ -4,6 +4,7 @@ import { getUser, displayName, isStaff, isSuperAdmin } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
+import { unreadCount } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,13 @@ const nav = [
   { icon: "❔", label: "Тусламж" },
 ];
 
-export default async function Home() {
+export default async function Home({ searchParams }) {
+  const { tab } = await searchParams;
+  const following = tab === "following";
   let user = null;
   let posts = [];
   let top = [];
+  let unread = 0;
   try {
     user = await getUser();
     await ensureSchema();
@@ -29,7 +33,10 @@ export default async function Home() {
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
       FROM posts p JOIN users u ON u.id = p.author_id
       WHERE p.status = 'published'
+        AND (${!following || !user}::boolean OR p.author_id IN
+             (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))
       ORDER BY p.created_at DESC LIMIT 30`;
+    unread = await unreadCount(user?.id);
     top = await sql`
       SELECT u.id, u.initial, u.first_name, SUM(l.delta)::int AS points
       FROM points_ledger l JOIN users u ON u.id = l.user_id
@@ -47,12 +54,24 @@ export default async function Home() {
         </form>
         <nav>
           {nav.map((n) => (
-            <a key={n.label} href="#" className={"nav-item" + (n.active ? " active" : "")}>
-              <span>{n.icon}</span>
-              {n.label}
-            </a>
+            n.active ? (
+              <Link key={n.label} href="/" className="nav-item active">
+                <span>{n.icon}</span>
+                {n.label}
+              </Link>
+            ) : (
+              <span key={n.label} className="nav-item soon" title="Тун удахгүй">
+                <span>{n.icon}</span>
+                {n.label}
+              </span>
+            )
           ))}
         </nav>
+        {user && (
+          <Link href="/notifications" className="nav-item">
+            🔔 Мэдэгдэл{unread > 0 && <span className="badge">{unread}</span>}
+          </Link>
+        )}
         {isStaff(user) && <Link href="/review" className="nav-item">🛡 Хянах самбар</Link>}
         {isSuperAdmin(user) && <Link href="/admin" className="nav-item">⚙ Супер админ</Link>}
         <div className="grow" />
@@ -68,8 +87,20 @@ export default async function Home() {
         <Link href={user ? "/write" : "/login"} className="composer">
           {user ? "Өнөөдөр ямар оч асаах гэж байна даа?" : "Нийтлэл бичихийн тулд нэвтэрнэ үү"}
         </Link>
+        {user && (
+          <div className="tabs">
+            <Link href="/" className={following ? "" : "on"}>Бүгд</Link>
+            <Link href="/?tab=following" className={following ? "on" : ""}>Дагаж буй</Link>
+          </div>
+        )}
         {posts.length === 0 && (
-          <div className="card"><p>Одоохондоо нийтлэл алга. Эхний очийг та асаагаарай ✦</p></div>
+          <div className="card">
+            <p>
+              {following && user
+                ? "Дагаж буй хүмүүсийн нийтлэл алга. Сонирхолтой хүмүүсийг дагаарай."
+                : "Одоохондоо нийтлэл алга. Эхний очийг та асаагаарай ✦"}
+            </p>
+          </div>
         )}
         {posts.map((p) => (
           <article key={p.id} className="card">

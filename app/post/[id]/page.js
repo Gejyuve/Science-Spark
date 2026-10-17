@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff } from "@/lib/auth";
+import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
-import { addComment, sparkPost } from "../../posts/actions";
+import { addComment, sparkPost, removePost, deleteComment } from "../../posts/actions";
 
-export default async function PostPage({ params }) {
+export const dynamic = "force-dynamic";
+
+export default async function PostPage({ params, searchParams }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const postId = Number(id);
   if (!Number.isInteger(postId)) notFound();
   await ensureSchema();
@@ -42,12 +45,18 @@ export default async function PostPage({ params }) {
         <p className="meta">
           <Link href={`/u/${post.author_id}`}>{post.initial}.{post.first_name}</Link><span>·</span><span>{fmtDate(post.created_at)}</span>
         </p>
+        {error && <p className="error">{error}</p>}
         {!published && (
-          <p className={post.status === "rejected" ? "error" : "notice"}>
+          <p className={post.status === "pending" ? "notice" : "error"}>
             {post.status === "rejected"
               ? `Хянагч татгалзсан: ${post.review_note || ""}`
+              : post.status === "removed"
+              ? `Админ нийтээс хассан: ${post.review_note || ""}`
               : "Хянагчийн шалгалтад байна. Батлагдсаны дараа бусдад харагдана."}
           </p>
+        )}
+        {!published && isAuthor && post.status !== "pending" && (
+          <p className="muted">Засаад хадгалбал дахин хянагчийн шалгалтад орно.</p>
         )}
         <div className="body">{post.body}</div>
 
@@ -76,6 +85,12 @@ export default async function PostPage({ params }) {
           <div key={c.id} className="comment">
             <b><Link href={`/u/${c.author_id}`}>{c.initial}.{c.first_name}</Link></b> <span className="muted">· {fmtDate(c.created_at)}</span>
             <div>{c.body}</div>
+            {user && (c.author_id === user.id || isAdmin(user)) && (
+              <form action={deleteComment}>
+                <input type="hidden" name="comment_id" value={c.id} />
+                <button className="btn ghost danger small" type="submit">Устгах</button>
+              </form>
+            )}
           </div>
         ))}
         {!published ? null : user ? (
@@ -86,6 +101,16 @@ export default async function PostPage({ params }) {
           </form>
         ) : (
           <p className="muted">Сэтгэгдэл бичихийн тулд <Link href="/login">нэвтэрнэ үү</Link>.</p>
+        )}
+        {published && isAdmin(user) && !isAuthor && (
+          <details className="mod">
+            <summary className="muted">Админ: нийтээс хасах</summary>
+            <form action={removePost} className="stack">
+              <input type="hidden" name="post_id" value={post.id} />
+              <input name="note" required placeholder="Хасах шалтгаан" />
+              <button className="btn ghost danger" type="submit">Нийтээс хасах</button>
+            </form>
+          </details>
         )}
       </article>
     </div>

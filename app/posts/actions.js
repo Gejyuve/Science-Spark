@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, isSuperAdmin } from "@/lib/auth";
+import { getUser, isStaff, isSuperAdmin, isAdmin } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { KINDS } from "@/lib/format";
 
 export async function createPost(formData) {
@@ -32,9 +33,10 @@ export async function addComment(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 2000);
   if (!Number.isInteger(postId) || !body) return;
   await ensureSchema();
-  const ok = await sql`SELECT 1 FROM posts WHERE id = ${postId} AND status = 'published'`;
+  const ok = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status = 'published'`;
   if (!ok.length) return;
   await sql`INSERT INTO comments (post_id, author_id, body) VALUES (${postId}, ${user.id}, ${body})`;
+  await notify({ userId: ok[0].author_id, kind: "comment", actorId: user.id, postId });
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
 }
@@ -97,7 +99,9 @@ export async function toggleFollow(formData) {
   await ensureSchema();
   const del = await sql`DELETE FROM follows WHERE follower_id = ${user.id} AND followee_id = ${target} RETURNING 1`;
   if (!del.length) {
-    await sql`INSERT INTO follows (follower_id, followee_id) VALUES (${user.id}, ${target}) ON CONFLICT DO NOTHING`;
+    const ins = await sql`INSERT INTO follows (follower_id, followee_id) VALUES (${user.id}, ${target})
+                          ON CONFLICT DO NOTHING RETURNING 1`;
+    if (ins.length) await notify({ userId: target, kind: "follow", actorId: user.id });
   }
   revalidatePath(`/u/${target}`);
 }
@@ -114,9 +118,19 @@ export async function reviewPost(formData) {
   }
   await ensureSchema();
   // Өөрийнхөө нийтлэлийг өөрөө батлахгүй.
-  await sql`UPDATE posts SET status = ${decision}, reviewer_id = ${user.id},
+  const done = await sql`UPDATE posts SET status = ${decision}, reviewer_id = ${user.id},
             reviewed_at = now(), review_note = ${note}
-            WHERE id = ${postId} AND author_id <> ${user.id} AND status = 'pending'`;
+            WHERE id = ${postId} AND author_id <> ${user.id} AND status = 'pending'
+            RETURNING author_id`;
+  if (done.length) {
+    await notify({
+      userId: done[0].author_id,
+      kind: decision === "published" ? "approved" : "rejected",
+      actorId: user.id,
+      postId,
+      note,
+    });
+  }
   revalidatePath("/review");
   revalidatePath("/");
   redirect("/review");
@@ -133,4 +147,49 @@ export async function setRole(formData) {
   await ensureSchema();
   await sql`UPDATE users SET role = ${role} WHERE id = ${target} AND role <> 'superadmin'`;
   revalidatePath("/admin");
+}
+
+// Админ / супер админ: нийтлэгдсэн нийтлэлийг нийтээс хасна (устгахгүй, зохиогч засаад дахин илгээж болно).
+export async function removePost(formData) {
+  const user = await getUser();
+  if (!isAdmin(user)) redirect("/");
+  const postId = Number(formData.get("post_id"));
+  const note = String(formData.get("note") || "").trim().slice(0, 1000);
+  if (!Number.isInteger(postId)) redirect("/");
+  if (!note) redirect(`/post/${postId}?error=${encodeURIComponent("Хасах шалтгаанаа бичнэ үү")}`);
+  await ensureSchema();
+  const done = await sql`UPDATE posts SET status = 'removed', reviewer_id = ${user.id},
+            reviewed_at = now(), review_note = ${note}
+            WHERE id = ${postId} AND status = 'published' RETURNING author_id`;
+  if (done.length) {
+    await notify({ userId: done[0].author_id, kind: "removed", actorId: user.id, postId, note });
+  }
+  revalidatePath(`/post/${postId}`);
+  revalidatePath("/");
+  redirect(`/post/${postId}`);
+}
+
+// Сэтгэгдэл устгах: өөрийнхөө сэтгэгдлийг, эсвэл админ бол хэнийх ч.
+export async function deleteComment(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const id = Number(formData.get("comment_id"));
+  if (!Number.isInteger(id)) return;
+  await ensureSchema();
+  const rows = isAdmin(user)
+    ? await sql`DELETE FROM comments WHERE id = ${id} RETURNING post_id`
+    : await sql`DELETE FROM comments WHERE id = ${id} AND author_id = ${user.id} RETURNING post_id`;
+  if (rows.length) {
+    revalidatePath(`/post/${rows[0].post_id}`);
+    revalidatePath("/");
+  }
+}
+
+export async function markAllRead() {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  await ensureSchema();
+  await sql`UPDATE notifications SET read_at = now() WHERE user_id = ${user.id} AND read_at IS NULL`;
+  revalidatePath("/notifications");
+  revalidatePath("/");
 }
