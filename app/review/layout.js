@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TopNav from "../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, canReview, needsName } from "@/lib/auth";
@@ -52,7 +53,8 @@ export default async function ReviewLayout({ children }) {
           <span>← Буцах</span>
         </Link>
       </aside>
-      <main className="adm-main">{children}</main>
+      <main className="adm-main">
+        <TopNav />{children}</main>
     </div>
   );
 }

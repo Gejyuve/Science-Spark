@@ -265,9 +265,6 @@ export default async function PostPage({ params, searchParams }) {
     <Shell user={user} header={false}>
       <div className="ar-col">
         <div className="ar-pagebar">
-          <Link href="/" className="ar-home" aria-label="Нүүр">
-            <img src="/icons/logo.svg" width={42} height={42} alt="" />
-          </Link>
           <Link href="/" className="ar-back">← Буцах</Link>
         </div>
 

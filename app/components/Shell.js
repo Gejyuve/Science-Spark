@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import Composer from "./Composer";
+import TopNav, { NavRow } from "./TopNav";
 import { logout } from "../auth/actions";
 import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
@@ -63,17 +64,7 @@ function Header({ user, compact, compose, composeError, active }) {
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
-      <div className="ss-topnav">
-        <Link className={"ss-round" + (active === "top" ? " on" : "")} href="/?f=top" title="Сүүлийн 24 цагийн топ">{I("hspark")}</Link>
-        <Link className={"ss-round" + (active === "rand" ? " on" : "")} href="/?f=rand" title="Санамсаргүй" prefetch={false}>{I("dice")}</Link>
-        <Link className={"ss-round" + (active === "qa" ? " on" : "")} href="/?f=qa" title="Асуулт ба бодрол">{I("ask", 24)}</Link>
-        <Link href="/" className="ss-logo" aria-label="Нүүр">
-          <img src="/icons/logo.svg" width={74} height={74} alt="Science Spark" />
-        </Link>
-        <Link className={"ss-round" + (active === "/events" ? " on" : "")} href="/events" title="Эвент">{I("event", 24)}</Link>
-        <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
-        <span className="ss-round soon" title="Тун удахгүй">{I("club", 24)}</span>
-      </div>
+      <NavRow active={active} />
       {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} />}
     </header>
   );
@@ -170,7 +161,11 @@ export default async function Shell({ user, active, children, header = true, com
     <div className="ss-shell">
       <Sidebar active={active} />
       <main className="ss-main">
-        {header && <Header user={user} compact={header === "nav"} compose={compose} composeError={composeError} active={active} />}
+        {header === true ? (
+          <Header user={user} compose={compose} composeError={composeError} active={active} />
+        ) : (
+          <TopNav active={active} />
+        )}
         {children}
       </main>
       <RightRail user={user} />

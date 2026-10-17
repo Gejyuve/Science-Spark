@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TopNav from "../../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, needsName } from "@/lib/auth";
@@ -22,9 +23,9 @@ export default async function EditProfilePage({ searchParams }) {
     <div className="wr-page">
       <span className="au-blob a" aria-hidden="true" />
       <span className="au-blob b" aria-hidden="true" />
+      {!isNew && <TopNav className="wr-nav" />}
       {!isNew && (
         <div className="ar-pagebar wr-bar">
-          <Link href="/" className="ar-home" aria-label="Нүүр"><img src="/icons/logo.svg" width={42} height={42} alt="" /></Link>
           <Link href={`/u/${user.id}`} className="ar-back">← Буцах</Link>
         </div>
       )}

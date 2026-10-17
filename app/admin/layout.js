@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TopNav from "../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
@@ -43,6 +44,7 @@ export default async function AdminLayout({ children }) {
         </Link>
       </aside>
       <main className="adm-main">
+        <TopNav />
         {children}
       </main>
     </div>

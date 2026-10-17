@@ -2,6 +2,7 @@ import Link from "next/link";
 import { KINDS } from "@/lib/format";
 import ContentField from "./ContentField";
 import ImageInput from "./ImageInput";
+import TopNav from "./TopNav";
 
 // Figma: Нийтлэл бичих. Шинэ болон засах хуудсанд хоёуланд нь ашиглана.
 export default function PostForm({ action, post = {}, error, extra, heading = "Мэдлэг бол хуваалцах тусам арвижих баялаг юм." }) {
@@ -10,10 +11,8 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
     <div className="wr-page">
       <span className="au-blob a" aria-hidden="true" />
       <span className="au-blob b" aria-hidden="true" />
+      <TopNav className="wr-nav" />
       <div className="ar-pagebar wr-bar">
-        <Link href="/" className="ar-home" aria-label="Нүүр">
-          <img src="/icons/logo.svg" width={42} height={42} alt="" />
-        </Link>
         <Link href={post.id ? `/post/${post.id}` : "/"} className="ar-back">← Буцах</Link>
       </div>
 
