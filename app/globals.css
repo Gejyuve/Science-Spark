@@ -1259,3 +1259,6 @@ details.mod summary { cursor: pointer; }
 .ss-follow { display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--teal-bg); color: #00a89b; font: inherit; font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; text-decoration: none; }
 .ss-follow:hover { background: #00a89b; color: #fff; }
 .ss-follow.on { background: #00a89b; color: #fff; font-size: 11px; }
+.ss-fol { display: inline-flex; align-items: center; gap: 4px; }
+.ss-fol.followed { color: var(--muted); }
+.ss-fol.followed img { filter: grayscale(1) opacity(.6); }

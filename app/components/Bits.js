@@ -27,14 +27,16 @@ export function Avatar({ user, size = 40 }) {
   );
 }
 
-export function Stat({ points = 0, followers = 0 }) {
+export function Stat({ points = 0, followers = 0, followed = false }) {
   return (
     <span className="ss-stat">
       <img src="/icons/spark.svg" width={16} height={16} alt="" />
       <span>{fmtK(points)}</span>
       <i>·</i>
-      <img src="/icons/followers.svg" width={13} height={13} alt="" />
-      <span>{fmtK(followers)}</span>
+      <span className={"ss-fol" + (followed ? " followed" : "")} title={followed ? "Та дагаж байна" : undefined}>
+        <img src="/icons/followers.svg" width={13} height={13} alt="" />
+        <span>{fmtK(followers)}</span>
+      </span>
     </span>
   );
 }
@@ -67,12 +69,12 @@ export function FollowBtn({ id, viewer, following }) {
   if (!viewer) {
     return <Link href="/login" className="ss-follow" title="Дагах" aria-label="Дагах">+</Link>;
   }
-  const on = following?.has(id);
+  if (following?.has(id)) return null; // дагасан бол товч алга болж, дагагчийн тоо саарал болно
   return (
     <form action={toggleFollow} className="ss-follow-form">
       <input type="hidden" name="user_id" value={id} />
-      <button type="submit" className={"ss-follow" + (on ? " on" : "")} title={on ? "Дагахаа болих" : "Дагах"} aria-label={on ? "Дагахаа болих" : "Дагах"}>
-        {on ? "✓" : "+"}
+      <button type="submit" className="ss-follow" title="Дагах" aria-label="Дагах">
+        +
       </button>
     </form>
   );
@@ -86,7 +88,7 @@ export function Person({ id, initial, first_name, points = 0, followers = 0, siz
       <div>
         <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? `${initial}.${first_name}` : "Шинэ хэрэглэгч"}</b></Link>
         <span className="ss-statrow">
-          <Stat points={points} followers={followers} />
+          <Stat points={points} followers={followers} followed={!!following?.has(id)} />
           <FollowBtn id={id} viewer={viewer} following={following} />
         </span>
       </div>
