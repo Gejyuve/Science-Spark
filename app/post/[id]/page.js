@@ -250,21 +250,21 @@ export default async function PostPage({ params, searchParams }) {
 
             <div className="ar-divider" />
             <div className="ar-reactions">
-              {published && user && !isAuthor && !mine ? (
-                <form action={sparkPost}>
-                  <input type="hidden" name="post_id" value={post.id} />
-                  <button type="submit" className="ar-react teal ar-sparkbtn" title="Оч өгөх">
-                    <img src="/icons/sparkle.svg" width={24} height={26} alt="Оч өгөх" />{post.sparks}
-                  </button>
-                </form>
-              ) : published && !user ? (
-                <Link href="/login" className="ar-react teal ar-sparkbtn" title="Оч өгөх"><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</Link>
-              ) : (
-                <span className={"ar-react teal" + (mine ? " given" : "")} title={mine ? "Та оч өгсөн" : "Оч"}><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</span>
-              )}
-              <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment20.svg" width={20} height={20} alt="Сэтгэгдэл" />{comments.length}</a>
-              {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
-              {published && <Share path={`/post/${post.id}`} title={post.title} />}
+              <span className="ar-left">
+                {published && user && !isAuthor && !mine ? (
+                  <form action={sparkPost}>
+                    <input type="hidden" name="post_id" value={post.id} />
+                    <button type="submit" className="ar-react teal ar-sparkbtn" title="Оч өгөх">
+                      <img src="/icons/sparkle.svg" width={24} height={26} alt="Оч өгөх" />{post.sparks}
+                    </button>
+                  </form>
+                ) : published && !user ? (
+                  <Link href="/login" className="ar-react teal ar-sparkbtn" title="Оч өгөх"><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</Link>
+                ) : (
+                  <span className={"ar-react teal" + (mine ? " given" : "")} title={mine ? "Та оч өгсөн" : "Оч"}><img src="/icons/sparkle.svg" width={24} height={26} alt="Оч" />{post.sparks}</span>
+                )}
+                <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment20.svg" width={20} height={20} alt="Сэтгэгдэл" />{comments.length}</a>
+              </span>
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && (
@@ -272,16 +272,20 @@ export default async function PostPage({ params, searchParams }) {
                   <img src="/icons/gift.svg" width={15} height={15} alt="" />Оч хандивлах
                 </span>
               )}
-              {published && (user ? (
-                <form action={toggleSave}>
-                  <input type="hidden" name="post_id" value={post.id} />
-                  <button type="submit" className="ar-iconbtn" title={saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={saved}>
-                    <img className={saved ? "" : "ic"} src={`/icons/${saved ? "saved20" : "save20"}.svg`} width={20} height={20} alt={saved ? "Хадгалсан" : "Хадгалах"} />
-                  </button>
-                </form>
-              ) : (
-                <Link href="/login" className="ar-iconbtn" title="Хадгалах"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></Link>
-              ))}
+              <span className="ar-right">
+                {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
+                {published && (user ? (
+                  <form action={toggleSave}>
+                    <input type="hidden" name="post_id" value={post.id} />
+                    <button type="submit" className="ar-iconbtn" title={saved ? "Хадгалснаас хасах" : "Хадгалах"} aria-pressed={saved}>
+                      <img className={saved ? "" : "ic"} src={`/icons/${saved ? "saved20" : "save20"}.svg`} width={20} height={20} alt={saved ? "Хадгалсан" : "Хадгалах"} />
+                    </button>
+                  </form>
+                ) : (
+                  <Link href="/login" className="ar-iconbtn" title="Хадгалах"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></Link>
+                ))}
+                {published && <Share path={`/post/${post.id}`} title={post.title} align="right" />}
+              </span>
             </div>
             <div className="ar-divider" />
 

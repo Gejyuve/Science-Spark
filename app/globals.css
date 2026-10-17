@@ -1262,3 +1262,6 @@ details.mod summary { cursor: pointer; }
 .ss-fol { display: inline-flex; align-items: center; gap: 4px; }
 .ss-fol.followed { color: var(--muted); }
 .ss-fol.followed img { filter: grayscale(1) opacity(.6); }
+.ar-left { display: inline-flex; align-items: center; gap: 8px; }
+.ar-left > .ar-react, .ar-left form > .ar-react { margin: 0; }
+.ar-right { display: inline-flex; align-items: center; gap: 6px; }
