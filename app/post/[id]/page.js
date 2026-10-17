@@ -314,7 +314,7 @@ export default async function PostPage({ params, searchParams }) {
                 <input type="hidden" name="post_id" value={post.id} />
                 <Avatar user={user} size={40} />
                 <input name="body" required maxLength={2000} placeholder={post.kind === "Асуулт" ? "Хариултаа бичнэ үү…" : "Сэтгэгдэл бичих…"} aria-label="Сэтгэгдэл" />
-                <button type="submit">Илгээх</button>
+                <button type="submit">{isQ ? "Хариулах" : "Илгээх"}</button>
               </form>
             ) : (
               <p className="muted">Сэтгэгдэл бичихийн тулд <Link href="/login">нэвтэрнэ үү</Link>.</p>
