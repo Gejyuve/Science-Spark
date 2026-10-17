@@ -16,7 +16,7 @@ export default async function SearchPage({ searchParams }) {
     posts = await sql`
       SELECT p.id, p.kind, p.title, p.created_at, u.initial, u.first_name
       FROM posts p JOIN users u ON u.id = p.author_id
-      WHERE p.title ILIKE ${like} OR p.body ILIKE ${like}
+      WHERE p.status = 'published' AND (p.title ILIKE ${like} OR p.body ILIKE ${like})
       ORDER BY p.created_at DESC LIMIT 30`;
     people = await sql`
       SELECT id, initial, first_name FROM users WHERE first_name ILIKE ${like} LIMIT 10`;

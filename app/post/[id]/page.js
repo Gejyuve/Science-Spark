@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser } from "@/lib/auth";
+import { getUser, isStaff } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { addComment, sparkPost } from "../../posts/actions";
 
@@ -18,6 +18,13 @@ export default async function PostPage({ params }) {
     FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id = ${postId}`;
   if (!posts.length) notFound();
   const post = posts[0];
+  const isAuthor = user && user.id === post.author_id;
+  const published = post.status === "published";
+  if (!published && !isAuthor && !isStaff(user)) notFound();
+  const reviewers = post.reviewer_id
+    ? await sql`SELECT initial, first_name, id FROM users WHERE id = ${post.reviewer_id}`
+    : [];
+  const reviewer = reviewers[0];
 
   const comments = await sql`
     SELECT c.*, u.initial, u.first_name FROM comments c
@@ -25,7 +32,6 @@ export default async function PostPage({ params }) {
   const mine = user
     ? (await sql`SELECT 1 FROM sparks WHERE post_id = ${postId} AND user_id = ${user.id}`).length > 0
     : false;
-  const isAuthor = user && user.id === post.author_id;
 
   return (
     <div className="auth-wrap top">
@@ -36,11 +42,25 @@ export default async function PostPage({ params }) {
         <p className="meta">
           <Link href={`/u/${post.author_id}`}>{post.initial}.{post.first_name}</Link><span>·</span><span>{fmtDate(post.created_at)}</span>
         </p>
+        {!published && (
+          <p className={post.status === "rejected" ? "error" : "notice"}>
+            {post.status === "rejected"
+              ? `Хянагч татгалзсан: ${post.review_note || ""}`
+              : "Хянагчийн шалгалтад байна. Батлагдсаны дараа бусдад харагдана."}
+          </p>
+        )}
         <div className="body">{post.body}</div>
+
+        <div className="credits">
+          <div><span className="muted">Бичсэн</span><br /><Link href={`/u/${post.author_id}`}>{post.initial}.{post.first_name}</Link></div>
+          {published && reviewer && (
+            <div><span className="muted">Хянасан</span><br /><Link href={`/u/${reviewer.id}`}>{reviewer.initial}.{reviewer.first_name}</Link></div>
+          )}
+        </div>
 
         <div className="actions">
           <span className="spark">✦ {post.sparks}</span>
-          {user && !isAuthor && !mine && (
+          {published && user && !isAuthor && !mine && (
             <form action={sparkPost}>
               <input type="hidden" name="post_id" value={post.id} />
               <button className="btn" type="submit">✦ Оч өгөх</button>
@@ -48,7 +68,7 @@ export default async function PostPage({ params }) {
           )}
           {mine && <span className="muted">Та оч өгсөн</span>}
           {isAuthor && <Link className="btn ghost" href={`/post/${post.id}/edit`}>Засах</Link>}
-          {!user && <Link className="btn ghost" href="/login">Оч өгөхийн тулд нэвтрэх</Link>}
+          {published && !user && <Link className="btn ghost" href="/login">Оч өгөхийн тулд нэвтрэх</Link>}
         </div>
 
         <h3>Сэтгэгдэл ({comments.length})</h3>
@@ -58,7 +78,7 @@ export default async function PostPage({ params }) {
             <div>{c.body}</div>
           </div>
         ))}
-        {user ? (
+        {!published ? null : user ? (
           <form action={addComment} className="comment-form">
             <input type="hidden" name="post_id" value={post.id} />
             <textarea name="body" rows={3} required placeholder="Сэтгэгдэл бичих…" />

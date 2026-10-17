@@ -170,3 +170,11 @@ nav { display: flex; flex-direction: column; gap: 4px; }
 :root[data-theme="dark"] .btn.danger { color: #ec797d; border-color: #ec797d; }
 .meta a, .comment a { color: inherit; }
 .comment a:hover, .meta a:hover { color: var(--teal); }
+.notice { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; background: var(--teal-bg); color: var(--teal); }
+.credits { display: flex; gap: 40px; font-size: 14px; padding-top: 6px; }
+.credits a { color: var(--ink); font-weight: 600; text-decoration: none; }
+.review-card { border-top: 1px solid var(--border); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.review-card h3 { margin: 4px 0 0; }
+.auth-card .row .btn { flex: 1; }
+.user-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.user-row > div { flex: 1; }

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser } from "@/lib/auth";
+import { getUser, isStaff } from "@/lib/auth";
 import { KINDS } from "@/lib/format";
 
 export async function createPost(formData) {
@@ -16,8 +16,13 @@ export async function createPost(formData) {
     redirect(`/write?error=${encodeURIComponent("Гарчиг болон агуулгаа бөглөнө үү")}`);
   }
   await ensureSchema();
+  // Энгийн хэрэглэгчийн нийтлэл хянагч батлах хүртэл нийтлэгдэхгүй.
+  // Хянагч/админ өөрөө бичсэн бол шууд нийтлэгдэнэ.
+  const staff = isStaff(user);
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, body) VALUES (${user.id}, ${kind}, ${title}, ${body})
+    INSERT INTO posts (author_id, kind, title, body, status, reviewer_id, reviewed_at)
+    VALUES (${user.id}, ${kind}, ${title}, ${body},
+            ${staff ? "published" : "pending"}, ${staff ? user.id : null}, ${staff ? new Date().toISOString() : null})
     RETURNING id`;
   revalidatePath("/");
   redirect(`/post/${rows[0].id}`);
@@ -30,6 +35,8 @@ export async function addComment(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 2000);
   if (!Number.isInteger(postId) || !body) return;
   await ensureSchema();
+  const ok = await sql`SELECT 1 FROM posts WHERE id = ${postId} AND status = 'published'`;
+  if (!ok.length) return;
   await sql`INSERT INTO comments (post_id, author_id, body) VALUES (${postId}, ${user.id}, ${body})`;
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
@@ -43,7 +50,7 @@ export async function sparkPost(formData) {
   const postId = Number(formData.get("post_id"));
   if (!Number.isInteger(postId)) return;
   await ensureSchema();
-  const post = await sql`SELECT author_id FROM posts WHERE id = ${postId}`;
+  const post = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status = 'published'`;
   if (!post.length || post[0].author_id === user.id) return;
   const ins = await sql`
     INSERT INTO sparks (post_id, user_id) VALUES (${postId}, ${user.id})
@@ -65,8 +72,15 @@ export async function updatePost(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 20000);
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
   await ensureSchema();
-  await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body}
-            WHERE id = ${postId} AND author_id = ${user.id}`;
+  if (isStaff(user)) {
+    await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body}
+              WHERE id = ${postId} AND author_id = ${user.id}`;
+  } else {
+    // Засвар хийсэн нийтлэл дахин хянагчийн шалгалтад орно.
+    await sql`UPDATE posts SET kind = ${kind}, title = ${title}, body = ${body},
+              status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
+              WHERE id = ${postId} AND author_id = ${user.id}`;
+  }
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
   redirect(`/post/${postId}`);
@@ -94,4 +108,36 @@ export async function toggleFollow(formData) {
     await sql`INSERT INTO follows (follower_id, followee_id) VALUES (${user.id}, ${target}) ON CONFLICT DO NOTHING`;
   }
   revalidatePath(`/u/${target}`);
+}
+
+export async function reviewPost(formData) {
+  const user = await getUser();
+  if (!isStaff(user)) redirect("/");
+  const postId = Number(formData.get("post_id"));
+  const decision = formData.get("decision") === "approve" ? "published" : "rejected";
+  const note = String(formData.get("note") || "").trim().slice(0, 1000) || null;
+  if (!Number.isInteger(postId)) return;
+  if (decision === "rejected" && !note) {
+    redirect(`/review?error=${encodeURIComponent("Татгалзахдаа шалтгаанаа бичнэ үү")}`);
+  }
+  await ensureSchema();
+  // Өөрийнхөө нийтлэлийг өөрөө батлахгүй.
+  await sql`UPDATE posts SET status = ${decision}, reviewer_id = ${user.id},
+            reviewed_at = now(), review_note = ${note}
+            WHERE id = ${postId} AND author_id <> ${user.id} AND status = 'pending'`;
+  revalidatePath("/review");
+  revalidatePath("/");
+  redirect("/review");
+}
+
+export async function setRole(formData) {
+  const user = await getUser();
+  if (!user || user.role !== "admin") redirect("/");
+  const target = Number(formData.get("user_id"));
+  const role = String(formData.get("role"));
+  if (!Number.isInteger(target) || !["user", "reviewer", "admin"].includes(role)) return;
+  if (target === user.id) return; // өөрийн эрхийг өөрчлөхгүй
+  await ensureSchema();
+  await sql`UPDATE users SET role = ${role} WHERE id = ${target}`;
+  revalidatePath("/admin");
 }

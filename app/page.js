@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "./components/ThemeToggle";
-import { getUser, displayName } from "@/lib/auth";
+import { getUser, displayName, isStaff } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
 
@@ -26,6 +26,7 @@ export default async function Home() {
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
       FROM posts p JOIN users u ON u.id = p.author_id
+      WHERE p.status = 'published'
       ORDER BY p.created_at DESC LIMIT 30`;
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
@@ -45,6 +46,8 @@ export default async function Home() {
             </a>
           ))}
         </nav>
+        {isStaff(user) && <Link href="/review" className="nav-item">🛡 Хянах самбар</Link>}
+        {user && user.role === "admin" && <Link href="/admin" className="nav-item">⚙ Админ</Link>}
         <div className="grow" />
         {user ? (
           <Link href="/profile" className="btn ghost">👤 {displayName(user)}</Link>

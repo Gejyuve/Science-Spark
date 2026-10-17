@@ -24,7 +24,9 @@ export default async function PublicProfile({ params }) {
   const u = rows[0];
   const level = levelFor(u.points);
   const posts = await sql`
-    SELECT id, kind, title, created_at FROM posts WHERE author_id = ${uid} ORDER BY created_at DESC LIMIT 50`;
+    SELECT id, kind, title, created_at FROM posts
+    WHERE author_id = ${uid} AND (status = 'published' OR author_id = ${me ? me.id : 0})
+    ORDER BY created_at DESC LIMIT 50`;
   const following = me
     ? (await sql`SELECT 1 FROM follows WHERE follower_id = ${me.id} AND followee_id = ${uid}`).length > 0
     : false;
