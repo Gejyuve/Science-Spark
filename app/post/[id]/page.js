@@ -36,6 +36,61 @@ function MetaBlock({ kind, m }) {
 }
 
 
+// Нэг сэтгэгдэл ба түүний хариултууд (Figma: Асуулт · Дэлгэрэнгүй — муруй зураастай давхар хариулт)
+function CommentNode({ c, kids, user, postId, canReply, depth }) {
+  const children = kids[c.id] || [];
+  return (
+    <div className={"ar-comment" + (depth ? " reply" : "")} id={`c${c.id}`}>
+      {depth > 0 && <span className="ss-curve" aria-hidden="true" />}
+      <Link href={`/u/${c.author_id}`} className="ss-person">
+        <Avatar user={{ id: c.author_id, first_name: c.first_name }} size={depth ? 32 : 40} />
+        <div>
+          <b>{c.initial}.{c.first_name}</b>
+          <Stat points={c.points} followers={c.followers} />
+        </div>
+      </Link>
+      <p>{c.body}</p>
+      <div className="ar-cactions">
+        {user && c.author_id !== user.id ? (
+          <form action={likeComment}>
+            <input type="hidden" name="comment_id" value={c.id} />
+            <button type="submit" className={"ar-spark" + (c.liked ? " on" : "")} title={c.liked ? "Очоо буцаах" : "Оч өгөх"}>
+              <img src={`/icons/${c.liked ? "spark" : "aspark"}.svg`} width={16} height={16} alt="Оч" className={c.liked ? "" : "ic"} />{c.likes}
+            </button>
+          </form>
+        ) : (
+          <span className="ar-spark static"><img src="/icons/spark.svg" width={16} height={16} alt="Оч" />{c.likes}</span>
+        )}
+        {canReply && user && (
+          <details className="ar-replybox">
+            <summary className="ar-link reply">Хариулах</summary>
+            <form action={addComment} className="ar-compose small">
+              <input type="hidden" name="post_id" value={postId} />
+              <input type="hidden" name="parent_id" value={c.id} />
+              <input name="body" required maxLength={2000} placeholder={`${c.initial}.${c.first_name}-д хариулах…`} aria-label="Хариулт" />
+              <button type="submit">Хариулах</button>
+            </form>
+          </details>
+        )}
+        {canReply && !user && <Link href="/login" className="ar-link reply">Хариулах</Link>}
+        <span className="ss-grow" />
+        {user && (c.author_id === user.id || isAdmin(user)) && (
+          <form action={deleteComment}>
+            <input type="hidden" name="comment_id" value={c.id} />
+            <button className="ar-link" type="submit">Устгах</button>
+          </form>
+        )}
+        <span className="ar-cdate">{fmtDate(c.created_at)}</span>
+      </div>
+      {children.length > 0 && (
+        <div className="ar-replies">
+          {children.map((k) => <CommentNode key={k.id} c={k} kids={kids} user={user} postId={postId} canReply={canReply} depth={depth + 1} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Figma: Нийтлэл · Харагдах хуудас
 export default async function PostPage({ params, searchParams }) {
   const { id } = await params;
@@ -74,6 +129,9 @@ export default async function PostPage({ params, searchParams }) {
            EXISTS (SELECT 1 FROM comment_likes WHERE comment_id = c.id AND user_id = ${user ? user.id : 0}) AS liked
     FROM comments c JOIN users u ON u.id = c.author_id
     WHERE c.post_id = ${postId} ORDER BY c.created_at`;
+  const kids = {};
+  for (const c of comments) if (c.parent_id) (kids[c.parent_id] ||= []).push(c);
+  const roots = comments.filter((c) => !c.parent_id);
   const mine = user
     ? (await sql`SELECT 1 FROM sparks WHERE post_id = ${postId} AND user_id = ${user.id}`).length > 0
     : false;
@@ -223,46 +281,17 @@ export default async function PostPage({ params, searchParams }) {
               <form action={addComment} className="ar-compose">
                 <input type="hidden" name="post_id" value={post.id} />
                 <Avatar user={user} size={40} />
-                <input name="body" required maxLength={2000} placeholder="Сэтгэгдэл бичих…" aria-label="Сэтгэгдэл" />
+                <input name="body" required maxLength={2000} placeholder={post.kind === "Асуулт" ? "Хариултаа бичнэ үү…" : "Сэтгэгдэл бичих…"} aria-label="Сэтгэгдэл" />
                 <button type="submit">Илгээх</button>
               </form>
             ) : (
               <p className="muted">Сэтгэгдэл бичихийн тулд <Link href="/login">нэвтэрнэ үү</Link>.</p>
             ))}
 
-            {comments.map((c, i) => (
+            {roots.map((c, i) => (
               <div key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
-                <div className="ar-comment" id={`c${c.id}`}>
-                  <Link href={`/u/${c.author_id}`} className="ss-person">
-                    <Avatar user={{ id: c.author_id, first_name: c.first_name }} size={40} />
-                    <div>
-                      <b>{c.initial}.{c.first_name}</b>
-                      <Stat points={c.points} followers={c.followers} />
-                    </div>
-                  </Link>
-                  <p>{c.body}</p>
-                  <div className="ar-cactions">
-                    {user && c.author_id !== user.id ? (
-                      <form action={likeComment}>
-                        <input type="hidden" name="comment_id" value={c.id} />
-                        <button type="submit" className={"ar-like" + (c.liked ? " on" : "")} title={c.liked ? "Лайкаа буцаах" : "Таалагдлаа"}>
-                          <span aria-hidden="true">{c.liked ? "♥" : "♡"}</span>{c.likes}
-                        </button>
-                      </form>
-                    ) : (
-                      <span className="ar-like static"><span aria-hidden="true">♡</span>{c.likes}</span>
-                    )}
-                    <span className="ss-grow" />
-                    {user && (c.author_id === user.id || isAdmin(user)) && (
-                      <form action={deleteComment}>
-                        <input type="hidden" name="comment_id" value={c.id} />
-                        <button className="ar-link" type="submit">Устгах</button>
-                      </form>
-                    )}
-                    <span className="ar-cdate">{fmtDate(c.created_at)}</span>
-                  </div>
-                </div>
+                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={published} depth={0} />
               </div>
             ))}
 

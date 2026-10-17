@@ -42,8 +42,25 @@ export async function addComment(formData) {
   await ensureSchema();
   const ok = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status = 'published'`;
   if (!ok.length) return;
-  await sql`INSERT INTO comments (post_id, author_id, body) VALUES (${postId}, ${user.id}, ${body})`;
-  await notify({ userId: ok[0].author_id, kind: "comment", actorId: user.id, postId });
+  // Хариулт: эцэг сэтгэгдэл мөн нийтлэлд байх ёстой. 3-аас гүн бол 2-р түвшинд залгана.
+  let parent = Number(formData.get("parent_id")) || null;
+  let parentAuthor = null;
+  if (parent) {
+    const [pc] = await sql`SELECT c.id, c.author_id, c.parent_id, pp.parent_id AS grand
+                           FROM comments c LEFT JOIN comments pp ON pp.id = c.parent_id
+                           WHERE c.id = ${parent} AND c.post_id = ${postId}`;
+    if (!pc) parent = null;
+    else {
+      parentAuthor = pc.author_id;
+      if (pc.parent_id && pc.grand) parent = pc.parent_id;
+    }
+  }
+  const [c] = await sql`INSERT INTO comments (post_id, author_id, body, parent_id) VALUES (${postId}, ${user.id}, ${body}, ${parent}) RETURNING id`;
+  if (parentAuthor) await notify({ userId: parentAuthor, kind: "reply", actorId: user.id, postId });
+  if (ok[0].author_id !== parentAuthor) await notify({ userId: ok[0].author_id, kind: "comment", actorId: user.id, postId });
+  revalidatePath(`/post/${postId}`);
+  revalidatePath("/");
+  redirect(`/post/${postId}#c${c.id}`);
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
 }

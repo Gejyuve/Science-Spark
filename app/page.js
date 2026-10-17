@@ -29,7 +29,7 @@ export default async function Home({ searchParams }) {
           COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = cu.id), 0)::int AS points,
           (SELECT COUNT(*) FROM follows WHERE followee_id = cu.id)::int AS followers
         FROM comments c JOIN users cu ON cu.id = c.author_id
-        WHERE c.post_id = p.id AND p.kind = 'Асуулт'
+        WHERE c.post_id = p.id AND p.kind = 'Асуулт' AND c.parent_id IS NULL
         ORDER BY (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) DESC, c.created_at DESC, c.id DESC
         LIMIT 1
       ) ta ON true

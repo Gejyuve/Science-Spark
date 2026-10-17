@@ -1169,7 +1169,20 @@ details.mod summary { cursor: pointer; }
 .ss-answer.empty:hover .ss-answer-cta { color: var(--teal); }
 .ss-answer:hover b { color: var(--teal); }
 :root[data-theme="dark"] .ss-curve { border-color: #3a4852; }
-.ar-like { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.ar-like span { font-size: 15px; line-height: 1; }
-.ar-like.on { border-color: #e5484d; color: #e5484d; }
-.ar-like.static { cursor: default; }
+.ar-spark { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: #00a89b; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ar-spark:hover img { transform: scale(1.15); }
+.ar-spark img { transition: transform .15s; }
+.ar-spark.static { cursor: default; }
+.ar-link.reply { color: #00a89b; font-size: 12.5px; }
+.ar-link.reply:hover { color: #008075; }
+.ar-replybox { position: static; }
+.ar-replybox > summary { list-style: none; }
+.ar-replybox > summary::-webkit-details-marker { display: none; }
+.ar-replybox[open] { flex-basis: 100%; order: 10; }
+.ar-cactions { flex-wrap: wrap; }
+.ar-compose.small { margin-top: 10px; gap: 8px; }
+.ar-compose.small input { height: 38px; font-size: 13px; }
+.ar-compose.small button { height: 38px; }
+.ar-replies { display: flex; flex-direction: column; gap: 16px; margin: 6px 0 0 34px; }
+.ar-comment.reply { position: relative; }
+.ar-comment.reply > .ss-curve { left: -26px; top: -4px; width: 20px; height: 22px; }
