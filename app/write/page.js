@@ -14,6 +14,7 @@ export default async function WritePage({ searchParams }) {
     <div className="auth-wrap">
       <form className="auth-card wide" action={createPost}>
         <h1>Шинэ нийтлэл</h1>
+        <p className="muted">Өөр хянагч батласны дараа бүгдэд харагдана.</p>
         {error && <p className="error">{error}</p>}
         <label>Төрөл
           <select name="kind" defaultValue="Нийтлэл">
@@ -22,7 +23,7 @@ export default async function WritePage({ searchParams }) {
         </label>
         <label>Гарчиг<input name="title" required maxLength={200} /></label>
         <label>Агуулга<textarea name="body" required rows={10} /></label>
-        <button className="btn" type="submit">Нийтлэх</button>
+        <button className="btn" type="submit">Хянуулахаар илгээх</button>
         <p className="muted"><Link href="/">← Нүүр</Link></p>
       </form>
     </div>

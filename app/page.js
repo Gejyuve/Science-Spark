@@ -3,6 +3,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import { getUser, displayName, isStaff, isSuperAdmin } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
+import { levelFor } from "@/lib/levels";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ const nav = [
 export default async function Home() {
   let user = null;
   let posts = [];
+  let top = [];
   try {
     user = await getUser();
     await ensureSchema();
@@ -28,6 +30,11 @@ export default async function Home() {
       FROM posts p JOIN users u ON u.id = p.author_id
       WHERE p.status = 'published'
       ORDER BY p.created_at DESC LIMIT 30`;
+    top = await sql`
+      SELECT u.id, u.initial, u.first_name, SUM(l.delta)::int AS points
+      FROM points_ledger l JOIN users u ON u.id = l.user_id
+      GROUP BY u.id HAVING SUM(l.delta) > 0
+      ORDER BY points DESC LIMIT 5`;
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
   }
@@ -80,13 +87,25 @@ export default async function Home() {
       </main>
 
       <aside className="side right">
-        <div className="panel">
-          <h3>А.Доржпалам</h3>
-          <p className="muted">1,850 оч · Түвшин 4 · Фузион</p>
-        </div>
+        {user && (
+          <div className="panel">
+            <h3><Link href={`/u/${user.id}`}>{displayName(user)}</Link></h3>
+            <p className="muted">
+              {user.points.toLocaleString("en-US")} оч · Түвшин {levelFor(user.points).n} · {levelFor(user.points).name}
+            </p>
+          </div>
+        )}
         <div className="panel">
           <h3>🔥 Асаж буй оч</h3>
-          <p className="muted">Ж.Баяржавхлан · Б.Түмэнбаяр · Д.Анар</p>
+          {top.length === 0 ? (
+            <p className="muted">Одоохондоо оч цуглуулсан хүн алга.</p>
+          ) : (
+            <p className="muted">
+              {top.map((t, i) => (
+                <span key={t.id}>{i > 0 && " · "}<Link href={`/u/${t.id}`}>{t.initial}.{t.first_name}</Link> ✦{t.points}</span>
+              ))}
+            </p>
+          )}
         </div>
       </aside>
     </div>
