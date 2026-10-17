@@ -735,8 +735,8 @@ details.mod summary { cursor: pointer; }
 .cp-head b { font-size: 16px; font-weight: 700; color: var(--ink); }
 .cp-note { font-size: 12.5px; color: #708c9e; }
 .cp-req { font-style: normal; color: #e5484d; }
-.cp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.cp-field { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); position: relative; }
+.cp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cp-field { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); position: relative; min-width: 0; }
 .cp-field input, .cp-field select { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-family: inherit; font-size: 14px; color: var(--ink); }
 .cp-field select { appearance: none; -webkit-appearance: none; cursor: pointer; }
 .cp-field input::placeholder { color: #879dab; }
