@@ -43,7 +43,7 @@ export default function Share({ path, title, size = 20, icon = "share20" }) {
   };
   return (
     <span className="sh-wrap" ref={box} onPointerEnter={enter} onPointerLeave={leave}>
-      <button type="button" className="ar-iconbtn" aria-label="Хуваалцах" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button type="button" className="ar-iconbtn" aria-label="Хуваалцах" aria-expanded={open} onClick={() => { clearTimeout(timer.current); setOpen(true); }}>
         <img className="ic" src={`/icons/${icon}.svg`} width={size} height={size} alt="" />
       </button>
       {open && (
