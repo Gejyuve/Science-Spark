@@ -18,7 +18,8 @@ export default function PostCard({ p, viewer, following }) {
   const excerpt = p.body.length > 320 ? p.body.slice(0, 320) + "…" : p.body;
   const author = { id: p.author_id, initial: p.initial, first_name: p.first_name };
   return (
-    <article className="ss-card">
+    <article className="ss-card pc">
+      <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
       <div className="ss-card-top">
         <span className="ss-kind">{p.kind}</span>
         <When d={p.created_at} />

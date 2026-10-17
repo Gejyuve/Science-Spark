@@ -1341,3 +1341,8 @@ a.och-brow:hover { background: var(--surface-2); }
   .och-brow { grid-template-columns: 28px minmax(0, 1fr) 70px 64px; }
   .och-brow > span:nth-child(3) { display: none; }
 }
+/* Картын сул хэсэг дээр дарахад контент руу очно */
+.ss-card.pc { position: relative; cursor: pointer; }
+.pc-link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.ss-card.pc a:not(.pc-link), .ss-card.pc button, .ss-card.pc form, .ss-card.pc .sh-wrap { position: relative; z-index: 2; }
+.ss-card.pc:hover { box-shadow: 0 0 0 1px var(--accent) inset, var(--card-shadow); }
