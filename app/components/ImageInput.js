@@ -57,6 +57,14 @@ async function upload({ blob, w, h, type }) {
   return String(j.id);
 }
 
+// Нийтлэл дундах зураг гэх мэтэд: файлыг жижигрүүлж, шахаад оруулна. Зургийн id буцаана.
+export async function uploadImageFile(file, { maxW = 1600, aspect = null } = {}) {
+  if (!/^image\//.test(file.type)) throw new Error("Зөвхөн зураг сонгоно уу");
+  if (file.size > 25_000_000) throw new Error("Зураг хэт том байна (25MB-аас бага)");
+  const b = await loadBitmap(file);
+  return upload(await render(b, aspect, maxW));
+}
+
 const parsePos = (s) => {
   const m = /^(\d{1,3})% (\d{1,3})%$/.exec(s || "");
   return m ? { x: Math.min(100, +m[1]), y: Math.min(100, +m[2]) } : { x: 50, y: 50 };

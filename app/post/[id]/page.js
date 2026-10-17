@@ -15,6 +15,8 @@ import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits"
 import { Langs, VoteBox } from "../../components/Terms";
 import { TERM_KIND, daysLeft, synonyms, shortUrl } from "@/lib/terms";
 import { crumbs } from "@/lib/tree";
+import { render } from "@/lib/md";
+import { Sources } from "../../components/RichEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -357,8 +359,11 @@ export default async function PostPage({ params, searchParams }) {
     : [];
   const usedTerms = new Set();
   const plain = post.kind === "Зарлал"; // зарлал: бүх догол мөр ижил
-  const lead = plain ? null : post.subtitle || (paras.length > 1 ? paras[0] : null);
-  const rest = plain || post.subtitle ? paras : paras.length > 1 ? paras.slice(1) : paras;
+  // Нийтлэл, мэдээ: тэмдэглэгээтэй агуулга (lib/md.js) тул эхний догол мөрийг автоматаар тодруулахгүй
+  const lead = plain ? null : post.subtitle || (!isArticle && paras.length > 1 ? paras[0] : null);
+  const rest = plain || post.subtitle || isArticle ? paras : paras.length > 1 ? paras.slice(1) : paras;
+  const srcList = isArticle && Array.isArray(post.meta?.sources) ? post.meta.sources : [];
+  const cover = isArticle ? post.meta?.cover : null;
 
   return (
     <Shell user={user} header={false}>
@@ -382,7 +387,14 @@ export default async function PostPage({ params, searchParams }) {
             </span>
           </div>
 
-          {post.image_id && isArticle && <img className="ar-cover" src={`/img/${post.image_id}`} alt="" />}
+          {post.image_id && isArticle && (
+            <figure className="ar-coverfig">
+              <img className="ar-cover" src={`/img/${post.image_id}`} alt="" />
+              {cover?.source && (
+                <figcaption>Зураг: {cover.url ? <a href={cover.url} target="_blank" rel="noopener noreferrer nofollow">{cover.source}</a> : cover.source}</figcaption>
+              )}
+            </figure>
+          )}
           <div className="ar-content">
             {isQ && (
               <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
@@ -460,7 +472,12 @@ export default async function PostPage({ params, searchParams }) {
             {isQ ? (
               <div className="ar-qbox">{post.body}</div>
             ) : (
-              rest.map((para, i) => <p key={i} className="ar-text">{glossary.length ? withTerms(para, glossary, usedTerms) : para}</p>)
+              isArticle ? (
+                <div className="ar-body">
+                  {render(post.body, { text: glossary.length ? (s) => withTerms(s, glossary, usedTerms) : undefined })}
+                  {srcList.length > 0 && <Sources sources={srcList} />}
+                </div>
+              ) : rest.map((para, i) => <p key={i} className="ar-text">{glossary.length ? withTerms(para, glossary, usedTerms) : para}</p>)
             )}
             {post.image_id && !isArticle && !isAnn && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
             {!isAnn && <MetaBlock kind={post.kind} m={post.meta || {}} />}

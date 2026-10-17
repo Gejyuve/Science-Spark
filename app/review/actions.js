@@ -84,7 +84,7 @@ export async function decidePost(formData) {
   if (editable) {
     title = String(formData.get("title") || "").trim().slice(0, 200);
     subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
-    body = String(formData.get("body") || "").trim().slice(0, 20000);
+    body = String(formData.get("body") || "").trim().slice(0, 40000);
     if (!title || !body) go(back, "error", "Гарчиг, агуулга хоосон байж болохгүй");
     const cat = String(formData.get("category") || "");
     if (cat && validCategory(cat)) category = cat;

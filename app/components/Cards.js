@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { crumbs } from "@/lib/tree";
+import { strip } from "@/lib/md";
 import { Avatar } from "./Bits";
 
 // Хайлт, Мод, архивын хуудсуудын нийтлэг картууд (Figma 620:472, 732:944, 732:496)
@@ -27,7 +28,7 @@ export function Hl({ text, term }) {
 
 // Хайсан үг орсон хэсгийг тасдаж авна
 export function snippet(body, term, len = 130) {
-  const b = String(body || "").replace(/\s+/g, " ").trim();
+  const b = strip(body).replace(/\s+/g, " ").trim();
   const k = term ? b.toLowerCase().indexOf(term.toLowerCase()) : -1;
   if (b.length <= len) return b;
   if (k < 60) return b.slice(0, len).replace(/\s+\S*$/, "") + "…";

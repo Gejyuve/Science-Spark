@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { KINDS } from "@/lib/format";
-import ContentField from "./ContentField";
+import RichEditor from "./RichEditor";
+import CatTools from "./CatTools";
 import ImageInput from "./ImageInput";
 import TopNav from "./TopNav";
-import DictAdd from "./DictAdd";
 import CategoryPicker from "./CategoryPicker";
 import { plainTree } from "@/lib/tree";
 
@@ -46,6 +46,12 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
             <span className="wr-pick"><img src="/icons/plus16.svg" width={16} height={16} alt="" />Зураг сонгох</span>
             <small>JPG, PNG, WEBP · 740×280 харьцаагаар автоматаар тайрна</small>
           </ImageInput>
+          <div className="wr-coversrc">
+            <label><span>Ковер зургийн эх сурвалж <em>заавал биш</em></span>
+              <input name="cover_source" maxLength={150} defaultValue={post.meta?.cover?.source || ""} placeholder="Жишээ: NASA/JPL-Caltech эсвэл Зохиогчийн зураг" /></label>
+            <label><span>Эх сурвалжийн холбоос <em>заавал биш</em></span>
+              <input name="cover_url" type="url" maxLength={300} defaultValue={post.meta?.cover?.url || ""} placeholder="https://..." /></label>
+          </div>
         </section>
 
         <section className="wr-card">
@@ -65,18 +71,18 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
           </div>
           <label className="wr-label">Ангилал сонгох <em>Заавал</em> <span className="wr-hint">Шинжлэх ухааны модны аль салбарт хамаарах вэ?</span></label>
           <CategoryPicker tree={plainTree()} defaultValue={post.category || ""} />
+          <div className="wr-catadd">
+            <span>Тохирох ангилал олдохгүй байна уу?</span>
+            <CatTools tree={plainTree()} only="add" loggedIn />
+          </div>
         </section>
 
         <section className="wr-card">
           <div className="wr-sec-head">
-            <div><h2>Нийтлэлийн агуулга</h2><p>Догол мөр хооронд хоосон мөр үлдээвэл тусдаа догол болж харагдана.</p></div>
+            <div><h2>Нийтлэлийн агуулга</h2><p>Гарчиг, тод бичиг, ишлэл, зураг, холбоос, эх сурвалжийг хэрэгслийн мөрөөс нэмнэ. «Урьдчилж харах» дээр уншигчид хэрхэн харагдахыг шалгаарай.</p></div>
           </div>
           <div className="wr-editor">
-            <ContentField defaultValue={post.body || ""} />
-          </div>
-          <div className="wr-inserts">
-            <DictAdd className="wr-insert" label="Шинэ үгийн тайлбар нэмэх" icon={<img src="/icons/book18.svg" width={18} height={18} alt="" />} />
-            <span className="wr-insert soon" title="Тун удахгүй"><img src="/icons/link18.svg" width={18} height={18} alt="" />Эх сурвалж нэмэх</span>
+            <RichEditor defaultValue={post.body || ""} defaultSources={post.meta?.sources || []} />
           </div>
         </section>
 

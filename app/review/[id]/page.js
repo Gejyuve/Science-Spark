@@ -71,7 +71,7 @@ export default async function ReviewPost({ params, searchParams }) {
               <section className="adm-card rv-sec">
                 <b className="rv-h">Агуулга</b>
                 <p className="adm-muted">Алдааг шууд засаж болно. Бичээчийн анхны хувилбар хадгалагдана.</p>
-                <textarea name="body" defaultValue={p.body} required maxLength={20000} rows={22} className="rv-body" />
+                <textarea name="body" defaultValue={p.body} required maxLength={40000} rows={22} className="rv-body" />
               </section>
             </>
           ) : (

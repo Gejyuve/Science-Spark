@@ -3,6 +3,7 @@ import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
 import { fmtEventRange, spanText, validLocal } from "@/lib/events";
 import EventCover from "./EventCover";
 import { nodeOf } from "@/lib/tree";
+import { strip } from "@/lib/md";
 import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
 import { toggleSave, sparkPost } from "../posts/actions";
@@ -17,7 +18,8 @@ export default function PostCard({ p, viewer, following }) {
     : p.kind === "Зарлал"
     ? [m.valid_until && ["f_date", `Хүчинтэй: ${m.valid_until}`], m.contact && ["f_phone", m.contact]]
     : [];
-  const excerpt = p.body.length > 320 ? p.body.slice(0, 320) + "…" : p.body;
+  const plainBody = ["Нийтлэл", "Мэдээ"].includes(p.kind) ? strip(p.body).replace(/\s+/g, " ").trim() : p.body;
+  const excerpt = plainBody.length > 320 ? plainBody.slice(0, 320) + "…" : plainBody;
   const actions = (
         <div className="ss-actionbar">
           {viewer && viewer.id !== p.author_id && !p.sparked ? (

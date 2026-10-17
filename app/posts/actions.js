@@ -10,7 +10,19 @@ import { audit } from "@/lib/admin";
 import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { ownImage } from "@/lib/images";
 import { validCategory } from "@/lib/tree";
+import { cleanSources } from "@/lib/md";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
+
+// Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
+function articleMeta(fd) {
+  const t = (k, n) => String(fd.get(k) || "").trim().replace(/\s+/g, " ").slice(0, n);
+  const url = t("cover_url", 300);
+  const source = t("cover_source", 150);
+  return {
+    sources: cleanSources(fd.get("sources")),
+    cover: source ? { source, url: /^https?:\/\/\S+$/i.test(url) ? url : null } : null,
+  };
+}
 
 export async function createPost(formData) {
   const user = await getUser();
@@ -19,7 +31,7 @@ export async function createPost(formData) {
   if (needsName(user)) redirect("/profile/edit");
   const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
   const title = String(formData.get("title") || "").trim().slice(0, 200);
-  const body = String(formData.get("body") || "").trim().slice(0, 20000);
+  const body = String(formData.get("body") || "").trim().slice(0, 40000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   const category = String(formData.get("category") || "");
   if (!title || !body) {
@@ -29,8 +41,8 @@ export async function createPost(formData) {
   await ensureSchema();
   // Хэн бичсэн ч (хянагч, админ, супер админ ч) өөр хянагч батлах хүртэл нийтлэгдэхгүй.
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, subtitle, body, status, image_id, category)
-    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending', ${await ownImage(user.id, formData.get("image"))}, ${category})
+    INSERT INTO posts (author_id, kind, title, subtitle, body, status, image_id, category, meta)
+    VALUES (${user.id}, ${kind}, ${title}, ${subtitle}, ${body}, 'pending', ${await ownImage(user.id, formData.get("image"))}, ${category}, ${JSON.stringify(articleMeta(formData))}::jsonb)
     RETURNING id`;
   revalidatePath("/");
   redirect(`/post/${rows[0].id}`);
@@ -100,7 +112,7 @@ export async function updatePost(formData) {
   const postId = Number(formData.get("post_id"));
   const kind = KINDS.includes(formData.get("kind")) ? formData.get("kind") : "Нийтлэл";
   const title = String(formData.get("title") || "").trim().slice(0, 200);
-  const body = String(formData.get("body") || "").trim().slice(0, 20000);
+  const body = String(formData.get("body") || "").trim().slice(0, 40000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
   const category = String(formData.get("category") || "");
@@ -109,6 +121,7 @@ export async function updatePost(formData) {
   // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
   const imageId = await ownImage(user.id, formData.get("image"));
   await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
+            meta = COALESCE(meta, '{}'::jsonb) || ${JSON.stringify(articleMeta(formData))}::jsonb,
             status = 'pending', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
             WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);

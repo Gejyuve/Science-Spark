@@ -212,7 +212,7 @@ function ReportCategory({ tree, onClose, start = "" }) {
 }
 
 // «Ангилал нэмэх» + хуваалцах + логик алдаа мэдэгдэх товчнууд
-export default function CatTools({ tree, loggedIn, start = "", sharePath = "/tree", shareTitle = "Шинжлэх ухааны мод", compact = false }) {
+export default function CatTools({ tree, loggedIn, start = "", sharePath = "/tree", shareTitle = "Шинжлэх ухааны мод", compact = false, only = null }) {
   const [open, setOpen] = useState(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -224,8 +224,8 @@ export default function CatTools({ tree, loggedIn, start = "", sharePath = "/tre
       ) : (
         <Link href="/login" className="cx-add">＋ Ангилал нэмэх</Link>
       )}
-      <span className="cx-share"><Share path={sharePath} title={shareTitle} align="right" /></span>
-      {loggedIn ? (
+      {!only && <span className="cx-share"><Share path={sharePath} title={shareTitle} align="right" /></span>}
+      {only ? null : loggedIn ? (
         <button type="button" className="cx-flag" onClick={() => setOpen("report")} title="Логик алдаа мэдэгдэх">
           <img className="ic" src="/icons/flag20.svg" width={16} height={16} alt="" />{!compact && "Логик алдаа мэдэгдэх"}
         </button>
