@@ -1480,3 +1480,25 @@ a.ss-kind:hover { text-decoration: underline; }
 .rv-backlink { align-self: flex-start; color: var(--teal); font-size: 13px; font-weight: 600; text-decoration: none; }
 .rv-decide { display: flex; flex-direction: column; gap: 8px; position: sticky; bottom: 16px; padding: 12px; border-radius: 16px; background: var(--surface); box-shadow: 0 8px 24px rgba(18, 35, 46, .12); }
 .rv-decide .adm-btn { width: 100%; }
+/* ── Эвентийн карт (Figma 60:2) ── */
+.evc { display: flex; flex-direction: column; gap: 12px; }
+.evc-crumb { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.evc-crumb i { font-style: normal; color: var(--muted); }
+.evc-crumb > span { color: var(--ink); font-weight: 500; }
+.evc-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--text); }
+.evc-meta > span { display: inline-flex; align-items: center; gap: 6px; }
+.evc-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 24px; align-items: stretch; }
+.evc-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.evc-title { font-size: 21px; font-weight: 700; line-height: 1.35; color: var(--ink); text-decoration: none; }
+.evc-title:hover { color: var(--teal); }
+.evc-text { margin: 0; font-size: 15px; line-height: 1.65; color: var(--muted); }
+.evc-facts { margin-top: auto; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; border-radius: 16px; background: var(--surface-2); font-size: 14.5px; color: var(--ink); }
+.evc-facts span { display: flex; align-items: center; gap: 12px; }
+.evc-cover { display: block; border-radius: 16px; overflow: hidden; min-height: 260px; }
+.evc-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.evc-cover .ev-cover { height: 100%; aspect-ratio: auto; border-radius: 0; }
+@media (max-width: 760px) {
+  .evc-grid { grid-template-columns: minmax(0, 1fr); }
+  .evc-cover { order: -1; min-height: 0; aspect-ratio: 2 / 1; }
+  .evc-title { font-size: 19px; }
+}

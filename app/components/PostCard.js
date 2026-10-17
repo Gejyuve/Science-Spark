@@ -62,26 +62,30 @@ export default function PostCard({ p, viewer, following }) {
       m.capacity && ["f_people", `${m.capacity} хүн`],
     ].filter(Boolean);
     return (
-      <article className="ss-card pc">
+      <article className="ss-card pc evc">
         <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
-        <div className="ev-card">
-          <div className="ev-card-main">
-            <div className="ss-card-top">
-              <span className="ev-crumb"><Link href="/events" className="ss-kind">Эвент</Link> · {m.type || "Бусад"}</span>
-              <When d={p.created_at} />
+        <div className="ss-card-top">
+          <span className="evc-crumb"><Link href="/events" className="ss-kind">Эвент</Link><i>·</i><span>{m.type || "Бусад"}</span></span>
+          <When d={p.created_at} />
+        </div>
+        <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
+        <div className="evc-meta">
+          <span><img className="ic" src="/icons/f_pin.svg" width={16} height={16} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
+          <span className="tip" data-tip={`Энэ контентыг ${p.views || 0} хүн нээж үзсэн`}><img className="ic" src="/icons/eye.svg" width={16} height={16} alt="" />{p.views || 0}</span>
+        </div>
+        <div className="evc-grid">
+          <div className="evc-main">
+            <Link href={`/post/${p.id}`} className="evc-title">{p.title}</Link>
+            <p className="evc-text">{p.body.length > 220 ? p.body.slice(0, 220) + "…" : p.body}</p>
+            <div className="evc-facts">
+              {ev.map(([ic, v]) => <span key={ic}><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" />{v}</span>)}
             </div>
-            <span className="ev-where"><img className="ic" src="/icons/f_pin.svg" width={14} height={14} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
-            <Link href={`/post/${p.id}`} className="ev-title">{p.title}</Link>
-            <p className="ev-excerpt">{p.body.length > 220 ? p.body.slice(0, 220) + "…" : p.body}</p>
-            <div className="ev-facts">
-              {ev.map(([ic, v]) => <span key={ic}><img className="ic" src={`/icons/${ic}.svg`} width={16} height={16} alt="" />{v}</span>)}
-            </div>
-            {actions}
           </div>
-          <Link href={`/post/${p.id}`} className="ev-cover-link" aria-hidden="true" tabIndex={-1}>
-            {p.image_id ? <img className="ev-photo" src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <EventCover type={m.type} starts={m.starts_at} />}
+          <Link href={`/post/${p.id}`} className="evc-cover" aria-hidden="true" tabIndex={-1}>
+            {p.image_id ? <img src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <EventCover type={m.type} starts={m.starts_at} />}
           </Link>
         </div>
+        {actions}
       </article>
     );
   }

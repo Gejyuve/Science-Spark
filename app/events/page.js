@@ -4,6 +4,8 @@ import { sql, ensureSchema } from "@/lib/db";
 import { EVENT_TYPES } from "@/lib/format";
 import { nowLocal, monthGrid, addMonths, WD_SHORT, fmtEventRange, endLocal, spanText, validLocal, hueFor, daysIn } from "@/lib/events";
 import Shell from "../components/Shell";
+import PostCard from "../components/PostCard";
+import { followingSet } from "../components/Bits";
 import Cover, { TONE } from "../components/EventCover";
 
 export const dynamic = "force-dynamic";
@@ -35,9 +37,13 @@ export default async function Events({ searchParams }) {
         AND COALESCE(meta->>'ends_at', meta->>'starts_at') >= ${lo}
       ORDER BY meta->>'starts_at', id`;
     upcoming = await sql`
-      SELECT p.id, p.title, p.body, p.meta, p.image_id, p.created_at, u.initial, u.first_name,
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.image_id, p.views, p.created_at, u.initial, u.first_name, u.avatar_id AS avatar,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
+        COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
+        (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers,
+        EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved,
+        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked
       FROM posts p JOIN users u ON u.id = p.author_id
       WHERE p.kind = 'Эвент' AND p.status = 'published' AND COALESCE(p.meta->>'ends_at', p.meta->>'starts_at') >= ${now.day}
         AND (${type} = '' OR p.meta->>'type' = ${type})
@@ -48,6 +54,7 @@ export default async function Events({ searchParams }) {
     .filter((e) => validLocal(e.meta?.starts_at))
     .map((e) => ({ ...e, s: e.meta.starts_at.slice(0, 10), e: endLocal(e.meta).slice(0, 10) }));
   // Сар бүрт хэдэн эвент давхцаж байгаа
+  const followSet = await followingSet(user);
   const perMonth = {};
   for (const x of months) {
     const k = `${x.y}-${String(x.m).padStart(2, "0")}`;
@@ -149,36 +156,7 @@ export default async function Events({ searchParams }) {
       {upcoming.length === 0 && (
         <div className="ss-card"><p className="ss-empty">{type ? `Ойрын хугацаанд «${type}» эвент алга.` : "Ойрын хугацаанд эвент алга. Эхний эвентийг та зарлаарай ✦"}</p></div>
       )}
-      {upcoming.map((e) => {
-        const m = e.meta || {};
-        return (
-          <article key={e.id} className="ss-card ev-card">
-            <div className="ev-card-main">
-              <div className="ss-card-top">
-                <span className="ev-crumb"><em>Эвент</em> · {m.type || "Бусад"}</span>
-                <span className="ss-date">{e.initial}.{e.first_name}</span>
-              </div>
-              <span className="ev-where"><img className="ic" src="/icons/f_pin.svg" width={14} height={14} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
-              <Link href={`/post/${e.id}`} className="ev-title">{e.title}</Link>
-              <p className="ev-excerpt">{e.body.length > 220 ? e.body.slice(0, 220) + "…" : e.body}</p>
-              <div className="ev-facts">
-                <span><img className="ic" src="/icons/f_date.svg" width={16} height={16} alt="" />{fmtEventRange(m)}</span>
-                {validLocal(m.starts_at) && <span><img className="ic" src="/icons/f_clock.svg" width={16} height={16} alt="" />Үргэлжлэх хугацаа: {validLocal(m.ends_at) ? spanText(m.starts_at, m.ends_at) : m.duration || "—"}</span>}
-                {m.price && <span><img className="ic" src="/icons/f_ticket.svg" width={16} height={16} alt="" />{m.price}</span>}
-                {m.capacity && <span><img className="ic" src="/icons/f_people.svg" width={16} height={16} alt="" />{m.capacity} хүн</span>}
-              </div>
-              <div className="ss-actionbar">
-                <span className="ss-count"><img className="ic" src="/icons/aspark.svg" width={22} height={22} alt="Оч" />{e.sparks}</span>
-                <Link href={`/post/${e.id}#comments`} className="ss-count"><img className="ic" src="/icons/comment.svg" width={22} height={22} alt="Сэтгэгдэл" />{e.comments}</Link>
-                <Link href={`/post/${e.id}`} className="ss-pill">Дэлгэрэнгүй</Link>
-                <span className="ss-grow" />
-                <a href={`/post/${e.id}/ics`} className="ss-icon-btn" title="Календарьт нэмэх"><img className="ic" src="/icons/f_date.svg" width={20} height={20} alt="Календарьт нэмэх" /></a>
-              </div>
-            </div>
-            <Link href={`/post/${e.id}`} className="ev-cover-link" aria-hidden="true" tabIndex={-1}>{e.image_id ? <img className="ev-photo" src={`/img/${e.image_id}`} alt="" loading="lazy" /> : <Cover type={m.type} starts={m.starts_at} />}</Link>
-          </article>
-        );
-      })}
+      {upcoming.map((e) => <PostCard key={e.id} p={e} viewer={user} following={followSet} />)}
     </Shell>
   );
 }

@@ -40,7 +40,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const pr = (await sql`SELECT * FROM profiles WHERE user_id = ${uid}`)[0] || {};
 
   const all = await sql`
-    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.image_id, p.created_at, u.initial, u.first_name, u.avatar_id AS avatar,
+    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.image_id, p.views, p.created_at, u.initial, u.first_name, u.avatar_id AS avatar,
       EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS saved,
       EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS sparked,
       (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
@@ -51,7 +51,7 @@ export default async function PublicProfile({ params, searchParams }) {
   for (const p of all) { p.author_points = u.points; p.author_followers = u.followers; }
   const savedList = isMe
     ? await sql`
-      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.image_id, p.created_at, a.initial, a.first_name, a.avatar_id AS avatar, true AS saved,
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.image_id, p.views, p.created_at, a.initial, a.first_name, a.avatar_id AS avatar, true AS saved,
         EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${uid}) AS sparked,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,

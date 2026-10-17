@@ -17,7 +17,7 @@ export default async function Home({ searchParams }) {
     user = await getUser();
     await ensureSchema();
     posts = await sql`
-      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.image_id, p.created_at, u.initial, u.first_name, u.avatar_id AS avatar,
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.image_id, p.views, p.created_at, u.initial, u.first_name, u.avatar_id AS avatar,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
         COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
