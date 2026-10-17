@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, KIND_HREF } from "@/lib/format";
 import { fmtEventRange } from "@/lib/events";
 import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
@@ -21,7 +21,7 @@ export default function PostCard({ p, viewer, following }) {
     <article className="ss-card pc">
       <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
       <div className="ss-card-top">
-        <span className="ss-kind">{p.kind}</span>
+        {KIND_HREF[p.kind] ? <Link href={KIND_HREF[p.kind]} className="ss-kind">{p.kind}</Link> : <span className="ss-kind">{p.kind}</span>}
         <When d={p.created_at} />
       </div>
       <Person id={p.author_id} initial={p.initial} first_name={p.first_name} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />

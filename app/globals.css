@@ -1356,3 +1356,7 @@ a.och-brow:hover { background: var(--surface-2); }
 }
 .tip:hover::after, .tip:focus-visible::after { opacity: 1; transform: none; }
 :root[data-theme="dark"] .tip::after { background: #e4e7ea; color: #12232e; }
+.ar-chip.link { text-decoration: none; }
+.ar-chip.link:hover { filter: brightness(1.08); }
+a.ss-kind { text-decoration: none; }
+a.ss-kind:hover { text-decoration: underline; }

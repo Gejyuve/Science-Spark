@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import crypto from "node:crypto";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, KIND_HREF } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave } from "../../posts/actions";
 import Share from "../../components/Share";
 import LogicReport from "../../components/LogicReport";
@@ -182,7 +182,9 @@ export default async function PostPage({ params, searchParams }) {
               <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
             )}
             <div className="ar-chips">
-              <span className="ar-chip main">{post.kind}</span>
+              {KIND_HREF[post.kind]
+                ? <Link href={KIND_HREF[post.kind]} className="ar-chip main link">{post.kind}</Link>
+                : <span className="ar-chip main">{post.kind}</span>}
             </div>
             {!["Асуулт", "Бодрол"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
