@@ -75,6 +75,15 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
   const [min, max] = WORD_RULES[kind] || WORD_RULES.Нийтлэл;
   const minutes = Math.max(1, Math.round(words / 180));
   const heads = outline(text);
+  const [slots, setSlots] = useState({});
+  useEffect(() => setSlots({ outline: document.getElementById("wr-outline-slot"), stats: document.getElementById("wr-stats-slot") }), []);
+  const [, force] = useState(0);
+  useEffect(() => {
+    const t = document.querySelector('[name="title"]');
+    const on = () => force((x) => x + 1);
+    t?.addEventListener("input", on);
+    return () => t?.removeEventListener("input", on);
+  }, []);
   // Бүтэц дээр дарахад тухайн гарчгийн мөр рүү очно
   const jump = (i) => {
     const el = ta.current;
@@ -184,23 +193,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
         </span>
       </div>
 
-      <div className={"re-main" + (tab === "write" ? "" : " pv")}>
-        {tab === "write" && (
-          <aside className="re-outline" aria-label="Нийтлэлийн бүтэц">
-            <b>Бүтэц</b>
-            {heads.length === 0 ? (
-              <small>H1, H2, H3 гарчиг нэмэхэд энд бүтэц харагдана.</small>
-            ) : (
-              <ol>
-                {heads.map((x, i) => (
-                  <li key={i} className={`l${x.level}`}>
-                    <button type="button" onClick={() => jump(i)} title={x.text}>{x.text || "—"}</button>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </aside>
-        )}
+      <div className="re-main">
         <textarea
           ref={ta}
           name="body"
@@ -235,6 +228,26 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
       </details>
 
       <input type="hidden" name="sources" value={JSON.stringify(sources)} />
+      {/* Зүүн талын «Нийтлэлийн бүтэц», баруун талын тоолуур (бичих хуудасны хажуугийн самбарт) */}
+      {slots.outline && createPortal(
+        <nav className="wo-outline" aria-label="Нийтлэлийн бүтэц">
+          <b>Нийтлэлийн бүтэц</b>
+          <ol>
+            <li className="l0"><span className="wo-dot" /><button type="button" onClick={() => { setTab("write"); requestAnimationFrame(() => ta.current?.focus()); }}>{(typeof document !== "undefined" && document.querySelector('[name="title"]')?.value) || "Гарчиг"}</button></li>
+            {heads.map((x, i) => (
+              <li key={i} className={`l${x.level}`}><span className="wo-dot" /><button type="button" onClick={() => { setTab("write"); requestAnimationFrame(() => jump(i)); }} title={x.text}>{x.text || "—"}</button></li>
+            ))}
+          </ol>
+          {heads.length === 0 && <small>Агуулгад H1, H2, H3 гарчиг нэмэхэд энд бүтэц харагдана.</small>}
+        </nav>, slots.outline)}
+      {slots.stats && createPortal(
+        <div className="wo-stats">
+          <span className={text.trim() && rule.error ? "bad" : text.trim() ? "ok" : ""}>
+            <img className="ic" src="/icons/pen16.svg" width={16} height={16} alt="" />Үгийн тоо: <b>{words}</b>
+            <small>{kind === "Мэдээ" ? `Мэдээ ${min}–${max} үг` : "Нийтлэл 500-аас дээш үг"}</small>
+          </span>
+          <span><img className="ic" src="/icons/f_clock.svg" width={16} height={16} alt="" />Унших хугацаа: <b>{minutes} минут</b></span>
+        </div>, slots.stats)}
       {sources.length > 0 && (
         <div className="re-sources">
           <b>Эх сурвалж · {sources.length}</b>

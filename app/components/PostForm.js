@@ -11,6 +11,12 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
       <TopNav className="wr-nav" />
 
       <WriteForm action={action} post={post} tree={plainTree()} error={error} extra={extra} heading={heading} />
+      <div className="wr-mobile">
+        <img src="/icons/logo.svg" width={56} height={56} alt="" />
+        <b>Бичих самбар зөвхөн компьютерээс ажиллана</b>
+        <p>Урт нийтлэл бичих, зураг, эх сурвалж оруулахад том дэлгэц хэрэгтэй. Компьютерээсээ нэвтэрч бичээрэй. Утаснаасаа асуулт, бодрол, эвент, зарлалыг нүүр хуудаснаас шууд нийтэлж болно.</p>
+        <a href="/" className="wr-go">Нүүр хуудас руу</a>
+      </div>
     </div>
   );
 }

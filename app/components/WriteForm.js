@@ -73,6 +73,8 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
   const t = (ms) => new Date(ms).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 
   return (
+    <div className="wr-layout">
+    <aside className="wr-side left"><div id="wr-outline-slot" /></aside>
     <form ref={form} action={action} className="wr-col" key={ver}
       onSubmit={() => { try { localStorage.removeItem(key); } catch (e) {} }}>
       {post.id && <input type="hidden" name="post_id" value={post.id} />}
@@ -146,7 +148,6 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
 
       <section className="wr-card wr-foot">
         {extra}
-        {savedAt && <small className="wr-saved">✓ Ноорог энэ төхөөрөмж дээр хадгалагдсан · {t(savedAt)}</small>}
         <span className="ss-grow" />
         <button type="submit" className="wr-go">
           Урьдчилж харах
@@ -154,5 +155,10 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
         </button>
       </section>
     </form>
+    <aside className="wr-side right">
+      <div id="wr-stats-slot" />
+      {savedAt && <p className="wo-saved">✓ Ноорог хадгалагдсан · {t(savedAt)}</p>}
+    </aside>
+    </div>
   );
 }

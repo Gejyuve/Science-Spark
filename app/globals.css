@@ -2250,3 +2250,41 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ar-tocwrap.has { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .ar-toc { position: static; }
 }
+/* Бичих хуудас: зүүн талд бүтэц, баруун талд тоолуур (gejyuve.com/postcreate шиг) */
+.wr-layout { position: relative; z-index: 1; display: grid; grid-template-columns: 250px minmax(0, 840px) 250px; justify-content: center; gap: 24px; align-items: start; margin-top: 4px; }
+.wr-layout .wr-col { margin: 0; }
+.wr-side { position: sticky; top: 16px; }
+.wo-outline { display: flex; flex-direction: column; gap: 12px; min-height: 300px; max-height: calc(100vh - 40px); overflow: auto; padding: 20px 18px; border-radius: 22px; background: var(--surface); box-shadow: var(--card-shadow); }
+.wo-outline > b { font-size: 14px; color: var(--ink); }
+.wo-outline ol { position: relative; list-style: none; margin: 0; padding: 0 0 0 4px; display: flex; flex-direction: column; gap: 4px; }
+.wo-outline ol::before { content: ""; position: absolute; left: 10px; top: 10px; bottom: 10px; border-left: 2px dotted #9fd9d0; }
+.wo-outline li { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.wo-dot { flex: none; position: relative; z-index: 1; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid #00a89b; }
+.wo-outline .l0 .wo-dot { box-shadow: 0 0 0 4px rgba(0, 168, 155, .18); background: #00a89b; }
+.wo-outline .l2 { padding-left: 14px; } .wo-outline .l3 { padding-left: 26px; }
+.wo-outline .l2 .wo-dot, .wo-outline .l3 .wo-dot { width: 10px; height: 10px; margin-left: 2px; }
+.wo-outline button { flex: 1; min-width: 0; padding: 5px 6px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 13px; color: var(--ink); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.wo-outline button:hover { background: #e3f6f3; color: #00796f; }
+.wo-outline .l0 button { font-weight: 700; }
+.wo-outline .l1 button { font-weight: 600; }
+.wo-outline .l3 button { font-size: 12px; color: var(--muted); }
+.wo-outline small { font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+.wo-stats { display: flex; flex-direction: column; border-radius: 22px; background: var(--surface); box-shadow: var(--card-shadow); overflow: hidden; }
+.wo-stats > span { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 16px 18px; font-size: 13.5px; color: var(--muted); }
+.wo-stats > span + span { border-top: 1px solid var(--border); }
+.wo-stats b { color: var(--ink); }
+.wo-stats small { flex-basis: 100%; padding-left: 24px; font-size: 11.5px; }
+.wo-stats .ok b, .wo-stats .ok small { color: #00897e; }
+.wo-stats .bad b, .wo-stats .bad small { color: #c2400d; }
+.wo-saved { margin: 10px 4px 0; font-size: 11.5px; color: var(--muted); }
+.wr-mobile { display: none; }
+@media (max-width: 1400px) { .wr-layout { grid-template-columns: 220px minmax(0, 1fr) 210px; gap: 16px; } }
+@media (max-width: 1100px) { .wr-layout { grid-template-columns: 200px minmax(0, 1fr); } .wr-side.right { display: none; } }
+/* Бичих самбар зөвхөн компьютерээс */
+@media (max-width: 860px) {
+  .wr-layout { display: none; }
+  .wr-mobile { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 420px; margin: 40px auto; padding: 32px 24px; border-radius: 24px; background: var(--surface); box-shadow: var(--card-shadow); text-align: center; }
+  .wr-mobile b { font-size: 17px; color: var(--ink); }
+  .wr-mobile p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+  .wr-mobile .wr-go { margin-top: 6px; text-decoration: none; }
+}
