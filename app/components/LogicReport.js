@@ -23,7 +23,7 @@ export default function LogicReport({ postId, kind, title, loggedIn }) {
         <form action={reportLogic} className="lr-box">
           <input type="hidden" name="post_id" value={postId} />
           <div className="lr-head">
-            <span className="lr-ico"><img src="/icons/logic.svg" width={20} height={20} alt="" /></span>
+            <span className="lr-ico"><img className="ic" src="/icons/logic.svg" width={20} height={20} alt="" /></span>
             <div>
               <b>Логик алдаа мэдэгдэх</b>
               <small>Энэ контентод байгаа логик, баримтын алдааг товч бичнэ үү.</small>
