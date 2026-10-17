@@ -1266,3 +1266,77 @@ details.mod summary { cursor: pointer; }
 .ar-left { display: inline-flex; align-items: center; gap: 8px; }
 .ar-left > .ar-react, .ar-left form > .ar-react { margin: 0; }
 .ar-right { display: inline-flex; align-items: center; gap: 6px; }
+.ss-stat-och { display: inline-flex; align-items: center; gap: 4px; color: inherit; text-decoration: none; }
+.ss-stat-och:hover { text-decoration: underline; }
+.ss-sparkbtn { border: 0; background: none; padding: 0; cursor: pointer; font: inherit; font-size: 16px; }
+.ss-sparkbtn:hover img { transform: scale(1.12); }
+.ss-sparkbtn img { transition: transform .15s; }
+.ss-count.sparked { color: #00a89b; font-weight: 600; }
+
+/* ── Очны учир (Figma 598:477) ── */
+.och { padding: 28px 32px; display: flex; flex-direction: column; gap: 12px; }
+.och h1 { margin: 0; font-size: 26px; color: var(--ink); }
+.och h2 { margin: 18px 0 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #708c9e; }
+.och-sub, .och-hint { margin: 0; font-size: 13px; color: var(--muted); }
+.och-me { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px; }
+.och-me-main { display: flex; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 16px; background: var(--surface-2); }
+.och-me-main > div { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.och-me-main b { font-size: 15px; color: var(--ink); }
+.och-me-main i { font-style: normal; font-weight: 600; }
+.och-me-main small { font-size: 12px; color: var(--muted); }
+.och-bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.och-bar span { display: block; height: 100%; border-radius: 999px; }
+.och-wallet { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #37c3b3; background: var(--teal-bg); }
+.och-wallet small { font-size: 11px; color: var(--muted); }
+.och-wallet b { font-size: 22px; color: #00a89b; }
+.och-lv { display: grid; place-items: center; flex: none; border-radius: 12px; background: var(--c); color: #fff; font-weight: 800; font-size: 15px; box-shadow: 0 4px 12px color-mix(in srgb, var(--c) 35%, transparent); }
+.och-levels { display: flex; flex-direction: column; }
+.och-lrow { display: grid; grid-template-columns: 24px 40px minmax(0, 1.2fr) 110px minmax(0, 1.5fr); gap: 12px; align-items: center; padding: 10px 6px; border-top: 1px solid var(--border); }
+.och-lrow.me { background: var(--teal-bg); border-radius: 12px; }
+.och-lrow.dim { opacity: .55; }
+.och-num { color: var(--muted); font-size: 12px; text-align: center; }
+.och-lname { display: flex; flex-direction: column; }
+.och-lname b { font-size: 14px; color: var(--ink); }
+.och-lname small, .och-perk small { font-size: 11px; color: var(--muted); }
+.och-min { color: #00a89b; font-weight: 700; font-size: 13px; }
+.och-perk { display: flex; flex-direction: column; }
+.och-perk b { font-size: 12.5px; color: #16794a; }
+.och-rules { display: flex; flex-direction: column; border-radius: 16px; background: var(--surface-2); padding: 6px 16px; }
+.och-rule { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+.och-rule:first-child { border-top: 0; }
+.och-rule > span { flex: 1; display: flex; flex-direction: column; }
+.och-rule b { font-size: 13.5px; color: var(--ink); }
+.och-rule small { font-size: 11px; color: var(--muted); }
+.och-rule em { font-style: normal; font-weight: 700; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--teal-bg); color: #00a89b; white-space: nowrap; }
+.och-rule.soon { opacity: .5; }
+.och-soon { margin: 10px 0 0; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.och-note { margin: 0; padding: 12px 16px; border-radius: 14px; font-size: 13px; line-height: 1.6; }
+.och-note ul { margin: 4px 0 0; padding-left: 18px; }
+.och-note.warn { background: #fff3e8; color: #c2400d; }
+.och-note.bad { background: #fde8e9; color: #b4232e; }
+.och-note.info { background: #eaf1fd; color: #2f5fd0; }
+:root[data-theme="dark"] .och-note.warn { background: #3a2a1c; color: #ffc48a; }
+:root[data-theme="dark"] .och-note.bad { background: #450c0f; color: #ec797d; }
+:root[data-theme="dark"] .och-note.info { background: #1c2c4a; color: #8db1ff; }
+:root[data-theme="dark"] .och-perk b { color: #6fd7a3; }
+.och-tabs { margin-top: 4px; }
+.och-board { display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; }
+.och-brow { display: grid; grid-template-columns: 40px minmax(0, 1fr) 110px 110px 90px; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--ink); text-decoration: none; }
+.och-brow.head { border-top: 0; background: var(--surface-2); font-size: 11px; font-weight: 600; color: #708c9e; text-transform: uppercase; }
+.och-brow > span:last-child { text-align: right; font-weight: 700; }
+.och-brow.me { background: var(--teal-bg); }
+a.och-brow:hover { background: var(--surface-2); }
+.och-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.och-who b { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.och-chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.och-plus { color: #00a89b; font-weight: 600; }
+.och-dots { text-align: center; color: var(--muted); padding: 4px; border-top: 1px solid var(--border); }
+@media (max-width: 760px) {
+  .och { padding: 20px 16px; }
+  .och-me { grid-template-columns: minmax(0, 1fr); }
+  .och-lrow { grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .och-lrow .och-num { display: none; }
+  .och-perk { grid-column: 2 / -1; }
+  .och-brow { grid-template-columns: 28px minmax(0, 1fr) 70px 64px; }
+  .och-brow > span:nth-child(3) { display: none; }
+}

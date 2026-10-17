@@ -102,7 +102,7 @@ async function RightRail({ user }) {
             <Avatar user={user} size={40} />
             <div>
               <b>{displayName(user)}</b>
-              <Stat points={user.points} followers={followers} />
+              <Stat points={user.points} followers={followers} link={false} />
             </div>
           </Link>
           <div className="ss-actions">

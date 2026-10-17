@@ -7,6 +7,7 @@ import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
+import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 export async function createPost(formData) {
@@ -80,8 +81,10 @@ export async function sparkPost(formData) {
     INSERT INTO sparks (post_id, user_id) VALUES (${postId}, ${user.id})
     ON CONFLICT DO NOTHING RETURNING post_id`;
   if (ins.length) {
+    // Очны учир: өгсөн хүнд +5, контентын эзэнд +1
     await sql`INSERT INTO points_ledger (user_id, delta, reason)
-              VALUES (${post[0].author_id}, 1, ${"spark:post:" + postId + ":from:" + user.id})`;
+              VALUES (${post[0].author_id}, ${SPARK_GET}, ${"spark:post:" + postId + ":from:" + user.id}),
+                     (${user.id}, ${SPARK_GIVE}, ${"spark_give:post:" + postId})`;
   }
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
@@ -310,8 +313,20 @@ export async function likeComment(formData) {
   const [c] = await sql`SELECT c.author_id, c.post_id FROM comments c JOIN posts p ON p.id = c.post_id
                         WHERE c.id = ${id} AND p.status = 'published'`;
   if (!c || c.author_id === user.id) return;
+  // Хариултад оч: өгсөн хүнд +5, хариултын эзэнд +1. Буцаавал очийг мөн буцаана.
   const del = await sql`DELETE FROM comment_likes WHERE comment_id = ${id} AND user_id = ${user.id} RETURNING 1`;
-  if (!del.length) await sql`INSERT INTO comment_likes (comment_id, user_id) VALUES (${id}, ${user.id}) ON CONFLICT DO NOTHING`;
+  if (del.length) {
+    await sql`INSERT INTO points_ledger (user_id, delta, reason)
+              VALUES (${c.author_id}, ${-SPARK_GET}, ${"unspark:comment:" + id + ":from:" + user.id}),
+                     (${user.id}, ${-SPARK_GIVE}, ${"unspark_give:comment:" + id})`;
+  } else {
+    const ins = await sql`INSERT INTO comment_likes (comment_id, user_id) VALUES (${id}, ${user.id}) ON CONFLICT DO NOTHING RETURNING 1`;
+    if (ins.length) {
+      await sql`INSERT INTO points_ledger (user_id, delta, reason)
+                VALUES (${c.author_id}, ${SPARK_GET}, ${"spark:comment:" + id + ":from:" + user.id}),
+                       (${user.id}, ${SPARK_GIVE}, ${"spark_give:comment:" + id})`;
+    }
+  }
   revalidatePath(`/post/${c.post_id}`);
   revalidatePath("/");
 }

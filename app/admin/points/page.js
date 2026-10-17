@@ -21,7 +21,7 @@ export default async function Points({ searchParams }) {
     SELECT l.delta, l.reason, l.created_at, u.id, u.initial, u.first_name, u.email
     FROM points_ledger l JOIN users u ON u.id = l.user_id
     ORDER BY l.created_at DESC LIMIT 40`;
-  const open = LEVELS.filter((l) => !l.locked);
+  const open = LEVELS;
   const countFor = (l, i) => {
     const next = open[i + 1];
     return sums.filter((p) => p >= l.min && (!next || p < next.min)).length;
@@ -46,11 +46,11 @@ export default async function Points({ searchParams }) {
               {LEVELS.map((l) => {
                 const i = open.indexOf(l);
                 return (
-                  <tr key={l.n} className={l.locked ? "adm-dim" : ""}>
+                  <tr key={l.n}>
                     <td>{l.n}</td>
-                    <td className="adm-strong">{l.name}{l.locked && " 🔒"}</td>
+                    <td className="adm-strong">{l.name}{l.perkLocked && " 🔒"}</td>
                     <td>{l.min.toLocaleString("en-US")}+</td>
-                    <td>{l.locked ? "—" : countFor(l, i)}</td>
+                    <td>{countFor(l, i)}</td>
                   </tr>
                 );
               })}

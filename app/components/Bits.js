@@ -27,11 +27,16 @@ export function Avatar({ user, size = 40 }) {
   );
 }
 
-export function Stat({ points = 0, followers = 0, followed = false }) {
-  return (
-    <span className="ss-stat">
+export function Stat({ points = 0, followers = 0, followed = false, link = true }) {
+  const pts = (
+    <>
       <img src="/icons/spark.svg" width={16} height={16} alt="" />
       <span>{fmtK(points)}</span>
+    </>
+  );
+  return (
+    <span className="ss-stat">
+      {link ? <Link href="/och" className="ss-stat-och" title="Очны учир">{pts}</Link> : pts}
       <i>·</i>
       <span className={"ss-fol" + (followed ? " followed" : "")} title={followed ? "Та дагаж байна" : undefined}>
         <img src="/icons/followers.svg" width={13} height={13} alt="" />

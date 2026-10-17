@@ -42,6 +42,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const all = await sql`
     SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, u.initial, u.first_name,
       EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS saved,
+      EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${me ? me.id : 0}) AS sparked,
       (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
       (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
     FROM posts p JOIN users u ON u.id = p.author_id
@@ -51,6 +52,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const savedList = isMe
     ? await sql`
       SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, a.initial, a.first_name, true AS saved,
+        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${uid}) AS sparked,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
         COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = a.id), 0)::int AS author_points,

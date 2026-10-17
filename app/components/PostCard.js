@@ -3,7 +3,7 @@ import { fmtDate } from "@/lib/format";
 import { fmtEventRange } from "@/lib/events";
 import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
-import { toggleSave } from "../posts/actions";
+import { toggleSave, sparkPost } from "../posts/actions";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
 export default function PostCard({ p, viewer, following }) {
@@ -36,7 +36,20 @@ export default function PostCard({ p, viewer, following }) {
         )}
       </Link>
       <div className="ss-actionbar">
-        <span className="ss-count"><img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч" />{p.sparks}</span>
+        {viewer && viewer.id !== p.author_id && !p.sparked ? (
+          <form action={sparkPost}>
+            <input type="hidden" name="post_id" value={p.id} />
+            <button type="submit" className="ss-count ss-sparkbtn" title="Оч өгөх">
+              <img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч өгөх" />{p.sparks}
+            </button>
+          </form>
+        ) : !viewer ? (
+          <Link href="/login" className="ss-count ss-sparkbtn" title="Оч өгөх"><img className="ic" src="/icons/aspark.svg" width={25} height={24} alt="Оч" />{p.sparks}</Link>
+        ) : (
+          <span className={"ss-count" + (p.sparked ? " sparked" : "")} title={p.sparked ? "Та оч өгсөн" : "Оч"}>
+            <img className={p.sparked ? "" : "ic"} src={`/icons/${p.sparked ? "sparkle" : "aspark"}.svg`} width={p.sparked ? 23 : 25} height={24} alt="Оч" />{p.sparks}
+          </span>
+        )}
         <Link href={`/post/${p.id}#comments`} className="ss-count">
           <img className="ic" src="/icons/comment.svg" width={25} height={24} alt="Сэтгэгдэл" />{p.comments}
         </Link>
@@ -63,7 +76,7 @@ export default function PostCard({ p, viewer, following }) {
             <Avatar user={{ id: p.ta_author, first_name: p.ta_first }} size={36} />
             <span>
               <b>{p.ta_initial}.{p.ta_first}</b>
-              <Stat points={p.ta_points} followers={p.ta_followers} />
+              <Stat points={p.ta_points} followers={p.ta_followers} link={false} />
             </span>
           </span>
           <p>{p.ta_body}</p>
