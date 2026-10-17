@@ -103,7 +103,7 @@ nav { display: flex; flex-direction: column; gap: 4px; }
   .right { display: none; }
 }
 @media (max-width: 720px) {
-  .shell { grid-template-columns: 1fr; padding: 12px; }
+  .shell { grid-template-columns: 1fr; padding: 12px; align-content: start; }
   .left {
     position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center;
   }
