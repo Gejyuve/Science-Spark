@@ -1251,3 +1251,11 @@ details.mod summary { cursor: pointer; }
 .ar-qbox { margin: 14px 0 6px; padding: 18px 22px; border-radius: 18px; background: var(--surface-2); color: var(--ink); font-size: 16px; font-weight: 600; line-height: 1.6; white-space: pre-wrap; }
 .ar-reactions { gap: 10px; }
 .ar-reactions > .ar-react { margin-right: 4px; }
+/* Товч профайл + дагах товч */
+.ss-person-av, .ss-person-name { text-decoration: none; color: inherit; display: inline-flex; }
+.ss-person-name:hover b { color: var(--teal); }
+.ss-statrow { display: inline-flex; align-items: center; gap: 6px; }
+.ss-follow-form { display: inline-flex; }
+.ss-follow { display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--teal-bg); color: #00a89b; font: inherit; font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; text-decoration: none; }
+.ss-follow:hover { background: #00a89b; color: #fff; }
+.ss-follow.on { background: #00a89b; color: #fff; font-size: 11px; }

@@ -6,7 +6,7 @@ import { fmtDate } from "@/lib/format";
 import { toggleFollow } from "../../posts/actions";
 import Shell from "../../components/Shell";
 import PostCard from "../../components/PostCard";
-import { Avatar, fmtK } from "../../components/Bits";
+import { Avatar, fmtK, followingSet } from "../../components/Bits";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,7 @@ export default async function PublicProfile({ params, searchParams }) {
   if (!Number.isInteger(uid)) notFound();
   await ensureSchema();
   const me = await getUser();
+  const myFollowing = await followingSet(me);
   const rows = await sql`
     SELECT u.id, u.initial, u.first_name, u.surname, u.email, u.created_at,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
@@ -176,7 +177,7 @@ export default async function PublicProfile({ params, searchParams }) {
               {p.status === "pending" ? "Редакцын хяналтад" : p.status === "approved" ? "Нийтлэхэд бэлэн" : p.status === "rejected" ? "Засвар хийхээр буцаасан" : "Нуугдсан"}
             </span>
           )}
-          <PostCard p={p} viewer={me} />
+          <PostCard p={p} viewer={me} following={myFollowing} />
         </div>
       ))}
     </Shell>

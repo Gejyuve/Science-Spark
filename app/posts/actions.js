@@ -129,7 +129,7 @@ export async function toggleFollow(formData) {
                           ON CONFLICT DO NOTHING RETURNING 1`;
     if (ins.length) await notify({ userId: target, kind: "follow", actorId: user.id });
   }
-  revalidatePath(`/u/${target}`);
+  revalidatePath("/", "layout");
 }
 
 export async function reviewPost(formData) {

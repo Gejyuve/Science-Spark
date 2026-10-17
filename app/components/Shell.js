@@ -7,7 +7,7 @@ import { sql } from "@/lib/db";
 import { displayName, isAdmin, needsName, canReview } from "@/lib/auth";
 import { unreadCount } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
-import { Avatar, Stat } from "./Bits";
+import { Avatar, Stat, Person, followingSet } from "./Bits";
 
 const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
@@ -80,6 +80,7 @@ async function RightRail({ user }) {
   let top = [];
   let followers = 0;
   let unread = 0;
+  const following = await followingSet(user);
   try {
     top = await sql`
       SELECT u.id, u.initial, u.first_name, SUM(l.delta)::int AS points,
@@ -145,13 +146,7 @@ async function RightRail({ user }) {
         <p className="ss-panel-title orange">🔥 Асаж буй оч</p>
         {top.length === 0 && <p className="muted">Одоохондоо оч цуглуулсан хүн алга.</p>}
         {top.map((t) => (
-          <Link key={t.id} href={`/u/${t.id}`} className="ss-person">
-            <Avatar user={t} size={40} />
-            <div>
-              <b>{t.initial}.{t.first_name}</b>
-              <Stat points={t.points} followers={t.followers} />
-            </div>
-          </Link>
+          <Person key={t.id} id={t.id} initial={t.initial} first_name={t.first_name} points={t.points} followers={t.followers} viewer={user} following={following} />
         ))}
       </div>
     </aside>

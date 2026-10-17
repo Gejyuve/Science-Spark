@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
 import { fmtEventRange } from "@/lib/events";
-import { Avatar, Stat, When } from "./Bits";
+import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
 import { toggleSave } from "../posts/actions";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
-export default function PostCard({ p, viewer }) {
+export default function PostCard({ p, viewer, following }) {
   const isQuestion = p.kind === "Асуулт";
   const isShort = isQuestion || p.kind === "Бодрол";
   const m = p.meta || {};
@@ -23,13 +23,7 @@ export default function PostCard({ p, viewer }) {
         <span className="ss-kind">{p.kind}</span>
         <When d={p.created_at} />
       </div>
-      <Link href={`/u/${p.author_id}`} className="ss-person">
-        <Avatar user={author} size={40} />
-        <div>
-          <b>{p.initial}.{p.first_name}</b>
-          <Stat points={p.author_points} followers={p.author_followers} />
-        </div>
-      </Link>
+      <Person id={p.author_id} initial={p.initial} first_name={p.first_name} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
       <Link href={`/post/${p.id}`} className="ss-card-body">
         {!isShort && <h2>{p.title}</h2>}
         <p>{excerpt}</p>

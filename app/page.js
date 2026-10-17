@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import Shell from "./components/Shell";
 import PostCard from "./components/PostCard";
+import { followingSet } from "./components/Bits";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function Home({ searchParams }) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
   }
 
+  const followSet = await followingSet(user);
   return (
     <Shell user={user} active="/" compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {user && (
@@ -60,7 +62,7 @@ export default async function Home({ searchParams }) {
         </div>
       )}
       {posts.map((p) => (
-        <PostCard key={p.id} p={p} viewer={user} />
+        <PostCard key={p.id} p={p} viewer={user} following={followSet} />
       ))}
     </Shell>
   );

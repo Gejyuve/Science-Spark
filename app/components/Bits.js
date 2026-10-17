@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { relTime } from "@/lib/format";
+import { sql } from "@/lib/db";
+import { toggleFollow } from "../posts/actions";
 
 // Жижиг дахин ашиглах хэсгүүд: аватар, оч/дагагчийн тоо
 const COLORS = ["#37C3B3", "#5B8DEF", "#F59E0B", "#E5484D", "#8E6CEF", "#00A89B", "#EF6C9C"];
@@ -44,5 +47,49 @@ export function When({ d, size = 14, className = "ss-date" }) {
       <img className="ic" src={`/icons/${r.recent ? "f_clock" : "date16"}.svg`} width={size} height={size} alt="" />
       {r.text}
     </span>
+  );
+}
+
+// Нэвтэрсэн хүний дагаж буй хүмүүсийн жагсаалт (нэг хуудсанд нэг удаа)
+export async function followingSet(viewer) {
+  if (!viewer) return new Set();
+  try {
+    const r = await sql`SELECT followee_id FROM follows WHERE follower_id = ${viewer.id}`;
+    return new Set(r.map((x) => x.followee_id));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+// Дагах "+" товч (Figma: товч профайлын очны тооны хажууд)
+export function FollowBtn({ id, viewer, following }) {
+  if (viewer && viewer.id === id) return null;
+  if (!viewer) {
+    return <Link href="/login" className="ss-follow" title="Дагах" aria-label="Дагах">+</Link>;
+  }
+  const on = following?.has(id);
+  return (
+    <form action={toggleFollow} className="ss-follow-form">
+      <input type="hidden" name="user_id" value={id} />
+      <button type="submit" className={"ss-follow" + (on ? " on" : "")} title={on ? "Дагахаа болих" : "Дагах"} aria-label={on ? "Дагахаа болих" : "Дагах"}>
+        {on ? "✓" : "+"}
+      </button>
+    </form>
+  );
+}
+
+// Товч профайл: зураг, нэр, оч · дагагч, дагах товч
+export function Person({ id, initial, first_name, points = 0, followers = 0, size = 40, viewer, following, className = "" }) {
+  return (
+    <div className={"ss-person " + className}>
+      <Link href={`/u/${id}`} className="ss-person-av"><Avatar user={{ id, first_name }} size={size} /></Link>
+      <div>
+        <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? `${initial}.${first_name}` : "Шинэ хэрэглэгч"}</b></Link>
+        <span className="ss-statrow">
+          <Stat points={points} followers={followers} />
+          <FollowBtn id={id} viewer={viewer} following={following} />
+        </span>
+      </div>
+    </div>
   );
 }

@@ -8,7 +8,7 @@ import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComme
 import Share from "../../components/Share";
 import LogicReport from "../../components/LogicReport";
 import Shell from "../../components/Shell";
-import { Avatar, Stat, When } from "../../components/Bits";
+import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits";
 
 export const dynamic = "force-dynamic";
 
@@ -39,18 +39,12 @@ function MetaBlock({ kind, m }) {
 
 
 // Нэг сэтгэгдэл ба түүний хариултууд (Figma: Асуулт · Дэлгэрэнгүй — муруй зураастай давхар хариулт)
-function CommentNode({ c, kids, user, postId, canReply, depth }) {
+function CommentNode({ c, kids, user, postId, canReply, depth, following }) {
   const children = kids[c.id] || [];
   return (
     <div className={"ar-comment" + (depth ? " reply" : "")} id={`c${c.id}`}>
       {depth > 0 && <span className="ss-curve" aria-hidden="true" />}
-      <Link href={`/u/${c.author_id}`} className="ss-person">
-        <Avatar user={{ id: c.author_id, first_name: c.first_name }} size={depth ? 32 : 40} />
-        <div>
-          <b>{c.initial}.{c.first_name}</b>
-          <Stat points={c.points} followers={c.followers} />
-        </div>
-      </Link>
+      <Person id={c.author_id} initial={c.initial} first_name={c.first_name} points={c.points} followers={c.followers} size={depth ? 32 : 40} viewer={user} following={following} />
       <p>{c.body}</p>
       <div className="ar-cactions">
         {user && c.author_id !== user.id ? (
@@ -86,7 +80,7 @@ function CommentNode({ c, kids, user, postId, canReply, depth }) {
       </div>
       {children.length > 0 && (
         <div className="ar-replies">
-          {children.map((k) => <CommentNode key={k.id} c={k} kids={kids} user={user} postId={postId} canReply={canReply} depth={depth + 1} />)}
+          {children.map((k) => <CommentNode key={k.id} c={k} kids={kids} user={user} postId={postId} canReply={canReply} depth={depth + 1} following={following} />)}
         </div>
       )}
     </div>
@@ -135,6 +129,7 @@ export default async function PostPage({ params, searchParams }) {
   const kids = {};
   for (const c of comments) if (c.parent_id) (kids[c.parent_id] ||= []).push(c);
   const roots = comments.filter((c) => !c.parent_id);
+  const following = await followingSet(user);
   const saved = user
     ? (await sql`SELECT 1 FROM saves WHERE post_id = ${postId} AND user_id = ${user.id}`).length > 0
     : false;
@@ -165,13 +160,7 @@ export default async function PostPage({ params, searchParams }) {
 
           <div className="ar-content">
             {isQ && (
-              <Link href={`/u/${post.author_id}`} className="ss-person ar-qauthor">
-                <Avatar user={author} size={40} />
-                <div>
-                  <b>{post.initial}.{post.first_name}</b>
-                  <Stat points={post.author_points} followers={post.author_followers} />
-                </div>
-              </Link>
+              <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
             )}
             <div className="ar-chips">
               <span className="ar-chip main">{post.kind}</span>
@@ -249,24 +238,12 @@ export default async function PostPage({ params, searchParams }) {
             {!isQ && <div className="ar-credits">
               <div>
                 <span className="ar-label">Бичсэн:</span>
-                <Link href={`/u/${post.author_id}`} className="ss-person">
-                  <Avatar user={author} size={40} />
-                  <div>
-                    <b>{post.initial}.{post.first_name}</b>
-                    <Stat points={post.author_points} followers={post.author_followers} />
-                  </div>
-                </Link>
+                <Person id={post.author_id} initial={post.initial} first_name={post.first_name} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
               </div>
               {published && reviewer && (
                 <div>
                   <span className="ar-label">Хянасан:</span>
-                  <Link href={`/u/${reviewer.id}`} className="ss-person">
-                    <Avatar user={reviewer} size={40} />
-                    <div>
-                      <b>{reviewer.initial}.{reviewer.first_name}</b>
-                      <Stat points={reviewer.points} followers={reviewer.followers} />
-                    </div>
-                  </Link>
+                  <Person id={reviewer.id} initial={reviewer.initial} first_name={reviewer.first_name} points={reviewer.points} followers={reviewer.followers} viewer={user} following={following} />
                 </div>
               )}
             </div>}
@@ -323,7 +300,7 @@ export default async function PostPage({ params, searchParams }) {
             {roots.map((c, i) => (
               <div key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
-                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={published} depth={0} />
+                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={published} depth={0} following={following} />
               </div>
             ))}
 
