@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fmtDate, KIND_HREF } from "@/lib/format";
+import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
 import { fmtEventRange, spanText, validLocal } from "@/lib/events";
 import EventCover from "./EventCover";
 import { Avatar, Stat, When, Person } from "./Bits";
@@ -53,23 +53,30 @@ export default function PostCard({ p, viewer, following }) {
           <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} align="right" />
         </div>
   );
-  // Эвент: Figma (Эвент · 20:2) карт — зүүнд мэдээлэл, баруунд дөрвөлжин зураг
-  if (p.kind === "Эвент") {
-    const ev = [
+  // Эвент (Figma 20:2), Зарлал (Figma 496:368): зүүнд мэдээлэл, баруунд дөрвөлжин зураг
+  if (p.kind === "Эвент" || p.kind === "Зарлал") {
+    const isEv = p.kind === "Эвент";
+    const link = m.link || m.source;
+    const ev = (isEv ? [
       ["f_date", fmtEventRange(m)],
       validLocal(m.starts_at) && ["f_clock", `Үргэлжлэх хугацаа: ${validLocal(m.ends_at) ? spanText(m.starts_at, m.ends_at) : m.duration || "—"}`],
       m.price && ["f_ticket", m.price],
       m.capacity && ["f_people", `${m.capacity} хүн`],
-    ].filter(Boolean);
+    ] : [
+      m.valid_until && ["f_date", untilText(m.valid_until)],
+      m.contact && ["f_phone", m.contact],
+      link && ["f_link", <a key="l" href={link} target="_blank" rel="noopener noreferrer nofollow" className="evc-url">{link.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>],
+    ]).filter(Boolean);
+    const place = isEv ? (m.format === "Онлайн" ? "Онлайн" : m.location || m.format) : m.location;
     return (
-      <article className="ss-card pc evc">
+      <article className={"ss-card pc evc" + (isEv ? "" : " anc")}>
         <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
         <div className="ss-card-top">
-          <span className="evc-crumb"><Link href="/events" className="ss-kind">Эвент</Link><i>·</i><span>{m.type || "Бусад"}</span></span>
+          <span className="evc-crumb"><Link href={KIND_HREF[p.kind]} className="ss-kind">{p.kind}</Link>{m.type && <><i>·</i><span>{m.type}</span></>}</span>
           <When d={p.created_at} />
         </div>
         <div className="evc-meta">
-          <span><img className="ic" src="/icons/f_pin.svg" width={16} height={16} alt="" />{m.format === "Онлайн" ? "Онлайн" : m.location || m.format}</span>
+          <span>{place && <><img className="ic" src="/icons/f_pin.svg" width={16} height={16} alt="" />{place}</>}</span>
           <span className="tip" data-tip={`Энэ контентыг ${p.views || 0} хүн нээж үзсэн`}><img className="ic" src="/icons/eye.svg" width={16} height={16} alt="" />{p.views || 0}</span>
         </div>
         <div className="evc-grid">

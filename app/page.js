@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function Home({ searchParams }) {
   const { tab, compose, error, f } = await searchParams;
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
+  const ann = f === "ann"; // Зарлалууд
   const following = tab === "following";
   let user = null;
   let posts = [];
@@ -39,6 +40,7 @@ export default async function Home({ searchParams }) {
       ) ta ON true
       WHERE p.status = 'published'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
+        AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
         AND (${!following || !user}::boolean OR p.author_id IN
              (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))
       ORDER BY p.created_at DESC LIMIT 30`;
@@ -55,7 +57,13 @@ export default async function Home({ searchParams }) {
           <Link href="/">× Бүгдийг харах</Link>
         </div>
       )}
-      {user && !qa && (
+      {ann && (
+        <div className="ss-feedtabs">
+          <span className="on">Зарлал · сүүлд орсноор</span>
+          <Link href="/">× Бүгдийг харах</Link>
+        </div>
+      )}
+      {user && !qa && !ann && (
         <div className="ss-feedtabs">
           <Link href="/" className={following ? "" : "on"}>Бүгд</Link>
           <Link href="/?tab=following" className={following ? "on" : ""}>Дагаж буй</Link>
@@ -64,7 +72,9 @@ export default async function Home({ searchParams }) {
       {posts.length === 0 && (
         <div className="ss-card">
           <p className="ss-empty">
-            {qa
+            {ann
+              ? "Одоохондоо зарлал алга."
+              : qa
               ? "Одоохондоо асуулт, бодрол алга. Эхнийхийг нь та асуугаарай ✦"
               : following && user
               ? "Дагаж буй хүмүүсийн нийтлэл алга. Сонирхолтой хүмүүсийг дагаарай."

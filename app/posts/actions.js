@@ -9,7 +9,7 @@ import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
 import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { ownImage } from "@/lib/images";
-import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN } from "@/lib/format";
+import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
@@ -275,17 +275,29 @@ export async function quickPost(formData) {
   } else {
     title = t("title", 200);
     body = t("body", 500);
-    meta = { valid_until: t("valid_until", 10) || null, contact: t("contact", 120) || null, source: url(t("source", 300)) };
-    if (!title || !body) fail("Гарчиг, агуулгаа бөглөнө үү");
+    meta = {
+      type: ANNOUNCE_TYPES.includes(formData.get("type")) ? formData.get("type") : null,
+      valid_until: t("valid_until", 10) || null,
+      contact: t("contact", 120) || null,
+      location: t("location", 200) || null,
+      link: url(t("link", 300)),
+    };
+    if (!title || !body || !meta.type || !meta.valid_until || !meta.contact) fail("Одтой (*) бүх талбарыг бөглөнө үү");
+    if (body.length < EVENT_BODY_MIN) fail(`Зарлалын агуулгыг дор хаяж ${EVENT_BODY_MIN} тэмдэгтээр бичнэ үү`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.valid_until)) fail("Хүчинтэй хугацааг зөв сонгоно уу");
+    if (meta.valid_until < nowLocal().iso.slice(0, 10)) fail("Хүчинтэй хугацаа өнгөрсөн байна. Өнөөдрөөс хойшхи өдөр сонгоно уу");
   }
   // Тайлбар текстүүд: 30%-аас илүү латин бол хүлээж авахгүй (гарчиг, нэрэнд хамаарахгүй)
   if (latinShare(body) > LATIN_LIMIT || (meta.register && latinShare(meta.register) > LATIN_LIMIT)) fail(LATIN_MSG);
   await ensureSchema();
   if (kind === "Эвент") meta.program = await ownImage(user.id, formData.get("program"));
+  const imageId = kind === "Асуулт" ? null : await ownImage(user.id, formData.get("image"));
+  // Эвент, зарлалд ковер зураг заавал
+  if ((kind === "Эвент" || kind === "Зарлал") && !imageId) fail("Ковер зураг оруулна уу");
   const status = INSTANT_KINDS.includes(kind) ? "published" : "pending";
   const rows = await sql`
     INSERT INTO posts (author_id, kind, title, body, status, meta, image_id)
-    VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${kind === "Асуулт" ? null : await ownImage(user.id, formData.get("image"))})
+    VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${imageId})
     RETURNING id`;
   revalidatePath("/");
   redirect(status === "published" ? "/" : `/post/${rows[0].id}`);

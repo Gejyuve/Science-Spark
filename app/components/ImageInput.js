@@ -66,7 +66,7 @@ const parsePos = (s) => {
 // adjust=true: эх зургийг хадгалж, чирж байрлалыг нь тохируулна (профайлын зураг, ковер).
 export default function ImageInput({
   name, aspect = null, maxW = 1600, initial = null, initialSrc = null, initialPos = null,
-  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, children,
+  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, children,
 }) {
   const input = useRef(null);
   const box = useRef(null);
@@ -166,6 +166,11 @@ export default function ImageInput({
   return (
     <div className={`ii ii-${variant}` + (hasImg ? " has" : "") + (busy ? " busy" : "") + (canDrag ? " drag" : "")} style={aspect ? { "--ar": aspect } : undefined}>
       <input type="hidden" name={name} value={id} />
+      {required && (
+        // Зураг заавал: илгээх үед зураггүй бол монгол анхааруулга гаргана
+        <input className="ii-req" tabIndex={-1} aria-hidden="true" required value={id} onChange={() => {}}
+          ref={(el) => el && el.setCustomValidity(id ? "" : busy ? "Зураг оруулж дуусахыг хүлээнэ үү" : "Ковер зураг оруулна уу")} />
+      )}
       {adjust && <input type="hidden" name={`${name}_src`} value={srcId} />}
       {adjust && <input type="hidden" name={`${name}_pos`} value={`${pos.x}% ${pos.y}%`} />}
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden onChange={onFile} />

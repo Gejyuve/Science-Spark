@@ -1530,3 +1530,11 @@ a.ss-kind:hover { text-decoration: underline; }
   .evd-cover { order: -1; aspect-ratio: 2 / 1; }
   .evd-row { font-size: 14px; }
 }
+
+/* Зураг заавал: харагдахгүй шалгах талбар */
+.ii { position: relative; }
+.ii-req { position: absolute; left: 60px; top: 60px; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+/* Зарлалын карт, дэлгэрэнгүй (Figma 496:368, 523:368) */
+.anc .evc-facts { justify-content: space-between; gap: 18px; }
+.evc-url, .evd-url { color: var(--teal); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; position: relative; z-index: 2; }
+.anc .evc-meta > span:first-child:empty { visibility: hidden; }

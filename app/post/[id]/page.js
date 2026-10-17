@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import crypto from "node:crypto";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
-import { fmtDate, KIND_HREF } from "@/lib/format";
+import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave } from "../../posts/actions";
 import Share from "../../components/Share";
 import EventCover from "../../components/EventCover";
@@ -121,6 +121,34 @@ function EventTop({ post, m }) {
   );
 }
 
+// Figma 523:368 · Зарлал · Дэлгэрэнгүй: мэдээлэл + дөрвөлжин зураг, дараа нь гарчиг
+function AnnTop({ post, m }) {
+  const link = m.link || m.source;
+  const rows = [
+    m.valid_until && ["f_date", untilText(m.valid_until)],
+    m.location && ["f_pin", m.location],
+    m.contact && ["f_phone", m.contact],
+    link && ["f_link", <a href={link} target="_blank" rel="noopener noreferrer nofollow" className="evd-url">{link.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>],
+  ].filter(Boolean);
+  return (
+    <>
+      <div className="evd-top">
+        <div className="evd-facts">
+          <div className="evd-chips">
+            <Link href={KIND_HREF["Зарлал"]} className="ar-chip main link">Зарлал</Link>
+            {m.type && <span className="evd-chip">{m.type}</span>}
+          </div>
+          {rows.map(([ic, v]) => (
+            <span key={ic} className="evd-row"><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" />{v}</span>
+          ))}
+        </div>
+        {post.image_id && <div className="evd-cover"><img src={`/img/${post.image_id}`} alt="" /></div>}
+      </div>
+      <h1 className="ar-title evd-title">{post.title}</h1>
+    </>
+  );
+}
+
 // Эвентийн үндсэн хэсэг: тайлбар, хөтөлбөр, газрын зураг, бүртгүүлэх заавар
 function EventBody({ post, m, paras, published }) {
   const url = `https://science-spark-sable.vercel.app/post/${post.id}`;
@@ -196,6 +224,7 @@ export default async function PostPage({ params, searchParams }) {
   }
   const isQ = post.kind === "Асуулт";
   const isEvent = post.kind === "Эвент";
+  const isAnn = post.kind === "Зарлал";
   const published = post.status === "published";
   if (!published && !isAuthor && !isStaff(user)) notFound();
 
@@ -228,8 +257,9 @@ export default async function PostPage({ params, searchParams }) {
 
   const author = { id: post.author_id, initial: post.initial, first_name: post.first_name };
   const paras = post.body.split(/\n\s*\n/);
-  const lead = post.subtitle || (paras.length > 1 ? paras[0] : null);
-  const rest = post.subtitle ? paras : paras.length > 1 ? paras.slice(1) : paras;
+  const plain = post.kind === "Зарлал"; // зарлал: бүх догол мөр ижил
+  const lead = plain ? null : post.subtitle || (paras.length > 1 ? paras[0] : null);
+  const rest = plain || post.subtitle ? paras : paras.length > 1 ? paras.slice(1) : paras;
 
   return (
     <Shell user={user} header={false}>
@@ -256,12 +286,13 @@ export default async function PostPage({ params, searchParams }) {
               <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
             )}
             {isEvent && <EventTop post={post} m={post.meta || {}} />}
-            {!isEvent && <div className="ar-chips">
+            {isAnn && <AnnTop post={post} m={post.meta || {}} />}
+            {!isEvent && !isAnn && <div className="ar-chips">
               {KIND_HREF[post.kind]
                 ? <Link href={KIND_HREF[post.kind]} className="ar-chip main link">{post.kind}</Link>
                 : <span className="ar-chip main">{post.kind}</span>}
             </div>}
-            {!["Асуулт", "Бодрол", "Эвент"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
+            {!["Асуулт", "Бодрол", "Эвент", "Зарлал"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
             {error && <p className="error">{error}</p>}
             {ok && <p className="notice">{ok}</p>}
@@ -325,8 +356,8 @@ export default async function PostPage({ params, searchParams }) {
             ) : (
               rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)
             )}
-            {post.image_id && !isArticle && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
-            <MetaBlock kind={post.kind} m={post.meta || {}} />
+            {post.image_id && !isArticle && !isAnn && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
+            {!isAnn && <MetaBlock kind={post.kind} m={post.meta || {}} />}
             {post.meta?.program && <figure className="ar-program"><figcaption>Хөтөлбөр</figcaption><img src={`/img/${post.meta.program}`} alt="Хөтөлбөр" /></figure>}
             {post.kind === "Эвент" && published && googleCalUrl(post.title, post.meta || {}, post.body, `https://science-spark-sable.vercel.app/post/${post.id}`) && (
               <div className="ev-addcal">
@@ -339,7 +370,7 @@ export default async function PostPage({ params, searchParams }) {
 
             {!isQ && <div className="ar-credits">
               <div>
-                <span className="ar-label">Бичсэн:</span>
+                <span className="ar-label">{isAnn ? "Зарласан:" : "Бичсэн:"}</span>
                 <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
               </div>
               {published && reviewer && (

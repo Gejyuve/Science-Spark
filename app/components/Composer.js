@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
 import ImageInput from "./ImageInput";
-import { EVENT_TYPES, EVENT_FORMATS, EVENT_BODY_MIN, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
+import { EVENT_TYPES, EVENT_FORMATS, EVENT_BODY_MIN, ANNOUNCE_TYPES, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
 const Ic = ({ n, s = 18 }) => <img className="ic" src={`/icons/${n}.svg`} width={s} height={s} alt="" />;
@@ -67,8 +67,8 @@ function Field({ icon, children }) {
   return <label className="cp-field"><Ic n={icon} />{children}</label>;
 }
 
-function ImageSlot({ name, title, hint, wide, aspect }) {
-  return <ImageInput name={name} aspect={aspect} maxW={aspect && aspect <= 1 ? 1080 : 1600} variant={wide ? "slot wide" : "slot"} title={title} hint={hint} />;
+function ImageSlot({ name, title, hint, wide, aspect, required }) {
+  return <ImageInput name={name} aspect={aspect} maxW={aspect && aspect <= 1 ? 1080 : 1600} variant={wide ? "slot wide" : "slot"} title={title} hint={hint} required={required} />;
 }
 
 function Head({ icon, title, right }) {
@@ -166,8 +166,8 @@ export default function Composer({ loggedIn, me, initial, error }) {
         <Counted name="register" max={500} rows={3} required latinCheck placeholder="Бүртгүүлэх заавар (хэрхэн бүртгүүлэх, ямар мэдээлэл шаардах, холбоос хэзээ ирэх)… *" />
         <div className="cp-split">
           <div className="cp-col">
-            <span className="cp-label">Ковер зураг</span>
-            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" /><small className="cp-hint">Дөрвөлжин (1:1) хэмжээтэй, зөвхөн 1 зураг оруулна.</small></div>
+            <span className="cp-label">Ковер зураг <Req /></span>
+            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1) хэмжээтэй, зөвхөн 1 зураг оруулна.</small></div>
           </div>
           <div className="cp-col">
             <span className="cp-label">Хөтөлбөрийн зураг <em className="cp-opt">Заавал биш</em></span>
@@ -188,21 +188,29 @@ export default function Composer({ loggedIn, me, initial, error }) {
     panel = (
       <form action={quickPost} className="cp-panel">
         <input type="hidden" name="kind" value="Зарлал" />
-        <Head icon="sh_mega" title="Зарлал" />
-        <Field icon="f_text"><input name="title" required maxLength={200} placeholder="Зарлалын гарчиг" /></Field>
+        <Head icon="sh_mega" title="Зарлал" right={<span className="cp-note"><Req /> Заавал бөглөх талбар</span>} />
         <div className="cp-grid">
-          <Field icon="f_date"><input name="valid_until" type="date" aria-label="Хүчинтэй хугацаа" title="Хүчинтэй хугацаа" /></Field>
-          <Field icon="f_phone"><input name="contact" maxLength={120} placeholder="Холбоо барих" /></Field>
+          <Field icon="f_text"><input name="title" required maxLength={200} placeholder="Зарлалын гарчиг *" {...msg("Гарчгаа бичнэ үү")} /></Field>
+          <Field icon="f_tag">
+            <select name="type" required defaultValue="" {...msg("Зарлалын төрлөө сонгоно уу")}>
+              <option value="" disabled>Зарлалын төрөл: Элсэлт *</option>
+              {ANNOUNCE_TYPES.map((t) => <option key={t}>{t}</option>)}
+            </select>
+            <Ic n="f_chev" />
+          </Field>
+          <label className="cp-field cp-dtf">
+            <Ic n="f_date" />
+            <span className="cp-dt">Хүртэл *</span>
+            <input type="date" name="valid_until" required min={now.date || undefined} aria-label="Хүчинтэй хугацаа (хүртэл)"
+              {...msg("Зарлал хүчинтэй байх сүүлийн өдрийг сонгоно уу (өнөөдрөөс хойш)")} />
+          </label>
+          <Field icon="f_phone"><input name="contact" required maxLength={120} placeholder="Холбоо барих (утас эсвэл и-мэйл) *" {...msg("Холбоо барих утас эсвэл и-мэйлээ бичнэ үү")} /></Field>
+          <Field icon="f_pin"><input name="location" maxLength={200} placeholder="Байршил (заавал биш)" /></Field>
+          <Field icon="f_link"><input name="link" type="url" maxLength={300} placeholder="Холбоос (заавал биш)" {...msg("Холбоос https:// -ээр эхэлнэ")} /></Field>
         </div>
-        <Counted name="body" max={500} rows={4} required latinCheck placeholder="Зарлалын агуулга…" />
-        <div className="cp-split">
-          <ImageSlot name="image" aspect={1} title="Зураг" hint="1:1 харьцаа" />
-          <div className="cp-col">
-            <span className="cp-label">Эх сурвалж</span>
-            <Field icon="f_link"><input name="source" type="url" maxLength={300} placeholder="Холбоос эсвэл эх сурвалж" /></Field>
-            <small className="cp-hint">Зөвхөн 1 зураг оруулах боломжтой. Эх сурвалж заавал биш.</small>
-          </div>
-        </div>
+        <Counted name="body" max={500} min={EVENT_BODY_MIN} rows={5} required latinCheck placeholder={`Зарлалын агуулга (дор хаяж ${EVENT_BODY_MIN} тэмдэгт)… *`} />
+        <span className="cp-label">Зураг <Req /></span>
+        <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1) харьцаатай, зөвхөн 1 зураг оруулна.</small></div>
         <div className="cp-actions">
           <span className="cp-review"><img src="/icons/f_shield.svg" width={18} height={18} alt="" />Редакцын зөвшөөрлөөр нийтлэгдэнэ</span>
           <span className="ss-grow" />
