@@ -960,3 +960,7 @@ details.mod summary { cursor: pointer; }
   .adm-pop form { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; }
   .adm-pop input { width: auto; flex: 1; }
 }
+.adm-viewas { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: #fff7d6; color: #7a5a00; font-size: 13px; }
+.adm-viewas span { flex: 1; }
+:root[data-theme="dark"] .adm-viewas { background: #3a3214; color: #f3d77a; }
+.adm-profile + .adm-dl + .adm-acts { justify-content: space-between; width: 100%; }

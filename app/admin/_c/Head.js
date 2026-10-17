@@ -18,9 +18,9 @@ export default function Head({ user, title, sub, search, q, hidden = {} }) {
         </form>
       )}
       <span className="adm-me">
-        <Avatar user={user} size={32} />
+        <Avatar user={user.viewAs || user} size={32} />
         <span>
-          <b>{displayName(user)}</b>
+          <b>{displayName(user.viewAs || user)}</b>
           <small>Редакц</small>
         </span>
       </span>
