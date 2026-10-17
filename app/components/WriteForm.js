@@ -70,7 +70,7 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
     setVer((v) => v + 1);
     setRestored(null);
   };
-  const t = (ms) => new Date(ms).toLocaleTimeString("mn-MN", { hour: "2-digit", minute: "2-digit" });
+  const t = (ms) => new Date(ms).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 
   return (
     <form ref={form} action={action} className="wr-col" key={ver}
