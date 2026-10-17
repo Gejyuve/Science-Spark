@@ -258,7 +258,8 @@ details.mod summary { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px;
   color: var(--text); font-weight: 500; font-size: 14.8px; text-decoration: none;
 }
-.ss-tabs > * + * { border-left: 2px solid rgba(169, 195, 212, 0.4); height: 24px; margin: 12px 0; }
+.ss-tabs > * { position: relative; height: 48px; margin: 0; }
+.ss-tabs > * + *::before { content: ""; position: absolute; left: 0; top: 12px; height: 24px; border-left: 2px solid rgba(169, 195, 212, 0.4); }
 .ss-tabs a:hover, .ss-tabs button:hover { color: var(--accent); }
 .ss-tabs button.on { color: #008075; font-weight: 600; }
 
