@@ -37,7 +37,7 @@ export default async function ProfilePage({ searchParams }) {
             {mine.map((p) => (
               <div key={p.id} className="comment">
                 <Link href={`/post/${p.id}`}>{p.title}</Link>{" "}
-                <span className="muted">· {p.status === "rejected" ? "татгалзсан" : p.status === "removed" ? "хасагдсан" : "шалгалтад"}</span>
+                <span className="muted">· {p.status === "rejected" ? "татгалзсан" : p.status === "removed" ? "нуугдсан" : "шалгалтад"}</span>
               </div>
             ))}
           </div>

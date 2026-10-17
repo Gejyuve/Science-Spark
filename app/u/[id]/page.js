@@ -159,7 +159,7 @@ export default async function PublicProfile({ params, searchParams }) {
         <div key={p.id} className="pu-post">
           {p.status !== "published" && (
             <span className={"pu-status " + p.status}>
-              {p.status === "pending" ? "Редакцын хяналтад" : p.status === "approved" ? "Нийтлэхэд бэлэн" : p.status === "rejected" ? "Засвар хийхээр буцаасан" : "Нийтээс хасагдсан"}
+              {p.status === "pending" ? "Редакцын хяналтад" : p.status === "approved" ? "Нийтлэхэд бэлэн" : p.status === "rejected" ? "Засвар хийхээр буцаасан" : "Нуугдсан"}
             </span>
           )}
           <PostCard p={p} />

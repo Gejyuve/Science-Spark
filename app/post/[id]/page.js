@@ -110,7 +110,7 @@ export default async function PostPage({ params, searchParams }) {
                 {post.status === "rejected"
                   ? `Редакц засвар хийхээр буцаасан: ${post.review_note || ""}`
                   : post.status === "removed"
-                  ? `Админ нийтээс хассан: ${post.review_note || ""}`
+                  ? `Редакц нуусан: ${post.review_note || ""}`
                   : isArticle
                   ? "Редакцын хяналтад орсны дараа та өөрөө нийтлэх боломжтой болно."
                   : "Редакцын хяналтад орсны дараа нийтлэгдэнэ."}
@@ -268,11 +268,11 @@ export default async function PostPage({ params, searchParams }) {
 
             {published && isAdmin(user) && !isAuthor && (
               <details className="mod">
-                <summary className="muted">Админ: нийтээс хасах</summary>
+                <summary className="muted">Админ: нуух</summary>
                 <form action={removePost} className="stack">
                   <input type="hidden" name="post_id" value={post.id} />
-                  <input name="note" required placeholder="Хасах шалтгаан" />
-                  <button className="btn ghost danger" type="submit">Нийтээс хасах</button>
+                  <input name="note" required placeholder="Нуух шалтгаан (бичээчид очно)" />
+                  <button className="btn ghost danger" type="submit">Нуух</button>
                 </form>
               </details>
             )}

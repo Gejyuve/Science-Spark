@@ -168,7 +168,7 @@ export async function removePost(formData) {
   const postId = Number(formData.get("post_id"));
   const note = String(formData.get("note") || "").trim().slice(0, 1000);
   if (!Number.isInteger(postId)) redirect("/");
-  if (!note) redirect(`/post/${postId}?error=${encodeURIComponent("Хасах шалтгаанаа бичнэ үү")}`);
+  if (!note) redirect(`/post/${postId}?error=${encodeURIComponent("Нуух шалтгаанаа бичнэ үү")}`);
   await ensureSchema();
   const done = await sql`UPDATE posts SET status = 'removed', reviewer_id = ${user.id},
             reviewed_at = now(), review_note = ${note}
