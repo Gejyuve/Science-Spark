@@ -8,6 +8,7 @@ import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate, KIND_HREF } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave } from "../../posts/actions";
 import Share from "../../components/Share";
+import EventCover from "../../components/EventCover";
 import LogicReport from "../../components/LogicReport";
 import Shell from "../../components/Shell";
 import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits";
@@ -89,6 +90,77 @@ function CommentNode({ c, kids, user, postId, canReply, depth, following }) {
   );
 }
 
+// Figma 508:368 · Эвент · Дэлгэрэнгүй: дээд хэсэг (мэдээлэл + зураг) ба гарчиг
+function EventTop({ post, m }) {
+  const place = m.format === "Онлайн" ? "Онлайн" : [m.location, m.format && m.format !== "Танхим" ? m.format : null].filter(Boolean).join(" · ");
+  const rows = [
+    ["f_date", fmtEventRange(m)],
+    place && ["f_pin", place],
+    validLocal(m.starts_at) && ["f_clock", `Үргэлжлэх хугацаа: ${validLocal(m.ends_at) ? spanText(m.starts_at, m.ends_at) : m.duration || "—"}`],
+    m.price && ["f_ticket", `Тасалбар: ${m.price}`],
+    m.capacity && ["f_people", `Бүртгэх хязгаар: ${m.capacity} хүн`],
+  ].filter(Boolean);
+  return (
+    <>
+      <div className="evd-top">
+        <div className="evd-facts">
+          <div className="evd-chips">
+            <Link href="/events" className="ar-chip main link">Эвент</Link>
+            {m.type && <span className="evd-chip">{m.type}</span>}
+          </div>
+          {rows.map(([ic, v]) => (
+            <span key={ic} className="evd-row"><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" />{v}</span>
+          ))}
+        </div>
+        <div className="evd-cover">
+          {post.image_id ? <img src={`/img/${post.image_id}`} alt="" /> : <EventCover type={m.type} starts={m.starts_at} />}
+        </div>
+      </div>
+      <h1 className="ar-title evd-title">{post.title}</h1>
+    </>
+  );
+}
+
+// Эвентийн үндсэн хэсэг: тайлбар, хөтөлбөр, газрын зураг, бүртгүүлэх заавар
+function EventBody({ post, m, paras, published }) {
+  const url = `https://science-spark-sable.vercel.app/post/${post.id}`;
+  const cal = published && googleCalUrl(post.title, m, post.body, url);
+  const showMap = m.format !== "Онлайн" && m.location && !/^https?:/i.test(m.location);
+  return (
+    <div className="evd-body">
+      <h3>Тайлбар</h3>
+      {paras.map((para, i) => <p key={i} className="ar-text">{para}</p>)}
+      {m.program && (
+        <>
+          <h3>Хөтөлбөр</h3>
+          <img className="evd-program" src={`/img/${m.program}`} alt="Хөтөлбөр" />
+        </>
+      )}
+      {showMap && (
+        <>
+          <h3>Газрын зураг</h3>
+          <div className="evd-map">
+            <iframe title="Газрын зураг" loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(m.location)}&output=embed`} />
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.location)}`} target="_blank" rel="noopener noreferrer" className="evd-maplink">Google Maps дээр нээх ↗</a>
+          </div>
+        </>
+      )}
+      {(m.register || m.link) && (
+        <>
+          <h3>Бүртгүүлэх заавар</h3>
+          {m.register && <p className="ar-text">{m.register}</p>}
+        </>
+      )}
+      <div className="evd-acts">
+        {m.link && <a href={m.link} target="_blank" rel="noopener noreferrer nofollow" className="evd-btn">Бүртгүүлэх ↗</a>}
+        {cal && <a href={cal} target="_blank" rel="noopener noreferrer" className="evd-btn ghost">Google Calendar-т нэмэх</a>}
+        {published && <a href={`/post/${post.id}/ics`} className="evd-btn ghost">Утас / Outlook-т нэмэх</a>}
+      </div>
+    </div>
+  );
+}
+
 // Figma: Нийтлэл · Харагдах хуудас
 export default async function PostPage({ params, searchParams }) {
   const { id } = await params;
@@ -123,6 +195,7 @@ export default async function PostPage({ params, searchParams }) {
     } catch (e) {}
   }
   const isQ = post.kind === "Асуулт";
+  const isEvent = post.kind === "Эвент";
   const published = post.status === "published";
   if (!published && !isAuthor && !isStaff(user)) notFound();
 
@@ -182,12 +255,13 @@ export default async function PostPage({ params, searchParams }) {
             {isQ && (
               <Person className="ar-qauthor" id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
             )}
-            <div className="ar-chips">
+            {isEvent && <EventTop post={post} m={post.meta || {}} />}
+            {!isEvent && <div className="ar-chips">
               {KIND_HREF[post.kind]
                 ? <Link href={KIND_HREF[post.kind]} className="ar-chip main link">{post.kind}</Link>
                 : <span className="ar-chip main">{post.kind}</span>}
-            </div>
-            {!["Асуулт", "Бодрол"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
+            </div>}
+            {!["Асуулт", "Бодрол", "Эвент"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
             {error && <p className="error">{error}</p>}
             {ok && <p className="notice">{ok}</p>}
@@ -237,6 +311,9 @@ export default async function PostPage({ params, searchParams }) {
               <p className="muted">Засаад хадгалбал дахин редакцын хяналтад орно.</p>
             )}
 
+            {isEvent ? (
+              <EventBody post={post} m={post.meta || {}} paras={paras} published={published} />
+            ) : <>
             {lead && (
               <>
                 <p className="ar-lead">{lead}</p>
@@ -258,6 +335,7 @@ export default async function PostPage({ params, searchParams }) {
                 <a href={`/post/${post.id}/ics`}>Утас / Outlook / Apple (.ics)</a>
               </div>
             )}
+            </>}
 
             {!isQ && <div className="ar-credits">
               <div>
