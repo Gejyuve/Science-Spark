@@ -7,8 +7,22 @@ import ExamForm from "../_c/ExamForm";
 
 export default async function Exam({ searchParams }) {
   const user = await getUser();
-  if (isStaff(user)) redirect("/review");
   const sp = await searchParams;
+  // Хянагч, редакц: шалгалтын 5 жишээг урьдчилж харна (илгээх боломжгүй)
+  if (isStaff(user)) {
+    const k = Math.min(SAMPLES.length, Math.max(1, Number(sp.n) || 1)) - 1;
+    const s = SAMPLES[k];
+    return (
+      <>
+        <Head user={user} tag="Урьдчилж харах" title="Хянагчийн шалгалтын жишээ" sub="Шалгалт өгөгчид яг ингэж харагдана. Зөв хариулт нь зөвхөн редакцын хүсэлтийн хуудсанд харагдана." />
+        <div className="adm-tabs">
+          {SAMPLES.map((x, i) => <a key={i} href={`/review/exam?n=${i + 1}`} className={i === k ? "on" : ""}>{i + 1}. {x.title}</a>)}
+        </div>
+        <ExamForm preview sample={k} meta={{ title: s.title, subtitle: s.subtitle, kind: s.kind, category: s.category, author: s.author }}
+          list={sentences(s).map(({ i, p, t }) => ({ i, p, t }))} types={ERROR_TYPES} decisions={DECISIONS} />
+      </>
+    );
+  }
   const st = await examState(user);
   if (st.state !== "open") redirect("/review");
   const s = SAMPLES[st.sample];

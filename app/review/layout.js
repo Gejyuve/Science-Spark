@@ -25,16 +25,17 @@ export default async function ReviewLayout({ children }) {
   }
   const items = staff
     ? [
-        { key: "queue", label: "Хяналтын жагсаалт", icon: "a_content", href: "/review", exact: true, badge: pending || null },
+        { key: "queue", label: "Хяналтын жагсаалт", icon: "a_content", href: "/review", exact: true, match: "^/review/\\d+", badge: pending || null },
         { key: "archive", label: "Миний шийдвэрүүд", icon: "a_audit", href: "/review/archive" },
         { key: "rules", label: "Хянагчийн дүрэм", icon: "a_requests", href: "/review/rules" },
+        { key: "exam", label: "Шалгалтын жишээ", icon: "a_logic", href: "/review/exam" },
       ]
     : [
-        { key: "become", label: "Хянагч болох", icon: "a_reviewers", href: "/review", exact: true },
+        { key: "become", label: "Хянагч болох", icon: "a_reviewers", href: "/review", exact: true, match: "^/review/exam" },
         { key: "rules", label: "Хянагчийн дүрэм", icon: "a_requests", href: "/review/rules" },
       ];
   const chip = staff
-    ? `${user.role === "reviewer" ? "ХЯНАГЧ" : "РЕДАКЦ"} · ТҮВШИН ${lv} · БАТАЛГААЖСАН`
+    ? `${user.role === "reviewer" ? "ХЯНАГЧ" : "РЕДАКЦ"} · ТҮВШИН ${lv}`
     : `ТҮВШИН ${lv} · БАТАЛГААЖААГҮЙ`;
   return (
     <div className="adm">

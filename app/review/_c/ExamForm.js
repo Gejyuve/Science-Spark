@@ -4,7 +4,7 @@ import { useState } from "react";
 import { submitExam } from "../actions";
 
 // Өгүүлбэр дээр дарж тэмдэглэнэ, дараа нь алдааны төрлөө сонгоно.
-export default function ExamForm({ sample, meta, list, types, decisions }) {
+export default function ExamForm({ sample, meta, list, types, decisions, preview }) {
   const [marks, setMarks] = useState({});
   const [open, setOpen] = useState(null);
   const toggle = (i) => setOpen((o) => (o === i ? null : i));
@@ -23,7 +23,7 @@ export default function ExamForm({ sample, meta, list, types, decisions }) {
   const count = Object.keys(marks).length;
 
   return (
-    <form action={submitExam} className="rv-exam">
+    <form action={preview ? undefined : submitExam} onSubmit={preview ? (e) => e.preventDefault() : undefined} className="rv-exam">
       <input type="hidden" name="sample" value={sample} />
       {Object.entries(marks).map(([i, v]) => <input key={i} type="hidden" name={`m${i}`} value={v} />)}
       <section className="adm-card rv-article">
@@ -86,7 +86,7 @@ export default function ExamForm({ sample, meta, list, types, decisions }) {
             <span>Бичээчид үлдээх тайлбар</span>
             <textarea name="note" required minLength={20} maxLength={1000} rows={4} placeholder="Юуг засах шаардлагатай вэ? (20+ тэмдэгт)" />
           </label>
-          <button className="adm-btn teal big">Шалгалт илгээх</button>
+          {preview ? <p className="adm-muted small">Урьдчилж харах горим — илгээгдэхгүй.</p> : <button className="adm-btn teal big">Шалгалт илгээх</button>}
         </section>
       </aside>
     </form>
