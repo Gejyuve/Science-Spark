@@ -98,27 +98,27 @@ export default async function Home({ searchParams }) {
               ["following", user ? "tab=following" : null, "Дагаж буй", user ? counts.following : null],
               ["top", "f=top", "Хандалт өндөр", counts.top],
               ["qa", "f=qa", "Хэн юу гэв?", counts.qa],
-              ["rand", `f=rand&r=${seed.slice(0, 8)}`, <>Сэгсрээд өг <span aria-hidden="true">⚄</span></>, null],
             ].map(([k, q, label, n]) => {
-              const on = k === "all" ? !qa && !top && !rand && !following : k === "following" ? following && !!user : k === "top" ? top : k === "qa" ? qa : rand;
-              const qs = q === null ? null : [q, k === "rand" ? "" : tq].filter(Boolean).join("&");
+              const on = k === "all" ? !qa && !top && !rand && !following : k === "following" ? following && !!user : k === "top" ? top : qa;
+              const qs = q === null ? null : [q, tq].filter(Boolean).join("&");
               const href = qs === null ? "/login" : qs ? `/?${qs}` : "/";
               return (
-                <Link key={k} href={href} className={on ? "on" : ""} prefetch={k === "rand" ? false : undefined}>
+                <Link key={k} href={href} className={on ? "on" : ""}>
                   {label}{n !== null && <em>{n}</em>}
                 </Link>
               );
             })}
           </div>
-          {!rand && (
-            <TimeMenu
-              label={period[1]}
-              options={PERIODS.map(([v, name]) => {
-                const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
-                return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
-              })}
-            />
-          )}
+          <Link href={`/?f=rand&r=${seed.slice(0, 8)}`} prefetch={false} className={"ss-dice" + (rand ? " on" : "")} title="Сэгсрээд өг" aria-label="Сэгсрээд өг">
+            <img className={rand ? "" : "ic"} src="/icons/dice.svg" width={20} height={20} alt="" />
+          </Link>
+          <TimeMenu
+            label={period[1]}
+            options={PERIODS.map(([v, name]) => {
+              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
+              return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
+            })}
+          />
         </nav>
       )}
       {posts.length === 0 && (

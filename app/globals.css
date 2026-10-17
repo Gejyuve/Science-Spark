@@ -1605,3 +1605,10 @@ a.ss-kind:hover { text-decoration: underline; }
 :root[data-theme="dark"] .ss-time-btn { background: rgba(0, 0, 0, .25); }
 :root[data-theme="dark"] .ss-filters .ss-time-menu a { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .ss-filters, .ss-filters::after { animation: none; } }
+/* Сэгсрээд өг: текстгүй шоо товч, цагийн шүүлтүүрийн зүүн талд */
+.ss-filters a.ss-dice { width: 34px; padding: 0; justify-content: center; border: 1px solid rgba(0, 168, 155, .35); background: rgba(255, 255, 255, .85); }
+.ss-filters a.ss-dice:hover img { transform: rotate(-18deg); }
+.ss-filters a.ss-dice img { transition: transform .25s; }
+.ss-filters a.ss-dice.on img { filter: brightness(0) invert(1); }
+:root[data-theme="dark"] .ss-filters a.ss-dice:not(.on) { background: rgba(0, 0, 0, .25); }
+.ss-filters a.ss-dice.on { background: linear-gradient(135deg, #00a89b, #37c3b3); border-color: transparent; }
