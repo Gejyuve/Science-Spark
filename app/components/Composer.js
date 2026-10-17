@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
-import { EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT } from "@/lib/format";
+import { EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
 const Ic = ({ n, s = 18 }) => <img className="ic" src={`/icons/${n}.svg`} width={s} height={s} alt="" />;
@@ -17,10 +17,10 @@ function Counted({ name, max, rows, placeholder, required, latinCheck }) {
         name={name} maxLength={max} rows={rows} value={v} placeholder={placeholder} required={required}
         onChange={(e) => {
           setV(e.target.value);
-          e.target.setCustomValidity(latinCheck && latinShare(e.target.value) > LATIN_LIMIT ? "Латин үсэг 25%-аас хэтэрсэн байна" : "");
+          e.target.setCustomValidity(latinCheck && latinShare(e.target.value) > LATIN_LIMIT ? LATIN_MSG : "");
         }}
       />
-      {tooLatin && <em className="cp-latin">Агуулгын 25%-аас илүү нь латин үсэг байна. Кириллээр бичнэ үү.</em>}
+      {tooLatin && <em className="cp-latin">{LATIN_MSG}</em>}
       <span>{v.length} / {max}</span>
     </div>
   );
@@ -32,20 +32,30 @@ const msg = (text) => ({
   onInvalid: (e) => e.target.setCustomValidity(text),
   onInput: (e) => e.target.setCustomValidity(""),
 });
-function DateTime({ icon, label, name, minDate, onDate }) {
+// Улаанбаатарын одоогийн огноо, цаг ("YYYY-MM-DD", "HH:MM")
+function nowUB() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ulaanbaatar", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    .formatToParts(new Date()).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
+}
+// minDate өдөр сонгогдсон бол minTime-аас хойшхи цагийг л зөвшөөрнө
+function DateTime({ icon, label, name, minDate, minTime, onPick, tooEarly }) {
   const [d, setD] = useState("");
   const [t, setT] = useState("");
+  const sameDay = minDate && d === minDate;
+  const timeBad = sameDay && t && minTime && t <= minTime;
   return (
     <label className="cp-field cp-dtf">
       <Ic n={icon} />
       <span className="cp-dt">{label} *</span>
       <input type="date" required value={d} min={minDate || undefined} aria-label={`${label} огноо`}
-        {...msg(minDate && d && d < minDate ? "Дуусах огноо эхлэхээс өмнө байж болохгүй" : "Огноогоо бүрэн сонгоно уу (он, сар, өдөр)")}
-        onChange={(e) => { setD(e.target.value); onDate && onDate(e.target.value); e.target.setCustomValidity(""); }} />
-      <select required value={t} aria-label={`${label} цаг`} {...msg("Цагаа сонгоно уу")}
-        onChange={(e) => { setT(e.target.value); e.target.setCustomValidity(""); }}>
+        {...msg(minDate && d && d < minDate ? tooEarly : "Огноогоо бүрэн сонгоно уу (он, сар, өдөр)")}
+        onChange={(e) => { setD(e.target.value); onPick && onPick(e.target.value && t ? `${e.target.value}T${t}` : "", e.target.value); e.target.setCustomValidity(""); }} />
+      <select required value={t} aria-label={`${label} цаг`} {...msg(timeBad ? tooEarly : "Цагаа сонгоно уу")}
+        ref={(el) => el && el.setCustomValidity(timeBad ? tooEarly : "")}
+        onChange={(e) => { setT(e.target.value); onPick && onPick(d && e.target.value ? `${d}T${e.target.value}` : "", d); }}>
         <option value="" disabled>Цаг</option>
-        {TIMES.map((x) => <option key={x}>{x}</option>)}
+        {TIMES.map((x) => <option key={x} disabled={!!(sameDay && minTime && x <= minTime)}>{x}</option>)}
       </select>
       <input type="hidden" name={name} value={d && t ? `${d}T${t}` : ""} />
     </label>
@@ -81,7 +91,9 @@ const Req = () => <i className="cp-req">*</i>;
 
 export default function Composer({ loggedIn, initial, error }) {
   const [mode, setMode] = useState(initial || null);
-  const [start, setStart] = useState("");
+  const [start, setStart] = useState({ full: "", date: "" });
+  const [now, setNow] = useState({ date: "", time: "" });
+  useEffect(() => setNow(nowUB()), [mode]);
   const toggle = (m) => setMode((cur) => (cur === m ? null : m));
   const shareModes = ["share", "Бодрол", "Эвент", "Зарлал"];
 
@@ -139,8 +151,10 @@ export default function Composer({ loggedIn, initial, error }) {
             </select>
             <Ic n="f_chev" />
           </Field>
-          <DateTime icon="f_date" label="Эхлэх" name="starts_at" onDate={setStart} />
-          <DateTime icon="f_clock" label="Дуусах" name="ends_at" minDate={start} />
+          <DateTime icon="f_date" label="Эхлэх" name="starts_at" minDate={now.date || undefined} minTime={now.time || undefined}
+            tooEarly="Өнгөрсөн огноо, цаг сонгох боломжгүй" onPick={(full, date) => setStart({ full, date })} />
+          <DateTime icon="f_clock" label="Дуусах" name="ends_at" minDate={start.date || now.date || undefined} minTime={start.full ? start.full.slice(11) : now.time || undefined}
+            tooEarly="Дуусах цаг эхлэх цагаас хойш байх ёстой" />
           <Field icon="f_globe">
             <select name="format" required defaultValue="">
               <option value="" disabled>Хэлбэр: Онлайн / Танхим / Хосолсон *</option>
@@ -153,8 +167,8 @@ export default function Composer({ loggedIn, initial, error }) {
           <Field icon="f_ticket"><input name="price" required maxLength={60} placeholder="Тасалбарын үнэ (₮ эсвэл үнэгүй) *" /></Field>
           <Field icon="f_people"><input name="capacity" inputMode="numeric" maxLength={10} placeholder="Бүртгэх хүний хязгаар (заавал биш)" /></Field>
         </div>
-        <Counted name="body" max={1000} rows={5} required placeholder="Эвентийн дэлгэрэнгүй тайлбар… *" />
-        <Counted name="register" max={500} rows={3} required placeholder="Бүртгүүлэх заавар (хэрхэн бүртгүүлэх, ямар мэдээлэл шаардах, холбоос хэзээ ирэх)… *" />
+        <Counted name="body" max={1000} rows={5} required latinCheck placeholder="Эвентийн дэлгэрэнгүй тайлбар… *" />
+        <Counted name="register" max={500} rows={3} required latinCheck placeholder="Бүртгүүлэх заавар (хэрхэн бүртгүүлэх, ямар мэдээлэл шаардах, холбоос хэзээ ирэх)… *" />
         <div className="cp-split">
           <div className="cp-col">
             <span className="cp-label">Ковер зураг</span>
@@ -185,7 +199,7 @@ export default function Composer({ loggedIn, initial, error }) {
           <Field icon="f_date"><input name="valid_until" type="date" aria-label="Хүчинтэй хугацаа" title="Хүчинтэй хугацаа" /></Field>
           <Field icon="f_phone"><input name="contact" maxLength={120} placeholder="Холбоо барих" /></Field>
         </div>
-        <Counted name="body" max={500} rows={4} required placeholder="Зарлалын агуулга…" />
+        <Counted name="body" max={500} rows={4} required latinCheck placeholder="Зарлалын агуулга…" />
         <div className="cp-split">
           <ImageSlot title="Зураг" hint="1:1 харьцаа · тун удахгүй" />
           <div className="cp-col">

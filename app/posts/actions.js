@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
-import { validLocal, toMin, spanText } from "@/lib/events";
+import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
-import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT } from "@/lib/format";
+import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
@@ -222,7 +222,6 @@ export async function quickPost(formData) {
   if (kind === "Асуулт" || kind === "Бодрол") {
     body = t("body", 300);
     if (!body) fail("Агуулгаа бичнэ үү");
-    if (latinShare(body) > LATIN_LIMIT) fail("Агуулгын 25%-аас илүү нь латин үсгээр бичигдсэн байна. Кириллээр бичнэ үү");
     title = short(body.split("\n")[0]);
     if (kind === "Бодрол") meta.source = url(t("source", 300));
   } else if (kind === "Эвент") {
@@ -246,6 +245,7 @@ export async function quickPost(formData) {
     const span = toMin(meta.ends_at) - toMin(meta.starts_at);
     if (span <= 0) fail("Дуусах цаг эхлэх цагаас хойш байх ёстой");
     if (span > 60 * 1440) fail("Эвент 60 хоногоос урт байж болохгүй");
+    if (meta.starts_at <= nowLocal().iso) fail("Эхлэх огноо, цаг өнгөрсөн байна. Ирээдүйн цаг сонгоно уу");
     meta.duration = spanText(meta.starts_at, meta.ends_at);
   } else {
     title = t("title", 200);
@@ -253,6 +253,8 @@ export async function quickPost(formData) {
     meta = { valid_until: t("valid_until", 10) || null, contact: t("contact", 120) || null, source: url(t("source", 300)) };
     if (!title || !body) fail("Гарчиг, агуулгаа бөглөнө үү");
   }
+  // Тайлбар текстүүд: 30%-аас илүү латин бол хүлээж авахгүй (гарчиг, нэрэнд хамаарахгүй)
+  if (latinShare(body) > LATIN_LIMIT || (meta.register && latinShare(meta.register) > LATIN_LIMIT)) fail(LATIN_MSG);
   await ensureSchema();
   const status = INSTANT_KINDS.includes(kind) ? "published" : "pending";
   const rows = await sql`
