@@ -13,11 +13,11 @@ export default async function Reviewers({ searchParams }) {
   const rows = await sql`
     SELECT u.id, u.email, u.initial, u.first_name, u.role,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
-      COUNT(p.id) FILTER (WHERE p.status IN ('published','rejected'))::int AS total,
-      COUNT(p.id) FILTER (WHERE p.status IN ('published','rejected') AND p.reviewed_at > now() - interval '30 days')::int AS month,
+      COUNT(p.id) FILTER (WHERE p.status IN ('published','approved','rejected'))::int AS total,
+      COUNT(p.id) FILTER (WHERE p.status IN ('published','approved','rejected') AND p.reviewed_at > now() - interval '30 days')::int AS month,
       COUNT(p.id) FILTER (WHERE p.status = 'rejected')::int AS rejected,
       COUNT(p.id) FILTER (WHERE p.status = 'removed')::int AS removed,
-      COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM p.reviewed_at - p.created_at)) FILTER (WHERE p.status IN ('published','rejected')) / 3600), 0)::int AS avg_h,
+      COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM p.reviewed_at - p.created_at)) FILTER (WHERE p.status IN ('published','approved','rejected')) / 3600), 0)::int AS avg_h,
       MAX(p.reviewed_at) AS last_at
     FROM users u LEFT JOIN posts p ON p.reviewer_id = u.id
     WHERE u.role IN ('reviewer','admin','superadmin')

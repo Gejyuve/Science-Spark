@@ -13,10 +13,10 @@ export default async function Overview() {
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND created_at < now() - interval '3 days')::int AS stale,
       (SELECT COUNT(*) FROM users WHERE role IN ('reviewer','admin','superadmin'))::int AS reviewers,
       (SELECT COUNT(DISTINCT reviewer_id) FROM posts WHERE reviewed_at > now() - interval '30 days')::int AS active_reviewers,
-      (SELECT COUNT(*) FROM posts WHERE reviewed_at > now() - interval '30 days' AND status IN ('published','rejected'))::int AS reviewed,
+      (SELECT COUNT(*) FROM posts WHERE reviewed_at > now() - interval '30 days' AND status IN ('published','approved','rejected'))::int AS reviewed,
       (SELECT COUNT(*) FROM posts WHERE reviewed_at > now() - interval '30 days' AND status = 'rejected')::int AS rejected,
       (SELECT COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM reviewed_at - created_at)) / 3600), 0)
-         FROM posts WHERE reviewed_at > now() - interval '30 days' AND status IN ('published','rejected'))::int AS avg_h,
+         FROM posts WHERE reviewed_at > now() - interval '30 days' AND status IN ('published','approved','rejected'))::int AS avg_h,
       (SELECT COUNT(*) FROM users WHERE restricted_at IS NOT NULL)::int AS restricted,
       (SELECT COUNT(*) FROM reviewer_requests WHERE status = 'pending')::int AS requests`;
   const pending = await sql`

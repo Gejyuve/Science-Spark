@@ -49,7 +49,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const groups = {
     all,
     published: all.filter((p) => p.status === "published"),
-    pending: all.filter((p) => p.status === "pending"),
+    pending: all.filter((p) => p.status === "pending" || p.status === "approved"),
     replied: all.filter((p) => p.status === "rejected" || p.status === "removed"),
   };
   const current = groups[tab] ? tab : "all";
@@ -159,7 +159,7 @@ export default async function PublicProfile({ params, searchParams }) {
         <div key={p.id} className="pu-post">
           {p.status !== "published" && (
             <span className={"pu-status " + p.status}>
-              {p.status === "pending" ? "Хянагчийн шалгалтад" : p.status === "rejected" ? "Татгалзсан" : "Нийтээс хасагдсан"}
+              {p.status === "pending" ? "Редакцын хяналтад" : p.status === "approved" ? "Нийтлэхэд бэлэн" : p.status === "rejected" ? "Засвар хийхээр буцаасан" : "Нийтээс хасагдсан"}
             </span>
           )}
           <PostCard p={p} />

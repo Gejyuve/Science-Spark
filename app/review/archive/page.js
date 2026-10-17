@@ -21,11 +21,12 @@ export default async function Archive({ searchParams }) {
       u.initial, u.first_name, u.email
     FROM posts p JOIN users u ON u.id = p.author_id
     WHERE p.reviewer_id = ${user.id} AND p.status <> 'pending'
-      AND (${st} = '' OR p.status = ${st})
+      AND (${st} = '' OR p.status = ${st} OR (${st} = 'published' AND p.status = 'approved'))
       AND (${like} = '%%' OR lower(p.title) LIKE ${like})
     ORDER BY p.reviewed_at DESC NULLS LAST LIMIT 200`;
   const counts = await sql`SELECT status, COUNT(*)::int AS n FROM posts WHERE reviewer_id = ${user.id} AND status <> 'pending' GROUP BY status`;
   const c = Object.fromEntries(counts.map((r) => [r.status, r.n]));
+  c.published = (c.published || 0) + (c.approved || 0);
   const all = counts.reduce((a, r) => a + r.n, 0);
   return (
     <>
@@ -41,7 +42,7 @@ export default async function Archive({ searchParams }) {
                   <td className="adm-strong adm-clip">{p.title}{p.edited && <small className="adm-note">✎ Засвартай нийтлэгдсэн</small>}</td>
                   <td><Chip>{p.kind}</Chip></td>
                   <td>{who(p)}</td>
-                  <td><Chip tone={STATUS_TONE[p.status]}>{p.status === "removed" ? "Нуугдсан" : STATUS_LABELS[p.status]}</Chip></td>
+                  <td><Chip tone={STATUS_TONE[p.status]}>{p.status === "removed" ? "Нуугдсан" : p.status === "approved" ? "Зөвшөөрсөн · бичээч нийтлээгүй" : STATUS_LABELS[p.status]}</Chip></td>
                   <td className="adm-wrap adm-clip">{p.review_note || "—"}</td>
                   <td>{p.reviewed_at ? fmtDate(p.reviewed_at) : "—"}</td>
                   <td className="adm-right"><Link href={`/post/${p.id}`} className="adm-btn">Харах</Link></td>

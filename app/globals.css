@@ -1149,3 +1149,11 @@ details.mod summary { cursor: pointer; }
 .cp-dtf input[type="date"] { flex: 1 1 auto; min-width: 0; }
 .cp-dtf select { flex: 0 0 auto; width: 90px; padding: 4px 6px; border-radius: 8px; background: var(--surface-2); text-align: center; }
 :root[data-theme="dark"] .cp-dtf input[type="date"] { color-scheme: dark; }
+.ar-ready { margin: 12px 0; padding: 16px 18px; border-radius: 14px; background: var(--teal-bg); border: 1px solid var(--accent); }
+.ar-ready > b { color: var(--ink); font-size: 15px; }
+.ar-ready p { margin: 6px 0 10px; font-size: 13px; color: var(--text); line-height: 1.6; }
+.ar-ready-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ar-orig { margin: 6px 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--surface); font-size: 13px; }
+.ar-orig summary { cursor: pointer; color: var(--teal); font-weight: 600; }
+.ar-orig b, .ar-orig i { display: block; margin-top: 8px; color: var(--ink); }
+.ar-orig p { white-space: pre-wrap; }

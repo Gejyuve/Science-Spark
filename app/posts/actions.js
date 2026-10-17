@@ -119,7 +119,9 @@ export async function reviewPost(formData) {
   const user = await getUser();
   if (!isStaff(user)) redirect("/");
   const postId = Number(formData.get("post_id"));
-  const decision = formData.get("decision") === "approve" ? "published" : "rejected";
+  const approve = formData.get("decision") === "approve";
+  const [k] = await sql`SELECT kind FROM posts WHERE id = ${Number(formData.get("post_id")) || 0}`;
+  const decision = !approve ? "rejected" : k && ["Нийтлэл", "Мэдээ"].includes(k.kind) ? "approved" : "published";
   const note = String(formData.get("note") || "").trim().slice(0, 1000) || null;
   if (!Number.isInteger(postId)) return;
   if (decision === "rejected" && !note) {
@@ -132,10 +134,10 @@ export async function reviewPost(formData) {
             WHERE id = ${postId} AND author_id <> ${user.id} AND status = 'pending'
             RETURNING author_id, title`;
   if (done.length) {
-    await audit({ actorId: user.id, category: "content", action: decision === "published" ? "Нийтлэл баталсан" : `Нийтлэл буцаасан (${note})`, targetType: "post", targetId: postId, targetLabel: done[0].title });
+    await audit({ actorId: user.id, category: "content", action: decision !== "rejected" ? "Нийтлэл баталсан" : `Нийтлэл буцаасан (${note})`, targetType: "post", targetId: postId, targetLabel: done[0].title });
     await notify({
       userId: done[0].author_id,
-      kind: decision === "published" ? "approved" : "rejected",
+      kind: decision === "approved" ? "reviewed" : decision === "published" ? "approved" : "rejected",
       actorId: user.id,
       postId,
       note,
@@ -263,4 +265,19 @@ export async function quickPost(formData) {
     RETURNING id`;
   revalidatePath("/");
   redirect(status === "published" ? "/" : `/post/${rows[0].id}`);
+}
+
+// Бичээч: редакцаар зөвшөөрөгдсөн нийтлэл, мэдээгээ өөрөө нийтэлнэ
+export async function publishOwn(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) redirect("/");
+  await ensureSchema();
+  const d = await sql`UPDATE posts SET status = 'published', created_at = now()
+                      WHERE id = ${postId} AND author_id = ${user.id} AND status = 'approved' RETURNING title`;
+  if (d.length) await audit({ actorId: user.id, category: "content", action: "Бичээч нийтэлсэн", targetType: "post", targetId: postId, targetLabel: d[0].title });
+  revalidatePath("/");
+  revalidatePath(`/post/${postId}`);
+  redirect(`/post/${postId}`);
 }

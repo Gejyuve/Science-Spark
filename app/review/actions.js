@@ -88,16 +88,18 @@ export async function decidePost(formData) {
     const changed = title !== p.title || (subtitle || null) !== (p.subtitle || null) || body !== p.body;
     if (changed && !original) original = { title: p.title, subtitle: p.subtitle, body: p.body };
   }
-  const d = await sql`UPDATE posts SET status = 'published', reviewer_id = ${user.id}, reviewed_at = now(), review_note = ${note},
+  // Нийтлэл, мэдээ: бичээч рүү буцаж, бичээч өөрөө нийтэлнэ. Эвент, зарлал: шууд нийтлэгдэнэ.
+  const next = editable ? "approved" : "published";
+  const d = await sql`UPDATE posts SET status = ${next}, reviewer_id = ${user.id}, reviewed_at = now(), review_note = ${note},
                         title = ${title}, subtitle = ${subtitle}, body = ${body},
                         original = ${original ? JSON.stringify(original) : null}::jsonb
                       WHERE id = ${id} AND status = 'pending' AND author_id <> ${user.id} RETURNING id`;
   if (d.length) {
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
-    await notify({ userId: p.author_id, kind: "approved", actorId: user.id, postId: id, note });
+    await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
   }
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
   revalidatePath("/review", "layout");
-  go("/review", "ok", "Нийтлэгдлээ");
+  go("/review", "ok", editable ? "Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо" : "Нийтлэгдлээ");
 }

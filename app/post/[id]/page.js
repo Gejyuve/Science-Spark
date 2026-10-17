@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
-import { addComment, sparkPost, removePost, deleteComment } from "../../posts/actions";
+import { addComment, sparkPost, removePost, deleteComment, publishOwn } from "../../posts/actions";
 import Shell from "../../components/Shell";
 import { Avatar, Stat } from "../../components/Bits";
 
@@ -54,6 +54,7 @@ export default async function PostPage({ params, searchParams }) {
   if (!posts.length) notFound();
   const post = posts[0];
   const isAuthor = !!user && user.id === post.author_id;
+  const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
   const published = post.status === "published";
   if (!published && !isAuthor && !isStaff(user)) notFound();
 
@@ -102,20 +103,50 @@ export default async function PostPage({ params, searchParams }) {
             {!["Асуулт", "Бодрол"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
             {error && <p className="error">{error}</p>}
-            {!published && (
+            {!published && post.status !== "approved" && (
               <p className={post.status === "pending" ? "notice" : "error"}>
                 {post.status === "rejected"
-                  ? `Хянагч татгалзсан: ${post.review_note || ""}`
+                  ? `Редакц засвар хийхээр буцаасан: ${post.review_note || ""}`
                   : post.status === "removed"
                   ? `Админ нийтээс хассан: ${post.review_note || ""}`
-                  : "Хянагчийн шалгалтад байна. Батлагдсаны дараа бусдад харагдана."}
+                  : isArticle
+                  ? "Редакцын хяналтад орсны дараа та өөрөө нийтлэх боломжтой болно."
+                  : "Редакцын хяналтад орсны дараа нийтлэгдэнэ."}
                 {post.status === "pending" && isStaff(user) && !isAuthor && (
                   <> <Link href={`/review/${post.id}`}>Хянах самбар нээх →</Link></>
                 )}
               </p>
             )}
-            {!published && isAuthor && post.status !== "pending" && (
-              <p className="muted">Засаад хадгалбал дахин хянагчийн шалгалтад орно.</p>
+            {post.status === "approved" && (
+              isAuthor ? (
+                <div className="ar-ready">
+                  <b>Редакц таны нийтлэлийг хянаж зөвшөөрлөө 🎉</b>
+                  <p>
+                    {post.original ? "Хянагч зарим засвар оруулсан. Доорх хувилбарыг шалгаад нийтлээрэй." : "Доорх хувилбарыг шалгаад нийтлээрэй."}
+                    {post.review_note && <><br />Хянагчийн тайлбар: “{post.review_note}”</>}
+                  </p>
+                  {post.original && (
+                    <details className="ar-orig">
+                      <summary>Миний анхны хувилбарыг харах</summary>
+                      <b>{post.original.title}</b>
+                      {post.original.subtitle && <i>{post.original.subtitle}</i>}
+                      <p>{post.original.body}</p>
+                    </details>
+                  )}
+                  <div className="ar-ready-acts">
+                    <form action={publishOwn}>
+                      <input type="hidden" name="post_id" value={post.id} />
+                      <button type="submit" className="btn">Нийтлэх</button>
+                    </form>
+                    <Link href={`/post/${post.id}/edit`} className="btn ghost">Засах (дахин хяналтад орно)</Link>
+                  </div>
+                </div>
+              ) : (
+                <p className="notice">Редакц зөвшөөрсөн. Бичээч нийтлэхийг хүлээж байна.</p>
+              )
+            )}
+            {!published && isAuthor && (post.status === "rejected" || post.status === "removed") && (
+              <p className="muted">Засаад хадгалбал дахин редакцын хяналтад орно.</p>
             )}
 
             {lead && (

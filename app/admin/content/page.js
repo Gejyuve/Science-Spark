@@ -6,7 +6,7 @@ import { moderatePost } from "../actions";
 import Head, { Tabs, Chip, Flash, who, STATUS_TONE } from "../_c/Head";
 
 const ALL_KINDS = [...KINDS, ...QUICK_KINDS];
-const STATUSES = ["pending", "published", "rejected", "removed"];
+const STATUSES = ["pending", "approved", "published", "rejected", "removed"];
 
 export default async function Content({ searchParams }) {
   const user = await requireSection("content");

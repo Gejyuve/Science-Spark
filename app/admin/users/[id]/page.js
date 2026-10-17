@@ -18,7 +18,7 @@ export default async function UserDetail({ params, searchParams }) {
   const [u] = await sql`
     SELECT u.*, COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers,
-      (SELECT COUNT(*) FROM posts WHERE reviewer_id = u.id AND status IN ('published','rejected'))::int AS reviewed
+      (SELECT COUNT(*) FROM posts WHERE reviewer_id = u.id AND status IN ('published','approved','rejected'))::int AS reviewed
     FROM users u WHERE u.id = ${n}`;
   if (!u) notFound();
   const posts = await sql`SELECT id, kind, title, status, created_at FROM posts WHERE author_id = ${n} ORDER BY created_at DESC LIMIT 10`;

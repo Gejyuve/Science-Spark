@@ -28,9 +28,9 @@ async function Queue({ user, sp }) {
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.posts}))::int AS posts,
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.events}))::int AS events,
       (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND reviewed_at > date_trunc('day', now()))::int AS today,
-      (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND status IN ('published','rejected'))::int AS total,
+      (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND status IN ('published','approved','rejected'))::int AS total,
       (SELECT COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM reviewed_at - created_at)) / 360) / 10, 0)
-         FROM posts WHERE reviewer_id = ${user.id} AND status IN ('published','rejected')
+         FROM posts WHERE reviewer_id = ${user.id} AND status IN ('published','approved','rejected')
          AND reviewed_at > now() - interval '30 days')::float AS avg_h`;
   return (
     <>
