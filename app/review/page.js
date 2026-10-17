@@ -35,7 +35,7 @@ export default async function ReviewPage({ searchParams }) {
         {pending.map((p) => (
           <div key={p.id} className="review-card">
             <span className="chip">{p.kind}</span>
-            <h3>{p.title}</h3>
+            <h3><Link href={`/post/${p.id}`}>{p.title}</Link></h3>
             <p className="muted">{p.initial}.{p.first_name} · {fmtDate(p.created_at)}</p>
             <div className="body">{p.body}</div>
             {p.author_id === user.id ? (

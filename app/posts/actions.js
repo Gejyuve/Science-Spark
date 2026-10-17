@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
-import { KINDS } from "@/lib/format";
+import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS } from "@/lib/format";
 
 export async function createPost(formData) {
   const user = await getUser();
@@ -196,4 +196,55 @@ export async function markAllRead() {
   await sql`UPDATE notifications SET read_at = now() WHERE user_id = ${user.id} AND read_at IS NULL`;
   revalidatePath("/notifications");
   revalidatePath("/");
+}
+
+// Нүүрний дээд хэсгээс: Асуулт, Бодрол (шууд нийтлэгдэнэ), Эвент, Зарлал (редакц батална)
+export async function quickPost(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  if (needsName(user)) redirect("/profile/edit");
+  const kind = String(formData.get("kind"));
+  if (!QUICK_KINDS.includes(kind)) redirect("/");
+  const t = (k, max) => String(formData.get(k) || "").trim().slice(0, max);
+  const fail = (msg) => redirect(`/?compose=${encodeURIComponent(kind)}&error=${encodeURIComponent(msg)}`);
+  const url = (v) => (v && !/^https?:\/\/\S+$/i.test(v) ? fail("Холбоос https:// -ээр эхэлнэ") : v || null);
+  const short = (s) => (s.length > 90 ? s.slice(0, 90).replace(/\s+\S*$/, "") + "…" : s);
+
+  let title, body, meta = {};
+  if (kind === "Асуулт" || kind === "Бодрол") {
+    body = t("body", 300);
+    if (!body) fail("Агуулгаа бичнэ үү");
+    title = short(body.split("\n")[0]);
+    if (kind === "Бодрол") meta.source = url(t("source", 300));
+  } else if (kind === "Эвент") {
+    title = t("title", 200);
+    body = t("body", 1000);
+    meta = {
+      type: EVENT_TYPES.includes(formData.get("type")) ? formData.get("type") : null,
+      starts_at: t("starts_at", 20) || null,
+      format: EVENT_FORMATS.includes(formData.get("format")) ? formData.get("format") : null,
+      location: t("location", 200) || null,
+      duration: t("duration", 60) || null,
+      price: t("price", 60) || null,
+      capacity: t("capacity", 10) || null,
+      register: t("register", 500) || null,
+      link: url(t("link", 300)),
+    };
+    if (!title || !body || !meta.type || !meta.starts_at || !meta.format || !meta.location || !meta.duration || !meta.price || !meta.register) {
+      fail("Одтой (*) бүх талбарыг бөглөнө үү");
+    }
+  } else {
+    title = t("title", 200);
+    body = t("body", 500);
+    meta = { valid_until: t("valid_until", 10) || null, contact: t("contact", 120) || null, source: url(t("source", 300)) };
+    if (!title || !body) fail("Гарчиг, агуулгаа бөглөнө үү");
+  }
+  await ensureSchema();
+  const status = INSTANT_KINDS.includes(kind) ? "published" : "pending";
+  const rows = await sql`
+    INSERT INTO posts (author_id, kind, title, body, status, meta)
+    VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb)
+    RETURNING id`;
+  revalidatePath("/");
+  redirect(status === "published" ? "/" : `/post/${rows[0].id}`);
 }

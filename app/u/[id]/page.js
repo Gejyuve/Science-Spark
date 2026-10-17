@@ -39,7 +39,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const pr = (await sql`SELECT * FROM profiles WHERE user_id = ${uid}`)[0] || {};
 
   const all = await sql`
-    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.status, p.created_at, u.initial, u.first_name,
+    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.status, p.created_at, u.initial, u.first_name,
       (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
       (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
     FROM posts p JOIN users u ON u.id = p.author_id

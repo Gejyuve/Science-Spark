@@ -7,7 +7,7 @@ import PostCard from "./components/PostCard";
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }) {
-  const { tab } = await searchParams;
+  const { tab, compose, error } = await searchParams;
   const following = tab === "following";
   let user = null;
   let posts = [];
@@ -15,7 +15,7 @@ export default async function Home({ searchParams }) {
     user = await getUser();
     await ensureSchema();
     posts = await sql`
-      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.created_at, u.initial, u.first_name,
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.created_at, u.initial, u.first_name,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
         COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
@@ -30,7 +30,7 @@ export default async function Home({ searchParams }) {
   }
 
   return (
-    <Shell user={user} active="/">
+    <Shell user={user} active="/" compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {user && (
         <div className="ss-feedtabs">
           <Link href="/" className={following ? "" : "on"}>Бүгд</Link>

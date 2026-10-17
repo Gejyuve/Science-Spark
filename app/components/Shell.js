@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import Composer from "./Composer";
 import { sql } from "@/lib/db";
 import { displayName, isStaff, needsName } from "@/lib/auth";
 import { unreadCount } from "@/lib/notify";
@@ -54,14 +55,14 @@ function Sidebar({ active }) {
   );
 }
 
-function Header({ user, compact }) {
+function Header({ user, compact, compose, composeError }) {
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
       <div className="ss-topnav">
         <span className="ss-round soon" title="Тун удахгүй">{I("hspark")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("dice")}</span>
-        <Link className="ss-round" href={write("Асуулт")} title="Асуух">{I("ask", 24)}</Link>
+        <Link className="ss-round" href={user ? "/?compose=Асуулт" : "/login"} title="Асуух">{I("ask", 24)}</Link>
         <Link href="/" className="ss-logo" aria-label="Нүүр">
           <img src="/icons/logo.svg" width={74} height={74} alt="Science Spark" />
         </Link>
@@ -69,17 +70,7 @@ function Header({ user, compact }) {
         <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("club", 24)}</span>
       </div>
-      {!compact && <>
-      <Link href={write()} className="ss-composer">
-        {I("person", 32)}
-        <span>{user ? "Өнөөдөр ямар оч асаах гэж байна даа?" : "Нийтлэл бичихийн тулд нэвтэрнэ үү"}</span>
-      </Link>
-      <div className="ss-tabs">
-        <Link href={write("Нийтлэл")}>{I("write")}<span>Бичье</span></Link>
-        <Link href={write("Асуулт")}>{I("asktab")}<span>Асууя</span></Link>
-        <Link href={write("Мэдээ")}>{I("share")}<span>Хуваалцъя</span></Link>
-      </div>
-      </>}
+      {!compact && <Composer loggedIn={!!user} initial={compose} error={composeError} />}
     </header>
   );
 }
@@ -161,13 +152,13 @@ async function RightRail({ user }) {
   );
 }
 
-export default async function Shell({ user, active, children, header = true }) {
+export default async function Shell({ user, active, children, header = true, compose, composeError }) {
   if (needsName(user)) redirect("/profile/edit");
   return (
     <div className="ss-shell">
       <Sidebar active={active} />
       <main className="ss-main">
-        {header && <Header user={user} compact={header === "nav"} />}
+        {header && <Header user={user} compact={header === "nav"} compose={compose} composeError={composeError} />}
         {children}
       </main>
       <RightRail user={user} />

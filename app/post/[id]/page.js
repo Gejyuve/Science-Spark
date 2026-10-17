@@ -9,6 +9,31 @@ import { Avatar, Stat } from "../../components/Bits";
 
 export const dynamic = "force-dynamic";
 
+// Эвент, зарлал, бодролын нэмэлт мэдээлэл
+function MetaBlock({ kind, m }) {
+  const rows = kind === "Эвент"
+    ? [["f_tag", "Төрөл", m.type], ["f_date", "Огноо, цаг", m.starts_at && m.starts_at.replace("T", " ")], ["f_globe", "Хэлбэр", m.format],
+       ["f_pin", "Байршил", m.location], ["f_clock", "Үргэлжлэх хугацаа", m.duration], ["f_ticket", "Тасалбар", m.price],
+       ["f_people", "Хүний хязгаар", m.capacity], ["f_text", "Бүртгүүлэх заавар", m.register]]
+    : kind === "Зарлал"
+    ? [["f_date", "Хүчинтэй хугацаа", m.valid_until], ["f_phone", "Холбоо барих", m.contact]]
+    : [];
+  const link = m.link || m.source;
+  const shown = rows.filter((r) => r[2]);
+  if (!shown.length && !link) return null;
+  return (
+    <div className="ar-meta">
+      {shown.map(([ic, k, v]) => (
+        <div key={k}><img className="ic" src={`/icons/${ic}.svg`} width={18} height={18} alt="" /><span>{k}</span><b>{v}</b></div>
+      ))}
+      {link && (
+        <div><img className="ic" src="/icons/f_link.svg" width={18} height={18} alt="" /><span>Холбоос</span>
+          <a href={link} target="_blank" rel="noopener noreferrer nofollow">{link}</a></div>
+      )}
+    </div>
+  );
+}
+
 
 // Figma: Нийтлэл · Харагдах хуудас
 export default async function PostPage({ params, searchParams }) {
@@ -73,7 +98,7 @@ export default async function PostPage({ params, searchParams }) {
             <div className="ar-chips">
               <span className="ar-chip main">{post.kind}</span>
             </div>
-            <h1 className="ar-title">{post.title}</h1>
+            {!["Асуулт", "Бодрол"].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
 
             {error && <p className="error">{error}</p>}
             {!published && (
@@ -96,6 +121,7 @@ export default async function PostPage({ params, searchParams }) {
               </>
             )}
             {rest.map((para, i) => <p key={i} className="ar-text">{para}</p>)}
+            <MetaBlock kind={post.kind} m={post.meta || {}} />
 
             <div className="ar-credits">
               <div>
@@ -141,7 +167,7 @@ export default async function PostPage({ params, searchParams }) {
               <span className="ar-flag soon" title="Тун удахгүй">
                 <img src="/icons/flag.svg" width={14} height={14} alt="" />Логик алдаа мэдэгд
               </span>
-              {isAuthor && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
+              {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               <span className="ar-iconbtn soon" title="Хадгалах · тун удахгүй"><img className="ic" src="/icons/save20.svg" width={20} height={20} alt="Хадгалах" /></span>
               <span className="ar-iconbtn soon" title="Хуваалцах · тун удахгүй"><img className="ic" src="/icons/share20.svg" width={20} height={20} alt="Хуваалцах" /></span>
