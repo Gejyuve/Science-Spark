@@ -83,7 +83,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   };
 
   const onDown = (e) => {
-    if (e.button !== 0 || e.target.closest("[data-node]")) return;
+    if (e.button !== 0 || e.target.closest("[data-node], .tg-zoom, button, a")) return;
     drag.current = { x: e.clientX, y: e.clientY, v: view };
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
