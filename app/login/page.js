@@ -1,21 +1,19 @@
 import Link from "next/link";
 import { login } from "../auth/actions";
+import AuthCard, { Field } from "../components/AuthCard";
 
 export const metadata = { title: "Нэвтрэх · Science Spark" };
 
 export default async function LoginPage({ searchParams }) {
   const { error } = await searchParams;
   return (
-    <div className="auth-wrap">
-      <form className="auth-card" action={login}>
-        <h1>Нэвтрэх</h1>
-        {error && <p className="error">{error}</p>}
-        <label>Имэйл<input name="email" type="email" required autoComplete="email" /></label>
-        <label>Нууц үг<input name="password" type="password" required autoComplete="current-password" /></label>
-        <button className="btn" type="submit">Нэвтрэх</button>
-        <p className="muted">Бүртгэлгүй юу? <Link href="/register">Бүртгүүлэх</Link></p>
-        <p className="muted"><Link href="/">← Нүүр</Link></p>
-      </form>
-    </div>
+    <AuthCard
+      action={login}
+      error={error}
+      footer={<p className="au-foot">Бүртгэлгүй юу? <Link href="/register">Асаах</Link></p>}
+    >
+      <Field name="email" type="email" required autoComplete="email" placeholder="Мэйл" aria-label="Мэйл" />
+      <Field icon={null} name="password" type="password" required autoComplete="current-password" placeholder="Нууц үг" aria-label="Нууц үг" />
+    </AuthCard>
   );
 }

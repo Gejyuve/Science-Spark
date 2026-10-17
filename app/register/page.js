@@ -1,25 +1,28 @@
 import Link from "next/link";
 import { register } from "../auth/actions";
+import AuthCard, { Field } from "../components/AuthCard";
 
-export const metadata = { title: "Бүртгүүлэх · Science Spark" };
+export const metadata = { title: "Асаах · Science Spark" };
 
 export default async function RegisterPage({ searchParams }) {
   const { error } = await searchParams;
   return (
-    <div className="auth-wrap">
-      <form className="auth-card" action={register}>
-        <h1>Бүртгүүлэх</h1>
-        {error && <p className="error">{error}</p>}
-        <div className="row">
-          <label className="narrow">Овгийн эхний үсэг<input name="initial" maxLength={1} required placeholder="Х" /></label>
-          <label>Нэр<input name="first_name" required placeholder="Нэр" /></label>
-        </div>
-        <label>Имэйл<input name="email" type="email" required autoComplete="email" /></label>
-        <label>Нууц үг (8+ тэмдэгт)<input name="password" type="password" required minLength={8} autoComplete="new-password" /></label>
-        <button className="btn" type="submit">Бүртгүүлэх</button>
-        <p className="muted">Бүртгэлтэй юу? <Link href="/login">Нэвтрэх</Link></p>
-        <p className="muted"><Link href="/">← Нүүр</Link></p>
-      </form>
-    </div>
+    <AuthCard
+      action={register}
+      error={error}
+      footer={<p className="au-foot">Бүртгэлтэй юу? <Link href="/login">Нэвтрэх</Link></p>}
+    >
+      <div className="au-types">
+        <span className="au-type on"><img src="/icons/tperson.svg" width={34} height={34} alt="" />Хувь хүн</span>
+        <span className="au-type soon" title="Тун удахгүй"><img src="/icons/torg.svg" width={34} height={34} alt="" />Байгууллага</span>
+        <span className="au-type soon" title="Тун удахгүй"><img src="/icons/tclub.svg" width={34} height={34} alt="" />Клуб</span>
+      </div>
+      <div className="au-row">
+        <Field icon={null} name="initial" maxLength={1} required placeholder="Овог (Х)" aria-label="Овгийн эхний үсэг" className="au-initial" />
+        <Field icon={null} name="first_name" required placeholder="Нэр" aria-label="Нэр" />
+      </div>
+      <Field name="email" type="email" required autoComplete="email" placeholder="Мэйл" aria-label="Мэйл" />
+      <Field icon={null} name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="Нууц үг (8+ тэмдэгт)" aria-label="Нууц үг" />
+    </AuthCard>
   );
 }

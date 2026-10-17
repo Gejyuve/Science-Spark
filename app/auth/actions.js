@@ -13,6 +13,10 @@ export async function register(formData) {
   const first = String(formData.get("first_name") || "").trim();
 
   if (!initial || !first) back("/register", "Овгийн эхний үсэг болон нэрээ бөглөнө үү");
+  // Хувь хүний нэр зөвхөн кирилл үсгээр (латин үсэг хориотой)
+  if (!/^[А-ЯЁӨҮ]$/.test(initial) || !/^[А-ЯЁӨҮа-яёөү-]{2,30}$/.test(first)) {
+    back("/register", "Овог, нэрээ кирилл үсгээр бичнэ үү");
+  }
   if (!/^\S+@\S+\.\S+$/.test(email)) back("/register", "Имэйл хаяг буруу байна");
   if (password.length < 8) back("/register", "Нууц үг хамгийн багадаа 8 тэмдэгт байна");
 
