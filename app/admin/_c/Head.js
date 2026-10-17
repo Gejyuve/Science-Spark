@@ -2,7 +2,7 @@ import { displayName } from "@/lib/auth";
 import { Avatar } from "../../components/Bits";
 
 // Хуудасны толгой: гарчиг, тайлбар, хайлт, хэрэглэгчийн chip
-export default function Head({ user, title, sub, search, q, hidden = {} }) {
+export default function Head({ user, title, sub, search, q, hidden = {}, tag = "Редакц" }) {
   return (
     <header className="adm-head">
       <div className="adm-title">
@@ -18,10 +18,10 @@ export default function Head({ user, title, sub, search, q, hidden = {} }) {
         </form>
       )}
       <span className="adm-me">
-        <Avatar user={user.viewAs || user} size={32} />
+        <Avatar user={user} size={32} />
         <span>
-          <b>{displayName(user.viewAs || user)}</b>
-          <small>Редакц</small>
+          <b>{displayName(user)}</b>
+          <small>{tag}</small>
         </span>
       </span>
     </header>

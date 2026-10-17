@@ -17,7 +17,8 @@ export default async function Overview() {
       (SELECT COUNT(*) FROM posts WHERE reviewed_at > now() - interval '30 days' AND status = 'rejected')::int AS rejected,
       (SELECT COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM reviewed_at - created_at)) / 3600), 0)
          FROM posts WHERE reviewed_at > now() - interval '30 days' AND status IN ('published','rejected'))::int AS avg_h,
-      (SELECT COUNT(*) FROM users WHERE restricted_at IS NOT NULL)::int AS restricted`;
+      (SELECT COUNT(*) FROM users WHERE restricted_at IS NOT NULL)::int AS restricted,
+      (SELECT COUNT(*) FROM reviewer_requests WHERE status = 'pending')::int AS requests`;
   const pending = await sql`
     SELECT p.id, p.kind, p.title, p.created_at, u.initial, u.first_name, u.email
     FROM posts p JOIN users u ON u.id = p.author_id
@@ -37,6 +38,12 @@ export default async function Overview() {
         <p className="adm-banner">
           ⚠ {s.stale} нийтлэл 3 хоногоос удаан хянагдаагүй хүлээгдэж байна.{" "}
           <Link href="/review">Хянах →</Link>
+        </p>
+      )}
+      {s.requests > 0 && canSee(user, "requests") && (
+        <p className="adm-banner">
+          🛡 {s.requests} хэрэглэгч хянагчийн шалгалтад тэнцээд эрх хүлээж байна.{" "}
+          <Link href="/admin/requests">Хүсэлтүүд →</Link>
         </p>
       )}
       <div className="adm-stats">

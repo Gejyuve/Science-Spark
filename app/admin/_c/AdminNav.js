@@ -8,7 +8,7 @@ export default function AdminNav({ items }) {
   return (
     <nav className="adm-nav">
       {items.map((s) => {
-        const on = s.href === "/admin" ? path === "/admin" : path.startsWith(s.href);
+        const on = s.exact || s.href === "/admin" ? path === s.href || (s.exact && /^\/review\/(\d+|exam)/.test(path)) : path.startsWith(s.href);
         return (
           <Link key={s.key} href={s.href} className={"adm-item" + (on ? " on" : "") + (s.soon ? " soon" : "")}>
             <i className="adm-ic" style={{ WebkitMaskImage: `url(/icons/${s.icon}.svg)`, maskImage: `url(/icons/${s.icon}.svg)` }} />

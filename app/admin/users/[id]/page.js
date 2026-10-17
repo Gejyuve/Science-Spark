@@ -5,7 +5,6 @@ import { requireSection, canSee, GRANTABLE, STATUS_LABELS, ago } from "@/lib/adm
 import { ROLE_LABELS } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
-import { startViewAs } from "../../viewas";
 import { adminSetRole, setPerms, restrictUser, adjustPoints } from "../../actions";
 import Head, { Chip, Flash, who, STATUS_TONE } from "../../_c/Head";
 import { Avatar } from "../../../components/Bits";
@@ -64,12 +63,6 @@ export default async function UserDetail({ params, searchParams }) {
           </dl>
           <span className="adm-acts">
             <Link href={`/u/${u.id}`} className="adm-link">Нийтийн профайл →</Link>
-            {sup && !me.viewAs && !protectedUser && (
-              <form action={startViewAs}>
-                <input type="hidden" name="user_id" value={u.id} />
-                <button className="adm-btn">👁 Түүний нүдээр харах</button>
-              </form>
-            )}
           </span>
         </section>
 

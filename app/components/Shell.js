@@ -4,7 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 import Composer from "./Composer";
 import { logout } from "../auth/actions";
 import { sql } from "@/lib/db";
-import { displayName, isStaff, isAdmin, needsName } from "@/lib/auth";
+import { displayName, isAdmin, needsName, canReview } from "@/lib/auth";
 import { unreadCount } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat } from "./Bits";
@@ -20,7 +20,7 @@ const NAV = [
   { icon: "game", label: "Тоглоом" },
 ];
 
-function Sidebar({ active, user }) {
+function Sidebar({ active }) {
   return (
     <aside className="ss-side">
       <form action="/search" method="get" className="ss-search">
@@ -51,14 +51,6 @@ function Sidebar({ active, user }) {
         </span>
       </nav>
       <div className="ss-grow" />
-      {isStaff(user) && (
-        <div className="ss-staff">
-          <Link href="/review" className="ss-staff-btn"><img src="/icons/p_shield.svg" width={18} height={18} alt="" />Хяналт</Link>
-          {isAdmin(user) && (
-            <Link href="/admin" className="ss-staff-btn"><img src="/icons/p_crown.svg" width={18} height={18} alt="" />Редакц · Админ</Link>
-          )}
-        </div>
-      )}
       <ThemeToggle />
     </aside>
   );
@@ -124,7 +116,7 @@ async function RightRail({ user }) {
               <em className="ss-badge teal">{user.points.toLocaleString("en-US")} оч</em>
               {I("arrow", 14)}
             </Link>
-            {isStaff(user) && (
+            {canReview(user) && (
               <Link href="/review" className="ss-action">
                 {I("shield", 18)}<span>Хянах</span>
                 <em className="ss-badge gray">Түвшин {levelFor(user.points).n}</em>
@@ -132,7 +124,7 @@ async function RightRail({ user }) {
               </Link>
             )}
             {isAdmin(user) && (
-              <Link href="/admin" className="ss-action">{I("shield", 18)}<span>Админ боард</span>{I("arrow", 14)}</Link>
+              <Link href="/admin" className="ss-action">{I("crown", 18)}<span>Админ</span>{I("arrow", 14)}</Link>
             )}
             <form action={logout}>
               <button type="submit" className="ss-action ss-logout">
@@ -170,7 +162,7 @@ export default async function Shell({ user, active, children, header = true, com
   if (needsName(user)) redirect("/profile/edit");
   return (
     <div className="ss-shell">
-      <Sidebar active={active} user={user} />
+      <Sidebar active={active} />
       <main className="ss-main">
         {header && <Header user={user} compact={header === "nav"} compose={compose} composeError={composeError} />}
         {children}
