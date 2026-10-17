@@ -251,7 +251,8 @@ details.mod summary { cursor: pointer; }
   border-radius: 26px; background: var(--surface-2); color: var(--muted); font-weight: 500; font-size: 15px;
   text-decoration: none;
 }
-.ss-composer span { opacity: .7; }
+.ss-composer span:not(.ss-avatar) { opacity: .7; }
+.ss-composer .ss-avatar, .cp-ask-row .ss-avatar { flex-shrink: 0; }
 .ss-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #edf2f5; margin-top: 10px; }
 .ss-tabs a, .ss-tabs button {
   border: 0; background: none; cursor: pointer; font-family: inherit;
