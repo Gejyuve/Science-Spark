@@ -50,10 +50,11 @@ export function Stat({ points = 0, followers = 0, followed = false, link = true 
 }
 
 // Огноо эсвэл "3 цаг" — дүрстэй
-export function When({ d, size = 14, className = "ss-date" }) {
+export function When({ d, size = 14, className = "ss-date", align = "right" }) {
   const r = relTime(d);
+  const exact = new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).slice(0, 16).replaceAll("-", ".");
   return (
-    <span className={className} title={new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).slice(0, 16)}>
+    <span className={className + " tip" + (align === "left" ? " tip-l" : "")} data-tip={`Нийтлэгдсэн: ${exact}`} tabIndex={0}>
       <img className="ic" src={`/icons/${r.recent ? "f_clock" : "date16"}.svg`} width={size} height={size} alt="" />
       {r.text}
     </span>

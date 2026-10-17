@@ -170,7 +170,7 @@ export default async function PostPage({ params, searchParams }) {
 
         <article className="ar-card">
           <div className="ar-strip">
-            <When d={post.created_at} size={16} className="ar-when" />
+            <When d={post.created_at} size={16} className="ar-when" align="left" />
             <span className="ss-grow" />
             <span className="ar-views tip" data-tip={`Энэ контентыг ${views.toLocaleString("en-US")} хүн нээж үзсэн`} tabIndex={0}>
               <img className="ic" src="/icons/eye.svg" width={16} height={16} alt="Үзсэн" />{views.toLocaleString("en-US")}

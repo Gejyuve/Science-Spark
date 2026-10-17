@@ -1444,3 +1444,5 @@ a.ss-kind:hover { text-decoration: underline; }
 @media (max-width: 760px) {
   .nf-pop { position: fixed; left: 12px; right: 12px; top: 70px; width: auto; }
 }
+.tip.tip-l::after { right: auto; left: 0; }
+.ss-card.pc .tip { z-index: 2; }
