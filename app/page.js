@@ -26,7 +26,7 @@ export default async function Home({ searchParams }) {
   const following = tab === "following";
   let user = null;
   let posts = [];
-  let counts = { all: 0, following: 0, top: 0, qa: 0 };
+  let counts = { all: 0, following: 0, top: 0, qa: 0, ann: 0 };
   try {
     user = await getUser();
     await ensureSchema();
@@ -54,8 +54,8 @@ export default async function Home({ searchParams }) {
       WHERE p.status = 'published' AND p.kind <> 'Үг'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
-        -- Цагийн шүүлтүүр (санамсаргүй, зарлалд хамаарахгүй). Хандалт өндөр: тухайн хугацаанд оч авсан
-        AND (${rand || ann}::boolean OR (CASE WHEN ${top}::boolean
+        -- Цагийн шүүлтүүр (санамсаргүйд хамаарахгүй). Хамгийн тод: тухайн хугацаанд оч авсан
+        AND (${rand}::boolean OR (CASE WHEN ${top}::boolean
              THEN EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))
              ELSE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) END))
         AND (${!following || !user}::boolean OR p.author_id IN
@@ -75,7 +75,8 @@ export default async function Home({ searchParams }) {
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int))
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
         COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))))::int AS top,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa,
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Зарлал')::int AS ann
       FROM posts p WHERE p.status = 'published' AND p.kind <> 'Үг'`;
     counts = c;
   } catch (e) {
@@ -85,21 +86,17 @@ export default async function Home({ searchParams }) {
   const followSet = await followingSet(user);
   return (
     <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
-      {ann ? (
-        <div className="ss-feedtabs">
-          <span className="on">Зарлал · сүүлд орсноор</span>
-          <Link href="/">× Бүгдийг харах</Link>
-        </div>
-      ) : (
+      {(
         <nav className="ss-filters" aria-label="Шүүлтүүр">
           <div className="ss-fscroll">
             {[
               ["all", "", "Бүгд", counts.all],
               ["following", user ? "tab=following" : null, "Дагаж буй", user ? counts.following : null],
-              ["top", "f=top", "Хандалт өндөр", counts.top],
+              ["top", "f=top", "Хамгийн тод", counts.top],
               ["qa", "f=qa", "Хэн юу гэв?", counts.qa],
+              ["ann", "f=ann", "Гоё юм дуулгая", counts.ann],
             ].map(([k, q, label, n]) => {
-              const on = k === "all" ? !qa && !top && !rand && !following : k === "following" ? following && !!user : k === "top" ? top : qa;
+              const on = k === "all" ? !qa && !top && !rand && !ann && !following : k === "following" ? following && !!user : k === "top" ? top : k === "ann" ? ann : qa;
               const qs = q === null ? null : [q, tq].filter(Boolean).join("&");
               const href = qs === null ? "/login" : qs ? `/?${qs}` : "/";
               return (
@@ -115,7 +112,7 @@ export default async function Home({ searchParams }) {
           <TimeMenu
             label={period[1]}
             options={PERIODS.map(([v, name]) => {
-              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
+              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : ann ? "f=ann" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
               return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
             })}
           />
@@ -124,9 +121,7 @@ export default async function Home({ searchParams }) {
       {posts.length === 0 && (
         <div className="ss-card">
           <p className="ss-empty">
-            {ann
-              ? "Одоохондоо зарлал алга."
-              : hours && !rand && posts.length === 0 && (qa || top || following)
+            {hours && !rand && posts.length === 0 && (qa || top || following || ann)
               ? `Сонгосон хугацаанд (${period[1]}) энд контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
               : qa
               ? "Одоохондоо асуулт, бодрол алга. Эхнийхийг нь та асуугаарай ✦"
