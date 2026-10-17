@@ -31,8 +31,8 @@ export default async function TreePage() {
           <Link href="/news"><b>Бүх мэдээ</b><small>Архив →</small></Link>
         </div>
       </section>
-      <TreeList tree={tree} />
-      <TreeGraph tree={tree} />
+      <TreeList tree={tree} loggedIn={!!user} />
+      <TreeGraph tree={tree} loggedIn={!!user} />
     </Shell>
   );
 }

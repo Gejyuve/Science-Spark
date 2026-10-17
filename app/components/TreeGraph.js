@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import CatTools from "./CatTools";
 
 const COL = 260; // түвшин хоорондын зай
 const ROW = 44; // навч хоорондын зай
@@ -14,7 +15,7 @@ function layout(tree, open) {
   const links = [];
   let leaf = 0;
   (function place(n, depth, parent) {
-    const node = { path: n.path, name: n.name, n: n.n, depth, has: n.kids.length > 0, open: open.has(n.path), x: depth * COL };
+    const node = { path: n.path, name: n.name, en: n.en, n: n.n, depth, has: n.kids.length > 0, open: open.has(n.path), x: depth * COL };
     nodes.push(node);
     if (parent) links.push({ from: parent, to: node });
     if (node.has && node.open) {
@@ -32,7 +33,7 @@ function layout(tree, open) {
 }
 
 // Figma 86:17 · Шинжлэх ухааны мод: салаа дээр дарж задлах, нэр дээр дарж салбарын хуудас нээх
-export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"], focus = null }) {
+export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"], focus = null, loggedIn = false }) {
   const router = useRouter();
   const box = useRef(null);
   const drag = useRef(null);
@@ -40,6 +41,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   const [sel, setSel] = useState(focus);
   const [view, setView] = useState({ x: 40, y: 40, k: 1 });
   const [full, setFull] = useState(false);
+  const [hover, setHover] = useState(null); // англи нэрийн тайлбар
   // Бүтэн дэлгэц: Esc дарж гарна, хуудас гүйхгүй
   useEffect(() => {
     if (!full) return;
@@ -83,7 +85,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   };
 
   const onDown = (e) => {
-    if (e.button !== 0 || e.target.closest("[data-node], .tg-zoom, button, a")) return;
+    if (e.button !== 0 || e.target.closest("[data-node], .tg-zoom, .tg-tools, button, a")) return;
     drag.current = { x: e.clientX, y: e.clientY, v: view };
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
@@ -120,19 +122,24 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
               const hollow = n.open || !n.path;
               const on = sel === n.path;
               return (
-                <g key={n.path || "root"} className={"tg-node" + (on ? " on" : "")} style={{ transform: `translate(${n.x}px, ${n.y}px)` }} data-node>
+                <g key={n.path || "root"} className={"tg-node" + (on ? " on" : "")} style={{ transform: `translate(${n.x}px, ${n.y}px)` }} data-node
+                  onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover((h) => (h === n ? null : h))}>
                   <text className="tg-label" y={-15} textAnchor="middle" onClick={() => router.push(n.path ? `/tree/${n.path}` : "/tree")}>
                     {n.name} ({fmt(n.n)})
                   </text>
-                  <circle r={9} className={hollow ? "hollow" : n.has ? "full" : "leaf"} onClick={() => toggle(n)}>
-                    <title>{n.has ? (n.open ? "Хураах" : "Дэлгэх") : n.name}</title>
-                  </circle>
+                  <circle r={9} className={hollow ? "hollow" : n.has ? "full" : "leaf"} onClick={() => toggle(n)} />
                   {n.has && !n.open && <text className="tg-plus" y={3.5} textAnchor="middle" onClick={() => toggle(n)}>+</text>}
                 </g>
               );
             })}
           </g>
         </svg>
+        {hover && hover.en && (
+          <span className="tg-tip" style={{ left: view.x + hover.x * view.k, top: view.y + hover.y * view.k - 15 * view.k - 12 }}>
+            {hover.en}
+          </span>
+        )}
+        <div className="tg-tools" data-node><CatTools tree={tree} loggedIn={loggedIn} compact /></div>
         <div className="tg-zoom">
           <button type="button" onClick={() => zoom(1.2)} aria-label="Томруулах">+</button>
           <button type="button" onClick={() => zoom(1 / 1.2)} aria-label="Жижигрүүлэх">−</button>

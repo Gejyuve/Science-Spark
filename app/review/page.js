@@ -6,6 +6,8 @@ import { fmtDate } from "@/lib/format";
 import { examState, MAX_FAILS, PASS_SCORE } from "@/lib/exam";
 import Head, { Stat, Tabs, Chip, Flash, who } from "../admin/_c/Head";
 import { TERM_KIND, canApproveWords, daysLeft, SUPPORT_NEEDED } from "@/lib/terms";
+import { crumbs } from "@/lib/tree";
+import { decideCategory, resolveCategoryReport } from "../tree/actions";
 
 const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент", "Зарлал"] };
 
@@ -19,7 +21,7 @@ export default async function ReviewHome({ searchParams }) {
 // Хянагчийн хяналтын жагсаалт (Figma 628:1121, 628:1294)
 async function Queue({ user, sp }) {
   const words = canApproveWords(user);
-  const t = sp.t === "words" ? "words" : !isStaff(user) ? "words" : sp.t === "events" ? "events" : "posts";
+  const t = sp.t === "words" ? "words" : !isStaff(user) ? "words" : sp.t === "cats" ? "cats" : sp.t === "events" ? "events" : "posts";
   const kinds = GROUPS[t] || [];
   const rows = await sql`
     SELECT p.id, p.kind, p.title, p.created_at, p.author_id, u.initial, u.first_name, u.email, u.account_type
@@ -31,6 +33,7 @@ async function Queue({ user, sp }) {
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.posts}))::int AS posts,
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.events}))::int AS events,
       (SELECT COUNT(*) FROM posts WHERE status = 'discussion' AND kind = ${TERM_KIND})::int AS words,
+      ((SELECT COUNT(*) FROM category_requests WHERE status = 'pending') + (SELECT COUNT(*) FROM category_reports WHERE status = 'open'))::int AS cats,
       (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND reviewed_at > date_trunc('day', now()))::int AS today,
       (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND status IN ('published','approved','rejected'))::int AS total,
       (SELECT COALESCE(ROUND(AVG(EXTRACT(EPOCH FROM reviewed_at - created_at)) / 360) / 10, 0)
@@ -47,8 +50,8 @@ async function Queue({ user, sp }) {
         <Stat label="Нийт хянасан" value={s.total} />
       </div>
       <Tabs cur={t === "posts" ? "" : t} href={(k) => (k ? `/review?t=${k}` : "/review")}
-        tabs={[...(isStaff(user) ? [["", "Нийтлэл, мэдээ", s.posts], ["events", "Эвент, зарлал", s.events]] : []), ["words", "Шинэ үг", s.words]]} />
-      {t === "words" ? <Words user={user} can={words} /> : (
+        tabs={[...(isStaff(user) ? [["", "Нийтлэл, мэдээ", s.posts], ["events", "Эвент, зарлал", s.events]] : []), ["words", "Шинэ үг", s.words], ...(isStaff(user) ? [["cats", "Ангилал", s.cats]] : [])]} />
+      {t === "cats" ? <Cats /> : t === "words" ? <Words user={user} can={words} /> : (
       <section className="adm-card flush">
         <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : "Эвент, зарлал"} ({rows.length})</b></div>
         {rows.length === 0 ? (
@@ -129,6 +132,67 @@ async function Words({ user, can }) {
         Шинэ үгийг Түвшин 5+ хэрэглэгч ба редакц зөвшөөрнө. Хэлэлцүүлэгт {Math.round(SUPPORT_NEEDED * 100)}%-иас дээш дэмжлэг авсан, орчуулга, эх сурвалж нь зөв үгийг батлаарай. Батлагдвал нэмсэн хүнд +30 оч.
       </p>
     </section>
+  );
+}
+
+// Мод: ангиллын санал ба алдааны мэдэгдэл (редакц)
+async function Cats() {
+  const reqs = await sql`SELECT r.*, u.initial, u.first_name, u.email, u.account_type FROM category_requests r JOIN users u ON u.id = r.user_id
+                         WHERE r.status = 'pending' ORDER BY r.created_at ASC`;
+  const reps = await sql`SELECT r.*, u.initial, u.first_name, u.email, u.account_type FROM category_reports r JOIN users u ON u.id = r.user_id
+                         WHERE r.status = 'open' ORDER BY r.created_at ASC`;
+  const where = (p) => crumbs(p).map((c) => c.name).join(" › ") || "Шинжлэх ухаан";
+  return (
+    <>
+      <section className="adm-card flush">
+        <div className="adm-card-head pad"><b>Шинэ ангиллын санал ({reqs.length})</b></div>
+        {reqs.length === 0 ? <p className="adm-empty">Хүлээгдэж буй санал алга ✓</p> : reqs.map((r) => (
+          <form key={r.id} action={decideCategory} className="cq-item">
+            <input type="hidden" name="id" value={r.id} />
+            <input type="hidden" name="parent" value={r.parent} />
+            <p className="adm-muted small">{who(r)} · {fmtDate(r.created_at)} · Байрлал: <b>{where(r.parent)}</b></p>
+            <div className="cq-grid">
+              <label><span>Нэр</span><input name="name" defaultValue={r.name} maxLength={60} /></label>
+              <label><span>Англи нэр</span><input name="en" defaultValue={r.en} maxLength={80} /></label>
+            </div>
+            <p className="cq-note">{r.note}</p>
+            {r.examples && <p className="adm-muted small">Жишээ сэдэв: {r.examples}</p>}
+            {r.source && <p className="adm-muted small"><a href={r.source} target="_blank" rel="noopener noreferrer nofollow">{r.source}</a></p>}
+            <div className="cq-acts">
+              <input name="note" placeholder="Тайлбар (татгалзвал заавал)" maxLength={500} />
+              <button name="decision" value="decline" className="adm-btn danger">Татгалзах</button>
+              <button name="decision" value="approve" className="adm-btn teal">Батлаад нэмэх</button>
+            </div>
+          </form>
+        ))}
+      </section>
+      <section className="adm-card flush">
+        <div className="adm-card-head pad"><b>Ангиллын логик алдааны мэдэгдэл ({reps.length})</b></div>
+        {reps.length === 0 ? <p className="adm-empty">Нээлттэй мэдэгдэл алга ✓</p> : (
+          <table className="adm-table">
+            <thead><tr><th>Ангилал</th><th>Төрөл</th><th>Тайлбар</th><th>Илгээгч</th><th></th></tr></thead>
+            <tbody>
+              {reps.map((r) => (
+                <tr key={r.id}>
+                  <td className="adm-strong">{r.path ? where(r.path) : "—"}</td>
+                  <td><Chip tone="warn">{r.issue}</Chip></td>
+                  <td className="adm-clip">{r.body}</td>
+                  <td>{who(r)}</td>
+                  <td className="adm-right">
+                    <form action={resolveCategoryReport} className="adm-acts">
+                      <input type="hidden" name="id" value={r.id} />
+                      <button name="op" value="dismissed" className="adm-btn">Хаах</button>
+                      <button name="op" value="resolved" className="adm-btn teal">Зассан</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="adm-banner inset">Ангиллыг засах, зөөх, устгах шаардлагатай бол хөгжүүлэгчид мэдэгдэнэ. Шинэ ангиллыг энд батлахад Мод-нд шууд нэмэгдэнэ.</p>
+      </section>
+    </>
   );
 }
 
