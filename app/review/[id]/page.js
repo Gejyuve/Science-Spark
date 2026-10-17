@@ -38,16 +38,7 @@ export default async function ReviewPost({ params, searchParams }) {
   return (
     <form action={decidePost} className="rv-editor">
       <input type="hidden" name="post_id" value={p.id} />
-      <header className="rv-top">
-        <Link href="/review" className="rv-x" aria-label="Буцах">‹</Link>
-        <div>
-          <b>{p.title}</b>
-          <small>{p.kind} · Бичээч: {author} · Хянагч: {displayName(user)} · {editable ? "Хуулбар засвар (оригинал хадгалагдана)" : "Зөвхөн унших"}</small>
-        </div>
-        <span className="ss-grow" />
-        <button name="decision" value="reject" className="adm-btn danger-solid" formNoValidate>Бичээч рүү буцаах</button>
-        <button name="decision" value="approve" className="adm-btn teal">{editable ? "Зөвшөөрч бичээч рүү илгээх" : "Зөвшөөрч нийтлэх"}</button>
-      </header>
+      <Link href="/review" className="rv-backlink">← Хяналтын жагсаалт</Link>
       <Flash error={error} />
       <div className="rv-cols">
         <div className="rv-mainc">
@@ -117,6 +108,10 @@ export default async function ReviewPost({ params, searchParams }) {
               <b>Зөвшөөрөх:</b> {editable ? "таны засвартай хувилбар бичээч рүү очиж, бичээч өөрөө нийтэлнэ." : "контент шууд нийтлэгдэнэ."}
             </p>
           </section>
+          <div className="rv-decide">
+            <button name="decision" value="reject" className="adm-btn danger-solid big" formNoValidate>Бичээч рүү буцаах</button>
+            <button name="decision" value="approve" className="adm-btn teal big">{editable ? "Зөвшөөрч бичээч рүү илгээх" : "Зөвшөөрч нийтлэх"}</button>
+          </div>
         </aside>
       </div>
     </form>

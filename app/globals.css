@@ -1457,3 +1457,6 @@ a.ss-kind:hover { text-decoration: underline; }
 .pu-kind-menu a i { font-style: normal; color: #00a89b; font-weight: 700; }
 .pu-kind-menu a:hover { background: var(--surface-2); }
 .pu-kind-menu a.on { background: var(--teal-bg); font-weight: 700; }
+.rv-backlink { align-self: flex-start; color: var(--teal); font-size: 13px; font-weight: 600; text-decoration: none; }
+.rv-decide { display: flex; flex-direction: column; gap: 8px; position: sticky; bottom: 16px; padding: 12px; border-radius: 16px; background: var(--surface); box-shadow: 0 8px 24px rgba(18, 35, 46, .12); }
+.rv-decide .adm-btn { width: 100%; }
