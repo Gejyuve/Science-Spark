@@ -1186,3 +1186,5 @@ details.mod summary { cursor: pointer; }
 .ar-comment.reply { position: relative; }
 .ar-comment.reply > .ss-curve { left: -26px; top: -4px; width: 20px; height: 22px; }
 .ar-cdate { display: inline-flex; gap: 4px; align-items: center; }
+/* Харанхуй горимд тоо нь дүрстэйгээ ижил саарал */
+:root[data-theme="dark"] .ar-react:not(.teal), :root[data-theme="dark"] .ss-count { color: #aab6be; }
