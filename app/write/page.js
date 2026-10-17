@@ -9,7 +9,8 @@ export const metadata = { title: "Бичих · Science Spark" };
 export default async function WritePage({ searchParams }) {
   const user = await getUser();
   if (!user) redirect("/login");
-  const { error } = await searchParams;
+  const { error, kind } = await searchParams;
+  const initialKind = KINDS.includes(kind) ? kind : "Нийтлэл";
   return (
     <div className="auth-wrap">
       <form className="auth-card wide" action={createPost}>
@@ -17,7 +18,7 @@ export default async function WritePage({ searchParams }) {
         <p className="muted">Өөр хянагч батласны дараа бүгдэд харагдана.</p>
         {error && <p className="error">{error}</p>}
         <label>Төрөл
-          <select name="kind" defaultValue="Нийтлэл">
+          <select name="kind" defaultValue={initialKind}>
             {KINDS.map((k) => <option key={k}>{k}</option>)}
           </select>
         </label>

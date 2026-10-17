@@ -1,4 +1,7 @@
 import "./globals.css";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin", "cyrillic"], display: "swap", variable: "--font-inter" });
 
 export const metadata = {
   title: "Science Spark",
@@ -16,7 +19,7 @@ try {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="mn" suppressHydrationWarning>
+    <html lang="mn" className={inter.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
