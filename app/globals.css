@@ -1543,3 +1543,6 @@ a.ss-kind:hover { text-decoration: underline; }
 .ss-topbar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 18px; border-radius: 12px; background: #e6f7f5; border: 1px solid #c9eeea; color: #00796f; font-size: 14px; font-weight: 600; }
 .ss-topbar span { color: #00a89b; font-size: 15px; }
 :root[data-theme="dark"] .ss-topbar { background: rgba(0, 168, 155, .12); border-color: rgba(0, 168, 155, .3); color: #5ee6d0; }
+/* Нарийн дэлгэцэд картын зураг хүрээнээс гарахгүй */
+.evc-cover { aspect-ratio: auto; width: 100%; min-width: 0; min-height: 260px; }
+@media (max-width: 760px) { .evc-cover { aspect-ratio: 2 / 1; min-height: 0; } }
