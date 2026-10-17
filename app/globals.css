@@ -1088,13 +1088,13 @@ details.mod summary { cursor: pointer; }
 .ev-day.today { background: var(--teal-bg); outline: 1.5px solid #37c3b3; }
 .ev-num { font-size: 11px; font-weight: 600; color: var(--text); }
 .ev-day.today .ev-num { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #37c3b3; color: #fff; }
-.ev-chip { display: block; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 600; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ev-chip.blue { background: #e4edfd; color: #2f5fd0; }
-.ev-chip.purple { background: #eee7fd; color: #6a3fd6; }
-.ev-chip.orange { background: #fff0e0; color: #c2400d; }
-.ev-chip.teal { background: #e0f6f2; color: #00806f; }
-.ev-chip.green { background: #e3f6ec; color: #16794a; }
-.ev-chip.gray { background: var(--surface-3); color: var(--text); }
+.ev-chip { display: block; height: 18px; line-height: 18px; padding: 0 6px; border-radius: 6px; font-size: 10px; font-weight: 600; text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: hsl(var(--h) 80% 90%); color: hsl(var(--h) 65% 28%);
+  border-left: 3px solid hsl(var(--h) 65% 48%); }
+.ev-chip.cont { border-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -6px; }
+.ev-chip.more { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -6px; }
+.ev-chip:hover { background: hsl(var(--h) 80% 84%); }
+.ev-slot { display: block; height: 18px; }
 .ev-more { font-size: 10px; color: var(--muted); }
 .ev-bar { display: flex; align-items: center; gap: 10px; padding: 4px 2px 0; }
 .ev-bar b { font-size: 15px; color: var(--ink); }
@@ -1120,15 +1120,26 @@ details.mod summary { cursor: pointer; }
 .ev-cover small { font-size: 11px; opacity: .9; }
 .ev-addcal { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; color: var(--text); }
 .ev-addcal a { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--accent); color: var(--teal); font-weight: 600; text-decoration: none; }
-:root[data-theme="dark"] .ev-chip.blue { background: #1c2c4a; color: #8db1ff; }
-:root[data-theme="dark"] .ev-chip.purple { background: #2b2148; color: #b9a1ff; }
-:root[data-theme="dark"] .ev-chip.orange { background: #3a2a1c; color: #ffc48a; }
-:root[data-theme="dark"] .ev-chip.teal { background: #1d3e3a; color: #6fe0cf; }
-:root[data-theme="dark"] .ev-chip.green { background: #16352a; color: #6fd7a3; }
+:root[data-theme="dark"] .ev-chip { background: hsl(var(--h) 45% 22%); color: hsl(var(--h) 85% 80%); }
+:root[data-theme="dark"] .ev-chip:hover { background: hsl(var(--h) 45% 28%); }
+.ev-legend { padding: 14px 18px; }
+.ev-legend b { font-size: 13px; color: var(--ink); }
+.ev-legend ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
+.ev-legend li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
+.ev-legend i { flex: none; width: 10px; height: 10px; border-radius: 3px; background: hsl(var(--h) 65% 48%); }
+.ev-legend a { color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-legend small { margin-left: auto; flex: none; color: var(--muted); font-size: 11px; }
+.cp-dt { flex: none; font-size: 12px; font-weight: 600; color: var(--muted); }
 @media (max-width: 760px) {
   .ev-months { grid-template-columns: repeat(7, 72px); overflow-x: auto; }
   .ev-day { min-height: 54px; padding: 4px; }
-  .ev-chip { font-size: 0; padding: 0; height: 6px; border-radius: 3px; }
+  .ev-chip { font-size: 0; padding: 0; height: 6px; line-height: 6px; border-left: 0; }
+  .ev-chip.cont { margin-left: -4px; }
+  .ev-chip.more { margin-right: -4px; }
+  .ev-slot { height: 6px; }
+  .ev-legend ul { grid-template-columns: minmax(0, 1fr); }
+  .ev-legend li { flex-wrap: wrap; }
+  .ev-legend small { margin-left: 18px; width: 100%; }
   .ev-card { grid-template-columns: minmax(0, 1fr); }
   .ev-cover-link { order: -1; }
   .ev-cover { aspect-ratio: 2 / 1; }

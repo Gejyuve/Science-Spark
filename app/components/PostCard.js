@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
+import { fmtEventRange } from "@/lib/events";
 import { Avatar, Stat } from "./Bits";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
@@ -8,7 +9,7 @@ export default function PostCard({ p }) {
   const isShort = isQuestion || p.kind === "Бодрол";
   const m = p.meta || {};
   const facts = p.kind === "Эвент"
-    ? [m.starts_at && ["f_date", m.starts_at.replace("T", " ")], m.format && ["f_globe", m.format], m.location && ["f_pin", m.location], m.price && ["f_ticket", m.price]]
+    ? [m.starts_at && ["f_date", fmtEventRange(m)], m.format && ["f_globe", m.format], m.location && ["f_pin", m.location], m.price && ["f_ticket", m.price]]
     : p.kind === "Зарлал"
     ? [m.valid_until && ["f_date", `Хүчинтэй: ${m.valid_until}`], m.contact && ["f_phone", m.contact]]
     : [];

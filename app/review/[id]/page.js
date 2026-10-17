@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 import { getUser, isStaff, displayName } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
+import { fmtEventRange } from "@/lib/events";
 import { decidePost } from "../actions";
 import { Flash, Chip } from "../../admin/_c/Head";
 
@@ -31,7 +32,7 @@ export default async function ReviewPost({ params, searchParams }) {
   const author = p.first_name ? `${p.initial}.${p.first_name}` : p.email;
   const m = p.meta || {};
   const facts = p.kind === "Эвент"
-    ? [["Огноо, цаг", m.starts_at?.replace("T", " ")], ["Төрөл", m.type], ["Хэлбэр", m.format], ["Байршил", m.location], ["Үргэлжлэх хугацаа", m.duration], ["Тасалбар", m.price], ["Багтаамж", m.capacity], ["Холбоос", m.link]]
+    ? [["Огноо, цаг", m.starts_at && fmtEventRange(m)], ["Төрөл", m.type], ["Хэлбэр", m.format], ["Байршил", m.location], ["Үргэлжлэх хугацаа", m.duration], ["Тасалбар", m.price], ["Багтаамж", m.capacity], ["Холбоос", m.link]]
     : [["Хүчинтэй хугацаа", m.valid_until], ["Холбоо барих", m.contact], ["Эх сурвалж", m.source]];
 
   return (

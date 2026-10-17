@@ -55,6 +55,7 @@ const Req = () => <i className="cp-req">*</i>;
 
 export default function Composer({ loggedIn, initial, error }) {
   const [mode, setMode] = useState(initial || null);
+  const [start, setStart] = useState("");
   const toggle = (m) => setMode((cur) => (cur === m ? null : m));
   const shareModes = ["share", "Бодрол", "Эвент", "Зарлал"];
 
@@ -112,7 +113,8 @@ export default function Composer({ loggedIn, initial, error }) {
             </select>
             <Ic n="f_chev" />
           </Field>
-          <Field icon="f_date"><input name="starts_at" type="datetime-local" required aria-label="Огноо ба эхлэх цаг *" /></Field>
+          <Field icon="f_date"><span className="cp-dt">Эхлэх *</span><input name="starts_at" type="datetime-local" required aria-label="Эхлэх огноо, цаг *" onChange={(e) => setStart(e.target.value)} /></Field>
+          <Field icon="f_clock"><span className="cp-dt">Дуусах *</span><input name="ends_at" type="datetime-local" required min={start || undefined} aria-label="Дуусах огноо, цаг *" /></Field>
           <Field icon="f_globe">
             <select name="format" required defaultValue="">
               <option value="" disabled>Хэлбэр: Онлайн / Танхим / Хосолсон *</option>
@@ -121,7 +123,7 @@ export default function Composer({ loggedIn, initial, error }) {
             <Ic n="f_chev" />
           </Field>
           <Field icon="f_pin"><input name="location" required maxLength={200} placeholder="Байршил (хаяг эсвэл онлайн холбоос) *" /></Field>
-          <Field icon="f_clock"><input name="duration" required maxLength={60} placeholder="Үргэлжлэх хугацаа (жишээ: 1 цаг 30 минут) *" /></Field>
+
           <Field icon="f_ticket"><input name="price" required maxLength={60} placeholder="Тасалбарын үнэ (₮ эсвэл үнэгүй) *" /></Field>
           <Field icon="f_people"><input name="capacity" inputMode="numeric" maxLength={10} placeholder="Бүртгэх хүний хязгаар (заавал биш)" /></Field>
         </div>

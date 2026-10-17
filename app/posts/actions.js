@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
+import { validLocal, toMin, spanText } from "@/lib/events";
 import { audit } from "@/lib/admin";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT } from "@/lib/format";
 
@@ -232,15 +233,20 @@ export async function quickPost(formData) {
       starts_at: t("starts_at", 20) || null,
       format: EVENT_FORMATS.includes(formData.get("format")) ? formData.get("format") : null,
       location: t("location", 200) || null,
-      duration: t("duration", 60) || null,
+      ends_at: t("ends_at", 20) || null,
       price: t("price", 60) || null,
       capacity: t("capacity", 10) || null,
       register: t("register", 500) || null,
       link: url(t("link", 300)),
     };
-    if (!title || !body || !meta.type || !meta.starts_at || !meta.format || !meta.location || !meta.duration || !meta.price || !meta.register) {
+    if (!title || !body || !meta.type || !meta.starts_at || !meta.ends_at || !meta.format || !meta.location || !meta.price || !meta.register) {
       fail("Одтой (*) бүх талбарыг бөглөнө үү");
     }
+    if (!validLocal(meta.starts_at) || !validLocal(meta.ends_at)) fail("Эхлэх, дуусах огноо цагийг зөв оруулна уу");
+    const span = toMin(meta.ends_at) - toMin(meta.starts_at);
+    if (span <= 0) fail("Дуусах цаг эхлэх цагаас хойш байх ёстой");
+    if (span > 60 * 1440) fail("Эвент 60 хоногоос урт байж болохгүй");
+    meta.duration = spanText(meta.starts_at, meta.ends_at);
   } else {
     title = t("title", 200);
     body = t("body", 500);

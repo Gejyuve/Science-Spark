@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { googleCalUrl } from "@/lib/events";
+import { googleCalUrl, fmtEventRange, spanText, validLocal } from "@/lib/events";
 import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
@@ -13,8 +13,8 @@ export const dynamic = "force-dynamic";
 // Эвент, зарлал, бодролын нэмэлт мэдээлэл
 function MetaBlock({ kind, m }) {
   const rows = kind === "Эвент"
-    ? [["f_tag", "Төрөл", m.type], ["f_date", "Огноо, цаг", m.starts_at && m.starts_at.replace("T", " ")], ["f_globe", "Хэлбэр", m.format],
-       ["f_pin", "Байршил", m.location], ["f_clock", "Үргэлжлэх хугацаа", m.duration], ["f_ticket", "Тасалбар", m.price],
+    ? [["f_tag", "Төрөл", m.type], ["f_date", "Огноо, цаг", m.starts_at && fmtEventRange(m)], ["f_globe", "Хэлбэр", m.format],
+       ["f_pin", "Байршил", m.location], ["f_clock", "Үргэлжлэх хугацаа", validLocal(m.starts_at) && validLocal(m.ends_at) ? spanText(m.starts_at, m.ends_at) : m.duration], ["f_ticket", "Тасалбар", m.price],
        ["f_people", "Хүний хязгаар", m.capacity], ["f_text", "Бүртгүүлэх заавар", m.register]]
     : kind === "Зарлал"
     ? [["f_date", "Хүчинтэй хугацаа", m.valid_until], ["f_phone", "Холбоо барих", m.contact]]
