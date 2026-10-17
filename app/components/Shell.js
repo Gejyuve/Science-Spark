@@ -74,7 +74,7 @@ function Header({ user, compact, compose, composeError, active }) {
         <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
         <span className="ss-round soon" title="Тун удахгүй">{I("club", 24)}</span>
       </div>
-      {!compact && <Composer loggedIn={!!user} initial={compose} error={composeError} />}
+      {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} />}
     </header>
   );
 }

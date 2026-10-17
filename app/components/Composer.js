@@ -84,7 +84,7 @@ function Head({ icon, title, right }) {
 
 const Req = () => <i className="cp-req">*</i>;
 
-export default function Composer({ loggedIn, initial, error }) {
+export default function Composer({ loggedIn, me, initial, error }) {
   const [mode, setMode] = useState(initial || null);
   const [start, setStart] = useState({ full: "", date: "" });
   const [now, setNow] = useState({ date: "", time: "" });
@@ -98,7 +98,7 @@ export default function Composer({ loggedIn, initial, error }) {
       <form action={quickPost} className="cp-panel cp-ask">
         <input type="hidden" name="kind" value="Асуулт" />
         <div className="cp-ask-row">
-          <img src="/icons/person.svg" width={32} height={32} alt="" />
+          {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}
           <Counted name="body" max={300} rows={3} required latinCheck placeholder="Хариултаас илүү асуултаар нь хүнийг амархан таньж болно.   -Voltaire" />
         </div>
         <div className="cp-actions"><span className="ss-grow" /><button type="submit" className="cp-btn">Асуух</button></div>
@@ -217,7 +217,7 @@ export default function Composer({ loggedIn, initial, error }) {
       {error && <p className="error cp-error">{error}</p>}
       {panel || (
         <Link href={loggedIn ? "/write" : "/login"} className="ss-composer">
-          <img src="/icons/person.svg" width={32} height={32} alt="" />
+          {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}
           <span>{loggedIn ? "Өнөөдөр ямар оч асаах гэж байна даа?" : "Нийтлэл бичихийн тулд нэвтэрнэ үү"}</span>
         </Link>
       )}
