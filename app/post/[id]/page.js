@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { googleCalUrl, fmtEventRange, spanText, validLocal } from "@/lib/events";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import crypto from "node:crypto";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
@@ -106,6 +108,20 @@ export default async function PostPage({ params, searchParams }) {
   const post = posts[0];
   const isAuthor = !!user && user.id === post.author_id;
   const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
+  // Үзсэн хүний тоо: нийтлэгдсэн контентыг зохиогчоос бусад хүн анх нээхэд +1
+  let views = post.views || 0;
+  if (post.status === "published" && !isAuthor) {
+    try {
+      let viewer = user ? `u:${user.id}` : null;
+      if (!viewer) {
+        const h = await headers();
+        const ip = (h.get("x-forwarded-for") || "").split(",")[0].trim() || h.get("x-real-ip") || "";
+        viewer = "a:" + crypto.createHash("sha256").update(ip + "|" + (h.get("user-agent") || "")).digest("hex").slice(0, 32);
+      }
+      const ins = await sql`INSERT INTO post_views (post_id, viewer) VALUES (${post.id}, ${viewer}) ON CONFLICT DO NOTHING RETURNING 1`;
+      if (ins.length) views = (await sql`UPDATE posts SET views = views + 1 WHERE id = ${post.id} RETURNING views`)[0].views;
+    } catch (e) {}
+  }
   const isQ = post.kind === "Асуулт";
   const published = post.status === "published";
   if (!published && !isAuthor && !isStaff(user)) notFound();
@@ -154,8 +170,11 @@ export default async function PostPage({ params, searchParams }) {
 
         <article className="ar-card">
           <div className="ar-strip">
-            <span className="ss-grow" />
             <When d={post.created_at} size={16} className="ar-when" />
+            <span className="ss-grow" />
+            <span className="ar-views tip" data-tip={`Энэ контентыг ${views.toLocaleString("en-US")} хүн нээж үзсэн`} tabIndex={0}>
+              <img className="ic" src="/icons/eye.svg" width={16} height={16} alt="Үзсэн" />{views.toLocaleString("en-US")}
+            </span>
           </div>
 
           <div className="ar-content">

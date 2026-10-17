@@ -1346,3 +1346,13 @@ a.och-brow:hover { background: var(--surface-2); }
 .pc-link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
 .ss-card.pc a:not(.pc-link), .ss-card.pc button, .ss-card.pc form, .ss-card.pc .sh-wrap { position: relative; z-index: 2; }
 .ss-card.pc:hover { box-shadow: 0 0 0 1px var(--accent) inset, var(--card-shadow); }
+/* Үзсэн тоо + тайлбар (hover) */
+.ar-views { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-weight: 500; font-size: 13px; cursor: default; }
+.tip { position: relative; }
+.tip::after {
+  content: attr(data-tip); position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; white-space: nowrap;
+  padding: 6px 10px; border-radius: 8px; background: #12232e; color: #fff; font-size: 12px; font-weight: 500;
+  opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .15s, transform .15s;
+}
+.tip:hover::after, .tip:focus-visible::after { opacity: 1; transform: none; }
+:root[data-theme="dark"] .tip::after { background: #e4e7ea; color: #12232e; }
