@@ -268,8 +268,8 @@ export default async function PostPage({ params, searchParams }) {
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && (
-                <span className="ar-gift soon" title="Оч хандивлах · тун удахгүй">
-                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Оч хандивлах
+                <span className="ar-gift soon" title="Шагнах · тун удахгүй">
+                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Шагнах
                 </span>
               )}
               <span className="ar-right">
