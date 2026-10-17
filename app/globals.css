@@ -399,6 +399,7 @@ details.mod summary { cursor: pointer; }
 .au-field input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-family: inherit; font-size: 15px; color: var(--ink); }
 .au-field input::placeholder { color: #98aab5; }
 .au-row { width: 100%; display: flex; gap: 12px; }
+.au-row .au-field { width: auto; flex: 1; min-width: 0; }
 .au-row .au-field:first-child { flex: 0 0 110px; }
 .au-types { width: 100%; display: flex; gap: 12px; }
 .au-type {
