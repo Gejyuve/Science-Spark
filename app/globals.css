@@ -2082,6 +2082,12 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 @media (max-width: 720px) { .tr-en { display: none; } .cq-grid { grid-template-columns: 1fr; } .cq-acts { flex-wrap: wrap; } }
 .tr-name { flex-shrink: 0; }
 .tr-en { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Утсан дээр англи нэр нуугдана: монгол нэрийг таслахгүй, багтахгүй бол дараагийн мөрөнд шилжүүлнэ */
+@media (max-width: 720px) {
+  .tr-name { flex-shrink: 1; min-width: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: 15px; }
+  .tr-tog { height: auto; min-height: 46px; gap: 8px; padding: 6px 8px; }
+  .tr-row { gap: 4px; }
+}
 
 /* ===== Баялаг засварлагч ба нийтлэлийн тэмдэглэгээ ===== */
 .re { display: flex; flex-direction: column; gap: 10px; }
@@ -2321,6 +2327,14 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cm-tools { position: absolute; right: 24px; top: 64px; display: flex; flex-direction: column; gap: 6px; }
 .cm-tools button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid rgba(91, 240, 220, .28); border-radius: 10px; background: rgba(11, 42, 47, .85); color: #cffaf3; font-size: 18px; line-height: 1; cursor: pointer; }
 .cm-tools button:hover { background: rgba(20, 70, 76, .95); color: #fff; }
+/* Утсан дээр гарчиг ба «N клуб · N аймаг» давхцахгүй: тоог гарчгийн доор, баруун талын товчнуудаас зайтай */
+@media (max-width: 720px) {
+  .cm-head { left: 16px; right: 64px; top: 16px; }
+  .cm-head h1 { font-size: 19px; }
+  .cm-legend { left: 16px; right: auto; top: 86px; height: 28px; padding: 0 12px; font-size: 12px; }
+  .cm-tools { right: 16px; top: 16px; }
+  .cm-hint { left: 16px; bottom: 16px; max-width: calc(100% - 32px); }
+}
 .cm-pin { position: relative; width: 44px; height: 44px; padding: 0; background: none; border: 0; border-radius: 50%; cursor: pointer; }
 .cm-pin img { position: relative; display: block; width: 44px; height: 44px; transition: transform .2s; }
 .cm-pin:hover img { transform: scale(1.1); }
