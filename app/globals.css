@@ -1339,9 +1339,17 @@ a.och-brow:hover { background: var(--surface-2); }
   .och-lrow { grid-template-columns: 36px minmax(0, 1fr) auto; }
   .och-lrow .och-num { display: none; }
   .och-perk { grid-column: 2 / -1; }
-  .och-brow { grid-template-columns: 28px minmax(0, 1fr) 70px 64px; }
+  .och-brow { grid-template-columns: 18px minmax(0, 1fr) auto auto; gap: 8px; padding: 9px 10px; font-size: 12.5px; }
+  .och-brow.head { font-size: 10px; }
   .och-brow > span:nth-child(3) { display: none; }
+  .och-who { gap: 7px; }
+  .och-who .ss-avatar, .och-who img { width: 24px !important; height: 24px !important; font-size: 11px !important; }
+  .och-tabs { gap: 6px; }
+  .och-tabs a { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
 }
+.och-short { display: none; }
+.och-brow i { font-style: normal; }
+@media (max-width: 760px) { .och-long { display: none; } .och-short { display: inline; } }
 /* Картын сул хэсэг дээр дарахад контент руу очно */
 .ss-card.pc { position: relative; cursor: pointer; }
 .pc-link { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }

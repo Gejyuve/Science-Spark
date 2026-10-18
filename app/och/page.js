@@ -81,7 +81,7 @@ export default async function Och({ searchParams }) {
           {PERIODS.map(([k, l]) => <Link key={k} href={`/och?p=${k}`} className={period[0] === k ? "on" : ""}>{l}</Link>)}
         </div>
         <div className="och-board">
-          <div className="och-brow head"><span>№</span><span>Хэрэглэгч</span><span>Түвшин</span><span>{period[0] === "all" ? "Олсон" : period[1]}</span><span>Данс</span></div>
+          <div className="och-brow head"><span>№</span><span>Хэрэглэгч</span><span>Түвшин</span><span><i className="och-long">{period[0] === "all" ? "Олсон" : period[1]}</i><i className="och-short">Олсон</i></span><span>Данс</span></div>
           {top.length === 0 && <p className="ss-empty">Одоохондоо мэдээлэл алга.</p>}
           {top.map((t, i) => {
             const l = levelFor(t.total);
