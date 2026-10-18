@@ -2586,6 +2586,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ss-side .ss-projects { display: inline-flex; }
   .ss-side > .ss-grow, .ss-side > .theme-toggle { display: none; }
   .ss-dhead .theme-toggle { display: inline-flex; margin: 0; }
+  .ss-dhead .ss-grow { display: block; flex: 1; }
 }
 @media (max-width: 360px) {
   .ss-topnav.has-drawers .ss-round { width: 31px; height: 31px; }
