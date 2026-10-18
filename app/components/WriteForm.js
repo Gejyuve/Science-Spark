@@ -85,7 +85,6 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
           <b>{heading}</b>
         </div>
         <WriteSteps />
-        <p className="wr-note">Дараагийн алхамд нийтлэлээ урьдчилж хараад редакц руу илгээнэ. Илгээсэн нийтлэл өөр хянагчийн шалгалтаар орж, батлагдсаны дараа нийтлэгдэнэ.</p>
         {restored && (
           <p className="wr-restored">
             <span>↺ Өмнө бичиж байсан ноорог тань сэргээгдлээ ({t(restored)}).</span>
