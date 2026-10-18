@@ -35,6 +35,12 @@ const SOON = [
 ];
 const PERIODS = [["week", "Энэ долоо хоног", "7 days"], ["month", "Энэ сар", "30 days"], ["all", "Бүх цаг", null]];
 
+// Том тоо утсан дээр товчлогдоно (12.3K)
+function Num({ v, plus }) {
+  const p = plus && v > 0 ? "+" : "";
+  return <><i className="och-long">{p}{n(v)}</i><i className="och-short">{p}{fmtK(v)}</i></>;
+}
+
 function LevelIcon({ l, size = 36 }) {
   if (!l.n) return <span className="och-lv" style={{ "--c": l.color, width: size, height: size }}>·</span>;
   return <img className="och-lvi" src={`/icons/lv${l.n}.svg`} width={size} height={size} alt={`Түвшин ${l.n} · ${l.name}`} style={{ "--c": l.color }} />;
@@ -90,8 +96,8 @@ export default async function Och({ searchParams }) {
                 <span>{i + 1}</span>
                 <span className="och-who"><Avatar user={t} size={28} /><b>{t.initial}.{t.first_name}</b></span>
                 <span className="och-lvl"><LevelIcon l={l} size={22} /><span className="och-chip" style={{ "--c": l.color }}>{l.name}</span></span>
-                <span className="och-plus">{t.gained > 0 ? "+" : ""}{n(t.gained)}</span>
-                <span>{n(t.total)}</span>
+                <span className="och-plus"><Num v={t.gained} plus /></span>
+                <span><Num v={t.total} /></span>
               </Link>
             );
           })}
@@ -102,8 +108,8 @@ export default async function Och({ searchParams }) {
                 <span>{me.rank}</span>
                 <span className="och-who"><Avatar user={user} size={28} /><b>{user.initial}.{user.first_name} (та)</b></span>
                 <span className="och-lvl"><LevelIcon l={lv} size={22} /><span className="och-chip" style={{ "--c": lv.color }}>{lv.name}</span></span>
-                <span className="och-plus">{me.gained > 0 ? "+" : ""}{n(me.gained)}</span>
-                <span>{n(me.total)}</span>
+                <span className="och-plus"><Num v={me.gained} plus /></span>
+                <span><Num v={me.total} /></span>
               </div>
             </>
           )}
