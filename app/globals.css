@@ -2229,7 +2229,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .md-fig img { aspect-ratio: 16 / 9; height: auto; object-fit: contain; background: var(--surface-2); }
 .re-drop img { aspect-ratio: 16 / 9; width: 100%; max-height: none; object-fit: contain; }
 /* Бүтэц: засварлагч */
-.re-main { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 12px; align-items: start; }
+.re-main { display: block; }
 .re-main.pv { display: block; }
 .re-outline { position: sticky; top: 70px; display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow: auto; padding: 12px 10px 12px 14px; border-left: 3px solid #b9e6df; }
 .re-outline b { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
