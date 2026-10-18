@@ -14,7 +14,8 @@ import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat, Person, followingSet } from "./Bits";
 import { ClubPerson } from "./ClubBits";
-import { hotClubs, clubFollowSet } from "@/lib/clubs";
+import { hotClubs, clubFollowSet, membershipOf } from "@/lib/clubs";
+import { chatUnread } from "@/lib/chat";
 
 const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
@@ -81,6 +82,8 @@ async function RightRail({ user }) {
   let notifs = [];
   let clubs = [];
   let clubFollows = new Set();
+  let myClub = null;
+  let chatNew = 0;
   const following = await followingSet(user);
   try {
     top = await sql`
@@ -95,6 +98,8 @@ async function RightRail({ user }) {
       followers = (await sql`SELECT COUNT(*)::int AS n FROM follows WHERE followee_id = ${user.id}`)[0].n;
       unread = await unreadCount(user.id);
       notifs = await listNotifications(user.id, { limit: 8 });
+      myClub = await membershipOf(user.id);
+      chatNew = myClub ? await chatUnread(user.id, myClub.club_id) : 0;
     }
   } catch (e) {}
 
@@ -123,6 +128,11 @@ async function RightRail({ user }) {
               <NotifList items={notifs} empty="Одоохондоо мэдэгдэл алга." />
               <Link href="/notifications" className="nf-all">Бүх мэдэгдлийг харах</Link>
             </NotifMenu>
+            {myClub && (
+              <Link href={`/club/${myClub.club_id}?tab=chat`} className="ss-action" title={`${myClub.name} · Клубын чат`}>
+                {I("comment18", 18)}<span>Клубын чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
+              </Link>
+            )}
             <Link href={`/u/${user.id}`} className="ss-action">
               {I("wallet", 18)}<span>Данс</span>
               <em className="ss-badge teal">{user.points.toLocaleString("en-US")} оч</em>
