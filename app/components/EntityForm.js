@@ -332,8 +332,8 @@ function fromDraft(e, d) {
   if ("fy" in d) { x._fy = d.fy; x._fm = d.fm; x._fd = d.fd; }
   if ("location" in d) x._loc = d.location;
   const num = (v) => (v ? Number(v) : null);
-  if ("logo" in d) x.logo_id = num(d.logo);
-  if ("cover" in d) { x.cover_id = num(d.cover); x.cover_src = num(d.cover_src); x.cover_pos = d.cover_pos || null; }
+  if (d.logo) x.logo_id = num(d.logo);
+  if (d.cover) { x.cover_id = num(d.cover); x.cover_src = num(d.cover_src); x.cover_pos = d.cover_pos || null; }
   try { if (d.board_json) x._board = JSON.parse(d.board_json); } catch (er) {}
   return x;
 }
