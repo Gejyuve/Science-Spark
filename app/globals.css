@@ -2657,3 +2657,20 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ss-topnav.has-drawers .ss-round { width: 31px; height: 31px; }
   .ss-topnav .ss-logo, .ss-topnav .ss-logo img { width: 42px; }
 }
+
+/* ===== Дээд цэс: логоны 2 талд ээлжилж солигдох товчууд (NavSpin) ===== */
+.ss-spin-slot { display: grid; place-items: center; }
+.ss-spin { animation: ss-spin-in .5s cubic-bezier(.34, 1.56, .64, 1) backwards; transition: transform .2s ease, border-color .2s; }
+.ss-spin.out { animation: ss-spin-out .26s ease-in forwards; pointer-events: none; }
+.ss-spin:not(.out):hover { transform: translateY(-2px); }
+@keyframes ss-spin-out {
+  to { transform: scale(.4) rotate(-25deg); opacity: 0; }
+}
+@keyframes ss-spin-in {
+  0% { transform: scale(.4) rotate(25deg); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ss-spin { animation: none; transition: none; }
+}
