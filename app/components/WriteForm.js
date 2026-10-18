@@ -156,7 +156,6 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
       </section>
     </form>
     <aside className="wr-side right">
-      <div id="wr-stats-slot" />
       {savedAt && <p className="wo-saved">✓ Ноорог хадгалагдсан · {t(savedAt)}</p>}
     </aside>
     </div>

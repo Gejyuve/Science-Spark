@@ -76,7 +76,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
   const minutes = Math.max(1, Math.round(words / 180));
   const heads = outline(text);
   const [slots, setSlots] = useState({});
-  useEffect(() => setSlots({ outline: document.getElementById("wr-outline-slot"), stats: document.getElementById("wr-stats-slot") }), []);
+  useEffect(() => setSlots({ outline: document.getElementById("wr-outline-slot") }), []);
   const [, force] = useState(0);
   useEffect(() => {
     const t = document.querySelector('[name="title"]');
@@ -240,14 +240,6 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
           </ol>
           {heads.length === 0 && <small>Агуулгад H1, H2, H3 гарчиг нэмэхэд энд бүтэц харагдана.</small>}
         </nav>, slots.outline)}
-      {slots.stats && createPortal(
-        <div className="wo-stats">
-          <span className={text.trim() && rule.error ? "bad" : text.trim() ? "ok" : ""}>
-            <img className="ic" src="/icons/pen16.svg" width={16} height={16} alt="" />Үгийн тоо: <b>{words}</b>
-            <small>{kind === "Мэдээ" ? `Мэдээ ${min}–${max} үг` : "Нийтлэл 500-аас дээш үг"}</small>
-          </span>
-          <span><img className="ic" src="/icons/f_clock.svg" width={16} height={16} alt="" />Унших хугацаа: <b>{minutes} минут</b></span>
-        </div>, slots.stats)}
       {sources.length > 0 && (
         <div className="re-sources">
           <b>Эх сурвалж · {sources.length}</b>
