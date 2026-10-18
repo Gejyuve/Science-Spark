@@ -79,7 +79,10 @@ export default async function Home({ searchParams }) {
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)))::int AS all,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int))
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
-        COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))))::int AS top,
+        -- Хугацаандаа оч авсан контент: бүх нийтлэлийг нэг бүрчлэн шалгахын оронд тухайн хугацааны очноос эхэлж тоолно
+        (SELECT COUNT(DISTINCT s.post_id) FROM sparks s JOIN posts sp ON sp.id = s.post_id
+         WHERE sp.status = 'published' AND sp.kind <> 'Үг'
+           AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))::int AS top,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Зарлал')::int AS ann,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Нийтлэл')::int AS art,
