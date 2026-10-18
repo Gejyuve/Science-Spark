@@ -10,7 +10,7 @@ export default function ProfileAction({ id }) {
     <Link href={own ? "/profile/edit" : `/u/${id}`} className="ss-action">
       <img className="ic" src={own ? "/icons/pen16.svg" : "/icons/person.svg"} width={18} height={18} alt="" />
       <span>{own ? "Засах" : "Профайл"}</span>
-      <img src="/icons/arrow.svg" width={14} height={14} alt="" />
+      <img className="ic" src="/icons/arrow.svg" width={14} height={14} alt="" />
     </Link>
   );
 }
