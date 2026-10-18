@@ -5,21 +5,11 @@ import Link from "next/link";
 import { LIVE_NAV } from "./navItems";
 
 const SLOTS = 4; // логоны зүүн талд 2, баруун талд 2
-const EVERY = 4500; // мс тутам икон солигдоно
+const EVERY = 7000; // мс тутам нэг солигдолт
 const FADE = 260; // гарах хөдөлгөөний урт (globals.css .ss-spin.out-тэй ижил)
+const GAP = 600; // хоёр товч байраа солих үед хоёр дахь нь хэр хойно солигдох
 
-// Харагдах 4 байрын ядаж нэг нь өөрчлөгдсөн санамсаргүй дараалал (идэвхтэй товч 4-өөс олон бол нуугдсан нь ч орж ирнэ)
-function reshuffle(cur) {
-  for (let t = 0; t < 20; t++) {
-    const a = [...cur];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    if (a.slice(0, SLOTS).some((v, i) => v !== cur[i])) return a;
-  }
-  return [...cur.slice(1), cur[0]];
-}
+const pick = (n, not = -1) => { let i; do i = Math.floor(Math.random() * n); while (i === not); return i; };
 
 // Логоны нэг талын 2 товч. Хоёр тал нэг дарааллыг хуваалцана (side 0 → 0-1, side 1 → 2-3).
 export default function NavSpin({ side, active }) {
@@ -44,13 +34,34 @@ let state = { order: LIVE_NAV.map((_, i) => i), out: new Set() };
 let timer = null;
 const emit = () => subs.forEach((f) => f(state));
 
+// Нэг товч гарч, шинэ нь орж ирнэ. Нуугдсан идэвхтэй товч байвал (4-өөс олон) түүнийг оруулна,
+// үгүй бол хоёр товч байраа сольно: эхлээд нэг нь, GAP-ийн дараа нөгөө нь — нэг нэгээрээ.
+function swapSlot(k, item, then) {
+  state = { ...state, out: new Set([k]) };
+  emit();
+  setTimeout(() => {
+    const order = [...state.order];
+    order[k] = item;
+    state = { order, out: new Set() };
+    emit();
+    then && setTimeout(then, GAP);
+  }, FADE);
+}
+
 function tick() {
   // Хулгана/фокус дээд цэс дээр байвал товч алга болохгүйн тулд түр зогсооно
   if (document.hidden || document.querySelector(".ss-topnav:hover, .ss-topnav:focus-within")) return;
-  const next = reshuffle(state.order);
-  state = { order: state.order, out: new Set(next.slice(0, SLOTS).flatMap((v, k) => (v !== state.order[k] ? [k] : []))) };
-  emit();
-  setTimeout(() => { state = { order: next, out: new Set() }; emit(); }, FADE);
+  const cur = state.order;
+  const a = pick(SLOTS);
+  if (cur.length > SLOTS) {
+    const h = SLOTS + pick(cur.length - SLOTS);
+    const order = [...cur];
+    order[h] = cur[a]; // гарах товч нуугдсан жагсаалт руу
+    state = { ...state, order };
+    return swapSlot(a, cur[h]);
+  }
+  const b = pick(SLOTS, a);
+  swapSlot(a, cur[b], () => swapSlot(b, cur[a]));
 }
 
 function useSpin() {
@@ -59,7 +70,7 @@ function useSpin() {
     subs.add(set);
     set(state);
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!still && !timer && LIVE_NAV.length > 1) timer = setInterval(tick, EVERY);
+    if (!still && !timer && LIVE_NAV.length > 1 && SLOTS > 1) timer = setInterval(tick, EVERY);
     return () => {
       subs.delete(set);
       if (subs.size === 0 && timer) { clearInterval(timer); timer = null; }
