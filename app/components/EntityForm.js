@@ -138,7 +138,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
     setFilled(Math.round((n / (KEYS.length + 1)) * 100));
   };
   useEffect(() => { recount(); const t = setInterval(recount, 800); return () => clearInterval(t); }, []);
-  useEffect(() => { if (state?.error) window.scrollTo({ top: 0, behavior: "smooth" }); }, [state]);
+  useEffect(() => { if (state?.error) { dr.keep(); window.scrollTo({ top: 0, behavior: "smooth" }); } }, [state]);
   const lat = (v) => latinShare(v) > LATIN_LIMIT;
   const wc = (v) => countWords(v);
 
