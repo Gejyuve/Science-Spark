@@ -2551,7 +2551,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cp-req-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .cp-req-head h2 { margin: 0; font-size: 18px; color: var(--ink); }
 .cp-req-head h2 em { margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #fdecec; color: #e5484d; font-size: 12px; font-style: normal; font-weight: 600; vertical-align: middle; }
-.cp-req { display: grid; grid-template-columns: 200px minmax(0, 1fr) auto auto auto; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
+.cp-reqrow { display: grid; grid-template-columns: 200px minmax(0, 1fr) auto auto auto; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
 .cp-req-why { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .cp-req-why small { font-size: 11.5px; color: var(--muted); }
 .cp-req-why p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink); }
@@ -2559,7 +2559,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cp-req-why em.warn { background: #fff6e0; color: #8a5a00; }
 .cp-req-why em.bad { background: #fdecec; color: #c2303a; }
 .cp-req-date { font-size: 12px; color: var(--muted); }
-@media (max-width: 900px) { .cp-req { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .cp-reqrow { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .jn-card { padding: 24px 18px; border-radius: 22px; } }
 .cf-saved { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); }
 

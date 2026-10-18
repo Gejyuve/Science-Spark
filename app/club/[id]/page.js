@@ -220,7 +220,7 @@ export default async function ClubPage({ params, searchParams }) {
               const until = r.moved_at ? new Date(new Date(r.moved_at).setMonth(new Date(r.moved_at).getMonth() + 1)) : null;
               const banned = until && until > new Date();
               return (
-                <div key={r.id} className="cp-req">
+                <div key={r.id} className="cp-reqrow">
                   <Member m={r} viewer={user} following={following} />
                   <div className="cp-req-why">
                     <small>Нэгдэх шалтгаан</small>
