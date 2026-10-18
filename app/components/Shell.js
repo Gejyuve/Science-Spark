@@ -124,7 +124,7 @@ async function RightRail({ user }) {
               <Link href="/notifications" className="nf-all">Бүх мэдэгдлийг харах</Link>
             </NotifMenu>
             {myClub && (
-              <Link href={`/club/${myClub.club_id}?tab=chat`} className="ss-action" title={`${myClub.name} · Клубын чат`}>
+              <Link href={`/club/${myClub.club_id}/chat`} className="ss-action" title={`${myClub.name} · Клубын чат`}>
                 {I("comment18", 18)}<span>Клубын чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
               </Link>
             )}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
 import { membershipOf, clubFollowSet, BOARD_MAX, JOIN_REWARD, ymd } from "@/lib/clubs";
@@ -7,8 +7,7 @@ import Shell from "../../components/Shell";
 import MiniMap from "../../components/MiniMap";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
-import { chatMessages, chatUnread, markChatRead } from "@/lib/chat";
-import ClubChat from "../../components/ClubChat";
+import { chatUnread } from "@/lib/chat";
 import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest } from "../../clubs/actions";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +53,7 @@ export default async function ClubPage({ params, searchParams }) {
   const sp = await searchParams;
   const id = Number(raw);
   if (!Number.isInteger(id)) notFound();
+  if (sp.tab === "chat") redirect(`/club/${id}/chat`);
   const user = await getUser();
   const c = await load(id);
   if (!c) notFound();
@@ -78,10 +78,8 @@ export default async function ClubPage({ params, searchParams }) {
       (SELECT c2.name FROM club_members m2 JOIN clubs c2 ON c2.id = m2.club_id WHERE m2.user_id = u.id) AS other,
       (SELECT MAX(at) FROM club_moves mv WHERE mv.user_id = u.id) AS moved_at
     FROM club_requests r JOIN users u ON u.id = r.user_id WHERE r.club_id = ${id} ORDER BY r.created_at` : [];
-  const tab = isLeader && sp.tab === "requests" ? "requests" : sp.tab === "chat" ? "chat" : "members";
-  const chat = tab === "chat" && isMember ? await chatMessages(id) : null;
-  if (chat?.messages.length) await markChatRead(user.id, id, chat.messages.at(-1).id);
-  const unreadChat = isMember && tab !== "chat" ? await chatUnread(user.id, id) : 0;
+  const tab = isLeader && sp.tab === "requests" ? "requests" : "members";
+  const unreadChat = isMember ? await chatUnread(user.id, id) : 0;
   const following = await followingSet(user);
   const follows = await clubFollowSet(user);
   const followed = follows.has(id);
@@ -196,31 +194,13 @@ export default async function ClubPage({ params, searchParams }) {
         )}
         <nav className="cp-tabs" aria-label="Клубын хэсгүүд">
           <Link href={`/club/${id}`} className={tab === "members" ? "on" : ""} scroll={false}>Гишүүд <em>{members.length}</em></Link>
-          <Link href={`/club/${id}?tab=chat`} className={tab === "chat" ? "on" : ""} scroll={false}>
+          <Link href={`/club/${id}/chat`}>
             <img className="ic" src="/icons/comment18.svg" width={14} height={14} alt="" />Чат{unreadChat > 0 && <em className="hot">{unreadChat > 99 ? "99+" : unreadChat}</em>}
           </Link>
           {isLeader && <Link href={`/club/${id}?tab=requests`} className={tab === "requests" ? "on" : ""} scroll={false}>Хүсэлт <em className={requests.length ? "hot" : ""}>{requests.length}</em></Link>}
         </nav>
 
-        {tab === "chat" ? (
-          <section className="cp-card ch-card">
-            <div className="ch-head">
-              <ClubAv c={{ id: c.id, name: c.name, logo: c.logo_id }} size={40} />
-              <span><b>{c.name} · Чат</b><small>{members.length} гишүүн · Зөвхөн гишүүд харна</small></span>
-            </div>
-            {chat ? (
-              <ClubChat key={id} clubId={id} me={{ id: user.id, initial: user.initial, first_name: user.first_name, avatar: user.avatar }} isLeader={isLeader} initial={chat.messages} more={chat.more} />
-            ) : (
-              <div className="ch-locked">
-                <img className="ic" src="/icons/f_shield.svg" width={36} height={36} alt="" />
-                <b>Чат зөвхөн клубын гишүүдэд нээлттэй</b>
-                <span>Клубт нэгдсэнээр гишүүдтэйгээ шууд ярилцах боломжтой болно.</span>
-                {myReq?.club_id === id ? <Link href={`/club/${id}/join`} className="cp-btn soft">⏳ Хүсэлт илгээсэн</Link>
-                  : <Link href={user ? `/club/${id}/join` : "/login"} className="cp-btn">+ Нэгдэх</Link>}
-              </div>
-            )}
-          </section>
-        ) : tab === "members" ? (
+        {tab === "members" ? (
           <section className="cp-card cp-list">
             {rest.length ? <div className="cp-grid">{rest.map((m) => <Member key={m.id} m={m} viewer={user} following={following} clubId={id} canRemove={isLeader} />)}</div>
               : <p className="muted">Энгийн гишүүн одоохондоо алга. Анхны гишүүн нь болоорой!</p>}

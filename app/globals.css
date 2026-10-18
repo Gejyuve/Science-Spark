@@ -2689,3 +2689,11 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .pu-tab.on img { filter: brightness(0) invert(1); }
 @media (min-width: 761px) { .pu-tab.mob-icon:not(.on) img { display: none; } }
 @media (max-width: 760px) { .pu-tab.mob-icon { padding: 0 12px; gap: 6px; } .pu-tab.mob-icon .pu-tlabel { display: none; } }
+
+/* Клубын чат — тусдаа хуудас */
+.ch-page { display: flex; flex-direction: column; gap: 12px; }
+.ch-back { align-self: flex-start; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
+.ch-back:hover { color: var(--ink); }
+.ch-headlink { display: inline-flex; }
+.ch-page .ch-list { height: calc(100vh - 290px); min-height: 320px; }
+@media (max-width: 760px) { .ch-page .ch-list { height: calc(100dvh - 300px); } }
