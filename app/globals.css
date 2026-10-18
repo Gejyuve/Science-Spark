@@ -1346,7 +1346,7 @@ a.och-brow:hover { background: var(--surface-2); }
   .och-brow.head > span:nth-child(3) { font-size: 0; }
   .och-brow > span:nth-child(n+4) { text-align: right; font-size: 11px; white-space: nowrap; overflow: hidden; }
   .och-brow > span:first-child { font-size: 11px; color: var(--muted); }
-  .och-lvl .och-lvi { width: 18px; height: 18px; }
+  .och-lvl .och-lvi, .och-lvl .och-lv { width: 18px !important; height: 18px !important; border-radius: 6px; font-size: 10px; box-shadow: none; }
   .och-who { gap: 6px; }
   .och-who b { font-size: 12px; }
   .och-who .ss-avatar, .och-who img { width: 22px !important; height: 22px !important; font-size: 10px !important; flex: none; }
