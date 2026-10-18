@@ -2681,3 +2681,9 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .pc-st.ok { background: #e6f7f5; color: #00897e; }
 .pc-st.bad { background: #ffeceb; color: #c7332b; }
 .ss-pill.ghost { background: var(--surface); color: var(--teal); border: 1px solid var(--border); }
+/* Профайлын табууд нэг мөрөнд: зарим нь зөвхөн дүрсээр */
+.pu-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.pu-tabs::-webkit-scrollbar { display: none; }
+.pu-tab { flex: none; white-space: nowrap; }
+.pu-tab.icon { padding: 0 12px; gap: 6px; }
+.pu-tab.on img { filter: brightness(0) invert(1); }

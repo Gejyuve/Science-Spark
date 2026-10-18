@@ -117,10 +117,11 @@ export default async function PublicProfile({ params, searchParams }) {
       ))}
     </div>
   );
-  const TabLink = ({ k, icon, label, count, warn }) => (
-    <Link href={href(k, kind)} className={"pu-tab" + (current === k ? " on" : "")}>
+  // iconOnly: зөвхөн дүрс (нэр нь хулгана аваачихад гарна)
+  const TabLink = ({ k, icon, label, count, warn, iconOnly }) => (
+    <Link href={href(k, kind)} className={"pu-tab" + (current === k ? " on" : "") + (iconOnly ? " icon" : "")} title={label} aria-label={label}>
       {icon && <img src={`/icons/${icon}.svg`} width={16} height={16} alt="" />}
-      {label}
+      {!iconOnly && label}
       {count > 0 && <em className={warn ? "warn" : ""}>{count}</em>}
     </Link>
   );
@@ -184,10 +185,10 @@ export default async function PublicProfile({ params, searchParams }) {
           </div>
         </details>
         <TabLink k="published" icon={current === "published" ? "t_pub" : null} label="Нийтлэгдсэн" count={groups.published.length} />
-        {isMe && <TabLink k="pending" icon="t_wait" label="Редакцын хяналт хүлээж байгаа" count={groups.pending.length} warn />}
-        {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length} />}
+        {isMe && <TabLink k="pending" icon="t_wait" label="Редакцын хяналт хүлээж байгаа" count={groups.pending.length} warn iconOnly />}
+        {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length} iconOnly />}
         <span className="ss-grow" />
-        {isMe && <TabLink k="saved" icon="t_saved" label="Хадгалсан" count={groups.saved.length} />}
+        {isMe && <TabLink k="saved" icon="t_saved" label="Хадгалсан" count={groups.saved.length} iconOnly />}
       </div>
 
       {current === "saved" && <p className="pu-savednote">Хадгалсан контент зөвхөн танд харагдана · {list.length} контент</p>}
