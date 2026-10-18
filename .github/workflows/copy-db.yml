@@ -1,0 +1,39 @@
+# Copies the site's database to another Postgres (e.g. from Neon to Supabase).
+# Run it by hand from the Actions tab. It needs two repository secrets:
+#   SOURCE_DATABASE_URL  the current database (Neon: the direct, non-pooled connection string)
+#   TARGET_DATABASE_URL  the new database (Supabase: the "Session pooler" connection string)
+# The live site keeps using DATABASE_URL in Vercel until you change it there.
+name: Copy database
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type COPY to start'
+        required: true
+      replace:
+        description: 'Replace an earlier copy in the target (yes/no)'
+        required: false
+        default: 'no'
+
+permissions:
+  contents: read
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    container: postgres:17
+    timeout-minutes: 30
+    steps:
+      - name: Check confirmation
+        if: ${{ inputs.confirm != 'COPY' }}
+        run: |
+          echo "Type COPY in the confirm box to run the copy."
+          exit 1
+      - uses: actions/checkout@v4
+      - name: Copy and verify
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.SOURCE_DATABASE_URL }}
+          TARGET_DATABASE_URL: ${{ secrets.TARGET_DATABASE_URL }}
+          REPLACE: ${{ inputs.replace }}
+        run: bash scripts/copy-db.sh
