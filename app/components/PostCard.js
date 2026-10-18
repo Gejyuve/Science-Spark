@@ -20,7 +20,19 @@ export default function PostCard({ p, viewer, following }) {
     : [];
   const plainBody = ["Нийтлэл", "Мэдээ"].includes(p.kind) ? strip(p.body).replace(/\s+/g, " ").trim() : p.body;
   const excerpt = plainBody.length > 320 ? plainBody.slice(0, 320) + "…" : plainBody;
-  const actions = (
+  // Нийтлэгдээгүй контент: оч, сэтгэгдэлгүй — төлөв ба дараагийн алхам
+  const ST = { pending: ["Редакцын хяналтад", "wait"], approved: ["Нийтлэхэд бэлэн", "ok"], rejected: ["Засвар хийхээр буцаасан", "bad"], removed: ["Нуугдсан", "bad"], draft: ["Ноорог", "wait"] };
+  const st = p.status && ST[p.status];
+  const mine = viewer && viewer.id === p.author_id;
+  const pendingBar = st && (
+        <div className="ss-actionbar pc-status">
+          <span className={"pc-st " + st[1]}><img className="ic" src={`/icons/${st[1] === "ok" ? "t_pub" : st[1] === "bad" ? "logic" : "t_wait"}.svg`} width={16} height={16} alt="" />{st[0]}</span>
+          <span className="ss-grow" />
+          {mine && (p.status === "rejected" || p.status === "draft") && ["Нийтлэл", "Мэдээ", "Эвент", "Зарлал"].includes(p.kind) && <Link href={`/post/${p.id}/edit`} className="ss-pill ghost">Засах</Link>}
+          <Link href={`/post/${p.id}`} className="ss-pill">{p.status === "approved" && mine ? "Нийтлэх" : "Харах"}</Link>
+        </div>
+  );
+  const actions = pendingBar || (
         <div className="ss-actionbar">
           {viewer && viewer.id !== p.author_id && !p.sparked ? (
             <form action={sparkPost}>

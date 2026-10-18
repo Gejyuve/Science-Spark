@@ -2674,3 +2674,10 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 @media (prefers-reduced-motion: reduce) {
   .ss-spin { animation: none; transition: none; }
 }
+/* Нийтлэгдээгүй картын доод мөр: төлөв + алхам */
+.pc-status { position: relative; z-index: 2; }
+.pc-st { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+.pc-st.wait { background: #fff3e5; color: #c2400d; }
+.pc-st.ok { background: #e6f7f5; color: #00897e; }
+.pc-st.bad { background: #ffeceb; color: #c7332b; }
+.ss-pill.ghost { background: var(--surface); color: var(--teal); border: 1px solid var(--border); }
