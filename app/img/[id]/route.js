@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
-import { blobOn, moveToBlob } from "@/lib/images";
+import { blobOn, moveToBlob, readBlob } from "@/lib/images";
 
 // Зураг харуулах. Зураг өөрчлөгддөггүй тул удаан хадгалуулна (cache).
 export async function GET(req, { params }) {
@@ -13,9 +13,8 @@ export async function GET(req, { params }) {
   let body;
   if (r.url) {
     // Blob-оос авч дамжуулна: хаяг нь өөрчлөгдөхгүй, хөтөч дээрх зураг засагч ч ажилласаар байна
-    const res = await fetch(r.url);
-    if (!res.ok) return new Response("Зураг ачаалж чадсангүй", { status: 502 });
-    body = res.body;
+    body = await readBlob(r.url).catch((e) => (console.error("blob read failed", n, e), null));
+    if (!body) return new Response("Зураг ачаалж чадсангүй", { status: 502 });
   } else {
     body = Buffer.from(r.b64, "base64");
     // Хуучин зургийг хариу илгээсний дараа Blob руу зөөнө
