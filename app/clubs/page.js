@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
-import { clubBoard, placeXY, PERIODS } from "@/lib/clubs";
+import { clubBoard, PERIODS } from "@/lib/clubs";
 import Shell from "../components/Shell";
 import ClubMap from "../components/ClubMap";
 import { Avatar, Stat, FollowBtn, followingSet } from "../components/Bits";
@@ -23,14 +23,10 @@ export default async function Clubs({ searchParams }) {
   } catch (e) {}
   const following = await followingSet(user);
 
-  // Газрын зураг: байршил бүрт нэг тэмдэг (тэнд хамгийн өндөр очтой клуб)
-  const byPlace = new Map();
-  for (const c of [...board].sort((a, b) => b.points - a.points)) {
-    if (!placeXY(c.aimag)) continue;
-    if (!byPlace.has(c.aimag)) byPlace.set(c.aimag, []);
-    byPlace.get(c.aimag).push(c);
-  }
-  const spots = [...byPlace].map(([place, clubs]) => ({ place, ...placeXY(place), clubs }));
+  // Газрын зураг: координаттай клубууд
+  const onMap = board.filter((c) => c.lat != null && c.lng != null)
+    .map(({ id, first_name, avatar, aimag, about, lat, lng, points, members, rank }) => ({ id, first_name, avatar, aimag, about, lat, lng, points, members, rank }));
+  const aimags = new Set(onMap.map((c) => c.aimag).filter(Boolean)).size;
 
   const pages = Math.max(1, Math.ceil(board.length / PER));
   const page = Math.min(pages, Math.max(1, parseInt(sp.p) || 1));
@@ -50,7 +46,7 @@ export default async function Clubs({ searchParams }) {
   return (
     <Shell user={user} active="/clubs" header={false}>
       <div className="cl-page">
-        <ClubMap spots={spots} total={board.length} aimags={byPlace.size} />
+        <ClubMap clubs={onMap} aimags={aimags} />
 
         <section className="cl-board">
           <div className="cl-head">
