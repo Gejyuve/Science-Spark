@@ -115,7 +115,7 @@ export default async function Och({ searchParams }) {
           )}
         </div>
 
-        <h2 className="och-h1">Очны учир</h2>
+        <h2 className="och-h1" id="rules">Очны учир</h2>
         <p className="och-sub">Оч олох дүрэм, түвшин, эрхүүд.</p>
 
         {user && (

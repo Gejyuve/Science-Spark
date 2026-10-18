@@ -136,8 +136,17 @@ export default async function PublicProfile({ params, searchParams }) {
             {/* Овгийг бүтнээр нь зөвхөн тухайн хүний өөрийн хуудсанд харуулна */}
             <h1>{u.surname ? `${u.surname} ${u.first_name}` : `${u.initial}.${u.first_name}`}</h1>
             <div className="pu-stats">
-              <span><img src="/icons/pts.svg" width={14} height={14} alt="" /><b>{fmtK(u.points)}</b> оч</span>
-              <span><img src="/icons/followers.svg" width={12} height={12} alt="" /><b>{fmtK(u.followers)}</b> дагагч</span>
+              {isMe ? (
+                <>
+                  <Link href="/och#rules" className="pu-stat-link" title="Очны дүрэм"><img src="/icons/pts.svg" width={14} height={14} alt="" /><b>{fmtK(u.points)}</b> оч</Link>
+                  <Link href={`/u/${u.id}/followers`} className="pu-stat-link" title="Дагагчдын жагсаалт"><img src="/icons/followers.svg" width={12} height={12} alt="" /><b>{fmtK(u.followers)}</b> дагагч</Link>
+                </>
+              ) : (
+                <>
+                  <span><img src="/icons/pts.svg" width={14} height={14} alt="" /><b>{fmtK(u.points)}</b> оч</span>
+                  <span><img src="/icons/followers.svg" width={12} height={12} alt="" /><b>{fmtK(u.followers)}</b> дагагч</span>
+                </>
+              )}
             </div>
           </div>
           <div className="pu-actions">
