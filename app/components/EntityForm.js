@@ -211,9 +211,9 @@ export default function ClubForm({ leader, kind = "club", entity = null, board =
         </div>
 
         <Label>Хаяг</Label>
-        <div className={"pf-area" + (lat(address) ? " bad" : "")}>
+        <div className="pf-area">
           <textarea name="address" rows={2} maxLength={org ? 1000 : 150} value={address} onChange={(ev) => setAddress(ev.target.value)} placeholder="Дүүрэг, хороо, гудамж, байр, давхар…" />
-          <span className={lat(address) || (org && wc(address) > 100) ? "bad" : ""}>{lat(address) ? LATIN_MSG : org ? `${wc(address)} / 100 үг` : `${address.length} / 150`}</span>
+          <span className={org && wc(address) > 100 ? "bad" : ""}>{org ? `${wc(address)} / 100 үг` : `${address.length} / 150`}</span>
         </div>
 
         <Label required={!org} right={<small className="cf-lochint">{org ? "Заавал биш" : "Газрын зураг дээр клуб тань энд гэрэлтэнэ"}</small>}>Байршил (координат эсвэл Google Maps холбоос)</Label>

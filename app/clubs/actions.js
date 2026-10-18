@@ -41,7 +41,9 @@ async function readEntity(fd, user, kind, current = null) {
     if (v.about.length > 500) return { error: "Клубын тухай 500 тэмдэгтээс хэтрэхгүй." };
     if (v.address && v.address.length > 150) return { error: "Хаяг 150 тэмдэгтээс хэтрэхгүй." };
   }
-  for (const t of [v.about, v.rules, v.address]) if (t && latinShare(t) > LATIN_LIMIT) return { error: LATIN_MSG };
+  // Латины хязгаар зөвхөн тайлбар бичвэрт (нэр, хаяг латин байж болно)
+  if (latinShare(v.about) > LATIN_LIMIT) return { error: `«${kind === "org" ? "Байгууллагын" : "Клубын"} тухай» хэсгийг кириллээр бичнэ үү.` };
+  if (v.rules && latinShare(v.rules) > LATIN_LIMIT) return { error: "«Клубын дүрэм» хэсгийг кириллээр бичнэ үү." };
   if (v.website && !/^https?:\/\/\S+\.\S+/.test(v.website)) return { error: "Вэбсайтын хаягаа зөв оруулна уу." };
   if (v.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) return { error: "Имэйл хаяг буруу байна." };
   if (v.phone && !/^\+?[\d\s-]{6,20}$/.test(v.phone)) return { error: "Утасны дугаараа зөв бичнэ үү." };
@@ -234,7 +236,7 @@ export async function requestJoin(prev, fd) {
   if (!fd.get("agree")) return { error: "Клубын дүрмийг уншиж, зөвшөөрнө үү." };
   const reason = String(fd.get("reason") || "").trim().slice(0, 1000);
   if (countWords(reason) > 100) return { error: "Нэгдэх шалтгаан 100 үгээс хэтрэхгүй." };
-  if (reason && latinShare(reason) > LATIN_LIMIT) return { error: LATIN_MSG };
+  if (reason && latinShare(reason) > LATIN_LIMIT) return { error: "«Нэгдэх шалтгаан»-аа кириллээр бичнэ үү." };
   await sql`INSERT INTO club_requests (user_id, club_id, reason) VALUES (${user.id}, ${clubId}, ${reason || null})
             ON CONFLICT (user_id) DO UPDATE SET club_id = EXCLUDED.club_id, reason = EXCLUDED.reason, created_at = now()`;
   if (c.leader_id) await notify({ userId: c.leader_id, kind: "club_request", actorId: user.id, note: c.name, clubId });
