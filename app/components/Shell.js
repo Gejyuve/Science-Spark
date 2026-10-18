@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import { DrawerHost, DrawerClose } from "./Drawer";
 import Composer from "./Composer";
 import TopNav, { NavRow } from "./TopNav";
 import { logout } from "../auth/actions";
@@ -29,6 +30,7 @@ const NAV = [
 function Sidebar({ active }) {
   return (
     <aside className="ss-side">
+      <div className="ss-dhead"><Link href="/" className="ss-dlogo"><img src="/icons/logo.svg" width={40} height={40} alt="Science Spark" /></Link><span className="ss-grow" /><ThemeToggle /><DrawerClose /></div>
       <form action="/search" method="get" className="ss-search">
         {I("search", 18)}
         <input name="q" placeholder="Хайх" aria-label="Хайх" />
@@ -66,7 +68,7 @@ function Header({ user, compact, compose, composeError, active }) {
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
-      <NavRow active={active} />
+      <NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} />
       {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} />}
     </header>
   );
@@ -98,6 +100,7 @@ async function RightRail({ user }) {
 
   return (
     <aside className="ss-right">
+      <div className="ss-dhead right"><span className="ss-grow" /><DrawerClose /></div>
       {user ? (
         <div className="ss-panel">
           <Link href={`/u/${user.id}`} className="ss-person big">
@@ -178,11 +181,12 @@ export default async function Shell({ user, active, children, header = true, com
         {header === true ? (
           <Header user={user} compose={compose} composeError={composeError} active={active} />
         ) : (
-          <TopNav active={active} />
+          <header className="ss-header compact static"><NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} /></header>
         )}
         {children}
       </main>
       <RightRail user={user} />
+      <DrawerHost />
     </div>
   );
 }
