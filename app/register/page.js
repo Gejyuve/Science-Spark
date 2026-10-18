@@ -14,7 +14,7 @@ export default async function RegisterPage({ searchParams }) {
     >
       <div className="au-types">
         <span className="au-type on"><img src="/icons/tperson.svg" width={34} height={34} alt="" />Хувь хүн</span>
-        <span className="au-type soon" title="Тун удахгүй"><img src="/icons/torg.svg" width={34} height={34} alt="" />Байгууллага</span>
+        <Link href="/orgs/new" className="au-type" title="Байгууллага бүртгүүлэх (хувь хүний бүртгэлээр)"><img src="/icons/torg.svg" width={34} height={34} alt="" />Байгууллага</Link>
         <Link href="/clubs/new" className="au-type" title="Клуб бүртгүүлэх (хувь хүний бүртгэлээр)"><img src="/icons/tclub.svg" width={34} height={34} alt="" />Клуб</Link>
       </div>
       <Field name="email" type="email" required autoComplete="email" placeholder="Мэйл" aria-label="Мэйл" />

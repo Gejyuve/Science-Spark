@@ -2468,3 +2468,82 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cp-info, .cp-grid { grid-template-columns: 1fr; }
   .cf-pick { flex-direction: column; } .cf-own { padding: 10px 14px; justify-content: center; }
 }
+
+/* ===== Клубт нэгдэх (Figma 404:242), клубын админ харагдац (412:248) ===== */
+.jn-page { display: flex; flex-direction: column; align-items: center; }
+.jn-top { position: absolute; left: 16px; top: 12px; z-index: 2; display: flex; align-items: center; gap: 10px; }
+.jn-home img { display: block; }
+.jn-backtop { padding: 7px 14px; border-radius: 999px; background: var(--surface); box-shadow: var(--card-shadow); color: var(--ink); font-size: 13px; text-decoration: none; }
+.jn-card { position: relative; z-index: 1; width: min(560px, 100%); margin: 24px auto 40px; padding: 28px 40px 32px; border-radius: 28px; background: var(--surface); box-shadow: var(--card-shadow); }
+.jn-x { position: absolute; right: 18px; top: 16px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #eef2f4; color: var(--muted); font-size: 20px; text-decoration: none; }
+.jn-quote { margin: 0 0 18px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.jn-quote b { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; color: var(--ink); }
+.jn-quote small { font-size: 12.5px; color: #00a89b; }
+.jn-club { position: relative; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 20px rgba(112, 144, 176, .18); background: var(--surface); }
+.jn-cover { height: 104px; background: linear-gradient(135deg, #0e3a40, #072026 55%, #030c10); }
+.jn-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.jn-logo { position: absolute; left: 14px; top: 70px; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--surface); box-shadow: 0 2px 8px rgba(0, 0, 0, .12); }
+.jn-body { display: flex; flex-direction: column; gap: 8px; padding: 34px 16px 16px; }
+.jn-body > b { font-size: 20px; color: var(--ink); }
+.jn-stat { display: flex; gap: 12px; font-size: 13px; font-weight: 600; color: #00a89b; }
+.jn-stat span, .jn-row { display: inline-flex; align-items: center; gap: 6px; }
+.jn-row { font-size: 13.5px; color: var(--text); }
+.jn-body p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
+.jn-socs { display: flex; gap: 8px; }
+.jn-socs a { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px; }
+.jn-box { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; font-size: 13px; line-height: 1.55; }
+.jn-box.ok { background: #e6f7f5; color: #00796f; border: 1px solid #bfe9e2; }
+.jn-box.warn { background: #fff6e0; color: #8a5a00; border: 1px solid #f5dfa6; }
+.jn-box.bad { background: #fdecec; color: #c2303a; border: 1px solid #f6c6c9; }
+.jn-ic { flex: none; }
+.jn-reward { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 14px 16px; border-radius: 14px; background: #e6f7f5; border: 1px solid #bfe9e2; }
+.jn-reward span { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.jn-reward b { font-size: 13.5px; color: #00796f; }
+.jn-reward small { font-size: 12px; line-height: 1.45; color: #4b8f88; }
+.jn-reward em { font-style: normal; font-weight: 700; color: #00a89b; }
+.jn-reward.minus { background: #fdecec; border-color: #f6c6c9; }
+.jn-reward.minus b { color: #9a2730; } .jn-reward.minus small { color: #b55a61; } .jn-reward.minus em { color: #e5484d; }
+.jn-reward.dim { opacity: .55; }
+.jn-form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.jn-rules { position: relative; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; }
+.jn-rules b { font-size: 13px; color: var(--ink); }
+.jn-rules p { margin: 6px 0 0; max-height: 64px; overflow: hidden; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-line; -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
+.jn-rules.open p { max-height: none; -webkit-mask-image: none; mask-image: none; }
+.jn-rules button { margin-top: 6px; padding: 0; border: 0; background: none; color: #00a89b; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.jn-label { margin-top: 4px; font-size: 13px; color: var(--text); }
+.jn-label em { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #eef2f4; color: var(--muted); font-size: 11px; font-style: normal; }
+.jn-agree { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+.jn-agree input { width: 18px; height: 18px; accent-color: #00a89b; }
+.jn-go { padding: 14px; border: 0; border-radius: 999px; background: #00a89b; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.jn-go:disabled { background: #cdd8de; color: #fff; cursor: not-allowed; }
+.jn-back { display: block; padding: 13px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; }
+.jn-card .cf-gate { margin: 16px 0 0; max-width: none; box-shadow: none; padding: 16px 0 0; }
+.cp-btn.danger { background: #e5484d; color: #fff; }
+.cp-btn.ghost.danger { background: var(--surface); color: #e5484d; border-color: #f3c0c3; }
+.cp-btn:disabled { background: #cdd8de; cursor: not-allowed; }
+.cp-admin { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 0; padding: 12px 16px; border-radius: 16px; background: #e6f7f5; border: 1px solid #bfe9e2; font-size: 12.5px; color: #4b8f88; }
+.cp-admin span { display: flex; flex-direction: column; gap: 2px; }
+.cp-admin b { font-size: 13.5px; color: #00796f; }
+.cp-tabs { display: flex; flex-direction: row; gap: 8px; margin: 16px 0 12px; flex-wrap: wrap; }
+.cp-tabs a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 13.5px; text-decoration: none; }
+.cp-tabs a.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--card-shadow); border-color: transparent; }
+.cp-tabs em { padding: 1px 8px; border-radius: 999px; background: #eef2f4; color: var(--muted); font-size: 11.5px; font-style: normal; }
+.cp-tabs em.hot { background: #e6f7f5; color: #00a89b; }
+.cp-list { padding: 22px 28px; }
+.cp-member { position: relative; }
+.cp-rm { margin-left: auto; }
+.cp-rm button { padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.cp-rm button:hover { color: #e5484d; border-color: #f3c0c3; }
+.cp-req-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.cp-req-head h2 { margin: 0; font-size: 18px; color: var(--ink); }
+.cp-req-head h2 em { margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #fdecec; color: #e5484d; font-size: 12px; font-style: normal; font-weight: 600; vertical-align: middle; }
+.cp-req { display: grid; grid-template-columns: 200px minmax(0, 1fr) auto auto auto; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
+.cp-req-why { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cp-req-why small { font-size: 11.5px; color: var(--muted); }
+.cp-req-why p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink); }
+.cp-req-why em { align-self: flex-start; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-style: normal; }
+.cp-req-why em.warn { background: #fff6e0; color: #8a5a00; }
+.cp-req-why em.bad { background: #fdecec; color: #c2303a; }
+.cp-req-date { font-size: 12px; color: var(--muted); }
+@media (max-width: 900px) { .cp-req { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .jn-card { padding: 24px 18px; border-radius: 22px; } }

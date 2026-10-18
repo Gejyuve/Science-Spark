@@ -2,12 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { membershipOf, clubFollowSet, BOARD_MAX, JOIN_REWARD } from "@/lib/clubs";
+import { membershipOf, clubFollowSet, BOARD_MAX, JOIN_REWARD, ymd } from "@/lib/clubs";
 import Shell from "../../components/Shell";
 import MiniMap from "../../components/MiniMap";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
-import { joinClub, leaveClub, declineInvite, toggleClubFollow } from "../../clubs/actions";
+import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest } from "../../clubs/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ async function load(id) {
     SELECT c.*,
       COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = c.id), 0)::int AS points,
       (SELECT COUNT(*) FROM club_follows f WHERE f.club_id = c.id)::int AS followers
-    FROM clubs c WHERE c.id = ${id} AND c.status = 'active'`;
+    FROM clubs c WHERE c.id = ${id} AND c.kind = 'club' AND c.status = 'active'`;
   return c || null;
 }
 
@@ -30,14 +30,18 @@ export async function generateMetadata({ params }) {
 const SOC = { facebook: "s_fb", instagram: "s_ig", x: "s_x", linkedin: "s_li", youtube: "s_yt" };
 const fmtDate = (d) => (d ? new Date(d).toISOString().slice(0, 10).replaceAll("-", ".") : null);
 
-function Member({ m, viewer, following }) {
+function Member({ m, viewer, following, clubId, canRemove }) {
   return (
-    <div className="ss-person">
+    <div className="ss-person cp-member">
       <Link href={`/u/${m.id}`} className="ss-person-av"><Avatar user={m} size={40} /></Link>
       <div>
         <Link href={`/u/${m.id}`} className="ss-person-name"><b>{m.initial}.{m.first_name}</b></Link>
         <span className="ss-statrow"><Stat points={m.points} followers={m.followers} followed={following.has(m.id)} /><FollowBtn id={m.id} viewer={viewer} following={following} /></span>
       </div>
+      {canRemove && (
+        <form action={removeMember} className="cp-rm"><input type="hidden" name="club_id" value={clubId} /><input type="hidden" name="user_id" value={m.id} />
+          <button type="submit" title="Клубээс хасах">Хасах</button></form>
+      )}
     </div>
   );
 }
@@ -63,6 +67,16 @@ export default async function ClubPage({ params, searchParams }) {
   const mine = user ? await membershipOf(user.id) : null;
   const isMember = mine?.club_id === id;
   const invited = user && !isMember ? (await sql`SELECT role FROM club_invites WHERE club_id = ${id} AND user_id = ${user.id}`)[0] : null;
+  const isLeader = !!user && c.leader_id === user.id;
+  const myReq = user ? (await sql`SELECT club_id FROM club_requests WHERE user_id = ${user.id}`)[0] : null;
+  const requests = isLeader ? await sql`
+    SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar, r.reason, r.created_at,
+      COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
+      (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id)::int AS followers,
+      (SELECT c2.name FROM club_members m2 JOIN clubs c2 ON c2.id = m2.club_id WHERE m2.user_id = u.id) AS other,
+      (SELECT MAX(at) FROM club_moves mv WHERE mv.user_id = u.id) AS moved_at
+    FROM club_requests r JOIN users u ON u.id = r.user_id WHERE r.club_id = ${id} ORDER BY r.created_at` : [];
+  const tab = isLeader && sp.tab === "requests" ? "requests" : "members";
   const following = await followingSet(user);
   const follows = await clubFollowSet(user);
   const followed = follows.has(id);
@@ -102,14 +116,15 @@ export default async function ClubPage({ params, searchParams }) {
                 <form action={toggleClubFollow}><input type="hidden" name="club_id" value={id} />
                   <button type="submit" className={"cp-btn ghost" + (followed ? " on" : "")}>{followed ? "✓ Дагаж байна" : "Дагах"}</button></form>
               )}
-              {isMember ? (
-                mine.role === "leader" ? <span className="cp-btn soft">Та удирдагч</span> : (
-                  <form action={leaveClub}><input type="hidden" name="club_id" value={id} />
-                    <button type="submit" className="cp-btn soft" title="Клубээс гарах">✓ Гишүүн · Гарах</button></form>
-                )
+              {isLeader ? (
+                <Link href={`/club/${id}/edit`} className="cp-btn"><img src="/icons/pen16.svg" width={14} height={14} alt="" style={{ filter: "brightness(10)" }} />Засах</Link>
+              ) : isMember ? (
+                <form action={leaveClub}><input type="hidden" name="club_id" value={id} />
+                  <button type="submit" className="cp-btn soft" title="Клубээс гарах">✓ Гишүүн · Гарах</button></form>
+              ) : myReq?.club_id === id ? (
+                <Link href={`/club/${id}/join`} className="cp-btn soft">⏳ Хүсэлт илгээсэн</Link>
               ) : (
-                <form action={joinClub}><input type="hidden" name="club_id" value={id} />
-                  <button type="submit" className="cp-btn">+ Нэгдэх</button></form>
+                <Link href={user ? `/club/${id}/join` : "/login"} className="cp-btn">+ Нэгдэх</Link>
               )}
             </div>
           </div>
@@ -117,22 +132,28 @@ export default async function ClubPage({ params, searchParams }) {
           {invited && (
             <div className="cp-note ok">
               <span>Таныг энэ клубын <b>удирдах зөвлөлд</b> урьсан байна.</span>
-              <form action={joinClub}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="switch" value="1" /><button type="submit" className="cp-btn sm">Зөвшөөрөх</button></form>
+              <form action={acceptInvite}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm">Зөвшөөрөх</button></form>
               <form action={declineInvite}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm ghost">Татгалзах</button></form>
             </div>
           )}
-          {join === "ok" && isMember && <p className="cp-note ok">🎉 «{c.name}» клубт тавтай морил! Анх удаа клубт нэгдсэн бол танд +{JOIN_REWARD} оч нэмэгдлээ.</p>}
-          {join === "switch" && mine && !isMember && (
+          {join === "inviteswitch" && mine && (
             <div className="cp-note warn">
-              <span>Та одоо «<b>{mine.name}</b>» клубын гишүүн байна. Нэг хүн нэг л клубт байх тул «{c.name}» руу шилжвэл өмнөх клубээсээ гарна.</span>
-              <form action={joinClub}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="switch" value="1" /><button type="submit" className="cp-btn sm">Шилжих</button></form>
+              <span>Та одоо «<b>{mine.name}</b>» клубын гишүүн. Урилгыг хүлээн авбал тэр клубээсээ гарч, анхны клубын урамшуулал ({JOIN_REWARD} оч) хасагдана. Дараа нь 1 сар шилжих боломжгүй.</span>
+              <form action={acceptInvite}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="switch" value="1" /><button type="submit" className="cp-btn sm">Шилжих</button></form>
               <Link href={`/club/${id}`} className="cp-btn sm ghost">Болих</Link>
             </div>
           )}
-          {join === "leader" && <p className="cp-note bad">Та «{mine?.name}» клубын удирдагч тул өөр клубт шилжих боломжгүй.</p>}
+          {join === "ok" && isMember && <p className="cp-note ok">🎉 «{c.name}» клубт тавтай морил!</p>}
+          {join === "sent" && <p className="cp-note ok">Нэгдэх хүсэлт тань илгээгдлээ. Клубын удирдагч зөвшөөрмөгц мэдэгдэл очно.</p>}
+          {join === "leave" && isMember && (
+            <div className="cp-note warn">
+              <span>Клубээс гарвал 1 сарын дотор өөр клубт нэгдэх боломжгүй. Гарах уу?</span>
+              <form action={leaveClub}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="confirm" value="1" /><button type="submit" className="cp-btn sm danger">Гарах</button></form>
+              <Link href={`/club/${id}`} className="cp-btn sm ghost">Болих</Link>
+            </div>
+          )}
           {join === "leaderleave" && <p className="cp-note bad">Удирдагч клубээсээ гарах боломжгүй.</p>}
-          {join === "blocked" && <p className="cp-note bad">Таны эрх хязгаарлагдсан тул клубт нэгдэх боломжгүй байна.</p>}
-
+          {sp.err && <p className="cp-note bad">{String(sp.err).slice(0, 300)}</p>}
           <p className="cp-about">{c.about}</p>
           {info.length > 0 && (
             <div className="cp-info">
@@ -163,11 +184,54 @@ export default async function ClubPage({ params, searchParams }) {
             <h3>Удирдах зөвлөл <small>{board.length} / {BOARD_MAX}</small></h3>
             {board.length ? <div className="cp-grid">{board.map((m) => <Member key={m.id} m={m} viewer={user} following={following} />)}</div> : <p className="muted">Одоохондоо зөвлөлийн гишүүн алга.</p>}
           </div>
-          <div className="cp-sec">
-            <h3>Гишүүд <small>{rest.length}</small></h3>
-            {rest.length ? <div className="cp-grid">{rest.map((m) => <Member key={m.id} m={m} viewer={user} following={following} />)}</div> : <p className="muted">Анхны гишүүн нь болоорой!</p>}
-          </div>
         </section>
+
+        {isLeader && (
+          <p className="cp-admin"><img className="ic" src="/icons/f_shield.svg" width={18} height={18} alt="" /><span><b>Админ харагдац</b>Энэ хэсгийг зөвхөн клубын удирдагч харна. Та гишүүдийн хүсэлтийг шийдвэрлэж, удирдах зөвлөлөө өөрчилнө.</span></p>
+        )}
+        <nav className="cp-tabs" aria-label="Клубын хэсгүүд">
+          <Link href={`/club/${id}`} className={tab === "members" ? "on" : ""} scroll={false}>Гишүүд <em>{members.length}</em></Link>
+          {isLeader && <Link href={`/club/${id}?tab=requests`} className={tab === "requests" ? "on" : ""} scroll={false}>Хүсэлт <em className={requests.length ? "hot" : ""}>{requests.length}</em></Link>}
+        </nav>
+
+        {tab === "members" ? (
+          <section className="cp-card cp-list">
+            {rest.length ? <div className="cp-grid">{rest.map((m) => <Member key={m.id} m={m} viewer={user} following={following} clubId={id} canRemove={isLeader} />)}</div>
+              : <p className="muted">Энгийн гишүүн одоохондоо алга. Анхны гишүүн нь болоорой!</p>}
+          </section>
+        ) : (
+          <section className="cp-card cp-list">
+            <div className="cp-req-head">
+              <h2>Нэгдэх хүсэлтүүд {requests.length > 0 && <em>{requests.length} хүлээгдэж буй</em>}</h2>
+              {requests.length > 1 && (
+                <form action={decideRequests}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="decision" value="all" />
+                  <button type="submit" className="cp-btn sm ghost">Бүгдийг зөвшөөрөх</button></form>
+              )}
+            </div>
+            {sp.skipped && <p className="cp-note warn" style={{ margin: "0 0 12px" }}>{sp.skipped} хүсэлтийг одоогоор зөвшөөрөх боломжгүй байсан (1 сарын хориг эсвэл өөр клубын удирдагч).</p>}
+            {requests.length === 0 && <p className="muted">Шинэ хүсэлт алга.</p>}
+            {requests.map((r) => {
+              const until = r.moved_at ? new Date(new Date(r.moved_at).setMonth(new Date(r.moved_at).getMonth() + 1)) : null;
+              const banned = until && until > new Date();
+              return (
+                <div key={r.id} className="cp-req">
+                  <Member m={r} viewer={user} following={following} />
+                  <div className="cp-req-why">
+                    <small>Нэгдэх шалтгаан</small>
+                    <p>{r.reason || "—"}</p>
+                    {banned ? <em className="bad">1 сарын дотор шилжсэн · {ymd(until)} хүртэл хориотой</em>
+                      : r.other ? <em className="warn">{r.other} клубын гишүүн · зөвшөөрвөл {r.other}-аас хасагдаж, {JOIN_REWARD} оч хасагдана</em> : null}
+                  </div>
+                  <small className="cp-req-date">{ymd(r.created_at)}</small>
+                  <form action={decideRequests}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="user_id" value={r.id} /><input type="hidden" name="decision" value="no" />
+                    <button type="submit" className="cp-btn sm ghost danger">Татгалзах</button></form>
+                  <form action={decideRequests}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="user_id" value={r.id} /><input type="hidden" name="decision" value="ok" />
+                    <button type="submit" className="cp-btn sm" disabled={banned}>Зөвшөөрөх</button></form>
+                </div>
+              );
+            })}
+          </section>
+        )}
       </div>
     </Shell>
   );
