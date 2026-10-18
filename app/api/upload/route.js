@@ -1,6 +1,6 @@
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { sniff, MAX_BYTES, DAILY_LIMIT } from "@/lib/images";
+import { sniff, MAX_BYTES, DAILY_LIMIT, blobOn, putBlob } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
@@ -28,8 +28,21 @@ export async function POST(req) {
   if (!mime) return fail("Зөвхөн JPG, PNG, WEBP зураг оруулна");
   const w = Math.min(10000, Math.max(0, Number(form.get("w")) || 0)) || null;
   const h = Math.min(10000, Math.max(0, Number(form.get("h")) || 0)) || null;
-  const [r] = await sql`INSERT INTO images (owner_id, mime, data, width, height, bytes)
-                        VALUES (${user.id}, ${mime}, decode(${buf.toString("base64")}, 'base64'), ${w}, ${h}, ${buf.length})
-                        RETURNING id`;
+  // Blob холбогдсон бол тэнд, үгүй эсвэл алдаа гарвал өмнөх шигээ өгөгдлийн санд хадгална
+  let url = null;
+  if (blobOn()) {
+    try {
+      url = await putBlob(`u${user.id}`, buf, mime);
+    } catch (e) {
+      console.error("blob upload failed", e);
+    }
+  }
+  const [r] = url
+    ? await sql`INSERT INTO images (owner_id, mime, url, width, height, bytes)
+                VALUES (${user.id}, ${mime}, ${url}, ${w}, ${h}, ${buf.length})
+                RETURNING id`
+    : await sql`INSERT INTO images (owner_id, mime, data, width, height, bytes)
+                VALUES (${user.id}, ${mime}, decode(${buf.toString("base64")}, 'base64'), ${w}, ${h}, ${buf.length})
+                RETURNING id`;
   return Response.json({ id: r.id, url: `/img/${r.id}` });
 }
