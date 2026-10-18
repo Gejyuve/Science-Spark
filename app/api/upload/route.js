@@ -3,6 +3,7 @@ import { sql, ensureSchema } from "@/lib/db";
 import { sniff, MAX_BYTES, DAILY_LIMIT, blobOn, putBlob } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const fail = (msg, status = 400) => Response.json({ error: msg }, { status });
 
@@ -34,7 +35,7 @@ export async function POST(req) {
     try {
       url = await putBlob(`u${user.id}`, buf, mime);
     } catch (e) {
-      console.error("blob upload failed", e);
+      console.error("blob upload failed", e?.message || e);
     }
   }
   const [r] = url
