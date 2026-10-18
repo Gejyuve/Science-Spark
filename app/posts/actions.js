@@ -3,11 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, isSuperAdmin, isAdmin, needsName } from "@/lib/auth";
+import { getUser, isStaff, isSuperAdmin, isAdmin, needsName, canWrite } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
-import { SPARK_GIVE, SPARK_GET } from "@/lib/levels";
+import { SPARK_GIVE, SPARK_GET, writeLevel } from "@/lib/levels";
 import { ownImage } from "@/lib/images";
 import { validCategory } from "@/lib/tree";
 import { cleanSources, bodyRule } from "@/lib/md";
@@ -34,6 +34,7 @@ export async function createPost(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 40000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   const category = String(formData.get("category") || "");
+  if (!canWrite(user, kind)) redirect(`/write?error=${encodeURIComponent(`${kind} бичих эрх Түвшин ${writeLevel(kind)}-д хүрэхэд нээгдэнэ`)}`);
   if (!title || !body) {
     redirect(`/write?error=${encodeURIComponent("Гарчиг болон агуулгаа бөглөнө үү")}`);
   }
@@ -118,6 +119,9 @@ export async function updatePost(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 40000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
+  // Өөр төрөл рүү шилжүүлэхэд тухайн төрлийн түвшин шаардана
+  const [cur] = await sql`SELECT kind FROM posts WHERE id = ${postId} AND author_id = ${user.id}`;
+  if (cur && cur.kind !== kind && !canWrite(user, kind)) redirect(`/post/${postId}/edit?error=${encodeURIComponent(`${kind} бичих эрх Түвшин ${writeLevel(kind)}-д хүрэхэд нээгдэнэ`)}`);
   const category = String(formData.get("category") || "");
   if (!validCategory(category)) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
   const rule = bodyRule(kind, body);

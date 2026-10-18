@@ -2697,3 +2697,24 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ch-headlink { display: inline-flex; }
 .ch-page .ch-list { height: calc(100vh - 290px); min-height: 320px; }
 @media (max-width: 760px) { .ch-page .ch-list { height: calc(100dvh - 300px); } }
+
+/* Нийтлэл бичих эрх түгжээтэй */
+.wr-lock { position: relative; z-index: 1; max-width: 520px; margin: 64px auto; padding: 40px 32px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; border-radius: 24px; background: var(--surface); box-shadow: var(--card-shadow); }
+.wr-lock .wr-go { text-decoration: none; }
+.wr-lock h1 { margin: 0; font-size: 20px; color: var(--ink); }
+.wr-lock p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.wr-lock .och-bar { width: 100%; }
+.wr-lock-sub { font-size: 13px !important; }
+.wr-lock-acts { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
+.wr-lock-link { color: #00a89b; font-weight: 600; font-size: 14px; text-decoration: none; }
+@media (max-width: 860px) { .wr-lock { margin: 24px 16px; padding: 28px 20px; } }
+
+/* Түвшний икон (Figma 598:477) */
+.och-lvi { flex: none; display: block; filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--c) 40%, transparent)); }
+.och-lrow.dim .och-lvi { filter: none; }
+.och-lvl { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.och-lvl .och-lvi { filter: none; }
+.och h2.och-h1 { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 22px; }
+@media (max-width: 760px) { .och-lvl .och-chip { display: none; } }
+.ss-panel-link { display: inline-flex; text-decoration: none; }
+.ss-panel-link:hover { text-decoration: underline; text-underline-offset: 3px; }

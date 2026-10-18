@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { sql } from "@/lib/db";
-import { getUser, isStaff, displayName } from "@/lib/auth";
+import { getUser, isStaff, canApproveEvents, displayName } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
 import { fmtEventRange } from "@/lib/events";
@@ -16,7 +16,7 @@ const CHECK_EVENT = ["Гарчиг, тайлбар ойлгомжтой, алд�
 // Figma: Хяналт · Засварлах самбар (631:502), Эвент/Зарлал хянах цонх (692:496, 700:496)
 export default async function ReviewPost({ params, searchParams }) {
   const user = await getUser();
-  if (!isStaff(user)) redirect("/review");
+  if (!canApproveEvents(user)) redirect("/review");
   const { id } = await params;
   const { error } = await searchParams;
   const n = Number(id);
@@ -31,6 +31,7 @@ export default async function ReviewPost({ params, searchParams }) {
   if (p.status !== "pending") redirect(`/post/${p.id}`);
   if (p.author_id === user.id) redirect("/review?error=" + encodeURIComponent("Өөрийн контентыг өөр хянагч хянана"));
   const editable = p.kind === "Нийтлэл" || p.kind === "Мэдээ";
+  if (editable && !isStaff(user)) redirect("/review");
   const author = p.first_name ? `${p.initial}.${p.first_name}` : p.email;
   const m = p.meta || {};
   const facts = p.kind === "Эвент"

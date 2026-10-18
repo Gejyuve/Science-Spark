@@ -10,7 +10,7 @@ import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
 import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
-import { displayName, isAdmin, needsName, canReview } from "@/lib/auth";
+import { displayName, isAdmin, needsName, canReview, canEnterReview } from "@/lib/auth";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat, Person, followingSet } from "./Bits";
@@ -132,8 +132,8 @@ async function RightRail({ user }) {
               {I("wallet", 18)}<span>Данс</span>
               {I("arrow", 14)}
             </Link>
-            {canReview(user) && (
-              <Link href="/review" className="ss-action">
+            {canEnterReview(user) && (
+              <Link href={canReview(user) ? "/review" : "/review?t=events"} className="ss-action">
                 {I("shield", 18)}<span>Хянах</span>
                 {I("arrow", 14)}
               </Link>
@@ -157,7 +157,7 @@ async function RightRail({ user }) {
       )}
 
       <div className="ss-panel">
-        <p className="ss-panel-title orange">🔥 Асаж буй оч</p>
+        <Link href="/och" className="ss-panel-title orange ss-panel-link">🔥 Асаж буй оч</Link>
         {top.length === 0 && <p className="muted">Одоохондоо оч цуглуулсан хүн алга.</p>}
         {top.map((t) => (
           <Person key={t.id} id={t.id} initial={t.initial} first_name={t.first_name} avatar={t.avatar} points={t.points} followers={t.followers} viewer={user} following={following} />

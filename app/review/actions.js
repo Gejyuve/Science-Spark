@@ -4,12 +4,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { validCategory } from "@/lib/tree";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, canReview } from "@/lib/auth";
+import { getUser, isStaff, canReview, canApproveEvents } from "@/lib/auth";
+import { EVENT_APPROVE_REWARD, ARTICLE_REVIEW_REWARD } from "@/lib/levels";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
 import { examState, grade, sentences, SAMPLES, ERROR_TYPES, DECISIONS } from "@/lib/exam";
 
-const go = (path, key, msg) => redirect(`${path}?${key}=${encodeURIComponent(msg)}`);
+const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
 
 // Шалгалт илгээх
 export async function submitExam(formData) {
@@ -52,7 +53,7 @@ const CHECKS_EVENT = 6;
 // Хянагчийн шийдвэр: зөвшөөрөх (засвартай байж болно) эсвэл бичээч рүү буцаах
 export async function decidePost(formData) {
   const user = await getUser();
-  if (!isStaff(user)) redirect("/");
+  if (!canApproveEvents(user)) redirect("/");
   if (user.restricted_at) go("/review", "error", "Таны эрх хязгаарлагдсан байна");
   await ensureSchema();
   const id = Number(formData.get("post_id"));
@@ -64,6 +65,8 @@ export async function decidePost(formData) {
   const approve = formData.get("decision") === "approve";
   const note = String(formData.get("note") || "").trim().slice(0, 1000) || null;
   const editable = p.kind === "Нийтлэл" || p.kind === "Мэдээ";
+  // Нийтлэл, мэдээг зөвхөн хянагч, редакц; эвент, зарлалыг Түвшин 3+ хэрэглэгч ч хянана
+  if (editable && !isStaff(user)) go("/review", "error", "Нийтлэл хянах эрх хянагчийн шалгалт өгсний дараа нээгдэнэ");
 
   if (!approve) {
     if (!note) go(back, "error", "Буцаахдаа бичээчид тайлбар бичнэ үү");
@@ -100,9 +103,15 @@ export async function decidePost(formData) {
   if (d.length) {
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
     await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
+    // Хөдөлмөрийн оч: нэг контентод нэг л удаа
+    const reward = editable ? ARTICLE_REVIEW_REWARD : EVENT_APPROVE_REWARD;
+    const reason = `${editable ? "review_article" : "approve_event"}:${id}`;
+    await sql`INSERT INTO points_ledger (user_id, delta, reason)
+              SELECT ${user.id}, ${reward}, ${reason}
+              WHERE NOT EXISTS (SELECT 1 FROM points_ledger WHERE reason = ${reason})`;
   }
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
   revalidatePath("/review", "layout");
-  go("/review", "ok", editable ? "Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо" : "Нийтлэгдлээ");
+  go(editable ? "/review" : "/review?t=events", "ok", editable ? `Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо · +${ARTICLE_REVIEW_REWARD.toLocaleString("en-US")} оч` : `Нийтлэгдлээ · +${EVENT_APPROVE_REWARD} оч`);
 }

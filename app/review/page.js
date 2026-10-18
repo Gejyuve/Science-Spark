@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
-import { getUser, isStaff } from "@/lib/auth";
+import { getUser, isStaff, canReview, canApproveEvents } from "@/lib/auth";
+import { EVENT_APPROVE_REWARD, ARTICLE_REVIEW_REWARD, EVENT_PENALTY, ARTICLE_PENALTY } from "@/lib/levels";
 import { ago } from "@/lib/admin";
 import { fmtDate } from "@/lib/format";
 import { examState, MAX_FAILS, PASS_SCORE } from "@/lib/exam";
@@ -14,14 +15,16 @@ const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент",
 export default async function ReviewHome({ searchParams }) {
   const user = await getUser();
   const sp = await searchParams;
-  if (isStaff(user) || (sp.t === "words" && canApproveWords(user))) return <Queue user={user} sp={sp} />;
+  if (isStaff(user) || (sp.t === "words" && canApproveWords(user)) || (canApproveEvents(user) && (sp.t === "events" || !canReview(user)))) return <Queue user={user} sp={sp} />;
   return <Become user={user} sp={sp} />;
 }
 
 // Хянагчийн хяналтын жагсаалт (Figma 628:1121, 628:1294)
 async function Queue({ user, sp }) {
   const words = canApproveWords(user);
-  const t = sp.t === "words" ? "words" : !isStaff(user) ? "words" : sp.t === "cats" ? "cats" : sp.t === "events" ? "events" : "posts";
+  const staff = isStaff(user);
+  const ev = canApproveEvents(user);
+  const t = sp.t === "words" ? "words" : !staff ? (ev ? "events" : "words") : sp.t === "cats" ? "cats" : sp.t === "events" ? "events" : "posts";
   const kinds = GROUPS[t] || [];
   const rows = await sql`
     SELECT p.id, p.kind, p.title, p.created_at, p.author_id, u.initial, u.first_name, u.email, u.account_type
@@ -44,13 +47,13 @@ async function Queue({ user, sp }) {
       <Head user={user} tag="Хянагч" title="Хяналтын жагсаалт" sub="Хүлээгдэж буй контент · «Хянах» дээр дарж засварлах самбарыг нээнэ" />
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats">
-        <Stat label="Хүлээгдэж буй" value={s.pending} note="таны хянах боломжтой" tone={s.pending ? "warn" : ""} />
+        <Stat label="Хүлээгдэж буй" value={staff ? s.pending : s.events} note="таны хянах боломжтой" tone={s.pending ? "warn" : ""} />
         <Stat label="Өнөөдөр хянасан" value={s.today} />
         <Stat label="Дундаж хугацаа" value={`${s.avg_h} цаг`} note="ирснээс шийдвэр хүртэл" />
         <Stat label="Нийт хянасан" value={s.total} />
       </div>
       <Tabs cur={t === "posts" ? "" : t} href={(k) => (k ? `/review?t=${k}` : "/review")}
-        tabs={[...(isStaff(user) ? [["", "Нийтлэл, мэдээ", s.posts], ["events", "Эвент, зарлал", s.events]] : []), ["words", "Шинэ үг", s.words], ...(isStaff(user) ? [["cats", "Ангилал", s.cats]] : [])]} />
+        tabs={[...(staff ? [["", "Нийтлэл, мэдээ", s.posts]] : []), ...(ev ? [["events", "Эвент, зарлал", s.events]] : []), ["words", "Шинэ үг", s.words], ...(staff ? [["cats", "Ангилал", s.cats]] : [])]} />
       {t === "cats" ? <Cats /> : t === "words" ? <Words user={user} can={words} /> : (
       <section className="adm-card flush">
         <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : "Эвент, зарлал"} ({rows.length})</b></div>
@@ -80,8 +83,8 @@ async function Queue({ user, sp }) {
         )}
         <p className="adm-banner inset">
           {t === "posts"
-            ? "Алдаатай нийтлэлийг зөвшөөрсөн нь илэрвэл редакц оч хасаж, хянагчийн эрхийг түдгэлзүүлж болно. Өөрийн нийтлэлийг хянах боломжгүй."
-            : "Асуудалтай эвент, зарлалыг зөвшөөрсөн нь илэрвэл редакц оч хасаж болно. Огноо, байршил, холбоосыг заавал шалгаарай."}
+            ? `Зөвшөөрсөн нийтлэл, мэдээ бүрт +${ARTICLE_REVIEW_REWARD.toLocaleString("en-US")} оч. Хэтэрхий алдаатай нийтлэлийг зөвшөөрсөн нь илэрвэл −${ARTICLE_PENALTY.toLocaleString("en-US")} оч, хянагчийн эрхийг түдгэлзүүлж болно. Өөрийн нийтлэлийг хянах боломжгүй.`
+            : `Зөвшөөрсөн эвент, зарлал бүрт +${EVENT_APPROVE_REWARD} оч. Асуудалтай эвент, зарлалыг зөвшөөрсөн нь илэрвэл −${EVENT_PENALTY.toLocaleString("en-US")} оч. Огноо, байршил, холбоосыг заавал шалгаарай.`}
         </p>
       </section>
       )}

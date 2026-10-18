@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser } from "@/lib/auth";
+import { getUser, canWrite } from "@/lib/auth";
+import { writeLevel } from "@/lib/levels";
 import { updatePost, deletePost } from "../../../posts/actions";
 import PostForm from "../../../components/PostForm";
 
@@ -26,6 +27,8 @@ export default async function EditPage({ params, searchParams }) {
         post={post}
         error={error}
         heading="Нийтлэлээ засварлах"
+        kinds={["Нийтлэл", "Мэдээ"].filter((k) => k === post.kind || canWrite(user, k))}
+        locked={{ Нийтлэл: writeLevel("Нийтлэл"), Мэдээ: writeLevel("Мэдээ") }}
         extra={<Link href={`/post/${post.id}`} className="wr-cancel">Цуцлах</Link>}
       />
       <form action={deletePost} className="wr-delete">

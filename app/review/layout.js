@@ -2,7 +2,7 @@ import Link from "next/link";
 import TopNav from "../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, canReview, needsName } from "@/lib/auth";
+import { getUser, isStaff, canReview, canEnterReview, canApproveEvents, needsName } from "@/lib/auth";
 import { levelFor } from "@/lib/levels";
 import { canApproveWords } from "@/lib/terms";
 import AdminNav from "../admin/_c/AdminNav";
@@ -15,7 +15,7 @@ export default async function ReviewLayout({ children }) {
   const user = await getUser();
   if (!user) redirect("/login");
   if (needsName(user)) redirect("/profile/edit");
-  if (!canReview(user)) redirect("/");
+  if (!canEnterReview(user)) redirect("/");
   await ensureSchema();
   const staff = isStaff(user);
   const lv = levelFor(user.points).n;
@@ -33,7 +33,8 @@ export default async function ReviewLayout({ children }) {
         { key: "exam", label: "Шалгалтын жишээ", icon: "a_logic", href: "/review/exam" },
       ]
     : [
-        { key: "become", label: "Хянагч болох", icon: "a_reviewers", href: "/review", exact: true, match: "^/review/exam" },
+        ...(canApproveEvents(user) ? [{ key: "events", label: "Эвент, зарлал зөвшөөрөх", icon: "a_content", href: "/review?t=events", ...(canReview(user) ? { exact: true, match: "^/review/\\d+" } : { exact: true, match: "^/review(/\\d+)?$" }) }] : []),
+        ...(canReview(user) ? [{ key: "become", label: "Хянагч болох", icon: "a_reviewers", href: "/review", exact: true, match: "^/review/exam" }] : []),
         { key: "rules", label: "Хянагчийн дүрэм", icon: "a_requests", href: "/review/rules" },
         ...(canApproveWords(user) ? [{ key: "words", label: "Шинэ үг зөвшөөрөх", icon: "a_content", href: "/review?t=words", match: "^/review/word" }] : []),
       ];

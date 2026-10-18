@@ -12,7 +12,7 @@ const FIELDS = ["title", "subtitle", "kind", "category", "body", "sources", "ima
 
 // Нийтлэл бичих маягт. Бичиж байсан бүх зүйлийг (текст, холбоос, зураг, эх сурвалж, төрөл, ангилал)
 // энэ хөтөч дээр автоматаар хадгалж, дараа нь буцаж ороход сэргээнэ.
-export default function WriteForm({ action, post = {}, tree, error, extra, heading }) {
+export default function WriteForm({ action, post = {}, tree, error, extra, heading, kinds = KINDS, locked = {} }) {
   const form = useRef(null);
   const key = post.id ? `ss-draft:edit:${post.id}` : "ss-draft:new";
   const base = {
@@ -125,7 +125,7 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
         <label className="wr-label">Төрөл сонгох <em>Заавал</em></label>
         <div className="wr-select">
           <select name="kind" defaultValue={init.kind} aria-label="Төрөл">
-            {KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
+            {KINDS.map((k) => <option key={k} value={k} disabled={!kinds.includes(k)}>{k}{kinds.includes(k) ? "" : ` · Түвшин ${locked[k] || ""}-өөс`}</option>)}
           </select>
           <img src="/icons/chevdown.svg" width={20} height={20} alt="" />
         </div>

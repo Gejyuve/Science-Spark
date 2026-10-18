@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { LEVELS, levelFor, nextLevel, SPARK_GIVE, SPARK_GET } from "@/lib/levels";
+import { LEVELS, levelFor, nextLevel, SPARK_GIVE, SPARK_GET, EVENT_APPROVE_REWARD, ARTICLE_REVIEW_REWARD, EVENT_PENALTY, ARTICLE_PENALTY, EVENT_LEVEL, REVIEWER_LEVEL } from "@/lib/levels";
+import { TERM_REWARD } from "@/lib/terms";
+import { JOIN_REWARD } from "@/lib/clubs-shared";
 import { POINTS_TOTAL } from "@/lib/profile";
 import Shell from "../components/Shell";
 import { Avatar, fmtK } from "../components/Bits";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Очны учир · Science Spark" };
+export const metadata = { title: "Асаж буй оч · Science Spark" };
 
 const n = (x) => Number(x || 0).toLocaleString("en-US");
 
@@ -16,25 +18,26 @@ const ACTIVE = [
   ["Оч өгөх", "Нийтлэл, асуулт, хариулт гэх мэт контентод · нэг контентод 1 л удаа", `+${SPARK_GIVE}`],
   ["Оч авах (контент, хариулт)", "Таны контентод хэн нэгэн оч өгөхөд · нэг хүнээс 1 л удаа", `+${SPARK_GET}`],
   ["Профайлаа бөглөх", "Талбар бүрд нэг л удаа", `+${POINTS_TOTAL} хүртэл`],
+  ["Шинэ үг нэмэх", "Толинд нэмсэн үг батлагдвал", `+${TERM_REWARD}`],
+  ["Клубт элсэх", "Анхны клубт 1 л удаа", `+${JOIN_REWARD}`],
+  ["Эвент, зарлал зөвшөөрөх", `Түвшин ${EVENT_LEVEL}-аас · зөвшөөрсөн бүрт · асуудалтай бол −${n(EVENT_PENALTY)} оч`, `+${n(EVENT_APPROVE_REWARD)}`],
+  ["Нийтлэл хянах", `Түвшин ${REVIEWER_LEVEL}-өөс, хянагч · зөвшөөрсөн бүрт · хэтэрхий алдаатай бол −${n(ARTICLE_PENALTY)} оч`, `+${n(ARTICLE_REVIEW_REWARD)}`],
 ];
 // Удахгүй нэвтрэх (Figma: Очны дүрэм)
 const SOON = [
   ["Асуултад хариулах", "Нэг асуултад 1 л удаа", "+10"],
-  ["Шинэ үг нэмэх", "Баталгаажвал", "+30"],
   ["Асуулт асуух", "", "+50"],
   ["Бодрол хуваалцах", "", "+100"],
   ["Зарлал хуваалцах", "Нийтлэгдвэл", "+200"],
   ["Эвент хуваалцах", "Нийтлэгдвэл", "+500"],
-  ["Клубт элсэх", "Анхны клубт 1 л удаа", "+600"],
   ["Нийтлэл бичих", "Түвшин 1-ээс · нийтлэгдвэл", "+1,000"],
-  ["Эвент, зарлал зөвшөөрөх", "Түвшин 3-аас · асуудалтай бол −5,000 оч", "+500"],
-  ["Нийтлэл хянах", "Түвшин 4-өөс · хэтэрхий алдаатай бол −10,000 оч", "+2,000"],
   ["Анхны удаагийн шагнал", "Анхны хариулт, үг, нийтлэл тус бүрт 1 л удаа", "+50"],
 ];
 const PERIODS = [["week", "Энэ долоо хоног", "7 days"], ["month", "Энэ сар", "30 days"], ["all", "Бүх цаг", null]];
 
 function LevelIcon({ l, size = 36 }) {
-  return <span className="och-lv" style={{ "--c": l.color, width: size, height: size }}>{l.n || "·"}</span>;
+  if (!l.n) return <span className="och-lv" style={{ "--c": l.color, width: size, height: size }}>·</span>;
+  return <img className="och-lvi" src={`/icons/lv${l.n}.svg`} width={size} height={size} alt={`Түвшин ${l.n} · ${l.name}`} style={{ "--c": l.color }} />;
 }
 
 export default async function Och({ searchParams }) {
@@ -51,7 +54,7 @@ export default async function Och({ searchParams }) {
       FROM users u JOIN points_ledger l ON l.user_id = u.id
       WHERE u.first_name <> ''
       GROUP BY u.id
-      ORDER BY gained DESC, total DESC LIMIT 10`;
+      ORDER BY gained DESC, total DESC LIMIT 50`;
     if (user) {
       const [r] = await sql`
         WITH s AS (
@@ -72,8 +75,42 @@ export default async function Och({ searchParams }) {
   return (
     <Shell user={user} header="nav">
       <div className="ss-card och">
-        <h1>Очны учир</h1>
-        <p className="och-sub">Оч олох дүрэм, түвшний мэдээлэл, шилдгүүдийн жагсаалт. Түвшин зөвхөн өөрийн хөдөлмөрөөр олсон очоор ахина.</p>
+        <h1>🔥 Асаж буй оч</h1>
+        <p className="och-sub">Хамгийн их оч цуглуулж буй гишүүд. Түвшин зөвхөн өөрийн хөдөлмөрөөр олсон очоор ахина.</p>
+        <div className="ss-feedtabs och-tabs">
+          {PERIODS.map(([k, l]) => <Link key={k} href={`/och?p=${k}`} className={period[0] === k ? "on" : ""}>{l}</Link>)}
+        </div>
+        <div className="och-board">
+          <div className="och-brow head"><span>№</span><span>Хэрэглэгч</span><span>Түвшин</span><span>{period[0] === "all" ? "Олсон" : period[1]}</span><span>Данс</span></div>
+          {top.length === 0 && <p className="ss-empty">Одоохондоо мэдээлэл алга.</p>}
+          {top.map((t, i) => {
+            const l = levelFor(t.total);
+            return (
+              <Link key={t.id} href={`/u/${t.id}`} className={"och-brow" + (user && user.id === t.id ? " me" : "")}>
+                <span>{i + 1}</span>
+                <span className="och-who"><Avatar user={t} size={28} /><b>{t.initial}.{t.first_name}</b></span>
+                <span className="och-lvl"><LevelIcon l={l} size={22} /><span className="och-chip" style={{ "--c": l.color }}>{l.name}</span></span>
+                <span className="och-plus">{t.gained > 0 ? "+" : ""}{n(t.gained)}</span>
+                <span>{n(t.total)}</span>
+              </Link>
+            );
+          })}
+          {user && me && !top.some((t) => t.id === user.id) && (
+            <>
+              <div className="och-dots">· · ·</div>
+              <div className="och-brow me">
+                <span>{me.rank}</span>
+                <span className="och-who"><Avatar user={user} size={28} /><b>{user.initial}.{user.first_name} (та)</b></span>
+                <span className="och-lvl"><LevelIcon l={lv} size={22} /><span className="och-chip" style={{ "--c": lv.color }}>{lv.name}</span></span>
+                <span className="och-plus">{me.gained > 0 ? "+" : ""}{n(me.gained)}</span>
+                <span>{n(me.total)}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <h2 className="och-h1">Очны учир</h2>
+        <p className="och-sub">Оч олох дүрэм, түвшин, эрхүүд.</p>
 
         {user && (
           <>
@@ -106,7 +143,7 @@ export default async function Och({ searchParams }) {
               <span className="och-lname"><b>{l.name}</b><small>{l.tagline}</small></span>
               <span className="och-min">✦ {n(l.min)}+</span>
               <span className="och-perk">
-                {l.perkLocked ? <small>🔒 Эрх түгжээтэй</small> : <><b>✓ {l.perk}</b>{l.note && <small>{l.note}</small>}</>}
+                {l.perkLocked ? <small>🔒 Эрх түгжээтэй</small> : <b>✓ {l.perk}</b>}
               </span>
             </div>
           ))}
@@ -142,38 +179,6 @@ export default async function Och({ searchParams }) {
           </ul>
         </div>
 
-        <h2>Тэргүүлэгчдийн жагсаалт</h2>
-        <div className="ss-feedtabs och-tabs">
-          {PERIODS.map(([k, l]) => <Link key={k} href={`/och?p=${k}`} className={period[0] === k ? "on" : ""}>{l}</Link>)}
-        </div>
-        <div className="och-board">
-          <div className="och-brow head"><span>№</span><span>Хэрэглэгч</span><span>Түвшин</span><span>{period[0] === "all" ? "Олсон" : period[1]}</span><span>Данс</span></div>
-          {top.length === 0 && <p className="ss-empty">Одоохондоо мэдээлэл алга.</p>}
-          {top.map((t, i) => {
-            const l = levelFor(t.total);
-            return (
-              <Link key={t.id} href={`/u/${t.id}`} className={"och-brow" + (user && user.id === t.id ? " me" : "")}>
-                <span>{i + 1}</span>
-                <span className="och-who"><Avatar user={t} size={28} /><b>{t.initial}.{t.first_name}</b></span>
-                <span><span className="och-chip" style={{ "--c": l.color }}>{l.name}</span></span>
-                <span className="och-plus">{t.gained > 0 ? "+" : ""}{n(t.gained)}</span>
-                <span>{n(t.total)}</span>
-              </Link>
-            );
-          })}
-          {user && me && !top.some((t) => t.id === user.id) && (
-            <>
-              <div className="och-dots">· · ·</div>
-              <div className="och-brow me">
-                <span>{me.rank}</span>
-                <span className="och-who"><Avatar user={user} size={28} /><b>{user.initial}.{user.first_name} (та)</b></span>
-                <span><span className="och-chip" style={{ "--c": lv.color }}>{lv.name}</span></span>
-                <span className="och-plus">{me.gained > 0 ? "+" : ""}{n(me.gained)}</span>
-                <span>{n(me.total)}</span>
-              </div>
-            </>
-          )}
-        </div>
       </div>
     </Shell>
   );
