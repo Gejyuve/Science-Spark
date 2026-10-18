@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DrawerBtn } from "./Drawer";
 
 const I = (name, size = 22) => (
   <img className={/^(logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt="" />
@@ -6,9 +7,10 @@ const I = (name, size = 22) => (
 
 // Дээд цэс: лого ба 6 товч. Зүүн 3 товчны үүргийг нүүрний шүүлтүүр рүү шилжүүлсэн. Нүүрэнд наалттай (sticky),
 // бусад бүх хуудсанд (хянах, админ орно) хөдөлгөөнгүй байдлаар харагдана.
-export function NavRow({ active }) {
+export function NavRow({ active, menu = false, me = null }) {
   return (
-    <div className="ss-topnav">
+    <div className={"ss-topnav" + (menu ? " has-drawers" : "")}>
+      {menu && <DrawerBtn side="left" className="ss-round ss-mbtn" label="Цэс">{I("menu", 20)}</DrawerBtn>}
       <span className="ss-round soon" title="Тун удахгүй">{I("hspark")}</span>
       <span className="ss-round soon" title="Тун удахгүй">{I("dice")}</span>
       <span className="ss-round soon" title="Тун удахгүй">{I("ask", 24)}</span>
@@ -18,6 +20,7 @@ export function NavRow({ active }) {
       <Link className={"ss-round" + (active === "/events" ? " on" : "")} href="/events" title="Эвент">{I("event", 24)}</Link>
       <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
       <Link className={"ss-round" + (active === "/clubs" ? " on" : "")} href="/clubs" title="Клуб">{I("club", 24)}</Link>
+      {menu && <DrawerBtn side="right" className="ss-round ss-mbtn ss-me" label="Профайл">{me}</DrawerBtn>}
     </div>
   );
 }

@@ -2613,3 +2613,47 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ch-msg { max-width: 88%; }
   .ch-compose > .ss-avatar { display: none; }
 }
+
+/* ===== Гар утас: зүүн цэс ☰ товч, баруун самбар профайл зураг (Figma «Mobile · Нүүр», «Mobile · Меню») ===== */
+.ss-mbtn, .ss-dhead, .ss-scrim { display: none; }
+@media (max-width: 760px) {
+  .ss-shell { grid-template-columns: minmax(0, 1fr); padding: 0 12px 24px; }
+  .ss-main { gap: 12px; }
+  .ss-main > .ss-header { margin: 0 -12px; border-radius: 0 0 26px 26px; border-top: 0; padding: 4px 10px 10px; }
+  .ss-main > .ss-header.compact { padding-bottom: 0; }
+  .ss-topnav { gap: 4px; height: 60px; justify-content: space-between; }
+  .ss-topnav.has-drawers .ss-round { width: 34px; height: 34px; flex: none; }
+  .ss-topnav .ss-round img { width: 18px; height: 18px; }
+  .ss-topnav .ss-logo { width: 50px; height: 56px; flex: none; }
+  .ss-topnav .ss-logo img { width: 50px; height: 50px; }
+  .ss-mbtn { display: grid; padding: 0; cursor: pointer; font: inherit; }
+  .ss-me { overflow: hidden; border: 0 !important; background: var(--accent) !important; }
+  .ss-me .ss-avatar, .ss-me img.ss-avatar { width: 34px !important; height: 34px !important; }
+  /* Хажуугийн самбарууд → гулсдаг хүрээ */
+  .ss-side, .ss-right {
+    position: fixed; top: 0; bottom: 0; z-index: 900; width: min(360px, 88vw); height: auto; margin: 0;
+    overflow-y: auto; overscroll-behavior: contain; background: var(--bg); padding: 14px 14px 32px;
+    transition: transform .25s ease; box-shadow: 0 0 40px rgba(0, 0, 0, .18); border-radius: 0;
+  }
+  .ss-side { left: 0; transform: translateX(-105%); display: flex; flex-direction: column; gap: 12px; }
+  .ss-right { right: 0; transform: translateX(105%); display: flex; }
+  html[data-drawer="left"] .ss-side, html[data-drawer="right"] .ss-right { transform: none; }
+  html[data-drawer] { overflow: hidden; }
+  .ss-scrim { display: block; position: fixed; inset: 0; z-index: 899; background: rgba(10, 25, 30, .35); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  html[data-drawer] .ss-scrim { opacity: 1; pointer-events: auto; }
+  .ss-dhead { display: flex; align-items: center; gap: 10px; padding: 4px 4px 6px; }
+  .ss-dhead.right { padding: 0; margin-bottom: -6px; }
+  .ss-dclose { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--surface); box-shadow: var(--card-shadow); color: var(--text); font-size: 24px; line-height: 1; cursor: pointer; }
+  .ss-side .ss-search { margin: 0; background: var(--surface); }
+  .ss-side .ss-nav { flex-direction: column; overflow: visible; padding: 10px; border-radius: 22px; background: var(--surface); }
+  .ss-side .ss-nav-item { height: 46px; }
+  .ss-side .ss-nav-item.on { background: var(--teal-bg); }
+  .ss-side .ss-projects { display: inline-flex; }
+  .ss-side > .ss-grow, .ss-side > .theme-toggle { display: none; }
+  .ss-dhead .theme-toggle { display: inline-flex; margin: 0; }
+  .ss-dhead .ss-grow { display: block; flex: 1; }
+}
+@media (max-width: 360px) {
+  .ss-topnav.has-drawers .ss-round { width: 31px; height: 31px; }
+  .ss-topnav .ss-logo, .ss-topnav .ss-logo img { width: 42px; }
+}
