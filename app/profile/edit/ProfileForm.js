@@ -248,8 +248,9 @@ function merge(user, profile, d) {
   p.socials = { ...(p.socials || {}) };
   for (const s of SOCIALS) if (`s_${s.key}` in d) p.socials[s.key] = d[`s_${s.key}`];
   const num = (v) => (v ? Number(v) : null);
-  if ("cover" in d) { p.cover_id = num(d.cover); p.cover_src = num(d.cover_src); p.cover_pos = d.cover_pos || null; }
-  if ("avatar" in d) { u.avatar = num(d.avatar); u.avatar_src = num(d.avatar_src); u.avatar_pos = d.avatar_pos || null; }
+  // Ноорогт зураг хоосон байвал (жишээ нь оруулах үед алдаа гарсан) хадгалсан зургийг дарж харуулахгүй
+  if (d.cover) { p.cover_id = num(d.cover); p.cover_src = num(d.cover_src); p.cover_pos = d.cover_pos || null; }
+  if (d.avatar) { u.avatar = num(d.avatar); u.avatar_src = num(d.avatar_src); u.avatar_pos = d.avatar_pos || null; }
   return { user: u, profile: p };
 }
 

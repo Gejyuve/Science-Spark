@@ -30,7 +30,7 @@ export default async function EditProfilePage({ searchParams }) {
         </div>
       )}
       <ProfileForm
-        user={{ id: user.id, email: user.email, surname: user.surname || "", first_name: user.first_name || "" }}
+        user={{ id: user.id, email: user.email, surname: user.surname || "", first_name: user.first_name || "", avatar: user.avatar, avatar_src: user.avatar_src, avatar_pos: user.avatar_pos }}
         profile={profile}
         error={error}
         isNew={isNew}
