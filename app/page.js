@@ -34,6 +34,12 @@ export default async function Home({ searchParams }) {
     user = await getUser();
     await ensureSchema();
     posts = await sql`
+      -- Хамгийн тод: тухайн хугацааны очийг нэг удаа нийлүүлнэ (нийтлэл бүрт тусад нь тоолохгүй)
+      WITH win AS (
+        SELECT s.post_id, COUNT(*)::int AS n FROM sparks s
+        WHERE ${top}::boolean AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))
+        GROUP BY s.post_id
+      )
       SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.image_id, p.views, p.created_at, p.category, u.initial, u.first_name, u.avatar_id AS avatar,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
@@ -54,6 +60,7 @@ export default async function Home({ searchParams }) {
         ORDER BY (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) DESC, c.created_at DESC, c.id DESC
         LIMIT 1
       ) ta ON true
+      LEFT JOIN win ON win.post_id = p.id
       WHERE p.status = 'published' AND p.kind <> 'Үг'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
@@ -61,7 +68,7 @@ export default async function Home({ searchParams }) {
         AND (NOT ${news}::boolean OR p.kind = 'Мэдээ')
         -- Цагийн шүүлтүүр (санамсаргүйд хамаарахгүй). Хамгийн тод: тухайн хугацаанд оч авсан
         AND (${rand}::boolean OR (CASE WHEN ${top}::boolean
-             THEN EXISTS (SELECT 1 FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))
+             THEN win.post_id IS NOT NULL
              ELSE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) END))
         AND (${!following || !user}::boolean OR p.author_id IN
              (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))
@@ -69,7 +76,7 @@ export default async function Home({ searchParams }) {
         -- Санамсаргүй: үзээгүй контент нь эхэнд, дотроо холилдсон
         CASE WHEN ${rand}::boolean THEN EXISTS (SELECT 1 FROM post_views v WHERE v.post_id = p.id AND v.viewer = ${user ? "u:" + user.id : ""}) END ASC NULLS LAST,
         CASE WHEN ${rand}::boolean THEN md5(p.id::text || ${seed}) END ASC NULLS LAST,
-        CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks s WHERE s.post_id = p.id AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))) END DESC NULLS LAST,
+        CASE WHEN ${top}::boolean THEN win.n END DESC NULLS LAST,
         CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id) END DESC NULLS LAST,
         p.created_at DESC
       LIMIT 30`;

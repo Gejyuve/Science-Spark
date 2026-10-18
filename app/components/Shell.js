@@ -70,33 +70,42 @@ function Header({ user, compact, compose, composeError, active }) {
   );
 }
 
-async function RightRail({ user }) {
-  let top = [];
-  let followers = 0;
-  let unread = 0;
-  let notifs = [];
-  let clubs = [];
-  let clubFollows = new Set();
-  let myClub = null;
-  let chatNew = 0;
-  const following = await followingSet(user);
-  try {
-    top = await sql`
+// «Асаж буй оч», «Гялбаж буй клубууд» бүх хэрэглэгчид ижил тул сервер дээр 1 минут хадгална
+const RAIL_TTL = 60000;
+let railCache = { at: 0, data: null };
+async function railLists() {
+  if (railCache.data && Date.now() - railCache.at < RAIL_TTL) return railCache.data;
+  const [top, clubs] = await Promise.all([
+    sql`
       SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar, SUM(l.delta)::int AS points,
              (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id)::int AS followers
       FROM points_ledger l JOIN users u ON u.id = l.user_id
       GROUP BY u.id HAVING SUM(l.delta) > 0
-      ORDER BY points DESC LIMIT 5`;
-    clubs = await hotClubs(5).catch(() => []);
-    clubFollows = await clubFollowSet(user);
-    if (user) {
-      followers = (await sql`SELECT COUNT(*)::int AS n FROM follows WHERE followee_id = ${user.id}`)[0].n;
-      unread = await unreadCount(user.id);
-      notifs = await listNotifications(user.id, { limit: 8 });
-      myClub = await membershipOf(user.id);
-      chatNew = myClub ? await chatUnread(user.id, myClub.club_id) : 0;
-    }
-  } catch (e) {}
+      ORDER BY points DESC LIMIT 5`,
+    hotClubs(5).catch(() => []),
+  ]);
+  railCache = { at: Date.now(), data: { top, clubs } };
+  return railCache.data;
+}
+
+async function RightRail({ user }) {
+  const none = (v) => () => v;
+  // Бие биеэсээ хамааралгүй асуулгуудыг зэрэг явуулна
+  const [lists, following, clubFollows, followers, unread, notifs, chat] = await Promise.all([
+    railLists().catch(none({ top: [], clubs: [] })),
+    followingSet(user),
+    clubFollowSet(user),
+    user ? sql`SELECT COUNT(*)::int AS n FROM follows WHERE followee_id = ${user.id}`.then((r) => r[0].n).catch(none(0)) : 0,
+    user ? unreadCount(user.id) : 0,
+    user ? listNotifications(user.id, { limit: 8 }).catch(none([])) : [],
+    user
+      ? membershipOf(user.id)
+          .then(async (myClub) => ({ myClub, chatNew: myClub ? await chatUnread(user.id, myClub.club_id) : 0 }))
+          .catch(none({ myClub: null, chatNew: 0 }))
+      : { myClub: null, chatNew: 0 },
+  ]);
+  const { top, clubs } = lists;
+  const { myClub, chatNew } = chat;
 
   return (
     <aside className="ss-right">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cache } from "react";
 import { relTime } from "@/lib/format";
 import { sql } from "@/lib/db";
 import { toggleFollow } from "../posts/actions";
@@ -62,14 +63,17 @@ export function When({ d, size = 14, className = "ss-date", align = "right" }) {
 }
 
 // Нэвтэрсэн хүний дагаж буй хүмүүсийн жагсаалт (нэг хуудсанд нэг удаа)
-export async function followingSet(viewer) {
-  if (!viewer) return new Set();
+// Нэг хүсэлтийн дотор хуудас ба баруун самбар хоёулаа дуудна: React cache нэг л удаа асуулга явуулна
+const followsOf = cache(async (id) => {
   try {
-    const r = await sql`SELECT followee_id FROM follows WHERE follower_id = ${viewer.id}`;
+    const r = await sql`SELECT followee_id FROM follows WHERE follower_id = ${id}`;
     return new Set(r.map((x) => x.followee_id));
   } catch (e) {
     return new Set();
   }
+});
+export async function followingSet(viewer) {
+  return viewer ? followsOf(viewer.id) : new Set();
 }
 
 // Дагах "+" товч (Figma: товч профайлын очны тооны хажууд)
