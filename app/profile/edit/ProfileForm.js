@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { saveProfile } from "../actions";
 import { POINTS, POINTS_TOTAL, OPTIONS, COUNTRIES, MN_CITIES, SCHOOLS, SOCIALS, countWords } from "@/lib/profile";
+import { useDraft, hhmm } from "@/lib/useDraft";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
 const YEARS = Array.from({ length: 2026 - 1930 + 1 }, (_, i) => 2026 - i);
@@ -53,9 +54,8 @@ function Select({ name, options, value, placeholder }) {
   );
 }
 
-export default function ProfileForm({ user, profile, error, isNew }) {
+function Inner({ user, profile, error, isNew, formRef, dr }) {
   const p = profile || {};
-  const formRef = useRef(null);
   const [earned, setEarned] = useState(() => {
     const e = {};
     for (const k of Object.keys(POINTS)) if (p[k] && k !== "socials") e[k] = true;
@@ -71,7 +71,7 @@ export default function ProfileForm({ user, profile, error, isNew }) {
   const latin = /[A-Za-z]/.test(surname + first);
 
   return (
-    <form ref={formRef} action={saveProfile} className="pf-col" onChange={() => setEarned(earnedFrom(formRef.current))}>
+    <form ref={formRef} action={saveProfile} className="pf-col" onChange={() => setEarned(earnedFrom(formRef.current))} onSubmit={dr.drop}>
       <section className="pf-card pf-head">
         <div className="pf-head-top">
           <img src="/icons/logo.svg" width={56} height={56} alt="" />
@@ -79,7 +79,12 @@ export default function ProfileForm({ user, profile, error, isNew }) {
           <span className="pf-total"><strong>{total}</strong> / {POINTS_TOTAL} оч</span>
         </div>
         <div className="pf-bar"><i style={{ width: `${(total / POINTS_TOTAL) * 100}%` }} /></div>
+        {dr.restoredAt && (
+          <p className="wr-restored"><span>↺ Өмнө бөглөж байсан ноорог тань сэргээгдлээ ({hhmm(dr.restoredAt)}).</span>
+            <button type="button" onClick={dr.clear}>Ноорог устгах</button></p>
+        )}
         {error && <p className="error">{error}</p>}
+        {dr.savedAt && <small className="cf-saved">✓ Ноорог энэ төхөөрөмж дээр хадгалагдсан · {hhmm(dr.savedAt)}</small>}
       </section>
 
       <section className="pf-card">
@@ -229,4 +234,29 @@ export default function ProfileForm({ user, profile, error, isNew }) {
       </section>
     </form>
   );
+}
+
+const PF_KEYS = ["about", "gender", "birth_country", "birth_city", "live_country", "live_city", "education", "school", "orcid", "profession", "job", "origin_view", "religion", "belief", "politics"];
+function merge(user, profile, d) {
+  if (!d) return { user, profile };
+  const u = { ...user }, p = { ...(profile || {}) };
+  if ("surname" in d) u.surname = d.surname;
+  if ("first_name" in d) u.first_name = d.first_name;
+  for (const k of PF_KEYS) if (k in d) p[k] = d[k];
+  p.email_public = "email_public" in d;
+  if (d.by && d.bm && d.bd) p.birth_date = new Date(Date.UTC(+d.by, +d.bm - 1, +d.bd)).toISOString();
+  p.socials = { ...(p.socials || {}) };
+  for (const s of SOCIALS) if (`s_${s.key}` in d) p.socials[s.key] = d[`s_${s.key}`];
+  const num = (v) => (v ? Number(v) : null);
+  if ("cover" in d) { p.cover_id = num(d.cover); p.cover_src = num(d.cover_src); p.cover_pos = d.cover_pos || null; }
+  if ("avatar" in d) { u.avatar = num(d.avatar); u.avatar_src = num(d.avatar_src); u.avatar_pos = d.avatar_pos || null; }
+  return { user: u, profile: p };
+}
+
+// Профайлын маягт: бөглөсөн утга энэ төхөөрөмж дээр ноорог болж хадгалагдана
+export default function ProfileForm(props) {
+  const formRef = useRef(null);
+  const dr = useDraft(`ss-draft:profile:${props.user.id}`, formRef, { skip: ["agree"] });
+  const { user, profile } = merge(props.user, props.profile, dr.draft);
+  return <Inner key={dr.ver} {...props} user={user} profile={profile} formRef={formRef} dr={dr} />;
 }

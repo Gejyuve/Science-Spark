@@ -9,6 +9,7 @@ import { parseLocation, inMongolia } from "@/lib/geo";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 import { CLUB_CATEGORIES, ORG_TYPES, BOARD_MAX } from "@/lib/clubs-shared";
 import { COUNTRIES, MN_CITIES, SOCIALS, countWords } from "@/lib/profile";
+import { useDraft, hhmm } from "@/lib/useDraft";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
 const THIS_YEAR = new Date().getFullYear();
@@ -72,6 +73,7 @@ function Board({ initial = [] }) {
     <div className="cf-board">
       <input type="hidden" name="board" value={picked.map((p) => p.id).join(",")} />
       <input type="hidden" name="board_keep" value={picked.filter((p) => p.keep).map((p) => p.id).join(",")} />
+      <input type="hidden" name="board_json" value={JSON.stringify(picked)} />
       {picked.map((u) => (
         <div key={u.id} className="cf-member">
           <Av u={u} />
@@ -108,16 +110,16 @@ function Av({ u, size = 36 }) {
 const ACTIONS = { club: createClub, org: createOrg, edit: updateEntity };
 
 // Клуб, байгууллага бүртгүүлэх / засах маягт (Figma: Клубээр бүртгүүлэх, Байгууллагаар бүртгүүлэх)
-export default function ClubForm({ leader, kind = "club", entity = null, board = [] }) {
+function Inner({ leader, kind, entity, board, init, formRef, dr }) {
   const org = kind === "org";
-  const e = entity || {};
+  const e = init;
   const [state, action, pending] = useActionState(ACTIONS[entity ? "edit" : kind], null);
-  const form = useRef(null);
+  const form = formRef;
   const [name, setName] = useState(e.name || "");
   const [address, setAddress] = useState(e.address || "");
   const [about, setAbout] = useState(e.about || "");
   const [rules, setRules] = useState(e.rules || "");
-  const [loc, setLoc] = useState(e.lat != null ? `${e.lat}, ${e.lng}` : "");
+  const [loc, setLoc] = useState(e._loc ?? (e.lat != null ? `${e.lat}, ${e.lng}` : ""));
   const [country, setCountry] = useState(e.country || "Монгол");
   const [filled, setFilled] = useState(0);
   const p = useMemo(() => parseLocation(loc), [loc]);
@@ -141,7 +143,7 @@ export default function ClubForm({ leader, kind = "club", entity = null, board =
   const wc = (v) => countWords(v);
 
   return (
-    <form ref={form} action={action} className="pf-col cf-col" onChange={recount}>
+    <form ref={form} action={action} className="pf-col cf-col" onChange={recount} onSubmit={dr.drop}>
       {entity && <input type="hidden" name="id" value={entity.id} />}
       <section className="pf-card pf-head">
         <div className="pf-head-top">
@@ -150,7 +152,12 @@ export default function ClubForm({ leader, kind = "club", entity = null, board =
           <span className="pf-total"><strong>{filled}</strong> / 100%</span>
         </div>
         <div className="pf-bar"><i style={{ width: `${filled}%` }} /></div>
+        {dr.restoredAt && (
+          <p className="wr-restored"><span>↺ Өмнө бөглөж байсан ноорог тань сэргээгдлээ ({hhmm(dr.restoredAt)}).</span>
+            <button type="button" onClick={dr.clear}>Ноорог устгах</button></p>
+        )}
         {state?.error && <p className="error">{state.error}</p>}
+        {dr.savedAt && <small className="cf-saved">✓ Ноорог энэ төхөөрөмж дээр хадгалагдсан · {hhmm(dr.savedAt)}</small>}
       </section>
 
       <section className="pf-card">
@@ -181,9 +188,9 @@ export default function ClubForm({ leader, kind = "club", entity = null, board =
 
         <Label>Байгуулагдсан он, сар, өдөр</Label>
         <div className="pf-grid3">
-          <div className="pf-select"><select name="fy" defaultValue={fd0 ? fd0.getUTCFullYear() : ""}><option value="">Он</option>{YEARS.map((y) => <option key={y} value={y}>{y}</option>)}</select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
-          <div className="pf-select"><select name="fm" defaultValue={fd0 ? fd0.getUTCMonth() + 1 : ""}><option value="">Сар</option>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
-          <div className="pf-select"><select name="fd" defaultValue={fd0 ? fd0.getUTCDate() : ""}><option value="">Өдөр</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
+          <div className="pf-select"><select name="fy" defaultValue={e._fy ?? (fd0 ? fd0.getUTCFullYear() : "")}><option value="">Он</option>{YEARS.map((y) => <option key={y} value={y}>{y}</option>)}</select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
+          <div className="pf-select"><select name="fm" defaultValue={e._fm ?? (fd0 ? fd0.getUTCMonth() + 1 : "")}><option value="">Сар</option>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
+          <div className="pf-select"><select name="fd" defaultValue={e._fd ?? (fd0 ? fd0.getUTCDate() : "")}><option value="">Өдөр</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
         </div>
 
         {org && (
@@ -293,7 +300,7 @@ export default function ClubForm({ leader, kind = "club", entity = null, board =
         <section className="pf-card">
           <h2>Удирдах зөвлөл</h2>
           <p className="pf-sub">Хамгийн ихдээ {BOARD_MAX} гишүүн. Нэмсэн хүмүүст урилга очих бөгөөд зөвшөөрвөл зөвлөлд орно.</p>
-          <Board initial={board} />
+          <Board initial={e._board || board} />
         </section>
       )}
 
@@ -313,4 +320,28 @@ export default function ClubForm({ leader, kind = "club", entity = null, board =
       </section>
     </form>
   );
+}
+
+// Нооргийн утгыг маягтын анхны утга болгоно
+function fromDraft(e, d) {
+  if (!d) return e;
+  const x = { ...e };
+  for (const k of ["name", "category", "country", "city", "address", "about", "rules", "field", "website", "email", "phone"]) if (k in d) x[k] = d[k];
+  x.socials = { ...(e.socials || {}) };
+  for (const s of SOCIALS) if (`s_${s.key}` in d) x.socials[s.key] = d[`s_${s.key}`];
+  if ("fy" in d) { x._fy = d.fy; x._fm = d.fm; x._fd = d.fd; }
+  if ("location" in d) x._loc = d.location;
+  const num = (v) => (v ? Number(v) : null);
+  if ("logo" in d) x.logo_id = num(d.logo);
+  if ("cover" in d) { x.cover_id = num(d.cover); x.cover_src = num(d.cover_src); x.cover_pos = d.cover_pos || null; }
+  try { if (d.board_json) x._board = JSON.parse(d.board_json); } catch (er) {}
+  return x;
+}
+
+export default function ClubForm({ leader, kind = "club", entity = null, board = [] }) {
+  const formRef = useRef(null);
+  const key = entity ? `ss-draft:entity:${entity.id}` : `ss-draft:${kind}:new`;
+  const dr = useDraft(key, formRef, { skip: ["agree", "id", "board_keep"] });
+  const init = fromDraft(entity || {}, dr.draft);
+  return <Inner key={dr.ver} leader={leader} kind={kind} entity={entity} board={board} init={init} formRef={formRef} dr={dr} />;
 }
