@@ -2687,3 +2687,5 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .pu-tab { flex: none; white-space: nowrap; }
 .pu-tab.icon { padding: 0 12px; gap: 6px; }
 .pu-tab.on img { filter: brightness(0) invert(1); }
+@media (min-width: 761px) { .pu-tab.mob-icon:not(.on) img { display: none; } }
+@media (max-width: 760px) { .pu-tab.mob-icon { padding: 0 12px; gap: 6px; } .pu-tab.mob-icon .pu-tlabel { display: none; } }

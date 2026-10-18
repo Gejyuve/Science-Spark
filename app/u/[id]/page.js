@@ -118,10 +118,10 @@ export default async function PublicProfile({ params, searchParams }) {
     </div>
   );
   // iconOnly: зөвхөн дүрс (нэр нь хулгана аваачихад гарна)
-  const TabLink = ({ k, icon, label, count, warn, iconOnly }) => (
-    <Link href={href(k, kind)} className={"pu-tab" + (current === k ? " on" : "") + (iconOnly ? " icon" : "")} title={label} aria-label={label}>
+  const TabLink = ({ k, icon, label, count, warn, iconOnly, mobIcon }) => (
+    <Link href={href(k, kind)} className={"pu-tab" + (current === k ? " on" : "") + (iconOnly ? " icon" : "") + (mobIcon ? " mob-icon" : "")} title={label} aria-label={label}>
       {icon && <img src={`/icons/${icon}.svg`} width={16} height={16} alt="" />}
-      {!iconOnly && label}
+      {!iconOnly && <span className="pu-tlabel">{label}</span>}
       {count > 0 && <em className={warn ? "warn" : ""}>{count}</em>}
     </Link>
   );
@@ -184,7 +184,7 @@ export default async function PublicProfile({ params, searchParams }) {
             ))}
           </div>
         </details>
-        <TabLink k="published" icon={current === "published" ? "t_pub" : null} label="Нийтлэгдсэн" count={groups.published.length} />
+        <TabLink k="published" icon="t_pub" label="Нийтлэгдсэн" count={groups.published.length} mobIcon />
         {isMe && <TabLink k="pending" icon="t_wait" label="Редакцын хяналт хүлээж байгаа" count={groups.pending.length} warn iconOnly />}
         {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length} iconOnly />}
         <span className="ss-grow" />
