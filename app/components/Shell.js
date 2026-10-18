@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import ProfileAction from "./ProfileAction";
 import { DrawerHost, DrawerClose } from "./Drawer";
 import Composer from "./Composer";
 import TopNav, { NavRow } from "./TopNav";
@@ -110,7 +111,7 @@ async function RightRail({ user }) {
             </div>
           </Link>
           <div className="ss-actions">
-            <Link href="/profile/edit" className="ss-action">{I("gear", 18)}<span>Тохиргоо</span>{I("arrow", 14)}</Link>
+            <ProfileAction id={user.id} />
             <NotifMenu trigger={<>{I("bell", 18)}<span>Мэдэгдэл</span>{unread > 0 && <em className="ss-badge red">{unread}</em>}{I("arrow", 14)}</>}>
               <div className="nf-head">
                 <b>Мэдэгдэл</b>{unread > 0 && <em className="ss-badge red">{unread}</em>}
@@ -129,13 +130,11 @@ async function RightRail({ user }) {
             )}
             <Link href={`/u/${user.id}`} className="ss-action">
               {I("wallet", 18)}<span>Данс</span>
-              <em className="ss-badge teal">{user.points.toLocaleString("en-US")} оч</em>
               {I("arrow", 14)}
             </Link>
             {canReview(user) && (
               <Link href="/review" className="ss-action">
                 {I("shield", 18)}<span>Хянах</span>
-                <em className="ss-badge gray">Түвшин {levelFor(user.points).n}</em>
                 {I("arrow", 14)}
               </Link>
             )}
