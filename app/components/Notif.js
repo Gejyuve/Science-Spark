@@ -9,7 +9,7 @@ const ICON = {
   rejected: ["logic", "warn"], reviewer_no: ["f_shield", "gray"], removed: ["logic", "bad"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"],
 };
-const AVATAR_KINDS = ["follow", "comment", "reply"];
+const AVATAR_KINDS = ["follow", "comment", "reply", "club_invite", "club_join"];
 
 // Улаанбаатарын өдрөөр бүлэглэнэ: Шинэ (уншаагүй) · Өнөөдөр · Өчигдөр · Энэ долоо хоног · Өмнө
 function groupOf(n) {

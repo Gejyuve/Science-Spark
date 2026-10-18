@@ -12,6 +12,8 @@ import { displayName, isAdmin, needsName, canReview } from "@/lib/auth";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat, Person, followingSet } from "./Bits";
+import { ClubPerson } from "./ClubBits";
+import { hotClubs, clubFollowSet } from "@/lib/clubs";
 
 const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
@@ -76,6 +78,7 @@ async function RightRail({ user }) {
   let unread = 0;
   let notifs = [];
   let clubs = [];
+  let clubFollows = new Set();
   const following = await followingSet(user);
   try {
     top = await sql`
@@ -84,14 +87,8 @@ async function RightRail({ user }) {
       FROM points_ledger l JOIN users u ON u.id = l.user_id
       GROUP BY u.id HAVING SUM(l.delta) > 0
       ORDER BY points DESC LIMIT 5`;
-    // Гялбаж буй клубууд: сүүлийн 7 хоногт хамгийн их оч цуглуулсан клубууд
-    clubs = await sql`
-      SELECT u.id, u.first_name, u.avatar_id AS avatar,
-        COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
-        COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id AND created_at > now() - interval '7 days'), 0)::int AS week,
-        (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id)::int AS followers
-      FROM users u WHERE u.account_type = 'club' AND u.restricted_at IS NULL AND u.first_name <> ''
-      ORDER BY week DESC, points DESC, u.id LIMIT 5`;
+    clubs = await hotClubs(5).catch(() => []);
+    clubFollows = await clubFollowSet(user);
     if (user) {
       followers = (await sql`SELECT COUNT(*)::int AS n FROM follows WHERE followee_id = ${user.id}`)[0].n;
       unread = await unreadCount(user.id);
@@ -165,7 +162,7 @@ async function RightRail({ user }) {
         <Link href="/clubs" className="ss-panel-title red cl-rail-title"><img src="/icons/clubstar.svg" width={20} height={20} alt="" />Гялбаж буй клубууд</Link>
         {clubs.length === 0 && <p className="muted">Одоохондоо бүртгэлтэй клуб алга.</p>}
         {clubs.map((t) => (
-          <Person key={t.id} id={t.id} initial="" first_name={t.first_name} avatar={t.avatar} points={t.points} followers={t.followers} viewer={user} following={following} />
+          <ClubPerson key={t.id} c={t} viewer={user} follows={clubFollows} />
         ))}
       </div>
     </aside>

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
-import { clubBoard, PERIODS } from "@/lib/clubs";
+import { clubBoard, PERIODS, clubFollowSet } from "@/lib/clubs";
 import Shell from "../components/Shell";
 import ClubMap from "../components/ClubMap";
-import { Avatar, Stat, FollowBtn, followingSet } from "../components/Bits";
+import { ClubPerson } from "../components/ClubBits";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Клуб · Science Spark" };
@@ -21,12 +21,12 @@ export default async function Clubs({ searchParams }) {
     await ensureSchema();
     board = await clubBoard(period);
   } catch (e) {}
-  const following = await followingSet(user);
+  const follows = await clubFollowSet(user);
 
   // Газрын зураг: координаттай клубууд
   const onMap = board.filter((c) => c.lat != null && c.lng != null)
-    .map(({ id, first_name, avatar, aimag, about, lat, lng, points, members, rank }) => ({ id, first_name, avatar, aimag, about, lat, lng, points, members, rank }));
-  const aimags = new Set(onMap.map((c) => c.aimag).filter(Boolean)).size;
+    .map(({ id, name, logo, city, about, lat, lng, points, members, rank }) => ({ id, name, logo, city, about, lat, lng, points, members, rank }));
+  const aimags = new Set(onMap.map((c) => c.city).filter(Boolean)).size;
 
   const pages = Math.max(1, Math.ceil(board.length / PER));
   const page = Math.min(pages, Math.max(1, parseInt(sp.p) || 1));
@@ -54,6 +54,8 @@ export default async function Clubs({ searchParams }) {
               <h2>ТОП-100 клуб</h2>
               <p>Очоор эрэмбэлсэн · Сүүлд шинэчлэгдсэн {today}</p>
             </div>
+            <span className="ss-grow" />
+            <Link href="/clubs/new" className="cl-new">+ Клуб бүртгүүлэх</Link>
             <nav className="cl-tabs" aria-label="Хугацаа">
               {Object.entries(PERIODS).map(([k, v]) => (
                 <Link key={k} href={href({ t: k })} className={period === k ? "on" : ""} scroll={false}>{v}</Link>
@@ -61,24 +63,15 @@ export default async function Clubs({ searchParams }) {
             </nav>
           </div>
           {rows.length === 0 ? (
-            <p className="cl-empty">Одоохондоо бүртгэлтэй клуб алга. Клубууд бүртгүүлж, оч цуглуулахад энд эрэмбэлэгдэнэ.</p>
+            <div className="cl-empty"><p>Одоохондоо бүртгэлтэй клуб алга. Клубууд бүртгүүлж, оч цуглуулахад энд эрэмбэлэгдэнэ.</p><Link href="/clubs/new" className="cm-join">+ Клуб бүртгүүлэх</Link></div>
           ) : (
             <>
               <div className="cl-row cl-cols"><span>№</span><span>Клуб</span><span>Байршил</span><span>Өөрчлөлт</span></div>
               {rows.map((c) => (
                 <div key={c.id} className="cl-row">
                   <span className={"cl-rank" + (c.rank <= 3 ? ` r${c.rank}` : "")}>{c.rank}</span>
-                  <div className="ss-person">
-                    <Link href={`/u/${c.id}`} className="ss-person-av"><Avatar user={c} size={40} /></Link>
-                    <div>
-                      <Link href={`/u/${c.id}`} className="ss-person-name"><b>{c.first_name}</b></Link>
-                      <span className="ss-statrow">
-                        <Stat points={period === "all" ? c.points : c.pts} followers={c.followers} followed={following.has(c.id)} />
-                        <FollowBtn id={c.id} viewer={user} following={following} />
-                      </span>
-                    </div>
-                  </div>
-                  <span className="cl-place">{c.aimag ? <><img className="ic" src="/icons/f_pin.svg" width={16} height={16} alt="" />{c.aimag}</> : <i>—</i>}</span>
+                  <ClubPerson c={c} viewer={user} follows={follows} points={period === "all" ? c.points : c.pts} />
+                  <span className="cl-place">{c.city ? <><img className="ic" src="/icons/f_pin.svg" width={16} height={16} alt="" />{c.city}</> : <i>—</i>}</span>
                   <span className={"cl-chg" + (c.change > 0 ? " up" : c.change < 0 ? " down" : "")}>
                     {c.change > 0 ? `▲ ${c.change}` : c.change < 0 ? `▼ ${-c.change}` : "–"}
                   </span>

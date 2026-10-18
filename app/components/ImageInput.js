@@ -74,7 +74,7 @@ const parsePos = (s) => {
 // adjust=true: эх зургийг хадгалж, чирж байрлалыг нь тохируулна (профайлын зураг, ковер).
 export default function ImageInput({
   name, aspect = null, maxW = 1600, initial = null, initialSrc = null, initialPos = null,
-  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, children,
+  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, requiredMsg = "Ковер зураг оруулна уу", children,
 }) {
   const input = useRef(null);
   const box = useRef(null);
@@ -177,7 +177,7 @@ export default function ImageInput({
       {required && (
         // Зураг заавал: илгээх үед зураггүй бол монгол анхааруулга гаргана
         <input className="ii-req" tabIndex={-1} aria-hidden="true" required value={id} onChange={() => {}}
-          ref={(el) => el && el.setCustomValidity(id ? "" : busy ? "Зураг оруулж дуусахыг хүлээнэ үү" : "Ковер зураг оруулна уу")} />
+          ref={(el) => el && el.setCustomValidity(id ? "" : busy ? "Зураг оруулж дуусахыг хүлээнэ үү" : requiredMsg)} />
       )}
       {adjust && <input type="hidden" name={`${name}_src`} value={srcId} />}
       {adjust && <input type="hidden" name={`${name}_pos`} value={`${pos.x}% ${pos.y}%`} />}
