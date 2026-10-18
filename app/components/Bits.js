@@ -95,7 +95,7 @@ export function Person({ id, initial, first_name, avatar = null, points = 0, fol
     <div className={"ss-person " + className}>
       <Link href={`/u/${id}`} className="ss-person-av"><Avatar user={{ id, first_name, avatar }} size={size} /></Link>
       <div>
-        <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? `${initial}.${first_name}` : "Шинэ хэрэглэгч"}</b></Link>
+        <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? (initial ? `${initial}.${first_name}` : first_name) : "Шинэ хэрэглэгч"}</b></Link>
         <span className="ss-statrow">
           <Stat points={points} followers={followers} followed={!!following?.has(id)} />
           <FollowBtn id={id} viewer={viewer} following={following} />

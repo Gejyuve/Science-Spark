@@ -17,7 +17,7 @@ export function NavRow({ active }) {
       </Link>
       <Link className={"ss-round" + (active === "/events" ? " on" : "")} href="/events" title="Эвент">{I("event", 24)}</Link>
       <span className="ss-round soon" title="Тун удахгүй">{I("market")}</span>
-      <span className="ss-round soon" title="Тун удахгүй">{I("club", 24)}</span>
+      <Link className={"ss-round" + (active === "/clubs" ? " on" : "")} href="/clubs" title="Клуб">{I("club", 24)}</Link>
     </div>
   );
 }
