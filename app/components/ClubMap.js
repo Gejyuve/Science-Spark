@@ -18,7 +18,12 @@ function tune(m) {
     if (l.type === "symbol") {
       if (l.id === "place_state") {
         m.setFilter(l.id, ["all", ["==", ["get", "class"], "state"], ["within", MN_POLY]]);
-        m.setLayoutProperty(l.id, "text-field", ["coalesce", ["get", "name:mn"], ["get", "name"]]);
+        // Нэрийн монгол бичгийн хэсгийг (мөр эсвэл зайны дараах) хасаж, зөвхөн кирилл нэрийг үлдээнэ
+        m.setLayoutProperty(l.id, "text-field", ["let", "n", ["coalesce", ["get", "name:mn"], ["get", "name"]],
+          ["let", "i", ["index-of", "\n", ["var", "n"]], "j", ["index-of", " ", ["var", "n"]],
+            ["case", [">", ["var", "i"], 0], ["slice", ["var", "n"], 0, ["var", "i"]],
+              [">", ["var", "j"], 0], ["slice", ["var", "n"], 0, ["var", "j"]], ["var", "n"]]]]);
+        m.setLayoutProperty(l.id, "text-transform", "none");
         m.setPaintProperty(l.id, "text-color", "rgba(207,250,243,0.78)");
         m.setPaintProperty(l.id, "text-halo-color", "rgba(3,12,16,0.9)");
         m.setPaintProperty(l.id, "text-halo-width", 1.2);
