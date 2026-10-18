@@ -16,17 +16,11 @@ import { Avatar, Stat, Person, followingSet } from "./Bits";
 import { ClubPerson } from "./ClubBits";
 import { hotClubs, clubFollowSet, membershipOf } from "@/lib/clubs";
 import { chatUnread } from "@/lib/chat";
+import { NAV } from "./navItems";
 
 const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
 );
-
-const NAV = [
-  { icon: "feed", label: "Урсгал", href: "/" },
-  { icon: "tree", label: "Мод", href: "/tree" },
-  { icon: "dict", label: "Толь", href: "/dict" },
-  { icon: "game", label: "Тоглоом" },
-];
 
 function Sidebar({ active }) {
   return (
