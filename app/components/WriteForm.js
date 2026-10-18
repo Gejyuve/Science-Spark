@@ -97,7 +97,7 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
 
       <section className="wr-card">
         <div className="wr-sec-head">
-          <div><h2>Нийтлэлийн ковер <em className="wr-req">Заавал</em></h2><p>Нийтлэлийн нүүр зураг. 740×280 харьцаатай зураг тохиромжтой.</p></div>
+          <div><h2>Нийтлэлийн ковер <em className="wr-req">Заавал</em></h2></div>
         </div>
         <ImageInput name="image" aspect={740 / 280} maxW={1600} variant="drop" initial={init.image || null} required>
           <span className="wr-ring"><img src="/icons/imgadd.svg" width={26} height={26} alt="" /></span>
@@ -106,7 +106,7 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
           <small>JPG, PNG, WEBP · 740×280 харьцаагаар автоматаар тайрна</small>
         </ImageInput>
         <div className="wr-coversrc">
-          <label><span>Ковер зургийн эх сурвалж <i className="cp-req">*</i></span>
+          <label><span>Ковер зургийн эх сурвалж <i className="wr-star">*</i></span>
             <input name="cover_source" required maxLength={150} defaultValue={init.cover_source} placeholder="Жишээ: NASA/JPL-Caltech эсвэл Зохиогчийн зураг"
               onInvalid={(e) => e.target.setCustomValidity("Ковер зургийн эх сурвалжийг бичнэ үү")} onInput={(e) => e.target.setCustomValidity("")} /></label>
           <label><span>Эх сурвалжийн холбоос <em>заавал биш</em></span>

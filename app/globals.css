@@ -2743,3 +2743,4 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .fl-list .ss-person { padding: 12px 4px; border-top: 1px solid var(--border); }
 .fl-list .ss-person:first-child { border-top: 0; }
 #rules { scroll-margin-top: 90px; }
+.wr-coversrc .wr-star { font-style: normal; color: #e5484d; margin-left: 2px; }
