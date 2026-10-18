@@ -4,48 +4,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { validCategory } from "@/lib/tree";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, canReview, canApproveEvents } from "@/lib/auth";
-import { EVENT_APPROVE_REWARD, ARTICLE_REVIEW_REWARD } from "@/lib/levels";
+import { getUser, canApproveEvents } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
-import { examState, grade, sentences, SAMPLES, ERROR_TYPES, DECISIONS } from "@/lib/exam";
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
-
-// Шалгалт илгээх
-export async function submitExam(formData) {
-  const user = await getUser();
-  if (!user) redirect("/login");
-  if (!canReview(user) || isStaff(user)) redirect("/review");
-  if (user.restricted_at) go("/review", "error", "Таны эрх хязгаарлагдсан байна");
-  await ensureSchema();
-  const st = await examState(user);
-  if (st.state !== "open") redirect("/review");
-  // Хуудас нээснээс хойш жишээ солигдсон бол дахин ачаална
-  if (Number(formData.get("sample")) !== st.sample) go("/review/exam", "error", "Шалгалт шинэчлэгдсэн байна. Дахин бөглөнө үү.");
-  const typeKeys = ERROR_TYPES.map(([k]) => k);
-  const n = sentences(SAMPLES[st.sample]).length;
-  const marks = {};
-  for (let i = 0; i < n; i++) {
-    const v = String(formData.get(`m${i}`) || "");
-    if (typeKeys.includes(v)) marks[i] = v;
-  }
-  const decision = String(formData.get("decision") || "");
-  const note = String(formData.get("note") || "").trim().slice(0, 1000);
-  if (!DECISIONS.some(([k]) => k === decision)) go("/review/exam", "error", "Шийдвэрээ сонгоно уу");
-  if (note.length < 20) go("/review/exam", "error", "Бичээчид үлдээх тайлбараа дор хаяж 20 тэмдэгтээр бичнэ үү");
-  const r = grade(st.sample, marks, decision);
-  const [a] = await sql`INSERT INTO exam_attempts (user_id, sample, answers, result, score, passed)
-            VALUES (${user.id}, ${st.sample}, ${JSON.stringify({ marks, decision, note })}::jsonb,
-                    ${JSON.stringify(r)}::jsonb, ${r.score}, ${r.passed}) RETURNING id`;
-  await audit({ actorId: user.id, category: "role", action: `Хянагчийн шалгалт: ${r.score} оноо, ${r.passed ? "тэнцсэн" : "тэнцээгүй"}`, targetType: "user", targetId: user.id });
-  if (r.passed) {
-    await sql`INSERT INTO reviewer_requests (user_id, attempt_id) VALUES (${user.id}, ${a.id})
-              ON CONFLICT (user_id) WHERE status = 'pending' DO NOTHING`;
-  }
-  revalidatePath("/review");
-  redirect(`/review/exam/${a.id}`);
-}
 
 const CHECKS_POST = 5;
 const CHECKS_EVENT = 6;
@@ -65,9 +28,6 @@ export async function decidePost(formData) {
   const approve = formData.get("decision") === "approve";
   const note = String(formData.get("note") || "").trim().slice(0, 1000) || null;
   const editable = p.kind === "Нийтлэл" || p.kind === "Мэдээ";
-  // Нийтлэл, мэдээг зөвхөн хянагч, редакц; эвент, зарлалыг Түвшин 3+ хэрэглэгч ч хянана
-  if (editable && !isStaff(user)) go("/review", "error", "Нийтлэл хянах эрх хянагчийн шалгалт өгсний дараа нээгдэнэ");
-
   if (!approve) {
     if (!note) go(back, "error", "Буцаахдаа бичээчид тайлбар бичнэ үү");
     const d = await sql`UPDATE posts SET status = 'rejected', reviewer_id = ${user.id}, reviewed_at = now(), review_note = ${note}
@@ -103,15 +63,9 @@ export async function decidePost(formData) {
   if (d.length) {
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
     await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
-    // Хөдөлмөрийн оч: нэг контентод нэг л удаа
-    const reward = editable ? ARTICLE_REVIEW_REWARD : EVENT_APPROVE_REWARD;
-    const reason = `${editable ? "review_article" : "approve_event"}:${id}`;
-    await sql`INSERT INTO points_ledger (user_id, delta, reason)
-              SELECT ${user.id}, ${reward}, ${reason}
-              WHERE NOT EXISTS (SELECT 1 FROM points_ledger WHERE reason = ${reason})`;
   }
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
   revalidatePath("/review", "layout");
-  go(editable ? "/review" : "/review?t=events", "ok", editable ? `Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо · +${ARTICLE_REVIEW_REWARD.toLocaleString("en-US")} оч` : `Нийтлэгдлээ · +${EVENT_APPROVE_REWARD} оч`);
+  go(editable ? "/review" : "/review?t=events", "ok", editable ? "Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо" : "Нийтлэгдлээ");
 }

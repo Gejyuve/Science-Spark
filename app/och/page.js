@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { LEVELS, levelFor, nextLevel, SPARK_GIVE, SPARK_GET, EVENT_APPROVE_REWARD, ARTICLE_REVIEW_REWARD, EVENT_PENALTY, ARTICLE_PENALTY, EVENT_LEVEL, REVIEWER_LEVEL } from "@/lib/levels";
+import { LEVELS, levelFor, nextLevel, SPARK_GIVE, SPARK_GET } from "@/lib/levels";
 import { TERM_REWARD } from "@/lib/terms";
 import { JOIN_REWARD } from "@/lib/clubs-shared";
 import { POINTS_TOTAL } from "@/lib/profile";
@@ -20,8 +20,6 @@ const ACTIVE = [
   ["Профайлаа бөглөх", "Талбар бүрд нэг л удаа", `+${POINTS_TOTAL} хүртэл`],
   ["Шинэ үг нэмэх", "Толинд нэмсэн үг батлагдвал", `+${TERM_REWARD}`],
   ["Клубт элсэх", "Анхны клубт 1 л удаа", `+${JOIN_REWARD}`],
-  ["Эвент, зарлал зөвшөөрөх", `Түвшин ${EVENT_LEVEL}-аас · зөвшөөрсөн бүрт · асуудалтай бол −${n(EVENT_PENALTY)} оч`, `+${n(EVENT_APPROVE_REWARD)}`],
-  ["Нийтлэл хянах", `Түвшин ${REVIEWER_LEVEL}-өөс, хянагч · зөвшөөрсөн бүрт · хэтэрхий алдаатай бол −${n(ARTICLE_PENALTY)} оч`, `+${n(ARTICLE_REVIEW_REWARD)}`],
 ];
 // Удахгүй нэвтрэх (Figma: Очны дүрэм)
 const SOON = [
@@ -166,15 +164,8 @@ export default async function Och({ searchParams }) {
           ))}
         </div>
 
-        <p className="och-note warn">Түвшин 6 (Супернова)-аас дээш: нийт очийн дор хаяж 30% нь нийтлэл бичих, хянахаас байх ёстой.</p>
-        <div className="och-note bad">
-          <b>Торгууль</b>
-          <ul>
-            <li>Зөвшөөрсөн эвент, зарлал асуудалтай болох нь илэрвэл −5,000 оч</li>
-            <li>Зөвшөөрсөн нийтлэл хэтэрхий алдаатай байвал −10,000 оч</li>
-            <li>Торгууль нь түвшинг бууруулж болно. Эрх нь түвшинтэй хамт хаагдана</li>
-          </ul>
-        </div>
+        <p className="och-note warn">Түвшин 6 (Супернова)-аас дээш: нийт очийн дор хаяж 30% нь нийтлэл бичихээс байх ёстой.</p>
+        <p className="och-note info">Нийтлэл, мэдээ, эвент, зарлалыг зөвхөн редакц хянадаг. Хянах ажилд оч олгогдохгүй.</p>
         <div className="och-note info">
           <b>Хамгаалалтын дүрэм</b>
           <ul>

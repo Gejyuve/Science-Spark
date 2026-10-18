@@ -10,7 +10,8 @@ import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
 import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
-import { displayName, isAdmin, needsName, canReview, canEnterReview } from "@/lib/auth";
+import { displayName, isAdmin, needsName, isStaff } from "@/lib/auth";
+import { canApproveWords } from "@/lib/terms";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat, Person, followingSet } from "./Bits";
@@ -141,8 +142,8 @@ async function RightRail({ user }) {
               {I("wallet", 18)}<span>Данс</span>
               {I("arrow", 14)}
             </Link>
-            {canEnterReview(user) && (
-              <Link href={canReview(user) ? "/review" : "/review?t=events"} className="ss-action">
+            {(isStaff(user) || canApproveWords(user)) && (
+              <Link href={isStaff(user) ? "/review" : "/review?t=words"} className="ss-action">
                 {I("shield", 18)}<span>Хянах</span>
                 {I("arrow", 14)}
               </Link>
