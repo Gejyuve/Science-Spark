@@ -16,6 +16,7 @@ import { walletBalance, fmtMnt } from "@/lib/money";
 import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, refundStatement } from "@/lib/bounty";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 import { leaderClub, CLUB_KINDS } from "@/lib/tasks";
+import { recordRevision, addCredit } from "@/lib/revisions";
 
 // Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
 function articleMeta(fd) {
@@ -137,25 +138,101 @@ export async function updatePost(formData) {
   const title = String(formData.get("title") || "").trim().slice(0, 200);
   const body = String(formData.get("body") || "").trim().slice(0, 40000);
   const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
+  const note = String(formData.get("edit_note") || "").trim().slice(0, 300) || null;
   if (!Number.isInteger(postId) || !title || !body) redirect("/");
+  const [cur] = await sql`SELECT * FROM posts WHERE id = ${postId}`;
+  // Бичээч өөрийнхөө, редакц (админ, супер админ) хэний ч контентыг засна
+  const staffEdit = !!cur && cur.author_id !== user.id && isStaff(user);
+  if (!cur || (cur.author_id !== user.id && !staffEdit)) redirect("/");
+  if (!staffEdit && user.restricted_at) redirect(`/post/${postId}?error=${encodeURIComponent("Таны эрх хязгаарлагдсан байна")}`);
   // Өөр төрөл рүү шилжүүлэхэд тухайн төрлийн түвшин шаардана
-  const [cur] = await sql`SELECT kind FROM posts WHERE id = ${postId} AND author_id = ${user.id}`;
-  if (cur && cur.kind !== kind && !canWrite(user, kind)) redirect(`/post/${postId}/edit?error=${encodeURIComponent(`${kind} бичих эрх Түвшин ${writeLevel(kind)}-д хүрэхэд нээгдэнэ`)}`);
+  if (cur.kind !== kind && !canWrite(user, kind)) redirect(`/post/${postId}/edit?error=${encodeURIComponent(`${kind} бичих эрх Түвшин ${writeLevel(kind)}-д хүрэхэд нээгдэнэ`)}`);
   const category = String(formData.get("category") || "");
   if (!validCategory(category)) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу")}`);
   const rule = bodyRule(kind, body);
   if (rule.error) redirect(`/post/${postId}/edit?error=${encodeURIComponent(rule.error)}`);
   if (!formData.get("image") || !String(formData.get("cover_source") || "").trim()) redirect(`/post/${postId}/edit?error=${encodeURIComponent("Ковер зураг болон түүний эх сурвалжийг заавал оруулна уу")}`);
   await ensureSchema();
-  // Засвар хийсэн нийтлэл (хэн ч бичсэн) дахин өөр хянагчийн шалгалтад орно.
-  const imageId = await ownImage(user.id, formData.get("image"));
+  // Редакц бичээчийн ковер зургийг хэвээр үлдээж болно
+  const imageId = (await ownImage(user.id, formData.get("image"))) ?? (Number(formData.get("image")) === cur.image_id ? cur.image_id : null);
+  const meta = JSON.stringify(articleMeta(formData));
+  if (staffEdit || cur.status === "published") {
+    // Нийтлэгдсэн контент нийтлэгдсэн хэвээр. Засвар бүр түүхэнд үлдэж, бичээчийн засварыг редакц тусад нь харна.
+    await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
+              meta = COALESCE(meta, '{}'::jsonb) || ${meta}::jsonb WHERE id = ${postId}`;
+    await afterEdit(cur, user, staffEdit, { title, subtitle, body, note });
+    redirect(`/post/${postId}?ok=${encodeURIComponent("Засвар хадгалагдлаа")}`);
+  }
+  // Нийтлэгдээгүй нийтлэл засвар хийсний дараа дахин редакцын шалгалтад орно.
   await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
-            meta = COALESCE(meta, '{}'::jsonb) || ${JSON.stringify(articleMeta(formData))}::jsonb,
+            meta = COALESCE(meta, '{}'::jsonb) || ${meta}::jsonb,
             status = 'draft', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
             WHERE id = ${postId} AND author_id = ${user.id}`;
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
   redirect(`/post/${postId}/preview`);
+}
+
+// Засварын түүх, оролцогч, мэдэгдэл, аудит
+async function afterEdit(cur, user, staffEdit, { title, subtitle, body, note }) {
+  await recordRevision(cur, { editorId: user.id, role: staffEdit ? "editor" : "author", note, title, subtitle, body });
+  if (staffEdit) {
+    await addCredit(cur.id, user.id, "reviewer");
+    await notify({ userId: cur.author_id, kind: "edited", actorId: user.id, postId: cur.id, note });
+  }
+  await audit({ actorId: user.id, category: "content", action: `${cur.kind} засварласан${staffEdit ? " (редакц)" : " (бичээч)"}${note ? ` (${note})` : ""}`, targetType: "post", targetId: cur.id, targetLabel: title || cur.title });
+  revalidatePath(`/post/${cur.id}`);
+  revalidatePath("/");
+  revalidatePath("/admin", "layout");
+}
+
+// Асуулт, бодрол, эвент, зарлал, даалгавар, тайлан зэрэг бусад контентыг засах
+export async function editContent(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) redirect("/");
+  await ensureSchema();
+  const [cur] = await sql`SELECT * FROM posts WHERE id = ${postId}`;
+  const staffEdit = !!cur && cur.author_id !== user.id && isStaff(user);
+  if (!cur || (cur.author_id !== user.id && !staffEdit) || KINDS.includes(cur.kind) || cur.kind === "Үг") redirect("/");
+  const fail = (msg) => redirect(`/post/${postId}/edit?error=${encodeURIComponent(msg)}`);
+  if (!staffEdit && user.restricted_at) fail("Таны эрх хязгаарлагдсан байна");
+  const t = (k, max) => String(formData.get(k) ?? "").trim().slice(0, max);
+  const url = (v) => (v && !/^https?:\/\/\S+$/i.test(v) ? fail("Холбоос https:// -ээр эхэлнэ") : v || null);
+  const note = t("edit_note", 300) || null;
+  const short = (s) => (s.length > 90 ? s.slice(0, 90).replace(/\s+\S*$/, "") + "…" : s);
+  const m = { ...(cur.meta || {}) };
+  let title = cur.title, body, subtitle = cur.subtitle;
+  if (cur.kind === "Асуулт" || cur.kind === "Бодрол") {
+    body = t("body", 300);
+    if (!body) fail("Агуулгаа бичнэ үү");
+    title = short(body.split("\n")[0]);
+    if (cur.kind === "Бодрол") m.source = url(t("source", 300));
+  } else {
+    title = t("title", 200);
+    body = t("body", ["Эвент"].includes(cur.kind) ? 1000 : cur.kind === "Зарлал" ? 500 : 40000);
+    if (formData.has("subtitle")) subtitle = t("subtitle", 250) || null;
+    if (!title || !body) fail("Гарчиг, агуулгаа бичнэ үү");
+    if (cur.kind === "Эвент") {
+      for (const [k, n] of [["location", 200], ["price", 60], ["capacity", 10], ["register", 500]]) m[k] = t(k, n) || null;
+      m.link = url(t("link", 300));
+      const s = t("starts_at", 20), e = t("ends_at", 20);
+      if (!validLocal(s) || !validLocal(e) || toMin(e) <= toMin(s)) fail("Эхлэх, дуусах огноо цагийг зөв оруулна уу");
+      m.starts_at = s;
+      m.ends_at = e;
+      m.duration = spanText(s, e);
+    } else if (cur.kind === "Зарлал") {
+      m.valid_until = /^\d{4}-\d{2}-\d{2}$/.test(t("valid_until", 10)) ? t("valid_until", 10) : m.valid_until;
+      m.contact = t("contact", 120) || m.contact;
+      m.location = t("location", 200) || null;
+      m.link = url(t("link", 300));
+    }
+  }
+  if (["Бодрол", "Эвент", "Зарлал"].includes(cur.kind) && latinShare(body) > LATIN_LIMIT) fail(LATIN_MSG);
+  await sql`UPDATE posts SET title = ${title}, subtitle = ${subtitle}, body = ${body}, meta = ${JSON.stringify(m)}::jsonb WHERE id = ${postId}`;
+  await afterEdit(cur, user, staffEdit, { title, subtitle, body, note });
+  redirect(`/post/${postId}?ok=${encodeURIComponent("Засвар хадгалагдлаа")}`);
 }
 
 // Урьдчилж харсны дараа редакц руу илгээх (Figma 454:272)

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { googleCalUrl, fmtEventRange, spanText, validLocal } from "@/lib/events";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import crypto from "node:crypto";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
+import { creditChain } from "@/lib/revisions";
 import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave, awardBounty, addBounty, deletePost } from "../../posts/actions";
 import { waitTone, BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS } from "@/lib/bounty";
@@ -369,6 +370,8 @@ export default async function PostPage({ params, searchParams }) {
     FROM posts p JOIN users u ON u.id = p.author_id LEFT JOIN clubs cl ON cl.id = p.club_id WHERE p.id = ${postId}`;
   if (!posts.length) notFound();
   const post = posts[0];
+  // Нэгтгэгдсэн контент үндсэн контент руу шилжинэ
+  if (post.status === "merged" && post.meta?.merged_into) redirect(`/post/${post.meta.merged_into}`);
   const isAuthor = !!user && user.id === post.author_id;
   const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
   // Даалгавар: нийтлэл шиг тэмдэглэгээтэй агуулга, ковертой. Клубын нэрээр харагдана.
@@ -410,6 +413,11 @@ export default async function PostPage({ params, searchParams }) {
                (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers
         FROM users u WHERE u.id = ${post.reviewer_id}`)[0]
     : null;
+
+  // Бичээч, хянагчид бичсэн, хянасан дарааллаараа (нэгтгэсэн контентод хэд хэдэн байж болно)
+  const chain = published ? await creditChain(post) : [];
+  const [{ revs }] = await sql`SELECT COUNT(*)::int AS revs FROM post_revisions WHERE post_id = ${post.id} AND role <> 'original'`;
+  const canEdit = !!user && !isTerm && (isAuthor || isStaff(user)) && post.status !== "merged" && post.status !== "removed";
 
   const comments = await sql`
     SELECT c.*, u.initial, u.first_name, u.avatar_id AS avatar,
@@ -638,7 +646,7 @@ export default async function PostPage({ params, searchParams }) {
               </section>
             )}
 
-            {!isQ && !isTerm && <div className="ar-credits">
+            {!isQ && !isTerm && <div className={"ar-credits" + (!club && chain.length > 2 ? " chain" : "")}>
               {club ? (
                 <div>
                   <span className="ar-label">{isTask ? "Нэмсэн клуб:" : "Клуб:"}</span>
@@ -646,6 +654,12 @@ export default async function PostPage({ params, searchParams }) {
                 </div>
               ) : null}
               {/* Даалгаврыг клубын нэрээр харуулна, жинхэнэ бичсэн хүнийг зөвхөн редакц харна */}
+              {!club && chain.length > 0 ? chain.map((c) => (
+                <div key={c.role + c.id}>
+                  <span className="ar-label">{c.role === "author" ? (isAnn ? "Зарласан:" : "Бичсэн:") : "Хянасан:"}</span>
+                  <Person id={c.id} initial={c.initial} first_name={c.first_name} avatar={c.avatar} points={c.points} followers={c.followers} viewer={user} following={following} />
+                </div>
+              )) : (<>
               {(!club || isStaff(user)) && (
                 <div>
                   <span className="ar-label">{isAnn ? "Зарласан:" : club ? "Бичсэн (редакцад харагдана):" : "Бичсэн:"}</span>
@@ -658,7 +672,9 @@ export default async function PostPage({ params, searchParams }) {
                   <Person id={reviewer.id} initial={reviewer.initial} first_name={reviewer.first_name} avatar={reviewer.avatar} points={reviewer.points} followers={reviewer.followers} viewer={user} following={following} />
                 </div>
               )}
+              </>)}
             </div>}
+            {revs > 0 && <Link href={`/post/${post.id}/history`} className="ar-histlink">Засварын түүх ({revs}) →</Link>}
 
             <div className="ar-divider" />
             <div className="ar-reactions">
@@ -677,7 +693,7 @@ export default async function PostPage({ params, searchParams }) {
                 )}
                 <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment20.svg" width={20} height={20} alt="Сэтгэгдэл" />{comments.length}</a>
               </span>
-              {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
+              {canEdit && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && !club && !isAuthor && (
                 <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Шагнал</>}

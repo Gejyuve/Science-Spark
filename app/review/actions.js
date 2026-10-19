@@ -8,6 +8,7 @@ import { getUser, canApproveEvents, canApproveTasks } from "@/lib/auth";
 import { APPROVE_REWARD } from "@/lib/levels";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
+import { recordRevision } from "@/lib/revisions";
 import { TASK_KIND, REPORT_KIND, TASK_APPROVE_REWARD, REWARD_MIN, REWARD_MAX, AUTHOR_SHARE } from "@/lib/tasks-shared";
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
@@ -24,7 +25,7 @@ export async function decidePost(formData) {
   const id = Number(formData.get("post_id"));
   if (!Number.isInteger(id)) redirect("/review");
   const back = `/review/${id}`;
-  const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original, category, club_id, task_id FROM posts WHERE id = ${id}`;
+  const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original, category, club_id, task_id, created_at FROM posts WHERE id = ${id}`;
   if (!p || p.status !== "pending") go("/review", "error", "Энэ контент хянагдсан эсвэл олдсонгүй");
   if (p.author_id === user.id) go("/review", "error", "Өөрийн контентыг өөр хянагч хянана");
   if ((p.kind === TASK_KIND || p.kind === REPORT_KIND) && !canApproveTasks(user)) go("/review", "error", "Клубын даалгавар, тайланг редакцийн админ шийднэ");
@@ -51,7 +52,7 @@ export async function decidePost(formData) {
   const reward = Math.round(Number(formData.get("reward")));
   if (isTask && !(reward >= REWARD_MIN && reward <= REWARD_MAX)) go(back, "error", `Даалгаврын очийг ${REWARD_MIN}–${REWARD_MAX} хооронд оруулна уу`);
 
-  let title = p.title, subtitle = p.subtitle, body = p.body, original = p.original, category = p.category;
+  let title = p.title, subtitle = p.subtitle, body = p.body, original = p.original, category = p.category, changed = false;
   if (editable) {
     title = String(formData.get("title") || "").trim().slice(0, 200);
     subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
@@ -59,7 +60,7 @@ export async function decidePost(formData) {
     if (!title || !body) go(back, "error", "Гарчиг, агуулга хоосон байж болохгүй");
     const cat = String(formData.get("category") || "");
     if (cat && validCategory(cat)) category = cat;
-    const changed = title !== p.title || (subtitle || null) !== (p.subtitle || null) || body !== p.body;
+    changed = title !== p.title || (subtitle || null) !== (p.subtitle || null) || body !== p.body;
     if (changed && !original) original = { title: p.title, subtitle: p.subtitle, body: p.body };
   }
   // Нийтлэл, мэдээ: бичээч рүү буцаж, бичээч өөрөө нийтэлнэ. Эвент, зарлал: шууд нийтлэгдэнэ.
@@ -70,6 +71,8 @@ export async function decidePost(formData) {
                         meta = CASE WHEN ${isTask}::boolean THEN COALESCE(meta, '{}'::jsonb) || jsonb_build_object('reward', ${isTask ? reward : 0}::int) ELSE meta END
                       WHERE id = ${id} AND status = 'pending' AND author_id <> ${user.id} RETURNING id`;
   if (d.length) {
+    // Хяналтын үеийн засвар засварын түүхэнд үлдэнэ
+    if (changed) await recordRevision(p, { editorId: user.id, role: "editor", note: "Хяналтын үед засварласан", title, subtitle, body });
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
     await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
     // Редакц чанарыг нь баталсан нийтлэл, мэдээнд бичээчид нэг удаа оч

@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { requireSection, audit, WARN_LIMIT } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
+import { recordRevision, addCredit } from "@/lib/revisions";
 
 const safe = (f) => (/^\/admin(\/|\?|$)/.test(f) ? f : "/admin");
 const back = (path, msg, ok) => redirect(`${path}${path.includes("?") ? "&" : "?"}${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
@@ -180,4 +181,52 @@ export async function decideLogic(formData) {
   await notify({ userId: r.user_id, kind: op === "resolved" ? "logic_ok" : "logic_no", actorId: me.id, postId: r.post_id, note });
   revalidatePath("/admin", "layout");
   back(from, "Шийдвэрлэлээ", true);
+}
+
+// Төстэй агуулгатай хоёр контентыг нэгтгэх: B-ийн агуулга, сэтгэгдэл, бичээч, хянагч A руу шилжиж, B нь A руу чиглэнэ
+export async function mergePosts(formData) {
+  const me = await requireSection("content");
+  const a = Number(formData.get("a"));
+  const b = Number(formData.get("b"));
+  const from = `/admin/content/merge?a=${a}&b=${b}`;
+  const title = String(formData.get("title") || "").trim().slice(0, 200);
+  const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
+  const body = String(formData.get("body") || "").trim().slice(0, 40000);
+  const note = String(formData.get("note") || "").trim().slice(0, 300);
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a === b) back("/admin/content/merge", "Хоёр өөр контент сонгоно уу");
+  if (!title || !body) back(from, "Гарчиг, агуулгаа бичнэ үү");
+  const rows = await sql`SELECT * FROM posts WHERE id IN (${a}, ${b})`;
+  const A = rows.find((r) => r.id === a);
+  const B = rows.find((r) => r.id === b);
+  if (!A || !B || A.kind !== B.kind || A.kind === "Үг") back(from, "Ижил төрлийн хоёр контентыг л нэгтгэнэ");
+  if (A.status !== "published" || B.status !== "published") back(from, "Зөвхөн нийтлэгдсэн контентыг нэгтгэнэ");
+  await sql`UPDATE posts SET title = ${title}, subtitle = ${subtitle}, body = ${body} WHERE id = ${a}`;
+  await recordRevision(A, { editorId: me.id, role: "merge", note: `«${B.title}» контенттой нэгтгэсэн${note ? `: ${note}` : ""}`, title, subtitle, body });
+  // Бичээч, хянагчид бичсэн, хянасан цагаараа дараална
+  await addCredit(a, B.author_id, "author", B.created_at);
+  if (B.reviewer_id) await addCredit(a, B.reviewer_id, "reviewer", B.reviewed_at || B.created_at);
+  await sql`INSERT INTO post_credits (post_id, user_id, role, at) SELECT ${a}, user_id, role, at FROM post_credits WHERE post_id = ${b}
+            ON CONFLICT (post_id, user_id, role) DO NOTHING`;
+  await addCredit(a, me.id, "reviewer");
+  await sql`UPDATE comments SET post_id = ${a} WHERE post_id = ${b}`;
+  await sql`UPDATE posts SET status = 'merged', reviewed_at = now(), meta = COALESCE(meta, '{}'::jsonb) || ${JSON.stringify({ merged_into: a })}::jsonb WHERE id = ${b}`;
+  await audit({ actorId: me.id, category: "content", action: `${A.kind} нэгтгэсэн: #${b} «${B.title}» → #${a}`, targetType: "post", targetId: a, targetLabel: title });
+  await notify({ userId: B.author_id, kind: "merged", actorId: me.id, postId: a });
+  if (A.author_id !== B.author_id) await notify({ userId: A.author_id, kind: "merged", actorId: me.id, postId: a });
+  revalidatePath("/");
+  revalidatePath(`/post/${a}`);
+  revalidatePath(`/post/${b}`);
+  revalidatePath("/admin", "layout");
+  redirect(`/post/${a}?ok=${encodeURIComponent("Нэгтгэлээ")}`);
+}
+
+// Бичээчийн засварыг редакц шалгасан гэж тэмдэглэх
+export async function checkRevision(formData) {
+  const me = await requireSection("content");
+  const id = Number(formData.get("id"));
+  const from = safe(String(formData.get("from") || "/admin/content?v=edits"));
+  if (!Number.isInteger(id)) back(from, "Буруу хүсэлт");
+  await sql`UPDATE post_revisions SET checked_by = ${me.id}, checked_at = now() WHERE id = ${id} AND checked_at IS NULL`;
+  revalidatePath("/admin", "layout");
+  back(from, "Шалгасан гэж тэмдэглэлээ", true);
 }

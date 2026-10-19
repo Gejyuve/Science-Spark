@@ -12,7 +12,7 @@ const FIELDS = ["title", "subtitle", "kind", "category", "body", "sources", "ima
 
 // Нийтлэл бичих маягт. Бичиж байсан бүх зүйлийг (текст, холбоос, зураг, эх сурвалж, төрөл, ангилал)
 // энэ хөтөч дээр автоматаар хадгалж, дараа нь буцаж ороход сэргээнэ.
-export default function WriteForm({ action, post = {}, tree, error, extra, heading, kinds = KINDS, locked = {} }) {
+export default function WriteForm({ action, post = {}, tree, error, extra, heading, kinds = KINDS, locked = {}, submit = "Урьдчилж харах" }) {
   const form = useRef(null);
   const key = post.id ? `ss-draft:edit:${post.id}` : "ss-draft:new";
   const base = {
@@ -149,7 +149,7 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
         {extra}
         <span className="ss-grow" />
         <button type="submit" className="wr-go">
-          Урьдчилж харах
+          {submit}
           <img src="/icons/arrowr.svg" width={19} height={19} alt="" />
         </button>
       </section>

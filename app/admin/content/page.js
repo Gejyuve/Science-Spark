@@ -2,15 +2,15 @@ import Link from "next/link";
 import { sql } from "@/lib/db";
 import { requireSection, STATUS_LABELS, ago } from "@/lib/admin";
 import { KINDS, QUICK_KINDS } from "@/lib/format";
-import { moderatePost } from "../actions";
+import { moderatePost, checkRevision } from "../actions";
 import Head, { Tabs, Chip, Flash, who, STATUS_TONE } from "../_c/Head";
 import { Words, Cats } from "../_c/Queues";
 import { TERM_KIND } from "@/lib/terms";
 
 const ALL_KINDS = [...KINDS, ...QUICK_KINDS, "Даалгавар", "Тайлан"];
 // Хяналтын жагсаалт энд нэгтгэгдсэн: шинэ үг, ангиллын санал тусдаа таб
-const VIEWS = { words: "Шинэ үг", cats: "Ангилал" };
-const STATUSES = ["pending", "approved", "published", "rejected", "removed"];
+const VIEWS = { edits: "Бичээчийн засвар", words: "Шинэ үг", cats: "Ангилал" };
+const STATUSES = ["pending", "approved", "published", "rejected", "removed", "merged"];
 
 export default async function Content({ searchParams }) {
   const user = await requireSection("content");
@@ -37,6 +37,7 @@ export default async function Content({ searchParams }) {
   const total = counts.reduce((a, r) => a + r.n, 0);
   const pendingAll = counts.filter((r) => !kind || r.kind === kind).reduce((a, r) => a + r.pending, 0);
   const [qc] = await sql`SELECT (SELECT COUNT(*) FROM posts WHERE status = 'discussion' AND kind = ${TERM_KIND})::int AS words,
+      (SELECT COUNT(*) FROM post_revisions WHERE role = 'author' AND checked_at IS NULL)::int AS edits,
       ((SELECT COUNT(*) FROM category_requests WHERE status = 'pending') + (SELECT COUNT(*) FROM category_reports WHERE status = 'open'))::int AS cats`;
   const qs = (o) => {
     const v = { kind, status, q, ...o };
@@ -50,8 +51,8 @@ export default async function Content({ searchParams }) {
       <Flash ok={sp.ok} error={sp.error} />
       <Tabs cur={view ? "v:" + view : kind}
         href={(k) => (k.startsWith("v:") ? `/admin/content?v=${k.slice(2)}` : qs({ kind: k }))}
-        tabs={[["", "Бүгд", total], ...ALL_KINDS.map((k) => [k, k, cnt[k] || 0]), ["v:words", VIEWS.words, qc.words], ["v:cats", VIEWS.cats, qc.cats]]} />
-      {view === "words" ? <Words user={user} can /> : view === "cats" ? <Cats /> : (<>
+        tabs={[["", "Бүгд", total], ...ALL_KINDS.map((k) => [k, k, cnt[k] || 0]), ["v:edits", VIEWS.edits, qc.edits], ["v:words", VIEWS.words, qc.words], ["v:cats", VIEWS.cats, qc.cats]]} />
+      {view === "edits" ? <Edits /> : view === "words" ? <Words user={user} can /> : view === "cats" ? <Cats /> : (<>
       <div className="adm-filters">
         {[["", "Бүх төлөв"], ...STATUSES.map((s) => [s, STATUS_LABELS[s]])].map(([s, l]) => (
           <a key={s || "all"} href={qs({ status: s })} className={status === s ? "on" : ""}>{l}{s === "pending" && pendingAll > 0 && <em>{pendingAll}</em>}</a>
@@ -79,6 +80,8 @@ export default async function Content({ searchParams }) {
                       {p.status === "pending" && (p.author_id === user.id
                         ? <Chip tone="gray">Өөрийн · өөр админ</Chip>
                         : <Link href={`/review/${p.id}`} className="adm-btn teal">Засах</Link>)}
+                      {p.status === "published" && <Link href={`/post/${p.id}/edit`} className="adm-btn teal">Засах</Link>}
+                      {p.status === "published" && <Link href={`/admin/content/merge?a=${p.id}`} className="adm-btn">Нэгтгэх</Link>}
                       {p.status === "published" && (
                         <details className="adm-pop">
                           <summary className="adm-btn danger">Нуух</summary>
@@ -126,5 +129,45 @@ export default async function Content({ searchParams }) {
       </section>
       </>)}
     </>
+  );
+}
+
+// Бичээч өөрөө оруулсан засварууд: редакц шалгаад тэмдэглэнэ
+async function Edits() {
+  const rows = await sql`
+    SELECT r.id, r.post_id, r.note, r.created_at, p.kind, p.title, u.initial, u.first_name, u.email
+    FROM post_revisions r JOIN posts p ON p.id = r.post_id LEFT JOIN users u ON u.id = r.editor_id
+    WHERE r.role = 'author' AND r.checked_at IS NULL ORDER BY r.created_at ASC LIMIT 100`;
+  return (
+    <section className="adm-card flush">
+      <div className="adm-card-head pad"><b>Бичээчийн засвар ({rows.length})</b></div>
+      {rows.length === 0 ? <p className="adm-empty">Шалгах засвар алга ✓</p> : (
+        <table className="adm-table">
+          <thead><tr><th>Контент</th><th>Төрөл</th><th>Бичээч</th><th>Тайлбар</th><th>Хэзээ</th><th></th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="adm-strong adm-clip">{r.title}</td>
+                <td><Chip>{r.kind}</Chip></td>
+                <td>{who(r)}</td>
+                <td className="adm-clip">{r.note || "—"}</td>
+                <td>{ago(r.created_at)}</td>
+                <td className="adm-right">
+                  <span className="adm-acts">
+                    <Link href={`/post/${r.post_id}/history`} className="adm-btn">Түүх харах</Link>
+                    <Link href={`/post/${r.post_id}/edit`} className="adm-btn">Засах</Link>
+                    <form action={checkRevision}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <button className="adm-btn teal">Шалгасан</button>
+                    </form>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p className="adm-banner inset">Бичээч нийтлэгдсэн контентдоо засвар оруулахад шууд хэрэгжиж, энд шалгуулахаар ирнэ. Асуудалтай бол засах эсвэл нууна уу.</p>
+    </section>
   );
 }

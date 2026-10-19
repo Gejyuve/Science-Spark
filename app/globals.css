@@ -451,8 +451,8 @@ details.mod summary { cursor: pointer; }
 .ar-lead { margin: 0; font-size: 18px; line-height: 28px; color: var(--text); white-space: pre-wrap; }
 .ar-text { margin: 0; font-size: 17px; line-height: 30px; color: #293b47; white-space: pre-wrap; }
 .ar-divider { height: 1px; background: var(--border); }
-.ar-credits { display: flex; gap: 24px; }
-.ar-credits > div { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.ar-credits { display: flex; flex-wrap: wrap; gap: 16px 24px; }
+.ar-credits > div { flex: 1 1 220px; display: flex; flex-direction: column; gap: 10px; }
 .ar-label { font-weight: 600; font-size: 13px; color: #708c9e; }
 .ar-reactions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .ar-react { display: inline-flex; align-items: center; gap: 8px; padding: 10px 0; font-weight: 600; font-size: 14.5px; color: var(--ink); text-decoration: none; }
@@ -892,6 +892,7 @@ details.mod summary { cursor: pointer; }
 .adm-form { display: flex; flex-direction: column; gap: 10px; }
 .adm-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #708c9e; }
 .adm-form .adm-btn { align-self: flex-start; }
+.adm-main .adm-form textarea { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 14px; line-height: 1.55; resize: vertical; }
 .adm-perms { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
 .adm-perms .adm-btn { align-self: flex-start; margin-top: 6px; }
 .adm-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); cursor: pointer; }
@@ -3179,3 +3180,30 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .adm-set-lv { display: grid; grid-template-columns: 120px repeat(2, minmax(0, 1fr)); gap: 8px; align-items: center; font-size: 13px; }
 .adm-set-lv b { font-weight: 600; color: var(--ink); }
 .adm-set-lv small { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+
+/* Контент засах (нийтлэлээс бусад төрөл) ба засварын түүх */
+.ed-page { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; display: flex; flex-direction: column; gap: 14px; }
+.ed-page h1 { margin: 0; font-size: 26px; }
+.ed-form { display: flex; flex-direction: column; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; }
+.ed-form label, .ed-note { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.ed-form input, .ed-form textarea, .ed-note input { padding: 11px 13px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 15px; font-weight: 400; }
+.ed-form textarea { resize: vertical; line-height: 1.55; }
+.ed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.ed-form .btn { align-self: flex-end; }
+.wr-foot .ed-note { flex: 1 1 320px; max-width: 460px; }
+.ar-chain { display: flex; flex-direction: column; gap: 10px; }
+.rv-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.rv-hist > li { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.rv-hist > li:last-child { border-bottom: 0; }
+.rv-hist .rv-hmeta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+.rv-hist .rv-hmeta small { color: var(--muted); }
+.rv-hist .rv-hnote { margin: 0; color: var(--muted); font-size: 14px; font-style: italic; }
+.rv-hist details summary { cursor: pointer; color: var(--teal); font-size: 13px; font-weight: 600; }
+.rv-hist .rv-hbody { white-space: pre-wrap; margin: 8px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); font-size: 14px; line-height: 1.6; max-height: 420px; overflow: auto; }
+.rv-tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface-3); color: var(--muted); }
+.rv-tag.author { background: var(--teal-bg); color: var(--teal); }
+.rv-tag.editor, .rv-tag.merge { background: #fde9df; color: #c2410c; }
+.ar-histlink { font-size: 13px; color: var(--muted); }
+.ar-credits.chain { flex-direction: column; gap: 14px; }
+.ar-credits.chain > div { flex: none; }
+.rv-hist .rv-hmeta a { color: var(--teal); font-weight: 600; text-decoration: none; }
