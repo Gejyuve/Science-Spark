@@ -2,7 +2,7 @@ import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
 import { monthBoard, splitPrizes, currentPeriod, prevPeriod, periodLabel, periodEnd, TOP_N, STAR_SHARE, PAIR_CAP, GIVER_MIN_DAYS } from "@/lib/spark";
-import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
+import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import Shell from "../components/Shell";
 import { Avatar } from "../components/Bits";
 import Countdown from "../components/Countdown";
@@ -174,7 +174,7 @@ export default async function San({ searchParams }) {
             <li>Түвшин 1 (Лаа)-аас дээш бичээч оролцоно. Нийтлэл, мэдээ, хариулт, сэтгэгдэлдээ тухайн сард авсан оч тооцогдоно.</li>
             <li>Шилдэг {TOP_N} сангийн {pct(1 - STAR_SHARE)}-ийг оноогоороо, «Шинэ од» (шилдэг {TOP_N}-т ороогүй Түвшин 1-2 бичээч) {pct(STAR_SHARE)}-ийг авна.</li>
             <li>Дэмжигчийн оч 2-оор тооцогдоно. Нэг хүнээс нэг бичээчид сард {PAIR_CAP} хүртэл оч, {GIVER_MIN_DAYS} хоногоос дээш настай дансны оч л тооцогдоно.</li>
-            <li>Бичээчид өгсөн хандив хэтэвчид нь орно, сайт {pct(TIP_FEE)} шимтгэл авна. Сан руу өгсөн хандиваас шимтгэл авахгүй.</li>
+            <li>Бичээчид өгсөн урамшуулал хэтэвчид нь орно. Сан руу өгсөн хандиваас шимтгэл авахгүй.</li>
             <li>Хэтэвч {fmtMnt(WITHDRAW_MIN)}-д хүрмэгц татах боломжтой. Хувь хүний орлогын албан татвар {pct(INCOME_TAX)}-ийг суутгана.</li>
             <li>Сар дууссаны дараа редакц хуурамч очийг 7 хоног шалгаад шагналыг хэтэвчид шилжүүлнэ. Хуваарилагдаагүй дүн дараа сард шилжинэ.</li>
             <li>Оч мөнгө болохгүй: оч зөвхөн жагсаалтын байрыг тодорхойлно.</li>

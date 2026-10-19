@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
-import { walletBalance, fmtMnt, KIND_LABEL, REQUEST_KIND, REQUEST_STATUS, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
+import { walletBalance, fmtMnt, KIND_LABEL, REQUEST_KIND, REQUEST_STATUS, WITHDRAW_MIN, INCOME_TAX, TIP_FEE } from "@/lib/money";
 import { requestWithdrawal } from "../san/actions";
 import Shell from "../components/Shell";
 import SupportModal from "../components/SupportModal";
@@ -14,7 +14,7 @@ export const metadata = { title: "Миний хэтэвч · Science Spark" };
 const W_STATUS = { pending: "Шалгаж байна", paid: "Шилжүүлсэн", rejected: "Буцаасан" };
 const day = (d) => new Date(d).toLocaleDateString("sv-SE");
 
-// Бичээчийн хэтэвч: хандив, шагнал орно. Доод дүнд хүрмэгц банкны данс руу татна.
+// Бичээчийн хэтэвч: урамшуулал, шагнал орно. Доод дүнд хүрмэгц банкны данс руу татна.
 export default async function Wallet({ searchParams }) {
   const sp = await searchParams;
   const user = await getUser();
@@ -33,6 +33,7 @@ export default async function Wallet({ searchParams }) {
   const pending = withdrawals.find((w) => w.status === "pending");
   const [given] = await sql`SELECT COALESCE(SUM(amount), 0)::bigint AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'confirmed'`;
   const toGo = Math.max(0, WITHDRAW_MIN - balance);
+  const feeNote = `Уншигчдын урамшууллаас сайтыг ажиллуулахад ${Math.round(TIP_FEE * 100)}% шимтгэл суутгадаг.`;
 
   return (
     <Shell user={user} header="nav">
@@ -42,7 +43,7 @@ export default async function Wallet({ searchParams }) {
         <div className="san-hero">
           <div>
             <h1>Миний хэтэвч</h1>
-            <p className="och-sub">Уншигчдын хандив, сарын шагнал энд орно. Таны бичсэн бүхэн хэн нэгний сонирхлыг асааж байна.</p>
+            <p className="och-sub">Уншигчдын урамшуулал, сарын шагнал энд орно. Таны бичсэн бүхэн хэн нэгний сонирхлыг асааж байна.</p>
           </div>
           <div className="san-pool">
             <small>Үлдэгдэл</small>
@@ -66,7 +67,7 @@ export default async function Wallet({ searchParams }) {
         {pending ? (
           <p className="och-note info">{fmtMnt(pending.amount)} татах хүсэлт тань шалгагдаж байна ({day(pending.created_at)}).</p>
         ) : balance < WITHDRAW_MIN ? (
-          <p className="och-hint">Хэтэвч {fmtMnt(WITHDRAW_MIN)}-д хүрмэгц банкны данс руугаа татах боломжтой.</p>
+          <p className="och-hint">Хэтэвч {fmtMnt(WITHDRAW_MIN)}-д хүрмэгц банкны данс руугаа татах боломжтой. {feeNote}</p>
         ) : (
           <form action={requestWithdrawal} className="san-form">
             <label className="san-field">Дүн (₮)
@@ -75,7 +76,7 @@ export default async function Wallet({ searchParams }) {
             <label className="san-field">Банк, дансны дугаар, эзэмшигчийн нэр
               <input name="bank" required maxLength={200} placeholder="Хаан банк 5000123456 Б.Болд" />
             </label>
-            <p className="och-hint">Хувь хүний орлогын албан татвар {Math.round(INCOME_TAX * 100)}%-ийг суутгаж, үлдсэнийг шилжүүлнэ.</p>
+            <p className="och-hint">{feeNote} Хувь хүний орлогын албан татвар {Math.round(INCOME_TAX * 100)}%-ийг суутгаж, үлдсэнийг шилжүүлнэ.</p>
             <button className="ss-pill">Татах хүсэлт илгээх</button>
           </form>
         )}

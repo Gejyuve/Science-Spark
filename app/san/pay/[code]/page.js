@@ -20,7 +20,7 @@ export default async function Pay({ params }) {
                         WHERE r.code = ${String(code)} AND r.user_id = ${user.id}`;
   if (!r) notFound();
   const bank = bankInfo();
-  const what = r.kind === "premium" ? `Дэмжигч · ${r.months} сар` : r.kind === "tip" ? `${r.w_initial}.${r.w_first_name}-д хандив` : REQUEST_KIND[r.kind];
+  const what = r.kind === "premium" ? `Дэмжигч · ${r.months} сар` : r.kind === "tip" ? `${r.w_initial}.${r.w_first_name}-д урамшуулал` : REQUEST_KIND[r.kind];
 
   return (
     <Shell user={user} active="/san" header="nav">

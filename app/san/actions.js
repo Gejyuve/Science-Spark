@@ -66,19 +66,7 @@ async function supportUser() {
   return user;
 }
 
-// /san/support хуудасны маягт: алдаа гарвал буцааж, амжилттай бол шилжүүлгийн хуудас руу
-export async function createSupport(formData) {
-  const user = await supportUser();
-  const r = await makeRequest(user, formData);
-  if (r.error) {
-    const kind = String(formData.get("kind") || "");
-    const back = `/san/support?kind=${encodeURIComponent(kind)}${formData.get("writer_id") ? `&to=${Number(formData.get("writer_id"))}` : ""}`;
-    go(r.to || back, "error", r.error);
-  }
-  redirect(`/san/pay/${r.code}`);
-}
-
-// Шагналын сангийн цонх: хуудаснаас гаралгүй дүн, кодыг буцаана
+// Дэмжих цонх: хуудаснаас гаралгүй дүн, кодыг буцаана
 export async function startSupport(prev, formData) {
   const user = await supportUser();
   return { ...(await makeRequest(user, formData)), at: Date.now() };
