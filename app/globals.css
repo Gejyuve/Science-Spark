@@ -2796,17 +2796,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san .pos { color: #00a89b; font-weight: 700; }
 .san .och-rule em.neg { background: #fde8e9; color: #cc2633; }
 .san a.och-rule { text-decoration: none; color: inherit; }
-.san-perks { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-.san-perks div { display: flex; flex-direction: column; gap: 3px; padding: 14px; border-radius: 14px; background: var(--surface-2); }
-.san-perks span { font-size: 20px; }
-.san-perks b { font-size: 13.5px; color: var(--ink); }
-.san-perks small { font-size: 12px; color: var(--muted); line-height: 1.45; }
-.san-perks div:first-child { background: #e3f6ec; }
-.san-perks div:first-child b { color: #16794a; }
-.san-to { display: flex; align-items: center; gap: 12px; }
-.san-to span { display: flex; flex-direction: column; }
-.san-to b { color: var(--ink); }
-.san-to small { color: var(--muted); font-size: 12px; }
 .san-form { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
 .san-form .ss-pill { align-self: flex-start; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 18px; }
 .san-field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -2832,8 +2821,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san-pay .san-code b { font-size: 22px; letter-spacing: .06em; color: #c2400d; font-variant-numeric: tabular-nums; }
 #daily, #board, #glass, #withdraw { scroll-margin-top: 90px; }
 :root[data-theme="dark"] .san-pool { background: linear-gradient(135deg, #12302c, #3a2a1c); }
-:root[data-theme="dark"] .san-badge, :root[data-theme="dark"] .san-perks div:first-child { background: #143a28; color: #6fd8a0; }
-:root[data-theme="dark"] .san-perks div:first-child b { color: #6fd8a0; }
+:root[data-theme="dark"] .san-badge { background: #143a28; color: #6fd8a0; }
 :root[data-theme="dark"] .san-board .och-brow.san-star { background: #33290f; }
 :root[data-theme="dark"] .san-pay .san-code { background: #3a2a1c; }
 :root[data-theme="dark"] .san-pay .san-code b { color: #ffc48a; }
@@ -2851,7 +2839,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 }
 .san button.ss-pill { border: 0; height: auto; }
 .san button.ss-pill.ghost { border: 1px solid var(--border); }
-@media (max-width: 760px) { .san-perks { grid-template-columns: 1fr 1fr; } .san-perks div { padding: 12px; } }
 /* Шагналын сангийн толгой: ногоон хүрээ, эргэлдэх цацраг */
 .san-top { position: relative; overflow: hidden; isolation: isolate; border-radius: 22px; border: 2px solid #37c3b3; background: linear-gradient(160deg, #f0fbf9 0%, #e5f7f5 55%, #fff7ec 100%); box-shadow: 0 10px 30px -18px rgba(0, 168, 155, .6); }
 .san-rays { position: absolute; z-index: -1; left: 50%; top: 18%; width: 1400px; height: 1400px; margin: -700px 0 0 -700px; pointer-events: none;

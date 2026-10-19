@@ -11,6 +11,8 @@ import Share from "../../components/Share";
 import EventCover from "../../components/EventCover";
 import LogicReport from "../../components/LogicReport";
 import Shell from "../../components/Shell";
+import SupportModal from "../../components/SupportModal";
+import { supportModalProps } from "@/lib/supportModal";
 import { Avatar, Stat, When, Person, followingSet } from "../../components/Bits";
 import { Langs, VoteBox } from "../../components/Terms";
 import { TERM_KIND, daysLeft, synonyms, shortUrl } from "@/lib/terms";
@@ -536,9 +538,8 @@ export default async function PostPage({ params, searchParams }) {
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && !isAuthor && (
-                <Link href={user ? `/san/support?kind=tip&to=${post.author_id}&post=${post.id}` : "/login"} className="ar-gift" title="Бичээчид хандив өгч урамшуулах">
-                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Бичээчийг дэмжих
-                </Link>
+                <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Шагнал</>}
+                  writer={{ id: post.author_id, name: `${post.initial}.${post.first_name}` }} postId={post.id} {...supportModalProps(user)} />
               )}
               <span className="ar-right">
                 {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}
