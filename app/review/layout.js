@@ -6,6 +6,7 @@ import { getUser, isStaff, needsName } from "@/lib/auth";
 import { levelFor } from "@/lib/levels";
 import { canApproveWords } from "@/lib/terms";
 import AdminNav from "../admin/_c/AdminNav";
+import { GRANTABLE, canSee } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хяналт · Science Spark" };
@@ -31,6 +32,8 @@ export default async function ReviewLayout({ children }) {
         { key: "queue", label: "Хяналтын жагсаалт", icon: "a_content", href: "/review", exact: true, match: "^/review/\\d+", badge: pending || null },
         { key: "archive", label: "Миний шийдвэрүүд", icon: "a_audit", href: "/review/archive" },
         { key: "rules", label: "Хянагчийн дүрэм", icon: "a_requests", href: "/review/rules" },
+        // Редакцийн админд супер админы зөвшөөрсөн хэсгүүд (Админ товч зөвхөн супер админд харагдана)
+        ...(user.role === "admin" ? GRANTABLE.filter((s) => !s.soon && canSee(user, s.key)) : []),
       ]
     : [
         { key: "words", label: "Шинэ үг зөвшөөрөх", icon: "a_content", href: "/review?t=words", match: "^/review/word" },

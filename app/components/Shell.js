@@ -11,8 +11,7 @@ import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
 import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
-import { displayName, isAdmin, needsName, isStaff, isPremium } from "@/lib/auth";
-import { canApproveWords } from "@/lib/terms";
+import { displayName, needsName, isStaff, isSuperAdmin, isPremium } from "@/lib/auth";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { walletBalance } from "@/lib/money";
@@ -26,7 +25,26 @@ const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
 );
 
-function Sidebar({ active }) {
+// Редакцийн товчууд зүүн цэсний доод хэсэгт: «Хянах» редакцид (хянагч, админ), «Админ» зөвхөн супер админд
+async function StaffNav({ user, active }) {
+  if (!isStaff(user)) return null;
+  const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}`
+    .then((r) => r[0].n)
+    .catch(() => 0);
+  return (
+    <nav className="ss-nav ss-staff" aria-label="Редакц">
+      <span className="ss-staff-t">Редакц</span>
+      <Link href="/review" className={"ss-nav-item" + (active === "/review" ? " on" : "")}>
+        {I("shield", 24)}<span>Хянах</span>{pending > 0 && <em className="ss-badge red">{pending > 99 ? "99+" : pending}</em>}
+      </Link>
+      {isSuperAdmin(user) && (
+        <Link href="/admin" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("crown", 24)}<span>Админ</span></Link>
+      )}
+    </nav>
+  );
+}
+
+function Sidebar({ user, active }) {
   return (
     <aside className="ss-side">
       <div className="ss-dhead"><Link href="/" className="ss-dlogo"><img src="/icons/logo.svg" width={40} height={40} alt="Science Spark" /></Link><span className="ss-grow" /><ThemeToggle /><DrawerClose /></div>
@@ -57,6 +75,7 @@ function Sidebar({ active }) {
           <span>Тусламж</span>
         </span>
       </nav>
+      <StaffNav user={user} active={active} />
       <div className="ss-grow" />
       <ThemeToggle />
     </aside>
@@ -149,15 +168,6 @@ async function RightRail({ user }) {
               {I("wallet", 18)}<span>Хэтэвч</span>
               {I("arrow", 14)}
             </Link>
-            {(isStaff(user) || canApproveWords(user)) && (
-              <Link href={isStaff(user) ? "/review" : "/review?t=words"} className="ss-action">
-                {I("shield", 18)}<span>Хянах</span>
-                {I("arrow", 14)}
-              </Link>
-            )}
-            {isAdmin(user) && (
-              <Link href="/admin" className="ss-action">{I("crown", 18)}<span>Админ</span>{I("arrow", 14)}</Link>
-            )}
             <form action={logout}>
               <button type="submit" className="ss-action ss-logout">
                 <img src="/icons/logout.svg" width={18} height={18} alt="" /><span>Гарах</span>
@@ -196,7 +206,7 @@ export default async function Shell({ user, active, children, header = true, com
   if (needsName(user)) redirect("/profile/edit");
   return (
     <div className="ss-shell">
-      <Sidebar active={active} />
+      <Sidebar user={user} active={active} />
       <main className="ss-main">
         {header === true ? (
           <Header user={user} compose={compose} composeError={composeError} active={active} />
