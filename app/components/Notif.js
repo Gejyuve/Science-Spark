@@ -7,9 +7,9 @@ import { toggleFollow } from "../posts/actions";
 const ICON = {
   tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"],
   withdraw_ok: ["wallet", "ok"], withdraw_no: ["wallet", "gray"],
-  approved: ["f_shield", "ok"], reviewed: ["f_shield", "ok"], reviewer_ok: ["f_shield", "ok"],
+  approved: ["f_shield", "ok"], approved_edited: ["f_shield", "ok"], reviewed: ["f_shield", "ok"], reviewer_ok: ["f_shield", "ok"],
   rejected: ["logic", "warn"], reviewer_no: ["f_shield", "gray"], removed: ["logic", "bad"],
-  logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"],
+  logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"], complaint_ok: ["flag20", "ok"], complaint_no: ["flag20", "gray"],
 };
 const AVATAR_KINDS = ["follow", "comment", "reply", "club_invite", "club_join", "club_request", "club_ok", "club_no"];
 
@@ -51,7 +51,6 @@ function Item({ n }) {
             <button type="submit">Дагах</button>
           </form>
         )}
-        {n.kind === "reviewed" && <Link href={`/n/${n.id}`} className="nf-act btn">Нийтлэх</Link>}
         {n.kind === "reviewer_ok" && <Link href={`/n/${n.id}`} className="nf-act btn">Хяналт руу</Link>}
       </span>
       {!n.read_at && <i className="nf-dot" aria-label="Уншаагүй" />}

@@ -7,7 +7,7 @@ import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { creditChain } from "@/lib/revisions";
 import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
-import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave, awardBounty, addBounty, deletePost } from "../../posts/actions";
+import { addComment, sparkPost, removePost, deleteComment, likeComment, toggleSave, awardBounty, addBounty, deletePost } from "../../posts/actions";
 import { waitTone, BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS } from "@/lib/bounty";
 import { walletBalance, fmtMnt } from "@/lib/money";
 import Share from "../../components/Share";
@@ -540,47 +540,17 @@ export default async function PostPage({ params, searchParams }) {
             {post.status === "draft" && (
               <p className="notice">Ноорог. {isAuthor ? <Link href={`/post/${post.id}/preview`}>Урьдчилж хараад редакц руу илгээх →</Link> : "Бичээч хараахан илгээгээгүй."}</p>
             )}
-            {!open && post.status !== "approved" && post.status !== "draft" && (
+            {!open && post.status !== "draft" && (
               <p className={post.status === "pending" ? "notice" : "error"}>
                 {post.status === "rejected"
                   ? `Редакц засвар хийхээр буцаасан: ${post.review_note || ""}`
                   : post.status === "removed"
                   ? `Редакц нуусан: ${post.review_note || ""}`
-                  : isArticle
-                  ? "Редакцын хяналтад орсны дараа та өөрөө нийтлэх боломжтой болно."
-                  : "Редакцын хяналтад орсны дараа нийтлэгдэнэ."}
+                  : "Редакц хянаж зөвшөөрсний дараа нийтлэгдэнэ."}
                 {post.status === "pending" && isStaff(user) && !isAuthor && (
                   <> <Link href={`/review/${post.id}`}>Хянах самбар нээх →</Link></>
                 )}
               </p>
-            )}
-            {post.status === "approved" && (
-              isAuthor ? (
-                <div className="ar-ready">
-                  <b>Редакц таны нийтлэлийг хянаж зөвшөөрлөө 🎉</b>
-                  <p>
-                    {post.original ? "Редакц зарим засвар оруулсан. Доорх хувилбарыг шалгаад нийтлээрэй." : "Доорх хувилбарыг шалгаад нийтлээрэй."}
-                    {post.review_note && <><br />Редакцийн тайлбар: “{post.review_note}”</>}
-                  </p>
-                  {post.original && (
-                    <details className="ar-orig">
-                      <summary>Миний анхны хувилбарыг харах</summary>
-                      <b>{post.original.title}</b>
-                      {post.original.subtitle && <i>{post.original.subtitle}</i>}
-                      <p>{post.original.body}</p>
-                    </details>
-                  )}
-                  <div className="ar-ready-acts">
-                    <form action={publishOwn}>
-                      <input type="hidden" name="post_id" value={post.id} />
-                      <button type="submit" className="btn">Нийтлэх</button>
-                    </form>
-                    <Link href={`/post/${post.id}/edit`} className="btn ghost">Засах (дахин хяналтад орно)</Link>
-                  </div>
-                </div>
-              ) : (
-                <p className="notice">Редакц зөвшөөрсөн. Бичээч нийтлэхийг хүлээж байна.</p>
-              )
             )}
             {!published && isAuthor && (post.status === "rejected" || post.status === "removed") && (
               <p className="muted">Засаад хадгалбал дахин редакцын хяналтад орно.</p>
