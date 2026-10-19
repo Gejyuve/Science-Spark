@@ -54,7 +54,7 @@ export function Chip({ tone, children }) {
   return <span className={"adm-pill " + (tone || "")}>{children}</span>;
 }
 
-export const STATUS_TONE = { pending: "warn", approved: "teal", published: "ok", rejected: "bad", removed: "gray" };
+export const STATUS_TONE = { pending: "warn", approved: "teal", published: "ok", rejected: "bad", removed: "gray", merged: "gray" };
 
 export function Flash({ ok, error }) {
   if (error) return <p className="adm-flash bad">{error}</p>;
