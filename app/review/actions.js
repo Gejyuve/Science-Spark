@@ -8,6 +8,7 @@ import { getUser, canApproveEvents } from "@/lib/auth";
 import { APPROVE_REWARD } from "@/lib/levels";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
+import { TASK_APPROVE_REWARD } from "@/lib/tasks-shared";
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
 
@@ -23,7 +24,7 @@ export async function decidePost(formData) {
   const id = Number(formData.get("post_id"));
   if (!Number.isInteger(id)) redirect("/review");
   const back = `/review/${id}`;
-  const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original, category FROM posts WHERE id = ${id}`;
+  const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original, category, club_id FROM posts WHERE id = ${id}`;
   if (!p || p.status !== "pending") go("/review", "error", "Энэ контент хянагдсан эсвэл олдсонгүй");
   if (p.author_id === user.id) go("/review", "error", "Өөрийн контентыг өөр хянагч хянана");
   const approve = formData.get("decision") === "approve";
@@ -65,6 +66,12 @@ export async function decidePost(formData) {
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
     await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
     // Редакц чанарыг нь баталсан нийтлэл, мэдээнд бичээчид нэг удаа оч
+    // Батлагдсан даалгаварт клубт нэг удаа
+    if (p.club_id) {
+      await sql`INSERT INTO club_points (club_id, delta, reason)
+                SELECT ${p.club_id}, ${TASK_APPROVE_REWARD}, ${"approved:post:" + id}
+                WHERE NOT EXISTS (SELECT 1 FROM club_points WHERE reason = ${"approved:post:" + id})`;
+    }
     const reward = APPROVE_REWARD[p.kind];
     if (reward) {
       await sql`INSERT INTO points_ledger (user_id, delta, reason)
@@ -75,5 +82,5 @@ export async function decidePost(formData) {
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
   revalidatePath("/review", "layout");
-  go(editable ? "/review" : "/review?t=events", "ok", editable ? "Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо" : "Нийтлэгдлээ");
+  go(editable ? "/review" : p.club_id ? "/review?t=tasks" : "/review?t=events", "ok", editable ? "Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо" : "Нийтлэгдлээ");
 }

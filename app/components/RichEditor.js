@@ -189,7 +189,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
           </div>
         )}
         <span className={"wr-count" + (text.trim() && rule.error ? " bad" : text.trim() ? " ok" : "")}>
-          {words} үг · {kind === "Мэдээ" ? `${min}–${max} үг` : "500+ үг"} · {minutes} мин
+          {words} үг · {kind === "Мэдээ" ? `${min}–${max} үг` : kind === "Даалгавар" ? `${min}+ үг` : "500+ үг"} · {minutes} мин
         </span>
       </div>
 

@@ -8,6 +8,8 @@ import MiniMap from "../../components/MiniMap";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
 import { chatUnread } from "@/lib/chat";
+import { listTasks } from "@/lib/tasks";
+import TaskCard from "../../components/TaskCard";
 import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest } from "../../clubs/actions";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +18,8 @@ async function load(id) {
   await ensureSchema();
   const [c] = await sql`
     SELECT c.*,
-      COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = c.id), 0)::int AS points,
+      (COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = c.id), 0)
+       + COALESCE((SELECT SUM(k.delta) FROM club_points k WHERE k.club_id = c.id), 0))::int AS points,
       (SELECT COUNT(*) FROM club_follows f WHERE f.club_id = c.id)::int AS followers
     FROM clubs c WHERE c.id = ${id} AND c.kind = 'club' AND c.status = 'active'`;
   return c || null;
@@ -78,7 +81,8 @@ export default async function ClubPage({ params, searchParams }) {
       (SELECT c2.name FROM club_members m2 JOIN clubs c2 ON c2.id = m2.club_id WHERE m2.user_id = u.id) AS other,
       (SELECT MAX(at) FROM club_moves mv WHERE mv.user_id = u.id) AS moved_at
     FROM club_requests r JOIN users u ON u.id = r.user_id WHERE r.club_id = ${id} ORDER BY r.created_at` : [];
-  const tab = isLeader && sp.tab === "requests" ? "requests" : "members";
+  const tab = isLeader && sp.tab === "requests" ? "requests" : sp.tab === "tasks" ? "tasks" : "members";
+  const tasks = await listTasks({ clubId: id, limit: 60 });
   const unreadChat = isMember ? await chatUnread(user.id, id) : 0;
   const following = await followingSet(user);
   const follows = await clubFollowSet(user);
@@ -197,10 +201,17 @@ export default async function ClubPage({ params, searchParams }) {
           <Link href={`/club/${id}/chat`}>
             <img className="ic" src="/icons/comment18.svg" width={14} height={14} alt="" />Чат{unreadChat > 0 && <em className="hot">{unreadChat > 99 ? "99+" : unreadChat}</em>}
           </Link>
+          <Link href={`/club/${id}?tab=tasks`} className={tab === "tasks" ? "on" : ""} scroll={false}>Даалгавар <em>{tasks.length}</em></Link>
           {isLeader && <Link href={`/club/${id}?tab=requests`} className={tab === "requests" ? "on" : ""} scroll={false}>Хүсэлт <em className={requests.length ? "hot" : ""}>{requests.length}</em></Link>}
         </nav>
 
-        {tab === "members" ? (
+        {tab === "tasks" ? (
+          <section className="cp-card cp-list">
+            {isLeader && <div className="cp-req-head"><h2>Клубын даалгаврууд</h2><Link href="/tasks/new" className="cp-btn sm">+ Даалгавар нэмэх</Link></div>}
+            {tasks.length ? <div className="tk-grid">{tasks.map((t) => <TaskCard key={t.id} t={t} />)}</div>
+              : <p className="muted">{isLeader ? "Клубынхээ хийж үзсэн туршилт, эвент, воркшопыг даалгавар болгон хуваалцаарай." : "Энэ клуб одоохондоо даалгавар нэмээгүй байна."}</p>}
+          </section>
+        ) : tab === "members" ? (
           <section className="cp-card cp-list">
             {rest.length ? <div className="cp-grid">{rest.map((m) => <Member key={m.id} m={m} viewer={user} following={following} clubId={id} canRemove={isLeader} />)}</div>
               : <p className="muted">Энгийн гишүүн одоохондоо алга. Анхны гишүүн нь болоорой!</p>}

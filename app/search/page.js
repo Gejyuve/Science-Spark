@@ -54,7 +54,7 @@ export default async function SearchPage({ searchParams }) {
              (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)::int AS answers,
              (p.title ILIKE ${like})::int AS in_title
       FROM posts p JOIN users u ON u.id = p.author_id
-      WHERE p.status = 'published' AND (p.title ILIKE ${like} OR p.body ILIKE ${like}
+      WHERE p.status = 'published' AND p.club_id IS NULL AND (p.title ILIKE ${like} OR p.body ILIKE ${like}
         OR (p.kind = 'Үг' AND (p.meta->>'en' ILIKE ${like} OR p.meta->>'ru' ILIKE ${like})))
       ORDER BY in_title DESC, p.created_at DESC LIMIT 100`;
     people = await sql`

@@ -67,7 +67,7 @@ export default async function Home({ searchParams }) {
         LIMIT 1
       ) ta ON true
       LEFT JOIN win ON win.post_id = p.id
-      WHERE p.status = 'published' AND p.kind <> 'Үг'
+      WHERE p.status = 'published' AND p.kind NOT IN ('Үг', 'Даалгавар')
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
         AND (NOT ${art}::boolean OR p.kind = 'Нийтлэл')
@@ -96,13 +96,13 @@ export default async function Home({ searchParams }) {
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
         -- Хугацаандаа оч авсан контент: бүх нийтлэлийг нэг бүрчлэн шалгахын оронд тухайн хугацааны очноос эхэлж тоолно
         (SELECT COUNT(DISTINCT s.post_id) FROM sparks s JOIN posts sp ON sp.id = s.post_id
-         WHERE sp.status = 'published' AND sp.kind <> 'Үг'
+         WHERE sp.status = 'published' AND sp.kind NOT IN ('Үг', 'Даалгавар')
            AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))::int AS top,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Зарлал')::int AS ann,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Нийтлэл')::int AS art,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Мэдээ')::int AS news
-      FROM posts p WHERE p.status = 'published' AND p.kind <> 'Үг'`;
+      FROM posts p WHERE p.status = 'published' AND p.kind NOT IN ('Үг', 'Даалгавар')`;
     counts = c;
     if (qa) {
       const [x] = await sql`

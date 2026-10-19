@@ -23,7 +23,8 @@ export default async function Join({ params }) {
   if (user && needsName(user)) redirect("/profile/edit");
   await ensureSchema();
   const [c] = await sql`
-    SELECT c.*, COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = c.id), 0)::int AS points,
+    SELECT c.*, (COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = c.id), 0)
+      + COALESCE((SELECT SUM(k.delta) FROM club_points k WHERE k.club_id = c.id), 0))::int AS points,
       (SELECT COUNT(*) FROM club_members m WHERE m.club_id = c.id)::int AS members
     FROM clubs c WHERE c.id = ${id} AND c.kind = 'club' AND c.status = 'active'`;
   if (!c) notFound();

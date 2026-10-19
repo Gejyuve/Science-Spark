@@ -106,8 +106,10 @@ export async function sparkPost(formData) {
   const postId = Number(formData.get("post_id"));
   if (!Number.isInteger(postId)) return;
   await ensureSchema();
-  const post = await sql`SELECT author_id, kind FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
+  const post = await sql`SELECT author_id, kind, club_id FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!post.length || post[0].author_id === user.id) return;
+  // Клубын даалгаварт өөрийн клубын гишүүд оч өгөхгүй (клубын оч өөрөө өсгөхгүй)
+  if (post[0].club_id && (await sql`SELECT 1 FROM club_members WHERE club_id = ${post[0].club_id} AND user_id = ${user.id}`).length) return;
   if ((await sql`SELECT 1 FROM sparks WHERE post_id = ${postId} AND user_id = ${user.id}`).length) return;
   await checkDaily(user);
   const w = sparkWeight(user);
@@ -115,8 +117,10 @@ export async function sparkPost(formData) {
     INSERT INTO sparks (post_id, user_id, weight) VALUES (${postId}, ${user.id}, ${w})
     ON CONFLICT DO NOTHING RETURNING post_id`;
   if (ins.length) {
-    const get = (WRITING_KINDS.includes(post[0].kind) ? SPARK_GET_WRITING : SPARK_GET_OTHER) * w;
-    await sql`INSERT INTO points_ledger (user_id, delta, reason)
+    const get = (WRITING_KINDS.includes(post[0].kind) || post[0].club_id ? SPARK_GET_WRITING : SPARK_GET_OTHER) * w;
+    // Клубын даалгаварт ирсэн оч бичсэн хүнд биш, клубт очно
+    if (post[0].club_id) await sql`INSERT INTO club_points (club_id, delta, reason) VALUES (${post[0].club_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
+    else await sql`INSERT INTO points_ledger (user_id, delta, reason)
               VALUES (${post[0].author_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
     await rewardFirstSpark(user.id);
   }
