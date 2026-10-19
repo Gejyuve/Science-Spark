@@ -32,7 +32,6 @@ export default async function ClubChatPage({ params }) {
   return (
     <Shell user={user} active="/clubs" header={false}>
       <div className="cp-page ch-page">
-        <Link href={`/club/${id}`} className="ch-back">← {c.name}</Link>
         <section className="cp-card ch-card">
           <div className="ch-head">
             <Link href={`/club/${id}`} className="ch-headlink"><ClubAv c={{ id: c.id, name: c.name, logo: c.logo_id }} size={40} /></Link>

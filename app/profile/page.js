@@ -52,7 +52,6 @@ export default async function ProfilePage({ searchParams }) {
         </details>
         <p className="muted"><Link href={`/u/${user.id}`}>Нийтэд харагдах профайл →</Link></p>
         <form action={logout}><button className="btn ghost" type="submit">Гарах</button></form>
-        <p className="muted"><Link href="/">← Нүүр</Link></p>
       </div>
     </Shell>
   );

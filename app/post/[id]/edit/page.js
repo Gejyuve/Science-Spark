@@ -68,7 +68,6 @@ export default async function EditPage({ params, searchParams }) {
   return (
     <Shell user={user} header="nav">
       <div className="ed-page">
-        <Link href={`/post/${post.id}`} className="pv-back">← Буцах</Link>
         <h1>{staff ? `Редакц: ${post.kind} засварлах` : `${post.kind} засварлах`}</h1>
         {error && <p className="error">{error}</p>}
         <form action={editContent} className="ed-form">

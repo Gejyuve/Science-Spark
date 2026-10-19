@@ -35,7 +35,6 @@ export default function JoinForm({ clubId, blocked, rules }) {
       </label>
       {state?.error && <p className="error">{state.error}</p>}
       <button type="submit" className="jn-go" disabled={blocked || pending || bad}>{blocked ? "Нэгдэх боломжгүй" : pending ? "Илгээж байна…" : "Клубт нэгдэх"}</button>
-      <Link href={`/club/${clubId}`} className="jn-back">Буцах</Link>
     </form>
   );
 }

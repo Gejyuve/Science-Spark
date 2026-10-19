@@ -15,7 +15,6 @@ export default async function WhoAmI() {
         <p>Эрх: <b>{user ? ROLE_LABELS[user.role] || user.role : "-"}</b></p>
         <p>SUPER_ADMIN_EMAILS тохируулсан эсэх: <b>{list.length ? "тийм" : "үгүй"}</b></p>
         <p>Таны имэйл жагсаалтад: <b>{user && list.includes(user.email.toLowerCase()) ? "тийм" : "үгүй"}</b></p>
-        <p className="muted"><Link href="/">← Нүүр</Link></p>
       </div>
     </div>
   );

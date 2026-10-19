@@ -39,7 +39,7 @@ export default async function PreviewPage({ params, searchParams }) {
             <b>Урьдчилж харах</b>
             <small>Нийтлэгдсэний дараа ийм харагдана. Энэ хуудас зөвхөн танд харагдана.</small>
           </span>
-          <Link href={`/post/${post.id}/edit`} className="pv-back">← Засах руу буцах</Link>
+          <Link href={`/post/${post.id}/edit`} className="pv-back">Засах</Link>
         </section>
 
         <article className="ar-card">
