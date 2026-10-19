@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
 import { lockedBalance } from "@/lib/bounty";
+import { levelFor, nextLevel } from "@/lib/levels";
 import { walletBalance, fmtMnt, KIND_LABEL, REQUEST_KIND, REQUEST_STATUS, WITHDRAW_MIN, INCOME_TAX, TIP_FEE } from "@/lib/money";
 import { requestWithdrawal } from "../san/actions";
 import Shell from "../components/Shell";
@@ -35,6 +36,8 @@ export default async function Wallet({ searchParams }) {
   const pending = withdrawals.find((w) => w.status === "pending");
   const [given] = await sql`SELECT COALESCE(SUM(amount), 0)::bigint AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'confirmed' AND kind <> 'topup'`;
   const toGo = Math.max(0, WITHDRAW_MIN - balance);
+  const lv = levelFor(user.points || 0);
+  const nx = nextLevel(user.points || 0);
   const feeNote = `Уншигчдын урамшуулал, асуултын шагналаас сайтыг ажиллуулахад ${Math.round(TIP_FEE * 100)}% шимтгэл суутгадаг.`;
 
   return (
@@ -42,11 +45,16 @@ export default async function Wallet({ searchParams }) {
       <div className="ss-card och san">
         {sp.error && <p className="och-note bad">{sp.error}</p>}
         {sp.ok && <p className="och-note info">{sp.ok}</p>}
-        <div className="san-hero">
+        <div className="san-hero wl-hero">
           <div>
             <h1>Миний хэтэвч</h1>
             <p className="och-sub">Уншигчдын урамшуулал, сарын шагнал, асуултын шагнал энд орно. Таны бичсэн бүхэн хэн нэгний сонирхлыг асааж байна.</p>
           </div>
+          <Link href="/och" className="san-pool wl-level" title="Түвшин ба очны дүрэм">
+            <small>Түвшин {lv.n}</small>
+            <b>{lv.n ? <img src={`/icons/lv${lv.n}.svg`} width={30} height={30} alt="" /> : null}{lv.name}</b>
+            <small>✦ {Number(user.points || 0).toLocaleString("en-US")} оч{nx ? ` · ${nx.name} хүртэл ${(nx.min - user.points).toLocaleString("en-US")}` : ""}</small>
+          </Link>
           <div className="san-pool">
             <small>Үлдэгдэл</small>
             <b>{fmtMnt(balance)}</b>

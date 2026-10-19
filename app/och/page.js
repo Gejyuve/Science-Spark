@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
-import { sql, ensureSchema } from "@/lib/db";
+import { ensureSchema } from "@/lib/db";
 import { LEVELS, levelFor, nextLevel, SPARK_GET_WRITING, SPARK_GET_OTHER, PREMIUM_SPARK_WEIGHT, PREMIUM_DAILY_BONUS, FIRST_SPARK_REWARD, APPROVE_REWARD } from "@/lib/levels";
 import { TERM_REWARD } from "@/lib/terms";
 import { JOIN_REWARD } from "@/lib/clubs-shared";
 import { POINTS_TOTAL } from "@/lib/profile";
 import { dailyLimit, givenToday } from "@/lib/spark";
 import Shell from "../components/Shell";
-import { Avatar, fmtK } from "../components/Bits";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Асаж буй оч · Science Spark" };
+export const metadata = { title: "Очны учир · Science Spark" };
 
 const n = (x) => Number(x || 0).toLocaleString("en-US");
 
@@ -34,14 +33,6 @@ const SOON = [
   ["Эвент хуваалцах", "Нийтлэгдвэл", "+500"],
   ["Анхны удаагийн шагнал", "Анхны хариулт, үг, нийтлэл тус бүрт 1 л удаа", "+50"],
 ];
-const PERIODS = [["week", "Энэ долоо хоног", "7 days"], ["month", "Энэ сар", "30 days"], ["all", "Бүх цаг", null]];
-
-// Том тоо утсан дээр товчлогдоно (12.3K)
-function Num({ v, plus }) {
-  const p = plus && v > 0 ? "+" : "";
-  return <><i className="och-long">{p}{n(v)}</i><i className="och-short">{p}{fmtK(v)}</i></>;
-}
-
 function LevelIcon({ l, size = 36 }) {
   if (!l.n) return <span className="och-lv" style={{ "--c": l.color, width: size, height: size }}>·</span>;
   return <img className="och-lvi" src={`/icons/lv${l.n}.svg`} width={size} height={size} alt={`Түвшин ${l.n} · ${l.name}`} style={{ "--c": l.color }} />;
@@ -49,32 +40,11 @@ function LevelIcon({ l, size = 36 }) {
 
 export default async function Och({ searchParams }) {
   const sp = await searchParams;
-  const period = PERIODS.find((p) => p[0] === sp.p) || PERIODS[0];
-  let user = null, top = [], me = null, today = 0;
+  let user = null, today = 0;
   try {
     user = await getUser();
     await ensureSchema();
-    top = await sql`
-      SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar,
-        COALESCE(SUM(l.delta) FILTER (WHERE ${period[2]}::text IS NULL OR l.created_at > now() - ${period[2] || "0 days"}::interval), 0)::int AS gained,
-        COALESCE(SUM(l.delta), 0)::int AS total
-      FROM users u JOIN points_ledger l ON l.user_id = u.id
-      WHERE u.first_name <> ''
-      GROUP BY u.id
-      ORDER BY gained DESC, total DESC LIMIT 50`;
-    if (user) {
-      const [r] = await sql`
-        WITH s AS (
-          SELECT u.id, COALESCE(SUM(l.delta) FILTER (WHERE ${period[2]}::text IS NULL OR l.created_at > now() - ${period[2] || "0 days"}::interval), 0) AS gained,
-                 COALESCE(SUM(l.delta), 0) AS total
-          FROM users u LEFT JOIN points_ledger l ON l.user_id = u.id GROUP BY u.id
-        )
-        SELECT (SELECT COUNT(*) FROM s WHERE s.gained > me.gained OR (s.gained = me.gained AND s.total > me.total))::int + 1 AS rank,
-               me.gained::int AS gained, me.total::int AS total
-        FROM s me WHERE me.id = ${user.id}`;
-      me = r;
-      today = await givenToday(user.id);
-    }
+    if (user) today = await givenToday(user.id);
   } catch (e) {}
   const lv = user ? levelFor(user.points) : null;
   const nx = user ? nextLevel(user.points) : null;
@@ -85,42 +55,8 @@ export default async function Och({ searchParams }) {
       <div className="ss-card och">
         {sp.error && <p className="och-note bad">{sp.error}</p>}
         {sp.ok && <p className="och-note info">{sp.ok}</p>}
-        <h1>🔥 Асаж буй оч</h1>
-        <p className="och-sub">Хамгийн их оч цуглуулж буй гишүүд. Түвшин зөвхөн өөрийн хөдөлмөрөөр олсон очоор ахина.</p>
-        <div className="ss-feedtabs och-tabs">
-          {PERIODS.map(([k, l]) => <Link key={k} href={`/och?p=${k}`} className={period[0] === k ? "on" : ""}>{l}</Link>)}
-        </div>
-        <div className="och-board">
-          <div className="och-brow head"><span>№</span><span>Хэрэглэгч</span><span>Түвшин</span><span><i className="och-long">{period[0] === "all" ? "Олсон" : period[1]}</i><i className="och-short">Олсон</i></span><span>Данс</span></div>
-          {top.length === 0 && <p className="ss-empty">Одоохондоо мэдээлэл алга.</p>}
-          {top.map((t, i) => {
-            const l = levelFor(t.total);
-            return (
-              <Link key={t.id} href={`/u/${t.id}`} className={"och-brow" + (user && user.id === t.id ? " me" : "")}>
-                <span>{i + 1}</span>
-                <span className="och-who"><Avatar user={t} size={28} /><b>{t.initial}.{t.first_name}</b></span>
-                <span className="och-lvl"><LevelIcon l={l} size={22} /><span className="och-chip" style={{ "--c": l.color }}>{l.name}</span></span>
-                <span className="och-plus"><Num v={t.gained} plus /></span>
-                <span><Num v={t.total} /></span>
-              </Link>
-            );
-          })}
-          {user && me && !top.some((t) => t.id === user.id) && (
-            <>
-              <div className="och-dots">· · ·</div>
-              <div className="och-brow me">
-                <span>{me.rank}</span>
-                <span className="och-who"><Avatar user={user} size={28} /><b>{user.initial}.{user.first_name} (та)</b></span>
-                <span className="och-lvl"><LevelIcon l={lv} size={22} /><span className="och-chip" style={{ "--c": lv.color }}>{lv.name}</span></span>
-                <span className="och-plus"><Num v={me.gained} plus /></span>
-                <span><Num v={me.total} /></span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <h2 className="och-h1" id="rules">Очны учир</h2>
-        <p className="och-sub">Оч олох дүрэм, түвшин, эрхүүд.</p>
+        <h1 id="rules">✦ Очны учир</h1>
+        <p className="och-sub">Оч олох дүрэм, түвшин, эрхүүд. Түвшин зөвхөн өөрийн хөдөлмөрөөр олсон очоор ахина. Шилдэг бичээчдийн жагсаалтыг <Link href="/san#board">Шагнал</Link> хуудаснаас үзнэ үү.</p>
 
         {user && (
           <>
