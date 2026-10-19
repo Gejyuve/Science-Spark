@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { popupBounty } from "../posts/actions";
 
 // Контент илгээсний дараах баярын цонх. Сервер үйлдэл (lib/celebrate.js) «ss_yay» күүки тавина,
 // энд уншаад цонхоо гаргаж, күүкийг устгана. Сервер үйлдлийн дараах шилжилт хуудсыг дахин ачаалдаггүй тул байн байн шалгана.
@@ -80,72 +78,6 @@ function CountUp({ to, ms = 900 }) {
   return n(v);
 }
 
-// Шагналгүй асуулт илгээсний дараа: «Шагнал нэмэх үү?» санал. Хэтэвчнээс мөнгө түгжиж,
-// асуугчийн сонгосон хамгийн зөв хариулагчийн хэтэвч рүү орно (lib/bounty.js).
-const BQ_PICKS = [5000, 10000, 20000, 50000];
-function BountyOffer({ a }) {
-  const router = useRouter();
-  const fits = BQ_PICKS.filter((v) => v <= a.w);
-  const [amt, setAmt] = useState(fits.length ? fits[Math.min(1, fits.length - 1)] : BQ_PICKS[0]);
-  const [busy, setBusy] = useState(false);
-  const [res, setRes] = useState(null);
-  const low = a.w < 1000;
-  const short = amt > a.w;
-
-  if (res?.ok) {
-    return (
-      <div className="cel-bq done">
-        <b>🏆 {n(res.amount)}₮-ийн шагнал тавигдлаа!</b>
-        <small>Мэдлэгээ хуваалцах хүмүүсийг урамшуулсанд баярлалаа. Асуулт тань «Шагналтай» шүүлтүүрт гарна. Хамгийн зөв хариултыг сонгоход шагнал тэр хүнд очно.</small>
-      </div>
-    );
-  }
-  const add = async () => {
-    setBusy(true);
-    try {
-      const r = await popupBounty(a.id, amt);
-      setRes(r);
-      if (r?.ok) router.refresh();
-    } catch (e) {
-      setRes({ error: "Шагнал тавьж чадсангүй. Дахин оролдоно уу." });
-    }
-    setBusy(false);
-  };
-  return (
-    <div className="cel-bq">
-      <b>🏆 Асуултдаа шагнал нэмэх үү?</b>
-      <small>Шагналтай асуулт «Шагналтай» шүүлтүүрт гарч, мэдлэгтэй хүмүүсийг хариулахад урамшуулна. Мөнгө түгжигдэж, таны сонгосон хамгийн зөв хариулагчийн хэтэвч рүү орно.</small>
-      {low ? (
-        <div className="cel-bq-row">
-          <span className="cel-bq-w">Хэтэвчинд: {n(a.w)}₮</span>
-          <Link href="/wallet?topup=1" className="cel-bq-go">Хэтэвчээ цэнэглэх →</Link>
-        </div>
-      ) : (
-        <>
-          <div className="cel-bq-picks" role="group" aria-label="Шагналын дүн">
-            {BQ_PICKS.map((v) => (
-              <button key={v} type="button" className={amt === v ? "on" : ""} disabled={v > a.w} onClick={() => setAmt(v)}>{n(v)}₮</button>
-            ))}
-            <label className="cel-bq-own">
-              <input type="number" min={1000} max={Math.min(5000000, a.w)} step={500} inputMode="numeric" aria-label="Өөр дүн"
-                value={BQ_PICKS.includes(amt) ? "" : amt || ""} placeholder="Өөр дүн" onChange={(e) => setAmt(Math.round(Number(e.target.value) || 0))} />
-              <span>₮</span>
-            </label>
-          </div>
-          <div className="cel-bq-row">
-            <span className="cel-bq-w">Хэтэвчинд: {n(a.w)}₮</span>
-            <button type="button" className="cel-bq-go" disabled={busy || short || amt < 1000} onClick={add}>
-              {busy ? "Түр хүлээнэ үү…" : `🏆 ${n(amt)}₮ шагнал нэмэх`}
-            </button>
-          </div>
-          {short && <small className="cel-bq-err">Хэтэвчинд хүрэлцэхгүй байна. <Link href="/wallet?topup=1">Хэтэвчээ цэнэглэх →</Link></small>}
-        </>
-      )}
-      {res?.error && <small className="cel-bq-err">{res.error}</small>}
-    </div>
-  );
-}
-
 export default function Celebrate() {
   const [d, setD] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -197,7 +129,6 @@ export default function Celebrate() {
         </div>
 
         <div className="cel-body">
-          {d.a && <BountyOffer a={d.a} />}
           {d.e?.length > 0 && (
             <div className="cel-earn">
               {d.e.map(([label, v]) => (

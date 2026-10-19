@@ -3390,7 +3390,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cel-bq { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; background: var(--bq-bg); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--bq) 40%, transparent); }
 .cel-bq > b { font-size: 16px; font-weight: 800; color: var(--bq); }
 .cel-bq > small { font-size: 12.5px; line-height: 1.5; color: var(--text); }
-.cel-bq.done { animation: cel-glow 2s ease-in-out infinite; }
 .cel-bq-picks { display: flex; flex-wrap: wrap; gap: 6px; }
 .cel-bq-picks button { flex: 1 1 70px; height: 36px; border: 1.5px solid color-mix(in srgb, var(--bq) 35%, var(--border)); border-radius: 10px; background: var(--surface); color: var(--ink);
   font: inherit; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
@@ -3406,6 +3405,13 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cel-bq-go:disabled { opacity: .5; cursor: not-allowed; }
 .cel-bq-err { font-size: 12.5px; color: var(--bq-w3); }
 :root[data-theme="dark"] .cel-bq-picks button.on, :root[data-theme="dark"] .cel-bq-go { color: #2a1d05; }
+.bqa { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8vh; padding: 28px 22px 20px; text-align: center; }
+.bqa-ic { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; background: var(--bq-bg); font-size: 36px; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bq) 45%, transparent); }
+.bqa > b { font-size: 20px; font-weight: 800; color: var(--ink); }
+.bqa > p { margin: 0; max-width: 400px; font-size: 13.5px; line-height: 1.55; color: var(--text); }
+.bqa .cel-bq { align-self: stretch; text-align: left; }
+.bqa-no { height: 40px; padding: 0 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.bqa-no:hover { background: var(--surface-2); }
 .cel-later { display: flex; flex-direction: column; gap: 6px; }
 .cel-lt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .cel-later > div { display: flex; flex-wrap: wrap; gap: 6px; }
