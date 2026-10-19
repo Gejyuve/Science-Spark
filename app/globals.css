@@ -2968,3 +2968,5 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 @media (prefers-reduced-motion: reduce) { .ss-nbadges img { animation: none; } }
 .pu-name h1 .ss-nbadges { margin-left: 8px; gap: 5px; }
 .san-bolt { margin-left: 6px; flex: none; }
+.sm-bolt { display: inline-block; margin-left: 6px; vertical-align: -2px; filter: drop-shadow(0 0 4px rgba(255, 176, 32, .55)); }
+.sm-ic img { display: block; filter: drop-shadow(0 0 6px rgba(255, 176, 32, .6)); }
