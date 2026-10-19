@@ -2408,7 +2408,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cl-row .cl-place, .cl-cols span:nth-child(3) { display: none; }
 }
 
-/* ===== Клуб бүртгүүлэх, клубын хуудас ===== */
+/* ===== Клуб бүртгүүлэх, клубийн хуудас ===== */
 .cl-new { padding: 9px 16px; border-radius: 999px; background: #e6f7f5; color: #00a89b; font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; align-self: center; }
 .cl-new:hover { background: #d3f1ec; }
 .cl-empty { display: flex; flex-direction: column; align-items: center; gap: 14px; }
@@ -2513,7 +2513,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cf-pick { flex-direction: column; } .cf-own { padding: 10px 14px; justify-content: center; }
 }
 
-/* ===== Клубт нэгдэх (Figma 404:242), клубын админ харагдац (412:248) ===== */
+/* ===== Клубт нэгдэх (Figma 404:242), клубийн админ харагдац (412:248) ===== */
 .jn-page { display: flex; flex-direction: column; align-items: center; }
 .jn-top { position: absolute; left: 16px; top: 12px; z-index: 2; display: flex; align-items: center; gap: 10px; }
 .jn-home img { display: block; }
@@ -2593,7 +2593,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 @media (max-width: 600px) { .jn-card { padding: 24px 18px; border-radius: 22px; } }
 .cf-saved { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); }
 
-/* Клубын групп чат */
+/* Клубийн групп чат */
 .ch-card { padding: 0; display: flex; flex-direction: column; }
 .ch-head { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--border); }
 .ch-head span { display: flex; flex-direction: column; gap: 2px; }
@@ -2735,7 +2735,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 @media (min-width: 761px) { .pu-tab.mob-icon:not(.on) img { display: none; } }
 @media (max-width: 760px) { .pu-tab.mob-icon { padding: 0 12px; gap: 6px; } .pu-tab.mob-icon .pu-tlabel { display: none; } }
 
-/* Клубын чат — тусдаа хуудас */
+/* Клубийн чат — тусдаа хуудас */
 .ch-page { display: flex; flex-direction: column; gap: 12px; }
 .ch-back { align-self: flex-start; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
 .ch-back:hover { color: var(--ink); }
@@ -3038,7 +3038,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 @media (max-width: 720px) { .wl-hero { grid-template-columns: 1fr 1fr; } .wl-level b { font-size: 18px; } }
 .och-sub a { color: var(--teal); font-weight: 600; text-decoration: none; }
 
-/* ===== Клубын даалгавар ===== */
+/* ===== Клубийн даалгавар ===== */
 .cl-tasks { padding: 28px 28px 24px; border-radius: 24px; background: var(--surface); box-shadow: var(--card-shadow); }
 .cl-tasks .cl-head { padding: 0; margin-bottom: 18px; }
 .tk-page { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
@@ -3092,7 +3092,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .tk-grid.four .tk-tags a:nth-child(n+2) { display: none; }
 }
 
-/* ===== Клубын тайлан, «Клуб» ангилал ===== */
+/* ===== Клубийн тайлан, «Клуб» ангилал ===== */
 .tk-tabs { display: flex; flex-direction: row; gap: 6px; padding: 6px; border-radius: 999px; background: var(--surface); box-shadow: var(--card-shadow); align-self: flex-start; }
 .tk-tabs a { flex: none; width: auto; height: auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
 .tk-tabs a em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -3143,7 +3143,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .rp-go { display: none; }
 }
 @media (max-width: 720px) {
-  /* Клубын хэсгүүдийн таб: утсан дээр нэг мөрөнд, хажуу тийш гүйлгэнэ */
+  /* Клубийн хэсгүүдийн таб: утсан дээр нэг мөрөнд, хажуу тийш гүйлгэнэ */
   .cp-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .cp-tabs::-webkit-scrollbar { display: none; }
   .cp-tabs a { flex: none; white-space: nowrap; }

@@ -17,7 +17,7 @@ const KIND = { club: "Клуб", org: "Байгууллага" };
 
 // Клуб, байгууллагын маягтыг шалгаж, хадгалах утгуудыг гаргана
 async function readEntity(fd, user, kind, current = null) {
-  const L = kind === "org" ? "Байгууллагын" : "Клубын";
+  const L = kind === "org" ? "Байгууллагын" : "Клубийн";
   const v = {};
   v.name = txt(fd, "name", 30);
   v.category = txt(fd, "category", 60);
@@ -31,19 +31,19 @@ async function readEntity(fd, user, kind, current = null) {
   v.email = txt(fd, "email", 120) || null;
   v.phone = txt(fd, "phone", 30) || null;
   if (v.name.length < 2) return { error: `${L} нэрээ бичнэ үү.` };
-  if (!v.category) return { error: kind === "org" ? "Байгууллагын төрлөө сонгоно уу." : "Клубын ангиллаа сонгоно уу." };
+  if (!v.category) return { error: kind === "org" ? "Байгууллагын төрлөө сонгоно уу." : "Клубийн ангиллаа сонгоно уу." };
   if (!v.city) return { error: `${L} хот, аймгаа сонгоно уу.` };
-  if (!v.about) return { error: `${kind === "org" ? "Байгууллагынхаа" : "Клубынхээ"} тухай бичнэ үү.` };
+  if (!v.about) return { error: `${kind === "org" ? "Байгууллагынхаа" : "Клубийнхаа"} тухай бичнэ үү.` };
   if (kind === "org") {
     if (countWords(v.about) > 100) return { error: "Байгууллагын тухай 100 үгээс хэтрэхгүй." };
     if (v.address && countWords(v.address) > 100) return { error: "Хаяг 100 үгээс хэтрэхгүй." };
   } else {
-    if (v.about.length > 500) return { error: "Клубын тухай 500 тэмдэгтээс хэтрэхгүй." };
+    if (v.about.length > 500) return { error: "Клубийн тухай 500 тэмдэгтээс хэтрэхгүй." };
     if (v.address && v.address.length > 150) return { error: "Хаяг 150 тэмдэгтээс хэтрэхгүй." };
   }
   // Латины хязгаар зөвхөн тайлбар бичвэрт (нэр, хаяг латин байж болно)
-  if (latinShare(v.about) > LATIN_LIMIT) return { error: `«${kind === "org" ? "Байгууллагын" : "Клубын"} тухай» хэсгийг кириллээр бичнэ үү.` };
-  if (v.rules && latinShare(v.rules) > LATIN_LIMIT) return { error: "«Клубын дүрэм» хэсгийг кириллээр бичнэ үү." };
+  if (latinShare(v.about) > LATIN_LIMIT) return { error: `«${kind === "org" ? "Байгууллагын" : "Клубийн"} тухай» хэсгийг кириллээр бичнэ үү.` };
+  if (v.rules && latinShare(v.rules) > LATIN_LIMIT) return { error: "«Клубийн дүрэм» хэсгийг кириллээр бичнэ үү." };
   if (v.website && !/^https?:\/\/\S+\.\S+/.test(v.website)) return { error: "Вэбсайтын хаягаа зөв оруулна уу." };
   if (v.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) return { error: "Имэйл хаяг буруу байна." };
   if (v.phone && !/^\+?[\d\s-]{6,20}$/.test(v.phone)) return { error: "Утасны дугаараа зөв бичнэ үү." };
@@ -64,7 +64,7 @@ async function readEntity(fd, user, kind, current = null) {
     if (!loc) return { error: "Байршлыг уншиж чадсангүй. Координатыг «47.9184, 106.9177» хэлбэрээр эсвэл Google Maps-ийн холбоосыг бүтнээр нь оруулна уу." };
     if (v.country === "Монгол" && !inMongolia(loc)) return { error: "Оруулсан байршил Монгол Улсын нутагт биш байна. Координатаа шалгана уу." };
     v.lat = loc.lat; v.lng = loc.lng;
-  } else if (kind === "club") return { error: "Клубын байршлыг (координат эсвэл Google Maps холбоос) оруулна уу." };
+  } else if (kind === "club") return { error: "Клубийн байршлыг (координат эсвэл Google Maps холбоос) оруулна уу." };
   else { v.lat = null; v.lng = null; }
 
   const rawLogo = fd.get("logo");
@@ -110,8 +110,8 @@ export async function createClub(prev, fd) {
   const user = await guard();
   if (user.restricted_at) return { error: "Таны эрх хязгаарлагдсан тул клуб бүртгүүлэх боломжгүй." };
   const mine = await membershipOf(user.id);
-  if (mine) return { error: `Та «${mine.name}» клубын гишүүн байна. Шинэ клуб бүртгүүлэхийн тулд эхлээд тэр клубээсээ гарна уу.` };
-  if (!fd.get("agree")) return { error: "Клубын бүртгэлийн нөхцөлийг зөвшөөрнө үү." };
+  if (mine) return { error: `Та «${mine.name}» клубийн гишүүн байна. Шинэ клуб бүртгүүлэхийн тулд эхлээд тэр клубээсээ гарна уу.` };
+  if (!fd.get("agree")) return { error: "Клубийн бүртгэлийн нөхцөлийг зөвшөөрнө үү." };
   const r = await readEntity(fd, user, "club");
   if (r.error) return r;
   const v = r.v;
@@ -202,8 +202,8 @@ export async function toggleClubFollow(fd) {
 async function eligibility(u, clubId) {
   if (u.restricted_at) return { error: "Эрх нь хязгаарлагдсан хэрэглэгч клубт нэгдэх боломжгүй." };
   const mine = await membershipOf(u.id);
-  if (mine?.club_id === clubId) return { error: "Аль хэдийн энэ клубын гишүүн байна.", member: true };
-  if (mine?.role === "leader") return { error: `«${mine.name}» клубын удирдагч өөр клубт шилжих боломжгүй.` };
+  if (mine?.club_id === clubId) return { error: "Аль хэдийн энэ клубийн гишүүн байна.", member: true };
+  if (mine?.role === "leader") return { error: `«${mine.name}» клубийн удирдагч өөр клубт шилжих боломжгүй.` };
   const cd = await cooldownOf(u.id);
   if (cd) return { error: `${ymd(cd.since)}-нд ${cd.from ? `«${cd.from}» клубээс ` : ""}гарсан тул ${ymd(cd.until)} хүртэл өөр клубт нэгдэх боломжгүй.`, cooldown: cd };
   return { mine };
@@ -215,7 +215,7 @@ async function doJoin(userId, club, role) {
   if (mine) {
     await sql`DELETE FROM club_members WHERE user_id = ${userId}`;
     await sql`INSERT INTO club_moves (user_id, from_club, from_name, to_club) VALUES (${userId}, ${mine.club_id}, ${mine.name}, ${club.id})`;
-    // Анхны клубын урамшууллын үлдэгдлийг (хуучин дүрмээр 600 байж болно) бүтнээр нь хасна
+    // Анхны клубийн урамшууллын үлдэгдлийг (хуучин дүрмээр 600 байж болно) бүтнээр нь хасна
     const bal = await rewardBalance(userId);
     if (bal > 0) await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${userId}, ${-bal}, 'club:switch')`;
   } else if (!(await hadFirstReward(userId))) {
@@ -235,7 +235,7 @@ export async function requestJoin(prev, fd) {
   if (!c) return { error: "Клуб олдсонгүй." };
   const el = await eligibility(user, clubId);
   if (el.error) return { error: el.error };
-  if (!fd.get("agree")) return { error: "Клубын дүрмийг уншиж, зөвшөөрнө үү." };
+  if (!fd.get("agree")) return { error: "Клубийн дүрмийг уншиж, зөвшөөрнө үү." };
   const reason = String(fd.get("reason") || "").trim().slice(0, 1000);
   if (countWords(reason) > 100) return { error: "Нэгдэх шалтгаан 100 үгээс хэтрэхгүй." };
   if (reason && latinShare(reason) > LATIN_LIMIT) return { error: "«Нэгдэх шалтгаан»-аа кириллээр бичнэ үү." };

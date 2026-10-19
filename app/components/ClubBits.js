@@ -20,7 +20,7 @@ export function ClubFollow({ id, viewer, followed }) {
   );
 }
 
-// Клубын нэр + оч · дагагч + дагах товч (Figma «Club info»)
+// Клубийн нэр + оч · дагагч + дагах товч (Figma «Club info»)
 export function ClubPerson({ c, viewer, follows, size = 40, points }) {
   const followed = !!follows?.has(c.id);
   return (

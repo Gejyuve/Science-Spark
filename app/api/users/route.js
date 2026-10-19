@@ -3,7 +3,7 @@ import { sql, ensureSchema } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Хэрэглэгч хайх (клубын удирдах зөвлөлд гишүүн нэмэх үед). Имэйл задруулахгүй.
+// Хэрэглэгч хайх (клубийн удирдах зөвлөлд гишүүн нэмэх үед). Имэйл задруулахгүй.
 export async function GET(req) {
   const user = await getUser();
   if (!user) return Response.json({ users: [] }, { status: 401 });

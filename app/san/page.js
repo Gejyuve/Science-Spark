@@ -77,7 +77,7 @@ export default async function San({ searchParams }) {
             <Countdown end={periodEnd(period)} initial={Math.max(0, periodEnd(period) - Date.now())} />
             <small className="san-kicker">✦ Шагналын сан</small>
             <b className="san-amount">{fmtMnt(pool)}</b>
-            <p>Монголын шинжлэх ухаан түгээгч, мэдлэг цацруулагч, идэвхтэн бичээчдийг хамтдаа дэмжие.</p>
+            <p>Монголын шинжлэх ухаан түгээгч, мэдлэг цацруулагч, идэвхтэн бичээчдийг хамтдаа дэмжье.</p>
             <div className="san-cta">
               <SupportModal kind="premium" label={user && isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill" {...modal} />
               <SupportModal kind="pool" label="Хандив өгөх" className="ss-pill ghost" {...modal} />

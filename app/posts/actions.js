@@ -116,7 +116,7 @@ export async function sparkPost(formData) {
   await ensureSchema();
   const post = await sql`SELECT author_id, kind, club_id FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!post.length || post[0].author_id === user.id) return;
-  // Клубын даалгаварт өөрийн клубын гишүүд оч өгөхгүй (клубын оч өөрөө өсгөхгүй)
+  // Клубийн даалгаварт өөрийн клубийн гишүүд оч өгөхгүй (клубийн оч өөрөө өсгөхгүй)
   if (post[0].club_id && (await sql`SELECT 1 FROM club_members WHERE club_id = ${post[0].club_id} AND user_id = ${user.id}`).length) return;
   if ((await sql`SELECT 1 FROM sparks WHERE post_id = ${postId} AND user_id = ${user.id}`).length) return;
   await checkDaily(user);
@@ -126,7 +126,7 @@ export async function sparkPost(formData) {
     ON CONFLICT DO NOTHING RETURNING post_id`;
   if (ins.length) {
     const get = (WRITING_KINDS.includes(post[0].kind) || CLUB_KINDS.includes(post[0].kind) ? SPARK_GET_WRITING : SPARK_GET_OTHER) * w;
-    // Клубын даалгаварт ирсэн оч бичсэн хүнд биш, клубт очно
+    // Клубийн даалгаварт ирсэн оч бичсэн хүнд биш, клубт очно
     if (post[0].club_id) await sql`INSERT INTO club_points (club_id, delta, reason) VALUES (${post[0].club_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
     else await sql`INSERT INTO points_ledger (user_id, delta, reason)
               VALUES (${post[0].author_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
@@ -474,11 +474,11 @@ export async function quickPost(formData) {
   if (latinShare(body) > LATIN_LIMIT || (meta.register && latinShare(meta.register) > LATIN_LIMIT)) fail(LATIN_MSG);
   await ensureSchema();
   if (kind === "Эвент") meta.program = await ownImage(user.id, formData.get("program"));
-  // Клубын удирдагч бодрол, эвент, зарлалыг клубынхээ нэрээр хуваалцаж болно
+  // Клубийн удирдагч бодрол, эвент, зарлалыг клубийнхээ нэрээр хуваалцаж болно
   let clubId = null;
   if (formData.get("as_club") && kind !== "Асуулт") {
     const club = await leaderClub(user.id);
-    if (!club) fail("Клубын нэрээр зөвхөн клубын удирдагч хуваалцана");
+    if (!club) fail("Клубийн нэрээр зөвхөн клубийн удирдагч хуваалцана");
     clubId = club.id;
   }
   const imageId = kind === "Асуулт" ? null : await ownImage(user.id, formData.get("image"));
@@ -492,7 +492,7 @@ export async function quickPost(formData) {
   revalidatePath("/");
   await celebrate(user, {
     kind, status, title: kind === "Асуулт" || kind === "Бодрол" ? "" : title, href: `/post/${rows[0].id}`,
-    // Клубын нэрээр хуваалцсан бүтээлийн оч клубт очно
+    // Клубийн нэрээр хуваалцсан бүтээлийн оч клубт очно
     later: status === "published" && !clubId ? [["Уншигч бүрээс авах оч", SPARK_GET_OTHER]] : [],
   });
   if (bounty > 0) {

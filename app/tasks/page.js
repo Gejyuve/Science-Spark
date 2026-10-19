@@ -8,7 +8,7 @@ import TaskCard, { ClubTabs } from "../components/TaskCard";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Даалгавар · Science Spark" };
 
-// Клубуудын хуваалцсан туршилт, эвент, воркшопын санаанууд
+// Клубүүдын хуваалцсан туршилт, эвент, воркшопын санаанууд
 export default async function Tasks({ searchParams }) {
   const sp = await searchParams;
   const type = typeof sp.t === "string" && sp.t.length <= 40 ? sp.t : null;
@@ -28,7 +28,7 @@ export default async function Tasks({ searchParams }) {
         <section className="tk-hero">
           <div>
             <h1>Даалгавар</h1>
-            <p>Клубуудын хуваалцсан туршилт, эвент, воркшопын санаа. Клубтэйгээ хийж үзээд, өөрсдийн санаагаа нэмээрэй.</p>
+            <p>Клубүүдын хуваалцсан туршилт, эвент, воркшопын санаа. Клубтэйгээ хийж үзээд, өөрсдийн санаагаа нэмээрэй.</p>
           </div>
           <span className="ss-grow" />
           <Link href={user ? "/tasks/new" : "/login"} className="cl-new">+ Даалгавар нэмэх</Link>

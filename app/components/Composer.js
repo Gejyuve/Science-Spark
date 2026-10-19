@@ -88,7 +88,7 @@ const Req = () => <i className="cp-req">*</i>;
 
 export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, initialAs }) {
   const [mode, setMode] = useState(initial || null);
-  // Клубын удирдагч: «Өөрөө» эсвэл «Клуб»-ын нэрээр. Клубын нэрээр бол Даалгавар · Тайлан · Хуваалцъя
+  // Клубийн удирдагч: «Өөрөө» эсвэл «Клуб»-ын нэрээр. Клубийн нэрээр бол Даалгавар · Тайлан · Хуваалцъя
   const [asClub, setAsClub] = useState(!!club && initialAs === "club");
   // Сүүлд сонгосноо санана (зөвхөн энэ хөтөчид)
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
     try { localStorage.setItem("ss-as", asClub ? "club" : "me"); } catch (e) {}
   }, [club, asClub]);
   const clubIn = asClub ? <input type="hidden" name="as_club" value="1" /> : null;
-  const by = (k) => (asClub ? `${k} · ${club.name} клубын нэрээр` : k);
+  const by = (k) => (asClub ? `${k} · ${club.name} клубийн нэрээр` : k);
   const [start, setStart] = useState({ full: "", date: "" });
   const [now, setNow] = useState({ date: "", time: "" });
   useEffect(() => setNow(nowUB()), [mode]);
@@ -273,7 +273,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
         {(mode !== "Асуулт" && panel) || (
           <Link href="/tasks/new" className="ss-composer">
             {clubAv}
-            <span>Клубынхээ туршлагыг хуваалцаж, бусад клубт урам өгье</span>
+            <span>Клубийнхаа туршлагыг хуваалцаж, бусад клубт урам өгье</span>
           </Link>
         )}
         <div className="ss-tabs">

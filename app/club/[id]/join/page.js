@@ -38,7 +38,7 @@ export default async function Join({ params }) {
     lose = mine ? Math.max(0, await rewardBalance(user.id)) : 0; // хасагдах оч
     first = !(await hadFirstReward(user.id));
     if (user.restricted_at) blockMsg = "Таны эрх хязгаарлагдсан тул клубт нэгдэх боломжгүй.";
-    else if (mine?.role === "leader") blockMsg = `Та «${mine.name}» клубын удирдагч тул өөр клубт шилжих боломжгүй.`;
+    else if (mine?.role === "leader") blockMsg = `Та «${mine.name}» клубийн удирдагч тул өөр клубт шилжих боломжгүй.`;
     else if (cd) blockMsg = `Та ${ymd(cd.since)}-нд ${cd.from ? `«${cd.from}» клубээс ` : ""}гарсан тул ${ymd(cd.until)} хүртэл өөр клубт нэгдэх боломжгүй.`;
   }
   const socials = Object.entries(c.socials || {}).filter(([k, v]) => SOC[k] && v);
@@ -68,7 +68,7 @@ export default async function Join({ params }) {
           <EntityGate title="Хувь хүний бүртгэл шаардлагатай" text="Клубт нэгдэхийн тулд эхлээд өөрийн бүртгэлээр нэвтэрнэ үү." />
         ) : pending ? (
           <>
-            <p className="jn-box ok"><img src="/icons/sparkle.svg" width={16} height={16} alt="" /><span>{pending.club_id === id ? "Таны нэгдэх хүсэлт илгээгдсэн. Клубын удирдагч шийдвэрлэхийг хүлээнэ үү." : `Та «${pending.name}» клубт нэгдэх хүсэлт илгээсэн байна. Нэг удаад нэг л хүсэлт илгээх боломжтой. Энэ клубт хүсэлт илгээвэл өмнөх хүсэлт тань цуцлагдана.`}</span></p>
+            <p className="jn-box ok"><img src="/icons/sparkle.svg" width={16} height={16} alt="" /><span>{pending.club_id === id ? "Таны нэгдэх хүсэлт илгээгдсэн. Клубийн удирдагч шийдвэрлэхийг хүлээнэ үү." : `Та «${pending.name}» клубт нэгдэх хүсэлт илгээсэн байна. Нэг удаад нэг л хүсэлт илгээх боломжтой. Энэ клубт хүсэлт илгээвэл өмнөх хүсэлт тань цуцлагдана.`}</span></p>
             {pending.club_id === id ? (
               <form action={cancelRequest} className="jn-form"><input type="hidden" name="club_id" value={id} /><button type="submit" className="jn-back">Хүсэлтээ цуцлах</button></form>
             ) : <JoinForm clubId={id} blocked={!!blockMsg} rules={c.rules} />}
@@ -77,7 +77,7 @@ export default async function Join({ params }) {
           <>
             {blockMsg && <p className="jn-box bad"><span className="jn-ic">⛔</span><span>{blockMsg}</span></p>}
             {!blockMsg && mine && (
-              <p className="jn-box warn"><span className="jn-ic">⚠</span><span>Та одоо «{mine.name}» клубын гишүүн байна. «{c.name}»-д нэгдсэнээр «{mine.name}»-аас гишүүнчлэл хасагдана{lose ? `, ${lose} оч хасагдана` : ""}. Шинэ клубт оч олгогдохгүй. Дараа нь 1 сарын дотор дахин шилжих боломжгүй.</span></p>
+              <p className="jn-box warn"><span className="jn-ic">⚠</span><span>Та одоо «{mine.name}» клубийн гишүүн байна. «{c.name}»-д нэгдсэнээр «{mine.name}»-аас гишүүнчлэл хасагдана{lose ? `, ${lose} оч хасагдана` : ""}. Шинэ клубт оч олгогдохгүй. Дараа нь 1 сарын дотор дахин шилжих боломжгүй.</span></p>
             )}
             {mine || !first ? (
               <div className={"jn-reward minus" + (blockMsg ? " dim" : "")}>

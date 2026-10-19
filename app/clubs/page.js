@@ -27,7 +27,7 @@ export default async function Clubs({ searchParams }) {
   } catch (e) {}
   const follows = await clubFollowSet(user);
 
-  // Газрын зураг: координаттай клубууд
+  // Газрын зураг: координаттай клубүүд
   const onMap = board.filter((c) => c.lat != null && c.lng != null)
     .map(({ id, name, logo, city, about, lat, lng, points, members, rank }) => ({ id, name, logo, city, about, lat, lng, points, members, rank }));
   const aimags = new Set(onMap.map((c) => c.city).filter(Boolean)).size;
@@ -40,7 +40,7 @@ export default async function Clubs({ searchParams }) {
   return (
     <Shell user={user} active="/clubs" header={false}>
       <div className="cl-page">
-        {/* Клубын удирдагч: Даалгавар · Тайлан · Хуваалцъя */}
+        {/* Клубийн удирдагч: Даалгавар · Тайлан · Хуваалцъя */}
         {myClub && (
           <div className="ss-header static cl-composer">
             <Composer loggedIn me={<Avatar user={user} size={32} />} club={{ name: myClub.name }} clubAv={<ClubAv c={myClub} size={32} />} initialAs="club" />
@@ -64,7 +64,7 @@ export default async function Clubs({ searchParams }) {
             </nav>
           </div>
           {rows.length === 0 ? (
-            <div className="cl-empty"><p>Одоохондоо бүртгэлтэй клуб алга. Клубууд бүртгүүлж, оч цуглуулахад энд эрэмбэлэгдэнэ.</p><Link href="/clubs/new" className="cm-join">+ Клуб бүртгүүлэх</Link></div>
+            <div className="cl-empty"><p>Одоохондоо бүртгэлтэй клуб алга. Клубүүд бүртгүүлж, оч цуглуулахад энд эрэмбэлэгдэнэ.</p><Link href="/clubs/new" className="cm-join">+ Клуб бүртгүүлэх</Link></div>
           ) : (
             <>
               <div className="cl-row cl-cols"><span>№</span><span>Клуб</span><span>Байршил</span><span>Өөрчлөлт</span></div>
@@ -82,12 +82,12 @@ export default async function Clubs({ searchParams }) {
           )}
         </section>
 
-        {/* Хамгийн доор: клубуудын даалгавар, тайлан */}
+        {/* Хамгийн доор: клубүүдын даалгавар, тайлан */}
         <section className="cl-tasks">
           <div className="cl-head">
             <div>
               <h2>Даалгавар</h2>
-              <p>Клубуудын хийж үзсэн туршилт, эвент, воркшопын санаа · {tasksN} даалгавар</p>
+              <p>Клубүүдын хийж үзсэн туршилт, эвент, воркшопын санаа · {tasksN} даалгавар</p>
             </div>
             <span className="ss-grow" />
             <Link href="/tasks" className="cl-new">Бүгдийг үзэх →</Link>
@@ -95,7 +95,7 @@ export default async function Clubs({ searchParams }) {
           {tasks.length ? (
             <div className="tk-grid four">{tasks.map((t) => <TaskCard key={t.id} t={t} compact />)}</div>
           ) : (
-            <p className="muted">Одоохондоо даалгавар алга. Клубын удирдагч анхны даалгаврыг нэмээрэй.</p>
+            <p className="muted">Одоохондоо даалгавар алга. Клубийн удирдагч анхны даалгаврыг нэмээрэй.</p>
           )}
         </section>
 
@@ -104,7 +104,7 @@ export default async function Clubs({ searchParams }) {
             <div className="cl-head">
               <div>
                 <h2>Тайлан</h2>
-                <p>Клубууд даалгаврыг хэрхэн биелүүлсэн бэ · {reportsN} тайлан</p>
+                <p>Клубүүд даалгаврыг хэрхэн биелүүлсэн бэ · {reportsN} тайлан</p>
               </div>
               <span className="ss-grow" />
               <Link href="/reports" className="cl-new">Бүгдийг үзэх →</Link>

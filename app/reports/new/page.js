@@ -37,8 +37,8 @@ export default async function NewReport({ searchParams }) {
       ) : (
         <section className="wr-lock">
           <img src="/icons/logo.svg" width={64} height={64} alt="" />
-          <h1>Тайланг клубын удирдагч нэмнэ</h1>
-          <p>Клуб тань даалгаврыг биелүүлсний дараа удирдагч нь клубын нэрээр тайлан бичнэ. Редакц баталмагц клуб даалгаврын очийг авна.</p>
+          <h1>Тайланг клубийн удирдагч нэмнэ</h1>
+          <p>Клуб тань даалгаврыг биелүүлсний дараа удирдагч нь клубийн нэрээр тайлан бичнэ. Редакц баталмагц клуб даалгаврын очийг авна.</p>
           <div className="wr-lock-acts">
             <Link href="/tasks" className="wr-go">Даалгаврууд үзэх</Link>
             <Link href="/clubs/new" className="wr-lock-link">Клуб бүртгүүлэх</Link>

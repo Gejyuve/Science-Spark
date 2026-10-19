@@ -374,7 +374,7 @@ export default async function PostPage({ params, searchParams }) {
   if (post.status === "merged" && post.meta?.merged_into) redirect(`/post/${post.meta.merged_into}`);
   const isAuthor = !!user && user.id === post.author_id;
   const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
-  // Даалгавар: нийтлэл шиг тэмдэглэгээтэй агуулга, ковертой. Клубын нэрээр харагдана.
+  // Даалгавар: нийтлэл шиг тэмдэглэгээтэй агуулга, ковертой. Клубийн нэрээр харагдана.
   const isTask = post.kind === TASK_KIND;
   const isReport = post.kind === REPORT_KIND;
   const rich = isArticle || isTask || isReport;
@@ -462,14 +462,14 @@ export default async function PostPage({ params, searchParams }) {
   const cover = rich ? post.meta?.cover : null;
   const club = post.club_id ? { id: post.club_id, name: post.club_name, logo: post.club_logo, followers: post.club_followers, points: post.club_points } : null;
   const clubFollows = club ? await clubFollowSet(user) : null;
-  // Өөрийн клубын даалгаварт оч өгөхгүй
+  // Өөрийн клубийн даалгаварт оч өгөхгүй
   const ownClub = !!club && !!user && (await sql`SELECT 1 FROM club_members WHERE club_id = ${club.id} AND user_id = ${user.id}`).length > 0;
   // Тайлан: биелүүлсэн даалгаврын товч мэдээлэл
   const [doneTask] = isReport && post.task_id
     ? await sql`SELECT t.id, t.title, t.subtitle, t.image_id, t.meta, c.id AS club_id, c.name AS club_name, c.logo_id AS club_logo
                 FROM posts t JOIN clubs c ON c.id = t.club_id WHERE t.id = ${post.task_id}`
     : [];
-  // Даалгавар: биелүүлсэн клубуудын тайлан, удирдагчид «Тайлан нэмэх»
+  // Даалгавар: биелүүлсэн клубүүдын тайлан, удирдагчид «Тайлан нэмэх»
   const taskReports = isTask && published ? await listReports({ taskId: post.id, limit: 12 }) : [];
   const myClub = isTask && published && user ? await leaderClub(user.id) : null;
   const myReported = myClub ? taskReports.some((x) => x.club_id === myClub.id) || (await sql`SELECT 1 FROM posts WHERE task_id = ${post.id} AND club_id = ${myClub.id} AND kind = ${REPORT_KIND} AND status = 'pending'`).length > 0 : false;
@@ -609,7 +609,7 @@ export default async function PostPage({ params, searchParams }) {
             {isTask && published && (
               <section className="tk-done">
                 <div className="tk-done-head">
-                  <b>Биелүүлсэн клубууд <em>{taskReports.length}</em></b>
+                  <b>Биелүүлсэн клубүүд <em>{taskReports.length}</em></b>
                   <span className="ss-grow" />
                   {myClub && !myReported && <Link href={`/reports/new?task=${post.id}`} className="cl-new">+ Тайлан нэмэх</Link>}
                 </div>
@@ -626,7 +626,7 @@ export default async function PostPage({ params, searchParams }) {
                   <ClubPerson c={club} viewer={user} follows={clubFollows} />
                 </div>
               ) : null}
-              {/* Даалгаврыг клубын нэрээр харуулна, жинхэнэ бичсэн хүнийг зөвхөн редакц харна */}
+              {/* Даалгаврыг клубийн нэрээр харуулна, жинхэнэ бичсэн хүнийг зөвхөн редакц харна */}
               {!club && chain.length > 0 ? chain.map((c) => (
                 <div key={c.role + c.id}>
                   <span className="ar-label">{c.role === "author" ? (isAnn ? "Зарласан:" : "Бичсэн:") : "Хянасан:"}</span>

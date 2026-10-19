@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const no = (error, status) => Response.json({ error }, { status });
 
-// Чатыг зөвхөн тухайн клубын гишүүд уншиж, бичнэ
+// Чатыг зөвхөн тухайн клубийн гишүүд уншиж, бичнэ
 async function gate(params) {
   const { id: raw } = await params;
   const id = Number(raw);
@@ -16,7 +16,7 @@ async function gate(params) {
   if (!user) return { err: no("Нэвтэрнэ үү.", 401) };
   await ensureSchema();
   const mine = await membershipOf(user.id);
-  if (mine?.club_id !== id) return { err: no("Чат зөвхөн клубын гишүүдэд нээлттэй.", 403) };
+  if (mine?.club_id !== id) return { err: no("Чат зөвхөн клубийн гишүүдэд нээлттэй.", 403) };
   return { id, user, mine };
 }
 

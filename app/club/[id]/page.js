@@ -51,7 +51,7 @@ function Member({ m, viewer, following, clubId, canRemove }) {
   );
 }
 
-// Figma 350:1053 «Клубын нийтийн хуудас»
+// Figma 350:1053 «Клубийн нийтийн хуудас»
 export default async function ClubPage({ params, searchParams }) {
   const { id: raw } = await params;
   const sp = await searchParams;
@@ -139,20 +139,20 @@ export default async function ClubPage({ params, searchParams }) {
 
           {invited && (
             <div className="cp-note ok">
-              <span>Таныг энэ клубын <b>удирдах зөвлөлд</b> урьсан байна.</span>
+              <span>Таныг энэ клубийн <b>удирдах зөвлөлд</b> урьсан байна.</span>
               <form action={acceptInvite}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm">Зөвшөөрөх</button></form>
               <form action={declineInvite}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm ghost">Татгалзах</button></form>
             </div>
           )}
           {join === "inviteswitch" && mine && (
             <div className="cp-note warn">
-              <span>Та одоо «<b>{mine.name}</b>» клубын гишүүн. Урилгыг хүлээн авбал тэр клубээсээ гарч, анхны клубын урамшууллын оч хасагдана. Дараа нь 1 сар шилжих боломжгүй.</span>
+              <span>Та одоо «<b>{mine.name}</b>» клубийн гишүүн. Урилгыг хүлээн авбал тэр клубээсээ гарч, анхны клубийн урамшууллын оч хасагдана. Дараа нь 1 сар шилжих боломжгүй.</span>
               <form action={acceptInvite}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="switch" value="1" /><button type="submit" className="cp-btn sm">Шилжих</button></form>
               <Link href={`/club/${id}`} className="cp-btn sm ghost">Болих</Link>
             </div>
           )}
           {join === "ok" && isMember && <p className="cp-note ok">🎉 «{c.name}» клубт тавтай морил!</p>}
-          {join === "sent" && <p className="cp-note ok">Нэгдэх хүсэлт тань илгээгдлээ. Клубын удирдагч зөвшөөрмөгц мэдэгдэл очно.</p>}
+          {join === "sent" && <p className="cp-note ok">Нэгдэх хүсэлт тань илгээгдлээ. Клубийн удирдагч зөвшөөрмөгц мэдэгдэл очно.</p>}
           {join === "leave" && isMember && (
             <div className="cp-note warn">
               <span>Клубээс гарвал 1 сарын дотор өөр клубт нэгдэх боломжгүй. Гарах уу?</span>
@@ -171,7 +171,7 @@ export default async function ClubPage({ params, searchParams }) {
             </div>
           )}
           {c.rules && (
-            <details className="cp-rules"><summary>Клубын дүрэм</summary><p>{c.rules}</p></details>
+            <details className="cp-rules"><summary>Клубийн дүрэм</summary><p>{c.rules}</p></details>
           )}
 
           {c.lat != null && (
@@ -195,9 +195,9 @@ export default async function ClubPage({ params, searchParams }) {
         </section>
 
         {isLeader && (
-          <p className="cp-admin"><img className="ic" src="/icons/f_shield.svg" width={18} height={18} alt="" /><span><b>Админ харагдац</b>Энэ хэсгийг зөвхөн клубын удирдагч харна. Та гишүүдийн хүсэлтийг шийдвэрлэж, удирдах зөвлөлөө өөрчилнө.</span></p>
+          <p className="cp-admin"><img className="ic" src="/icons/f_shield.svg" width={18} height={18} alt="" /><span><b>Админ харагдац</b>Энэ хэсгийг зөвхөн клубийн удирдагч харна. Та гишүүдийн хүсэлтийг шийдвэрлэж, удирдах зөвлөлөө өөрчилнө.</span></p>
         )}
-        <nav className="cp-tabs" aria-label="Клубын хэсгүүд">
+        <nav className="cp-tabs" aria-label="Клубийн хэсгүүд">
           <Link href={`/club/${id}`} className={tab === "members" ? "on" : ""} scroll={false}>Гишүүд <em>{members.length}</em></Link>
           <Link href={`/club/${id}/chat`}>
             <img className="ic" src="/icons/comment18.svg" width={14} height={14} alt="" />Чат{unreadChat > 0 && <em className="hot">{unreadChat > 99 ? "99+" : unreadChat}</em>}
@@ -210,13 +210,13 @@ export default async function ClubPage({ params, searchParams }) {
 
         {tab === "tasks" ? (
           <section className="cp-card cp-list">
-            {isLeader && <div className="cp-req-head"><h2>Клубын даалгаврууд</h2><Link href="/tasks/new" className="cp-btn sm">+ Даалгавар нэмэх</Link></div>}
+            {isLeader && <div className="cp-req-head"><h2>Клубийн даалгаврууд</h2><Link href="/tasks/new" className="cp-btn sm">+ Даалгавар нэмэх</Link></div>}
             {tasks.length ? <div className="tk-grid">{tasks.map((t) => <TaskCard key={t.id} t={t} />)}</div>
-              : <p className="muted">{isLeader ? "Клубынхээ хийж үзсэн туршилт, эвент, воркшопыг даалгавар болгон хуваалцаарай." : "Энэ клуб одоохондоо даалгавар нэмээгүй байна."}</p>}
+              : <p className="muted">{isLeader ? "Клубийнхаа хийж үзсэн туршилт, эвент, воркшопыг даалгавар болгон хуваалцаарай." : "Энэ клуб одоохондоо даалгавар нэмээгүй байна."}</p>}
           </section>
         ) : tab === "reports" ? (
           <section className="cp-card cp-list">
-            {isLeader && <div className="cp-req-head"><h2>Клубын тайлангууд</h2><Link href="/reports/new" className="cp-btn sm">+ Тайлан нэмэх</Link></div>}
+            {isLeader && <div className="cp-req-head"><h2>Клубийн тайлангууд</h2><Link href="/reports/new" className="cp-btn sm">+ Тайлан нэмэх</Link></div>}
             {reports.length ? <div className="tk-grid">{reports.map((r) => <ReportCard key={r.id} r={r} />)}</div>
               : <p className="muted">{isLeader ? "Даалгавраас нэгийг клубтэйгээ хийгээд тайлангаа бичээрэй. Батлагдмагц клуб тань оч авна." : "Энэ клуб одоохондоо тайлан бичээгүй байна."}</p>}
           </section>
@@ -234,7 +234,7 @@ export default async function ClubPage({ params, searchParams }) {
                   <button type="submit" className="cp-btn sm ghost">Бүгдийг зөвшөөрөх</button></form>
               )}
             </div>
-            {sp.skipped && <p className="cp-note warn" style={{ margin: "0 0 12px" }}>{sp.skipped} хүсэлтийг одоогоор зөвшөөрөх боломжгүй байсан (1 сарын хориг эсвэл өөр клубын удирдагч).</p>}
+            {sp.skipped && <p className="cp-note warn" style={{ margin: "0 0 12px" }}>{sp.skipped} хүсэлтийг одоогоор зөвшөөрөх боломжгүй байсан (1 сарын хориг эсвэл өөр клубийн удирдагч).</p>}
             {requests.length === 0 && <p className="muted">Шинэ хүсэлт алга.</p>}
             {requests.map((r) => {
               const until = r.moved_at ? new Date(new Date(r.moved_at).setMonth(new Date(r.moved_at).getMonth() + 1)) : null;
@@ -246,7 +246,7 @@ export default async function ClubPage({ params, searchParams }) {
                     <small>Нэгдэх шалтгаан</small>
                     <p>{r.reason || "—"}</p>
                     {banned ? <em className="bad">1 сарын дотор шилжсэн · {ymd(until)} хүртэл хориотой</em>
-                      : r.other ? <em className="warn">{r.other} клубын гишүүн · зөвшөөрвөл {r.other}-аас хасагдаж, анхны клубын оч нь хасагдана</em> : null}
+                      : r.other ? <em className="warn">{r.other} клубийн гишүүн · зөвшөөрвөл {r.other}-аас хасагдаж, анхны клубийн оч нь хасагдана</em> : null}
                   </div>
                   <small className="cp-req-date">{ymd(r.created_at)}</small>
                   <form action={decideRequests}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="user_id" value={r.id} /><input type="hidden" name="decision" value="no" />

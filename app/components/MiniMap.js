@@ -16,7 +16,7 @@ function tune(m) {
   }
 }
 
-// Нэг цэгийг харуулах жижиг газрын зураг (клубын газрын зурагтай ижил бараан загвар)
+// Нэг цэгийг харуулах жижиг газрын зураг (клубийн газрын зурагтай ижил бараан загвар)
 export default function MiniMap({ lat, lng, zoom = 13, className = "mm" }) {
   const box = useRef(null);
   const st = useRef({});
