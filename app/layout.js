@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import ValidityMn from "./components/ValidityMn";
+import Ping from "./components/Ping";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"], display: "swap", variable: "--font-inter" });
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <ValidityMn />
+        <Ping />
         {children}
       </body>
     </html>
