@@ -210,7 +210,7 @@ export default async function Finance({ searchParams }) {
 
   return (
     <>
-      <Head user={user} title="Санхүү · Шагналын сан" sub={<>Төлбөр баталгаажуулах, бичээчид шилжүүлэх, зардал бүртгэх. Нийтэд: <Link href="/san">/san</Link></>} />
+      <Head user={user} title="Санхүү" sub={<>Төлбөр баталгаажуулах, бичээчид шилжүүлэх, зардал бүртгэх. Нийтэд: <Link href="/san">/san</Link></>} />
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats">
         <Stat label="Шагналын сан" value={fmtMnt(pool)} note={periodLabel(period)} />
