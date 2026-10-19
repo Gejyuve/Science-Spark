@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { notify } from "@/lib/notify";
-import { requireSection, audit, GRANTABLE } from "@/lib/admin";
+import { requireSection, audit } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
 
 const safe = (f) => (/^\/admin(\/|\?|$)/.test(f) ? f : "/admin");
@@ -28,27 +28,11 @@ export async function adminSetRole(formData) {
   if (!t || !["user", "reviewer", "admin"].includes(role)) back(from, "Буруу хүсэлт");
   if (t.id === me.id || t.role === "superadmin") back(from, "Энэ хэрэглэгчийн эрхийг өөрчлөх боломжгүй");
   if (t.role === role) back(from, "Өөрчлөлт алга", true);
-  await sql`UPDATE users SET role = ${role}, perms = CASE WHEN ${role} = 'admin' THEN perms ELSE '{}' END
+  await sql`UPDATE users SET role = ${role}, perms = '{}'
             WHERE id = ${t.id} AND role <> 'superadmin'`;
   await audit({ actorId: me.id, category: "role", action: `Эрх: ${ROLE_LABELS[t.role]} → ${ROLE_LABELS[role]}`, targetType: "user", targetId: t.id, targetLabel: label(t) });
   revalidatePath("/admin", "layout");
   back(from, "Эрх шинэчлэгдлээ", true);
-}
-
-// Админы харах хэсгүүд — зөвхөн супер админ
-export async function setPerms(formData) {
-  const me = await requireSection("users");
-  const t = await target(formData.get("user_id"));
-  const from = `/admin/users/${t?.id || ""}`;
-  if (me.role !== "superadmin") back(from, "Зөвхөн супер админ хэсэг олгоно");
-  if (!t || t.role !== "admin") back(from, "Зөвхөн админд хэсэг олгоно");
-  const keys = GRANTABLE.map((s) => s.key);
-  const perms = [...new Set(formData.getAll("perm").map(String))].filter((k) => keys.includes(k));
-  await sql`UPDATE users SET perms = ${perms} WHERE id = ${t.id} AND role = 'admin'`;
-  const names = perms.map((k) => GRANTABLE.find((s) => s.key === k).label).join(", ") || "зөвхөн Тойм";
-  await audit({ actorId: me.id, category: "role", action: `Админы хэсэг: ${names}`, targetType: "user", targetId: t.id, targetLabel: label(t) });
-  revalidatePath("/admin", "layout");
-  back(from, "Хэсгүүд хадгалагдлаа", true);
 }
 
 // Хязгаарлах / сэргээх: хязгаарлагдсан хэрэглэгч нийтлэл, сэтгэгдэл бичих, оч өгөх боломжгүй

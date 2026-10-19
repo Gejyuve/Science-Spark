@@ -11,7 +11,7 @@ import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
 import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
-import { displayName, needsName, isStaff, isSuperAdmin, isPremium } from "@/lib/auth";
+import { displayName, needsName, isStaff, isAdmin, isSuperAdmin, isPremium } from "@/lib/auth";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { walletBalance } from "@/lib/money";
@@ -28,7 +28,8 @@ const I = (name, size = 22, alt = "") => (
 // Редакцийн товчууд зүүн цэсний доод хэсэгт: «Хянах» редакцид (хянагч, админ), «Админ» зөвхөн супер админд
 async function StaffNav({ user, active }) {
   if (!isStaff(user)) return null;
-  const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}`
+  const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}
+      AND (${isAdmin(user)}::boolean OR kind NOT IN ('Даалгавар', 'Тайлан'))`
     .then((r) => r[0].n)
     .catch(() => 0);
   return (

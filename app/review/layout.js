@@ -2,11 +2,11 @@ import Link from "next/link";
 import TopNav from "../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, needsName } from "@/lib/auth";
+import { getUser, isStaff, isAdmin, needsName } from "@/lib/auth";
 import { levelFor } from "@/lib/levels";
 import { canApproveWords } from "@/lib/terms";
 import AdminNav from "../admin/_c/AdminNav";
-import { GRANTABLE, canSee } from "@/lib/admin";
+import { SECTIONS, canSee } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хяналт · Science Spark" };
@@ -24,7 +24,8 @@ export default async function ReviewLayout({ children }) {
   let pending = 0;
   if (staff) {
     try {
-      pending = (await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}`)[0].n;
+      pending = (await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}
+        AND (${isAdmin(user)}::boolean OR kind NOT IN ('Даалгавар', 'Тайлан'))`)[0].n;
     } catch (e) {}
   }
   const items = staff
@@ -32,8 +33,8 @@ export default async function ReviewLayout({ children }) {
         { key: "queue", label: "Хяналтын жагсаалт", icon: "a_content", href: "/review", exact: true, match: "^/review/\\d+", badge: pending || null },
         { key: "archive", label: "Миний шийдвэрүүд", icon: "a_audit", href: "/review/archive" },
         { key: "rules", label: "Хянагчийн дүрэм", icon: "a_requests", href: "/review/rules" },
-        // Редакцийн админд супер админы зөвшөөрсөн хэсгүүд (Админ товч зөвхөн супер админд харагдана)
-        ...(user.role === "admin" ? GRANTABLE.filter((s) => !s.soon && canSee(user, s.key)) : []),
+        // Редакцийн админы админ боардын хэсгүүд (Админ товч зөвхөн супер админд харагдана)
+        ...(user.role === "admin" ? SECTIONS.filter((s) => s.key !== "overview" && canSee(user, s.key)) : []),
       ]
     : [
         { key: "words", label: "Шинэ үг зөвшөөрөх", icon: "a_content", href: "/review?t=words", match: "^/review/word" },

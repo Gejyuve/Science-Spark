@@ -61,7 +61,7 @@ export default async function Reviewers({ searchParams }) {
                           <button className="adm-btn danger">Түдгэлзүүлэх</button>
                         </form>
                       )}
-                      {sup || user.perms?.includes("users") ? <Link href={`/admin/users/${r.id}`} className="adm-btn">Харах</Link> : null}
+                      {sup && <Link href={`/admin/users/${r.id}`} className="adm-btn">Харах</Link>}
                     </span>
                   </td>
                 </tr>
