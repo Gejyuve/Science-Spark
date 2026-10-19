@@ -6,6 +6,8 @@ import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { ownImage, cleanPos } from "@/lib/images";
 import { checkName, capitalize, POINTS, OPTIONS, COUNTRIES, SOCIALS, countWords } from "@/lib/profile";
+import { celebrate } from "@/lib/celebrate";
+import { saveReferral } from "@/lib/referral";
 
 const back = (msg) => redirect(`/profile/edit?error=${encodeURIComponent(msg)}`);
 const text = (fd, k, max = 120) => String(fd.get(k) || "").trim().slice(0, max) || null;
@@ -106,15 +108,30 @@ export async function saveProfile(formData) {
   if (coverId) filled.push("cover");
   const given = (await sql`SELECT reason FROM points_ledger WHERE user_id = ${user.id} AND reason LIKE 'profile:%'`)
     .map((r) => r.reason.slice(8));
+  let gained = 0;
   for (const k of filled) {
     if (POINTS[k] && !given.includes(k)) {
-      await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${user.id}, ${POINTS[k]}, ${"profile:" + k})
-                ON CONFLICT (user_id, reason) WHERE reason LIKE 'profile:%' DO NOTHING`;
+      const r = await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${user.id}, ${POINTS[k]}, ${"profile:" + k})
+                ON CONFLICT (user_id, reason) WHERE reason LIKE 'profile:%' DO NOTHING RETURNING delta`;
+      if (r.length) gained += POINTS[k];
     }
+  }
+
+  // Шинэ профайл анх удаа үүсэхэд баярын цонх гарч, «Хаанаас сонссон бэ?» гэж асууна
+  if (!prof?.agreed_at) {
+    await celebrate(user, { kind: "Профайл", status: "published", href: `/u/${user.id}`, earned: gained ? [["Профайлаа бөглөсөн", gained]] : [] });
   }
 
   revalidatePath("/");
   redirect(`/u/${user.id}`);
+}
+
+// Баярын цонхноос: Science Spark-ийн тухай хэнээс сонссон (заавал биш). Эх сурвалж нь оч авна.
+export async function answerReferral(kind, targetId) {
+  const user = await getUser();
+  if (!user) return { error: "Нэвтэрнэ үү" };
+  await ensureSchema();
+  return saveReferral(user, kind, targetId);
 }
 
 const replied = (uid, key, msg) => redirect(`/u/${uid}?tab=replied&${key}=${encodeURIComponent(msg)}`);

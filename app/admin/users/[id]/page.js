@@ -5,6 +5,7 @@ import { requireSection, canSee, STATUS_LABELS, ago, WARN_LIMIT } from "@/lib/ad
 import { ROLE_LABELS } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
+import { REFERRAL_KINDS } from "@/lib/referral";
 import { adminSetRole, restrictUser, adjustPoints, warnUser, cancelDeletion, deleteUser } from "../../actions";
 import Head, { Chip, Flash, who, STATUS_TONE } from "../../_c/Head";
 import { Avatar } from "../../../components/Bits";
@@ -24,6 +25,9 @@ export default async function UserDetail({ params, searchParams }) {
   const posts = await sql`SELECT id, kind, title, status, created_at FROM posts WHERE author_id = ${n} ORDER BY created_at DESC LIMIT 10`;
   const warnings = await sql`SELECT w.note, w.created_at, x.initial, x.first_name, x.email FROM user_warnings w
                              LEFT JOIN users x ON x.id = w.admin_id WHERE w.user_id = ${n} ORDER BY w.created_at`;
+  const [ref] = await sql`SELECT r.kind, r.target_id, r.reward, COALESCE(c.name, x.initial || '.' || x.first_name) AS name
+                         FROM referrals r LEFT JOIN clubs c ON r.kind <> 'person' AND c.id = r.target_id
+                         LEFT JOIN users x ON r.kind = 'person' AND x.id = r.target_id WHERE r.user_id = ${n}`;
   const ledger = await sql`SELECT delta, reason, created_at FROM points_ledger WHERE user_id = ${n} ORDER BY created_at DESC LIMIT 10`;
   const log = canSee(me, "audit")
     ? await sql`SELECT a.action, a.created_at, x.initial, x.first_name, x.email FROM audit_log a
@@ -62,6 +66,10 @@ export default async function UserDetail({ params, searchParams }) {
             <dt>Дагагч</dt><dd>{u.followers}</dd>
             <dt>Хянасан</dt><dd>{u.reviewed}</dd>
             <dt>Бүртгүүлсэн</dt><dd>{fmtDate(u.created_at)}</dd>
+            {ref && (<><dt>Хаанаас сонссон</dt><dd>
+              <Link href={ref.kind === "person" ? `/u/${ref.target_id}` : `/${ref.kind}/${ref.target_id}`}>{ref.name || "Устгагдсан"}</Link>
+              {" · "}{REFERRAL_KINDS[ref.kind]}{ref.reward ? ` · +${ref.reward} оч` : " · оч олгоогүй"}
+            </dd></>)}
             {u.restricted_at && (<><dt>Хязгаарласан</dt><dd>{fmtDate(u.restricted_at)} — {u.restrict_note}</dd></>)}
           </dl>
           <span className="adm-acts">
