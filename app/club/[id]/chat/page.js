@@ -9,9 +9,9 @@ import { ClubAv } from "../../../components/ClubBits";
 import ClubChat from "../../../components/ClubChat";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Клубын чат · Science Spark" };
+export const metadata = { title: "Клубийн чат · Science Spark" };
 
-// Клубын чат — тусдаа хуудас (зөвхөн гишүүд)
+// Клубийн чат — тусдаа хуудас (зөвхөн гишүүд)
 export default async function ClubChatPage({ params }) {
   const { id: raw } = await params;
   const id = Number(raw);
@@ -42,7 +42,7 @@ export default async function ClubChatPage({ params }) {
           ) : (
             <div className="ch-locked">
               <img className="ic" src="/icons/f_shield.svg" width={36} height={36} alt="" />
-              <b>Чат зөвхөн клубын гишүүдэд нээлттэй</b>
+              <b>Чат зөвхөн клубийн гишүүдэд нээлттэй</b>
               <span>Клубт нэгдсэнээр гишүүдтэйгээ шууд ярилцах боломжтой болно.</span>
               {myReq?.club_id === id ? <Link href={`/club/${id}/join`} className="cp-btn soft">⏳ Хүсэлт илгээсэн</Link>
                 : <Link href={`/club/${id}/join`} className="cp-btn">+ Нэгдэх</Link>}

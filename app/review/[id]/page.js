@@ -38,7 +38,7 @@ export default async function ReviewPost({ params, searchParams }) {
   if (p.author_id === user.id) redirect("/review?error=" + encodeURIComponent("Өөрийн контентыг өөр хянагч хянана"));
   const editable = p.kind === "Нийтлэл" || p.kind === "Мэдээ";
   if (editable && !isStaff(user)) redirect("/review");
-  if ((p.kind === "Даалгавар" || p.kind === "Тайлан") && !canApproveTasks(user)) redirect("/review?error=" + encodeURIComponent("Клубын даалгавар, тайланг редакцийн админ шийднэ"));
+  if ((p.kind === "Даалгавар" || p.kind === "Тайлан") && !canApproveTasks(user)) redirect("/review?error=" + encodeURIComponent("Клубийн даалгавар, тайланг редакцийн админ шийднэ"));
   const author = p.first_name ? `${p.initial}.${p.first_name}` : p.email;
   const m = p.meta || {};
   const isTask = p.kind === "Даалгавар";

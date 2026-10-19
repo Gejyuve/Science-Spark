@@ -126,7 +126,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
   const shortLink = !p && /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps)\//i.test(loc.trim());
   const outside = p && country === "Монгол" && !inMongolia(p);
   const fd0 = e.founded ? new Date(e.founded) : null;
-  const L = org ? "Байгууллагын" : "Клубын";
+  const L = org ? "Байгууллагын" : "Клубийн";
 
   // Бөглөсөн хувь (Figma: дээд талын 0–100%)
   const KEYS = org ? ["logo", "cover", "name", "category", "fy", "about", "city", "address", "field", "website", "email", "phone"]
@@ -178,12 +178,12 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
       </section>
 
       <section className="pf-card">
-        <h2>{org ? "Үндсэн мэдээлэл" : "Клубын мэдээлэл"}</h2>
+        <h2>{org ? "Үндсэн мэдээлэл" : "Клубийн мэдээлэл"}</h2>
         <p className="pf-sub">Заавал талбарыг бөглөснөөр бүртгэл баталгаажна</p>
         <Label required>{L} нэр</Label>
         <div className="pf-input"><input name="name" required minLength={2} maxLength={30} value={name} onChange={(ev) => setName(ev.target.value)} placeholder={org ? "Жишээ: Сансар судлалын хүрээлэн" : "Жишээ: Сансрын судлаачид"} {...msg(`${L} нэрээ бичнэ үү`)} /><span>{name.length} / 30</span></div>
 
-        <Label required>{org ? "Байгууллагын төрөл" : "Клубын ангилал"}</Label>
+        <Label required>{org ? "Байгууллагын төрөл" : "Клубийн ангилал"}</Label>
         <PickOrWrite name="category" options={org ? ORG_TYPES : CLUB_CATEGORIES} initial={e.category || ""} placeholder={org ? "Төрөл сонгох" : "Ангилал сонгох"} required reqMsg={org ? "Төрлөө сонгоно уу" : "Ангиллаа сонгоно уу"} />
 
         <Label>Байгуулагдсан он, сар, өдөр</Label>
@@ -238,12 +238,12 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
 
         {!org && (
           <>
-            <Label required>Клубын тухай</Label>
+            <Label required>Клубийн тухай</Label>
             <div className={"pf-area" + (lat(about) ? " bad" : "")}>
-              <textarea name="about" rows={3} required maxLength={500} value={about} onChange={(ev) => setAbout(ev.target.value)} placeholder="Клуб тань юугаар хичээллэдэг, хэнд зориулагдсан бэ?" {...msg(lat(about) ? LATIN_MSG : "Клубынхээ тухай бичнэ үү")} />
+              <textarea name="about" rows={3} required maxLength={500} value={about} onChange={(ev) => setAbout(ev.target.value)} placeholder="Клуб тань юугаар хичээллэдэг, хэнд зориулагдсан бэ?" {...msg(lat(about) ? LATIN_MSG : "Клубийнхаа тухай бичнэ үү")} />
               <span className={lat(about) ? "bad" : ""}>{lat(about) ? LATIN_MSG : `${about.length} / 500`}</span>
             </div>
-            <Label>Клубын дүрэм</Label>
+            <Label>Клубийн дүрэм</Label>
             <div className={"pf-area" + (lat(rules) ? " bad" : "")}>
               <textarea name="rules" rows={3} maxLength={1000} value={rules} onChange={(ev) => setRules(ev.target.value)} placeholder="1. Бусдыг хүндэлж, нээлттэй санал солилцоно. 2. …" />
               <span className={lat(rules) ? "bad" : ""}>{lat(rules) ? LATIN_MSG : `${rules.length} / 1000`}</span>
@@ -263,7 +263,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
         )}
         <Label>Вэбсайт</Label>
         <div className="pf-input"><input name="website" maxLength={200} defaultValue={e.website || ""} placeholder="https://…" /></div>
-        <Label>{org ? "Албан ёсны имэйл" : "Клубын имэйл"}</Label>
+        <Label>{org ? "Албан ёсны имэйл" : "Клубийн имэйл"}</Label>
         <div className="pf-input"><input name="email" type="email" maxLength={120} defaultValue={e.email || ""} placeholder="info@example.mn" {...msg("Имэйл хаягаа зөв бичнэ үү")} /></div>
         <Label>Утасны дугаар</Label>
         <div className="pf-input"><input name="phone" type="tel" maxLength={30} defaultValue={e.phone || ""} placeholder="+976 9911 2233" pattern="\+?[\d\s\-]{6,20}" {...msg("Утасны дугаараа зөв бичнэ үү")} /></div>
@@ -281,8 +281,8 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
       </section>
 
       <section className="pf-card">
-        <h2>{org ? "Бүртгүүлж буй хүн" : "Клубын удирдагч"}</h2>
-        <p className="pf-sub">{org ? "Таны хувь хүний профайлаас автоматаар татагдсан тул эндээс өөрчлөх боломжгүй. Та байгууллагын админ болно." : "Та клубын удирдагч болж бүртгүүлнэ. Зөвхөн удирдагч админ эрхтэй."}</p>
+        <h2>{org ? "Бүртгүүлж буй хүн" : "Клубийн удирдагч"}</h2>
+        <p className="pf-sub">{org ? "Таны хувь хүний профайлаас автоматаар татагдсан тул эндээс өөрчлөх боломжгүй. Та байгууллагын админ болно." : "Та клубийн удирдагч болж бүртгүүлнэ. Зөвхөн удирдагч админ эрхтэй."}</p>
         <div className="cf-member lead">
           <Av u={leader} size={40} />
           <div><b>{leader.name} <em className="cf-you">{org ? "Админ" : "Удирдагч"}</em></b><small>{[leader.job, leader.email].filter(Boolean).join(" · ")}</small></div>

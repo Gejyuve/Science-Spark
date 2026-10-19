@@ -18,7 +18,7 @@ export default function JoinForm({ clubId, blocked, rules }) {
       <input type="hidden" name="club_id" value={clubId} />
       {rules && (
         <div className={"jn-rules" + (more ? " open" : "")}>
-          <b>Клубын дүрэм</b>
+          <b>Клубийн дүрэм</b>
           <p>{rules}</p>
           <button type="button" onClick={() => setMore((x) => !x)}>{more ? "Хураах ⌃" : "Үргэлжлүүлж унших ⌄"}</button>
         </div>
@@ -30,8 +30,8 @@ export default function JoinForm({ clubId, blocked, rules }) {
       </div>
       <label className="jn-agree">
         <input type="checkbox" name="agree" checked={agree} onChange={(e) => setAgree(e.target.checked)} disabled={blocked} required
-          onInvalid={(e) => e.target.setCustomValidity("Клубын дүрмийг зөвшөөрнө үү")} onInput={(e) => e.target.setCustomValidity("")} />
-        <span>Клубын дүрмийг уншиж танилцсан, зөвшөөрч байна</span>
+          onInvalid={(e) => e.target.setCustomValidity("Клубийн дүрмийг зөвшөөрнө үү")} onInput={(e) => e.target.setCustomValidity("")} />
+        <span>Клубийн дүрмийг уншиж танилцсан, зөвшөөрч байна</span>
       </label>
       {state?.error && <p className="error">{state.error}</p>}
       <button type="submit" className="jn-go" disabled={blocked || pending || bad}>{blocked ? "Нэгдэх боломжгүй" : pending ? "Илгээж байна…" : "Клубт нэгдэх"}</button>

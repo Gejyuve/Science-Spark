@@ -27,7 +27,7 @@ function cleanTypes(fd) {
   return out.slice(0, TYPE_MAX);
 }
 
-// Клубын удирдагч клубынхээ нэрээр даалгавар нэмнэ. Редакц батласны дараа нийтлэгдэнэ.
+// Клубийн удирдагч клубийнхээ нэрээр даалгавар нэмнэ. Редакц батласны дараа нийтлэгдэнэ.
 export async function createTask(fd) {
   const user = await getUser();
   if (!user) redirect("/login");
@@ -35,7 +35,7 @@ export async function createTask(fd) {
   if (needsName(user)) redirect("/profile/edit");
   await ensureSchema();
   const club = await leaderClub(user.id);
-  if (!club) back("Даалгаврыг зөвхөн клубын удирдагч клубынхээ нэрээр нэмнэ");
+  if (!club) back("Даалгаврыг зөвхөн клубийн удирдагч клубийнхээ нэрээр нэмнэ");
   const title = t(fd, "title", 200);
   const subtitle = t(fd, "subtitle", 250) || null;
   const body = String(fd.get("body") || "").trim().slice(0, 40000);
@@ -63,7 +63,7 @@ export async function createTask(fd) {
   redirect(`/post/${p.id}?ok=${encodeURIComponent("Даалгавар редакц руу илгээгдлээ. Батлагдмагц «Даалгавар» хуудсанд нийтлэгдэнэ.")}`);
 }
 
-// Клуб биелүүлсэн даалгавраа тайлагнана. Редакц баталбал нийтлэл шиг нийтлэгдэж, клубууд оч авна.
+// Клуб биелүүлсэн даалгавраа тайлагнана. Редакц баталбал нийтлэл шиг нийтлэгдэж, клубүүд оч авна.
 export async function createReport(fd) {
   const taskId = Number(fd.get("task_id")) || 0;
   const fail = (msg) => redirect(`/reports/new?${taskId ? `task=${taskId}&` : ""}error=${encodeURIComponent(msg)}`);
@@ -73,7 +73,7 @@ export async function createReport(fd) {
   if (needsName(user)) redirect("/profile/edit");
   await ensureSchema();
   const club = await leaderClub(user.id);
-  if (!club) fail("Тайланг зөвхөн клубын удирдагч клубынхээ нэрээр нэмнэ");
+  if (!club) fail("Тайланг зөвхөн клубийн удирдагч клубийнхээ нэрээр нэмнэ");
   if (!taskId) fail("Биелүүлсэн даалгавраа сонгоно уу");
   const [task] = await sql`SELECT id FROM posts WHERE id = ${taskId} AND kind = ${TASK_KIND} AND status = 'published'`;
   if (!task) fail("Сонгосон даалгавар олдсонгүй");

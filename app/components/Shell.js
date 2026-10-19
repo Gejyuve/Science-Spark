@@ -86,7 +86,7 @@ function Sidebar({ user, active }) {
 async function Header({ user, compact, compose, composeError, active }) {
   // Асуултад шагнал тавихад хэтэвчний үлдэгдлийг харуулна
   const wallet = user && !compact ? await walletBalance(user.id).catch(() => 0) : 0;
-  // Клубын удирдагч бичих самбараас клубынхээ нэрээр даалгавар, тайлан нэмж, хуваалцана
+  // Клубийн удирдагч бичих самбараас клубийнхээ нэрээр даалгавар, тайлан нэмж, хуваалцана
   const club = user && !compact ? await leaderClub(user.id).catch(() => null) : null;
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
@@ -98,7 +98,7 @@ async function Header({ user, compact, compose, composeError, active }) {
   );
 }
 
-// «Асаж буй оч», «Гялбаж буй клубууд» бүх хэрэглэгчид ижил тул сервер дээр 1 минут хадгална
+// «Асаж буй оч», «Гялбаж буй клубүүд» бүх хэрэглэгчид ижил тул сервер дээр 1 минут хадгална
 const RAIL_TTL = 60000;
 let railCache = { at: 0, data: null };
 async function railLists() {
@@ -161,8 +161,8 @@ async function RightRail({ user }) {
               <Link href="/notifications" className="nf-all">Бүх мэдэгдлийг харах</Link>
             </NotifMenu>
             {myClub && (
-              <Link href={`/club/${myClub.club_id}/chat`} className="ss-action" title={`${myClub.name} · Клубын чат`}>
-                {I("comment18", 18)}<span>Клубын чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
+              <Link href={`/club/${myClub.club_id}/chat`} className="ss-action" title={`${myClub.name} · Клубийн чат`}>
+                {I("comment18", 18)}<span>Клубийн чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
               </Link>
             )}
             <Link href="/wallet" className="ss-action">
@@ -193,7 +193,7 @@ async function RightRail({ user }) {
       </div>
 
       <div className="ss-panel">
-        <Link href="/clubs" className="ss-panel-title red cl-rail-title"><img src="/icons/clubstar.svg" width={20} height={20} alt="" />Гялбаж буй клубууд</Link>
+        <Link href="/clubs" className="ss-panel-title red cl-rail-title"><img src="/icons/clubstar.svg" width={20} height={20} alt="" />Гялбаж буй клубүүд</Link>
         {clubs.length === 0 && <p className="muted">Одоохондоо бүртгэлтэй клуб алга.</p>}
         {clubs.map((t) => (
           <ClubPerson key={t.id} c={t} viewer={user} follows={clubFollows} />

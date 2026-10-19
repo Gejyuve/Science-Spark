@@ -34,7 +34,7 @@ function TaskPicker({ tasks, initial }) {
   );
 }
 
-// Клубын тайлан бичих самбар (нийтлэл бичихтэй ижил бүтэцтэй)
+// Клубийн тайлан бичих самбар (нийтлэл бичихтэй ижил бүтэцтэй)
 export default function ReportForm({ action, club, avatar, tasks, initial, error, share }) {
   return (
     <div className="wr-layout">
@@ -44,9 +44,9 @@ export default function ReportForm({ action, club, avatar, tasks, initial, error
         <section className="wr-card wr-head">
           <div className="wr-head-top">
             <img src="/icons/logo.svg" width={56} height={56} alt="" />
-            <b>Клубынхээ хийсэн ажлыг хуваалцаж, бусад клубт урам өгье.</b>
+            <b>Клубийнхаа хийсэн ажлыг хуваалцаж, бусад клубт урам өгье.</b>
           </div>
-          <p className="tk-as">{avatar}<span><b>{club.name}</b> клубын нэрээр нийтлэгдэнэ</span></p>
+          <p className="tk-as">{avatar}<span><b>{club.name}</b> клубийн нэрээр нийтлэгдэнэ</span></p>
           {error && <p className="error">{error}</p>}
         </section>
 
@@ -72,7 +72,7 @@ export default function ReportForm({ action, club, avatar, tasks, initial, error
           </ImageInput>
           <div className="wr-coversrc">
             <label><span>Ковер зургийн эх сурвалж <em>заавал биш</em></span>
-              <input name="cover_source" maxLength={150} placeholder="Жишээ: Клубын гишүүдийн авсан зураг" /></label>
+              <input name="cover_source" maxLength={150} placeholder="Жишээ: Клубийн гишүүдийн авсан зураг" /></label>
             <label><span>Эх сурвалжийн холбоос <em>заавал биш</em></span>
               <input name="cover_url" type="url" maxLength={300} placeholder="https://..." /></label>
           </div>

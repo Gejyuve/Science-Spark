@@ -29,7 +29,7 @@ export async function decidePost(formData) {
   const [p] = await sql`SELECT id, author_id, kind, title, subtitle, body, status, original, category, club_id, task_id, created_at FROM posts WHERE id = ${id}`;
   if (!p || p.status !== "pending") go("/review", "error", "Энэ контент хянагдсан эсвэл олдсонгүй");
   if (p.author_id === user.id) go("/review", "error", "Өөрийн контентыг өөр хянагч хянана");
-  if ((p.kind === TASK_KIND || p.kind === REPORT_KIND) && !canApproveTasks(user)) go("/review", "error", "Клубын даалгавар, тайланг редакцийн админ шийднэ");
+  if ((p.kind === TASK_KIND || p.kind === REPORT_KIND) && !canApproveTasks(user)) go("/review", "error", "Клубийн даалгавар, тайланг редакцийн админ шийднэ");
   const approve = formData.get("decision") === "approve";
   const note = String(formData.get("note") || "").trim().slice(0, 1000) || null;
   const editable = p.kind === "Нийтлэл" || p.kind === "Мэдээ";

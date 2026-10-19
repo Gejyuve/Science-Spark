@@ -36,7 +36,7 @@ function tune(m) {
   m.addLayer({ id: "mn-line", type: "line", source: "mn", paint: { "line-color": "#5BF0DC", "line-opacity": 0.45, "line-width": 1.2 } });
 }
 
-// Клубын газрын зураг: OpenStreetMap (OpenFreeMap). Томруулж, чирж болно.
+// Клубийн газрын зураг: OpenStreetMap (OpenFreeMap). Томруулж, чирж болно.
 export default function ClubMap({ clubs, aimags }) {
   const box = useRef(null);
   const map = useRef(null);
@@ -93,7 +93,7 @@ export default function ClubMap({ clubs, aimags }) {
   return (
     <section className={"cm-card" + (full ? " full" : "")} onMouseLeave={() => !full && setSel(null)}>
       <div ref={box} className="cm-leaf" />
-      <h1 className="cm-sr">Клубын газрын зураг</h1>
+      <h1 className="cm-sr">Клубийн газрын зураг</h1>
       <span className="cm-legend">✦ {total} клуб · {aimags} аймаг</span>
       <div className="cm-tools">
         <button type="button" onClick={() => map.current?.zoomIn()} aria-label="Томруулах" title="Томруулах">+</button>
@@ -101,7 +101,7 @@ export default function ClubMap({ clubs, aimags }) {
         <button type="button" onClick={() => { map.current?.fitBounds(MN, { padding: 16 }); setSel(null); }} aria-label="Монголыг бүтнээр" title="Монголыг бүтнээр">⌂</button>
         <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Жижиг болгох" : "Бүтэн дэлгэц"} title={full ? "Жижиг болгох" : "Бүтэн дэлгэц"}>{full ? "×" : "⛶"}</button>
       </div>
-      <span className="cm-hint">{!total ? "Клубууд бүртгүүлэхэд байршил нь энд гэрэлтэнэ" : armed ? "Хулганы дугуйгаар томруулж, чирж хөдөлгөнө" : "Оч дээр хулганаа аваачиж клубын мэдээллийг үзнэ үү · Томруулахын тулд зураг дээр дарна уу"}</span>
+      <span className="cm-hint">{!total ? "Клубүүд бүртгүүлэхэд байршил нь энд гэрэлтэнэ" : armed ? "Хулганы дугуйгаар томруулж, чирж хөдөлгөнө" : "Оч дээр хулганаа аваачиж клубийн мэдээллийг үзнэ үү · Томруулахын тулд зураг дээр дарна уу"}</span>
       <span className="cm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a></span>
       {sel && (
         <div className={"cm-pop" + (left ? " left" : "")} style={{ left: sel.x, top: sel.y }} role="dialog" aria-label={sel.c.name}>

@@ -52,7 +52,7 @@ function TypePicker({ options }) {
   );
 }
 
-// Клубын даалгавар нэмэх самбар (нийтлэл бичихтэй ижил бүтэцтэй)
+// Клубийн даалгавар нэмэх самбар (нийтлэл бичихтэй ижил бүтэцтэй)
 export default function TaskForm({ action, club, avatar, types, error }) {
   return (
     <div className="wr-layout">
@@ -62,9 +62,9 @@ export default function TaskForm({ action, club, avatar, types, error }) {
         <section className="wr-card wr-head">
           <div className="wr-head-top">
             <img src="/icons/logo.svg" width={56} height={56} alt="" />
-            <b>Клубынхээ туршлагыг бусад клубтэй хуваалцаж, дараагийн үеийнхний сониуч занг асаая.</b>
+            <b>Клубийнхаа туршлагыг бусад клубтэй хуваалцаж, дараагийн үеийнхний сониуч занг асаая.</b>
           </div>
-          <p className="tk-as">{avatar}<span><b>{club.name}</b> клубын нэрээр нийтлэгдэнэ</span></p>
+          <p className="tk-as">{avatar}<span><b>{club.name}</b> клубийн нэрээр нийтлэгдэнэ</span></p>
           {error && <p className="error">{error}</p>}
         </section>
 
@@ -80,7 +80,7 @@ export default function TaskForm({ action, club, avatar, types, error }) {
           </ImageInput>
           <div className="wr-coversrc">
             <label><span>Ковер зургийн эх сурвалж <em>заавал биш</em></span>
-              <input name="cover_source" maxLength={150} placeholder="Жишээ: Клубын гишүүдийн авсан зураг" /></label>
+              <input name="cover_source" maxLength={150} placeholder="Жишээ: Клубийн гишүүдийн авсан зураг" /></label>
             <label><span>Эх сурвалжийн холбоос <em>заавал биш</em></span>
               <input name="cover_url" type="url" maxLength={300} placeholder="https://..." /></label>
           </div>
@@ -88,7 +88,7 @@ export default function TaskForm({ action, club, avatar, types, error }) {
 
         <section className="wr-card">
           <div className="wr-sec-head">
-            <div><h2>Гарчиг ба төрөл</h2><p>Бусад клубууд юу хийхээ гарчгаас нь шууд ойлгохоор бичээрэй.</p></div>
+            <div><h2>Гарчиг ба төрөл</h2><p>Бусад клубүүд юу хийхээ гарчгаас нь шууд ойлгохоор бичээрэй.</p></div>
           </div>
           <label className="wr-label">Гарчиг <em>Заавал</em></label>
           <input className="wr-title" name="title" required maxLength={200} placeholder="Жишээ: Лаавын чийдэн хийж нягтын ялгааг харцгаая"

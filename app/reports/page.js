@@ -8,7 +8,7 @@ import { ReportCard, ClubTabs } from "../components/TaskCard";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Тайлан · Science Spark" };
 
-// Клубуудын биелүүлсэн даалгаврын тайлангууд
+// Клубүүдын биелүүлсэн даалгаврын тайлангууд
 export default async function Reports() {
   let user = null, reports = [], club = null, counts = {};
   try {
@@ -25,7 +25,7 @@ export default async function Reports() {
         <section className="tk-hero">
           <div>
             <h1>Тайлан</h1>
-            <p>Клубууд даалгаврыг хэрхэн биелүүлж, юу олж мэдсэнээ хуваалцдаг. Тайлан бүр редакцаар батлагдаж нийтлэгдэнэ.</p>
+            <p>Клубүүд даалгаврыг хэрхэн биелүүлж, юу олж мэдсэнээ хуваалцдаг. Тайлан бүр редакцаар батлагдаж нийтлэгдэнэ.</p>
           </div>
           <span className="ss-grow" />
           {club && <Link href="/reports/new" className="cl-new">+ Тайлан нэмэх</Link>}

@@ -24,7 +24,7 @@ export default async function NewClub() {
       {!user ? (
         <EntityGate title="Хувь хүний бүртгэл шаардлагатай" text="Клубыг хувь хүн удирдагч болж бүртгүүлдэг. Эхлээд өөрийн бүртгэлээр нэвтэрч, дараа нь клубээ бүртгүүлээрэй." />
       ) : mine ? (
-        <EntityGate title="Та аль хэдийн клубын гишүүн байна" text={`Та «${mine.name}» клубт байгаа тул шинэ клуб бүртгүүлэх боломжгүй. Нэг хүн нэг л клубт байна.`}
+        <EntityGate title="Та аль хэдийн клубийн гишүүн байна" text={`Та «${mine.name}» клубт байгаа тул шинэ клуб бүртгүүлэх боломжгүй. Нэг хүн нэг л клубт байна.`}
           actions={<Link href={`/club/${mine.club_id}`} className="cf-btn">Клуб руугаа очих</Link>} />
       ) : (
         <EntityForm kind="club" leader={await leaderInfo(sql, user)} />

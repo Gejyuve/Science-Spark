@@ -9,7 +9,7 @@ import { REFERRAL_REWARD as REWARD } from "@/lib/referral-shared";
 const TABS = [
   ["person", "👤", "Хувь хүн", "Хүний нэрээр хайх"],
   ["org", "🏛️", "Байгууллага", "Байгууллагын нэрээр хайх"],
-  ["club", "🔭", "Клуб", "Клубын нэрээр хайх"],
+  ["club", "🔭", "Клуб", "Клубийн нэрээр хайх"],
 ];
 
 export default function ReferralAsk() {

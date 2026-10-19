@@ -33,7 +33,7 @@ function Body({ text }) {
   return parts.map((p, i) => (i % 2 ? <a key={i} href={p} target="_blank" rel="noopener nofollow ugc">{p.replace(/^https?:\/\/(www\.)?/, "")}</a> : p));
 }
 
-// Клубын групп чат: гишүүд хоорондоо бичнэ. Шинэ мессежийг хэдэн секунд тутам шалгана.
+// Клубийн групп чат: гишүүд хоорондоо бичнэ. Шинэ мессежийг хэдэн секунд тутам шалгана.
 export default function ClubChat({ clubId, me, isLeader, initial, more: initialMore }) {
   const [msgs, setMsgs] = useState(initial);
   const [more, setMore] = useState(initialMore);
@@ -156,7 +156,7 @@ export default function ClubChat({ clubId, me, isLeader, initial, more: initialM
         {msgs.length === 0 && (
           <div className="ch-empty">
             <img className="ic" src="/icons/comment.svg" width={36} height={36} alt="" />
-            <b>Клубын чат нээгдлээ</b>
+            <b>Клубийн чат нээгдлээ</b>
             <span>Гишүүддээ мэндчилгээ илгээж, анхны яриаг эхлүүлээрэй.</span>
           </div>
         )}
@@ -202,7 +202,7 @@ export default function ClubChat({ clubId, me, isLeader, initial, more: initialM
             rows={1}
             value={text}
             maxLength={MAX}
-            placeholder="Клубын гишүүддээ бичих..."
+            placeholder="Клубийн гишүүддээ бичих..."
             aria-label="Мессеж"
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) send(e); }}
