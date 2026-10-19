@@ -478,10 +478,6 @@ export default async function PostPage({ params, searchParams }) {
   return (
     <Shell user={user} header={false}>
       <div className="ar-col">
-        <div className="ar-pagebar">
-          <Link href={isTerm ? "/dict" : isTask ? "/tasks" : isReport ? "/reports" : "/"} className="ar-back">← Буцах</Link>
-        </div>
-
         <article className="ar-card">
           <div className="ar-strip">
             {isTerm && post.status === "discussion" ? (

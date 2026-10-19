@@ -80,7 +80,6 @@ export default async function CategoryPage({ params, searchParams }) {
       )}
 
       <div className="ct-tools">
-        {listKind && <Link href={q({ type: null, n: null })} className="ct-back">← {node.name}</Link>}
         <span className="ss-grow" />
         <Link href={q({ sort: sort === "old" ? "new" : "old", n: null })} className="ct-sort" title="Эрэмбэ солих">
           {sort === "old" ? "Хуучин → шинэ" : "Шинэ → хуучин"}

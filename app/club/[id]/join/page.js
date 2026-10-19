@@ -47,7 +47,7 @@ export default async function Join({ params }) {
     <div className="wr-page jn-page">
       <span className="au-blob a" aria-hidden="true" />
       <span className="au-blob b" aria-hidden="true" />
-      <div className="jn-top"><Link href="/" className="jn-home"><img src="/icons/logo.svg" width={32} height={32} alt="Нүүр" /></Link><Link href={`/club/${id}`} className="jn-backtop">← Буцах</Link></div>
+      <div className="jn-top"><Link href="/" className="jn-home"><img src="/icons/logo.svg" width={32} height={32} alt="Нүүр" /></Link></div>
       <section className="jn-card">
         <Link href={`/club/${id}`} className="jn-x" aria-label="Хаах">×</Link>
         <p className="jn-quote"><b><img src="/icons/flame.svg" width={16} height={16} alt="" /> Ганц мод гал болохгүй</b><small>- Ардын зүйр үг</small></p>

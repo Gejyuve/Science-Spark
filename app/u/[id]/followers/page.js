@@ -38,7 +38,6 @@ export default async function Followers({ params, searchParams }) {
   return (
     <Shell user={me} header="nav">
       <div className="ss-card fl-page">
-        <Link href={`/u/${uid}`} className="ch-back">← Профайл руу</Link>
         <h1>{tab === "followers" ? "Дагагчид" : "Дагаж буй"}</h1>
         <div className="ss-feedtabs fl-tabs">
           <Link href={`/u/${uid}/followers`} className={tab === "followers" ? "on" : ""}>Дагагчид {c.a}</Link>

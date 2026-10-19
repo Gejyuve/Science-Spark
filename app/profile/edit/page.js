@@ -24,11 +24,6 @@ export default async function EditProfilePage({ searchParams }) {
       <span className="au-blob a" aria-hidden="true" />
       <span className="au-blob b" aria-hidden="true" />
       {!isNew && <TopNav className="wr-nav" />}
-      {!isNew && (
-        <div className="ar-pagebar wr-bar">
-          <Link href={`/u/${user.id}`} className="ar-back">← Буцах</Link>
-        </div>
-      )}
       <ProfileForm
         user={{ id: user.id, email: user.email, surname: user.surname || "", first_name: user.first_name || "", avatar: user.avatar, avatar_src: user.avatar_src, avatar_pos: user.avatar_pos }}
         profile={profile}

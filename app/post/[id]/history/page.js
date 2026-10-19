@@ -24,9 +24,8 @@ export default async function History({ params }) {
   return (
     <Shell user={user} header="nav">
       <div className="ed-page">
-        <Link href={`/post/${post.id}`} className="pv-back">← {post.title}</Link>
         <h1>Засварын түүх</h1>
-        <p className="muted">Энэ {post.kind.toLowerCase()}-д оруулсан бүх засвар он цагийн дарааллаар. Хувилбар бүрийг дэлгэж харна.</p>
+        <p className="muted">«<Link href={`/post/${post.id}`}>{post.title}</Link>»-д оруулсан бүх засвар он цагийн дарааллаар. Хувилбар бүрийг дэлгэж харна.</p>
         {revs.length === 0 ? <p className="muted">Засвар ороогүй байна.</p> : (
           <ul className="rv-hist ed-form">
             {revs.map((r, i) => (

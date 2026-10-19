@@ -25,7 +25,6 @@ export default async function Pay({ params }) {
   return (
     <Shell user={user} active="/san" header="nav">
       <div className="ss-card och san">
-        <Link href="/wallet" className="san-back">← Миний хэтэвч</Link>
         <h1>{r.status === "confirmed" ? <>Баярлалаа! {r.kind === "premium" ? <img className="sm-bolt" src="/icons/bolt.svg" width={26} height={26} alt="" /> : "💚"}</> : "Шилжүүлгээ хийнэ үү"}</h1>
         <p className="och-sub">
           {r.status === "confirmed"
