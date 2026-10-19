@@ -32,65 +32,19 @@ export default async function Clubs({ searchParams }) {
     .map(({ id, name, logo, city, about, lat, lng, points, members, rank }) => ({ id, name, logo, city, about, lat, lng, points, members, rank }));
   const aimags = new Set(onMap.map((c) => c.city).filter(Boolean)).size;
 
-  const pages = Math.max(1, Math.ceil(board.length / PER));
-  const page = Math.min(pages, Math.max(1, parseInt(sp.p) || 1));
-  const rows = board.slice((page - 1) * PER, page * PER);
-  const href = (o) => {
-    const q = new URLSearchParams();
-    const t = o.t ?? period, p = o.p ?? 1;
-    if (t !== "all") q.set("t", t);
-    if (p > 1) q.set("p", p);
-    const s = q.toString();
-    return "/clubs" + (s ? "?" + s : "");
-  };
-  const nums = pages <= 5 ? Array.from({ length: pages }, (_, i) => i + 1)
-    : [...new Set([1, 2, 3, page - 1, page, page + 1, pages].filter((n) => n >= 1 && n <= pages))].sort((a, b) => a - b);
+  // Зөвхөн эхний 10 клуб
+  const rows = board.slice(0, PER);
+  const href = (o) => (o.t && o.t !== "all" ? `/clubs?t=${o.t}` : "/clubs");
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).replaceAll("-", ".");
 
   return (
     <Shell user={user} active="/clubs" header={false}>
       <div className="cl-page">
-        {/* Клубын нүүр: удирдагчид Даалгавар · Тайлан · Хуваалцъя, бусдад даалгаврын тухай товч */}
-        {myClub ? (
+        {/* Клубын удирдагч: Даалгавар · Тайлан · Хуваалцъя */}
+        {myClub && (
           <div className="ss-header static cl-composer">
             <Composer loggedIn me={<Avatar user={user} size={32} />} club={{ name: myClub.name }} clubAv={<ClubAv c={myClub} size={32} />} initialAs="club" />
           </div>
-        ) : (
-          <Link href={user ? "/tasks" : "/login"} className="cl-compose">
-            {user ? <Avatar user={user} size={36} /> : <img src="/icons/person.svg" width={36} height={36} alt="" />}
-            <span>Клубуудын хийж үзсэн туршилт, эвент, воркшопын санаа, тайлангууд. Клубын удирдагч клубынхээ нэрээр нэмнэ.</span>
-            <b className="cm-join">Даалгаврууд үзэх</b>
-          </Link>
-        )}
-
-        <section className="cl-tasks">
-          <div className="cl-head">
-            <div>
-              <h2>Даалгавар</h2>
-              <p>Клубуудын хуваалцсан санаа · {tasksN} даалгавар</p>
-            </div>
-            <span className="ss-grow" />
-            <Link href="/tasks" className="cl-new">Бүгдийг үзэх →</Link>
-          </div>
-          {tasks.length ? (
-            <div className="tk-grid four">{tasks.map((t) => <TaskCard key={t.id} t={t} compact />)}</div>
-          ) : (
-            <p className="muted">Одоохондоо даалгавар алга. Клубын удирдагч анхны даалгаврыг нэмээрэй.</p>
-          )}
-        </section>
-
-        {reports.length > 0 && (
-          <section className="cl-tasks">
-            <div className="cl-head">
-              <div>
-                <h2>Тайлан</h2>
-                <p>Клубууд даалгаврыг хэрхэн биелүүлсэн бэ · {reportsN} тайлан</p>
-              </div>
-              <span className="ss-grow" />
-              <Link href="/reports" className="cl-new">Бүгдийг үзэх →</Link>
-            </div>
-            <div className="tk-grid four">{reports.map((r) => <ReportCard key={r.id} r={r} compact />)}</div>
-          </section>
         )}
 
         <ClubMap clubs={onMap} aimags={aimags} />
@@ -98,7 +52,7 @@ export default async function Clubs({ searchParams }) {
         <section className="cl-board">
           <div className="cl-head">
             <div>
-              <h2>ТОП-100 клуб</h2>
+              <h2>ТОП-10 клуб</h2>
               <p>Очоор эрэмбэлсэн · Сүүлд шинэчлэгдсэн {today}</p>
             </div>
             <span className="ss-grow" />
@@ -124,24 +78,40 @@ export default async function Clubs({ searchParams }) {
                   </span>
                 </div>
               ))}
-              <div className="cl-foot">
-                <small>Харуулж байна: {(page - 1) * PER + 1}–{(page - 1) * PER + rows.length} / {board.length}</small>
-                <span className="ss-grow" />
-                {pages > 1 && (
-                  <nav className="cl-pages" aria-label="Хуудас">
-                    {nums.map((n, i) => (
-                      <span key={n} className="cl-pg">
-                        {i > 0 && n - nums[i - 1] > 1 && <i>…</i>}
-                        <Link href={href({ p: n })} className={n === page ? "on" : ""}>{n}</Link>
-                      </span>
-                    ))}
-                    {page < pages && <Link href={href({ p: page + 1 })} className="cl-next">Дараах {board.length - page * PER} клуб →</Link>}
-                  </nav>
-                )}
-              </div>
             </>
           )}
         </section>
+
+        {/* Хамгийн доор: клубуудын даалгавар, тайлан */}
+        <section className="cl-tasks">
+          <div className="cl-head">
+            <div>
+              <h2>Даалгавар</h2>
+              <p>Клубуудын хийж үзсэн туршилт, эвент, воркшопын санаа · {tasksN} даалгавар</p>
+            </div>
+            <span className="ss-grow" />
+            <Link href="/tasks" className="cl-new">Бүгдийг үзэх →</Link>
+          </div>
+          {tasks.length ? (
+            <div className="tk-grid four">{tasks.map((t) => <TaskCard key={t.id} t={t} compact />)}</div>
+          ) : (
+            <p className="muted">Одоохондоо даалгавар алга. Клубын удирдагч анхны даалгаврыг нэмээрэй.</p>
+          )}
+        </section>
+
+        {reports.length > 0 && (
+          <section className="cl-tasks">
+            <div className="cl-head">
+              <div>
+                <h2>Тайлан</h2>
+                <p>Клубууд даалгаврыг хэрхэн биелүүлсэн бэ · {reportsN} тайлан</p>
+              </div>
+              <span className="ss-grow" />
+              <Link href="/reports" className="cl-new">Бүгдийг үзэх →</Link>
+            </div>
+            <div className="tk-grid four">{reports.map((r) => <ReportCard key={r.id} r={r} compact />)}</div>
+          </section>
+        )}
       </div>
     </Shell>
   );

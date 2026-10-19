@@ -3033,10 +3033,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .och-sub a { color: var(--teal); font-weight: 600; text-decoration: none; }
 
 /* ===== Клубын даалгавар ===== */
-.cl-compose { display: flex; align-items: center; gap: 12px; padding: 14px 16px 14px 18px; border-radius: 24px; background: var(--surface); box-shadow: var(--card-shadow); color: var(--muted); font-size: 14.5px; font-weight: 500; text-decoration: none; }
-.cl-compose > span { flex: 1; min-width: 0; }
-.cl-compose .ss-avatar { flex-shrink: 0; }
-.cl-compose .cm-join { flex-shrink: 0; }
 .cl-tasks { padding: 28px 28px 24px; border-radius: 24px; background: var(--surface); box-shadow: var(--card-shadow); }
 .cl-tasks .cl-head { padding: 0; margin-bottom: 18px; }
 .tk-page { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
@@ -3082,8 +3078,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 [data-theme="dark"] .tk-tags a, [data-theme="dark"] .tk-as { background: rgba(55, 195, 179, .14); color: #8bffef; }
 @media (max-width: 1100px) { .tk-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 720px) {
-  .cl-compose { flex-wrap: wrap; font-size: 13.5px; }
-  .cl-compose .cm-join { width: 100%; text-align: center; }
   .cl-tasks { padding: 20px 16px; }
   .tk-hero { padding: 20px; }
   .tk-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
