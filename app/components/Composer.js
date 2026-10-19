@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
 import ImageInput, { sizeLabel } from "./ImageInput";
+import BountyAsk from "./BountyAsk";
 import { EVENT_TYPES, EVENT_FORMATS, EVENT_BODY_MIN, ANNOUNCE_TYPES, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
@@ -85,7 +86,7 @@ function Head({ icon, title, right }) {
 
 const Req = () => <i className="cp-req">*</i>;
 
-export default function Composer({ loggedIn, me, initial, error, club = null, clubAv = null, initialAs }) {
+export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, initialAs }) {
   const [mode, setMode] = useState(initial || null);
   // Клубын удирдагч: «Өөрөө» эсвэл «Клуб»-ын нэрээр. Клубын нэрээр бол Даалгавар · Тайлан · Хуваалцъя
   const [asClub, setAsClub] = useState(!!club && initialAs === "club");
@@ -106,11 +107,29 @@ export default function Composer({ loggedIn, me, initial, error, club = null, cl
   const toggle = (m) => setMode((cur) => (cur === m ? null : m));
   const shareModes = ["share", "Бодрол", "Эвент", "Зарлал"];
 
+  // Асуулт: «Асуух» дарахад нийтлэхээс өмнө шагнал нэмэх эсэхийг асууна
+  const askForm = useRef(null);
+  const askBounty = useRef(null);
+  const [bqOpen, setBqOpen] = useState(false);
+  const closeBq = useCallback(() => setBqOpen(false), []);
+  const pickBq = (amt) => {
+    const f = askForm.current;
+    setBqOpen(false);
+    if (!f) return;
+    askBounty.current.value = amt > 0 ? String(amt) : "";
+    f.dataset.go = "1";
+    f.requestSubmit();
+    delete f.dataset.go;
+  };
+
   let panel = null;
   if (mode === "Асуулт") {
     panel = (
-      <form action={quickPost} className="cp-panel cp-ask">
+      <form action={quickPost} className="cp-panel cp-ask" ref={askForm}
+        onSubmit={(e) => { if (!e.currentTarget.dataset.go) { e.preventDefault(); setBqOpen(true); } }}>
         <input type="hidden" name="kind" value="Асуулт" />
+        <input type="hidden" name="bounty" ref={askBounty} />
+        {bqOpen && <BountyAsk wallet={wallet} onPick={pickBq} onClose={closeBq} />}
         <div className="cp-ask-row">
           {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}
           <Counted name="body" max={300} rows={3} required latinCheck placeholder="Хариултаас илүү асуултаар нь хүнийг амархан таньж болно.   -Voltaire" />
