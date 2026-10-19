@@ -6,7 +6,7 @@ import { fmtDate } from "@/lib/format";
 import { toggleFollow } from "../../posts/actions";
 import Shell from "../../components/Shell";
 import PostCard from "../../components/PostCard";
-import { Avatar, fmtK, followingSet } from "../../components/Bits";
+import { Avatar, fmtK, followingSet, NameBadges } from "../../components/Bits";
 
 export const dynamic = "force-dynamic";
 
@@ -134,7 +134,7 @@ export default async function PublicProfile({ params, searchParams }) {
           <span className="pu-avatar"><Avatar user={u} size={96} /></span>
           <div className="pu-name">
             {/* Овгийг бүтнээр нь зөвхөн тухайн хүний өөрийн хуудсанд харуулна */}
-            <h1>{u.surname ? `${u.surname} ${u.first_name}` : `${u.initial}.${u.first_name}`}{isPremium(u) && <Link href="/san" className="san-badge" title="Шинжлэх ухааныг дэмжигч">💚 Дэмжигч</Link>}</h1>
+            <h1>{u.surname ? `${u.surname} ${u.first_name}` : `${u.initial}.${u.first_name}`}<NameBadges points={u.points} supporter={isPremium(u)} size={22} /></h1>
             <div className="pu-stats">
               {isMe ? (
                 <>

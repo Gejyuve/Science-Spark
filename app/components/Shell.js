@@ -10,11 +10,11 @@ import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
 import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
-import { displayName, isAdmin, needsName, isStaff } from "@/lib/auth";
+import { displayName, isAdmin, needsName, isStaff, isPremium } from "@/lib/auth";
 import { canApproveWords } from "@/lib/terms";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
-import { Avatar, Stat, Person, followingSet } from "./Bits";
+import { Avatar, Stat, Person, NameBadges, followingSet } from "./Bits";
 import { ClubPerson } from "./ClubBits";
 import { hotClubs, clubFollowSet, membershipOf } from "@/lib/clubs";
 import { chatUnread } from "@/lib/chat";
@@ -116,7 +116,7 @@ async function RightRail({ user }) {
           <Link href={`/u/${user.id}`} className="ss-person big">
             <Avatar user={user} size={40} />
             <div>
-              <b>{displayName(user)}</b>
+              <span className="ss-person-line"><b>{displayName(user)}</b><NameBadges points={user.points} supporter={isPremium(user)} /></span>
               <Stat points={user.points} followers={followers} link={false} />
             </div>
           </Link>

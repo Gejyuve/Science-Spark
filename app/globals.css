@@ -2958,3 +2958,9 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .sm-foot .sm-go { flex: 1; justify-content: center; }
   .sm-foot .ss-grow { display: none; }
 }
+/* Нэрний хажуугийн тэмдэг: түвшин, дэмжигчийн аянга */
+.ss-person-line { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.ss-nbadges { display: inline-flex; align-items: center; gap: 3px; flex: none; vertical-align: middle; }
+.ss-nbadges img { display: block; }
+.pu-name h1 .ss-nbadges { margin-left: 8px; gap: 5px; }
+.san-bolt { margin-left: 6px; flex: none; }
