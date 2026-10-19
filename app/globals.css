@@ -221,6 +221,9 @@ details.mod summary { cursor: pointer; }
 }
 .ss-nav-item:hover { background: var(--surface-2); }
 .ss-nav-item.on { color: var(--accent); }
+.ss-nav-item .ss-badge { margin-left: auto; }
+.ss-staff { margin: 12px 12px 0; padding: 12px 0 0; border-top: 1px solid var(--line, rgba(127, 140, 150, .2)); }
+.ss-staff-t { padding: 0 12px 2px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .ss-projects {
   display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; margin: 4px 4px;
   padding: 12px 18px 12px 14px; border-radius: 16px; border: 1px solid #ffcc9e;
@@ -1714,6 +1717,8 @@ a.ss-kind:hover { text-decoration: underline; }
 .tl-hero p { margin: 0 0 8px; font-size: 14px; opacity: .92; }
 .tl-add { display: inline-flex; align-items: center; height: 36px; padding: 0 18px; border-radius: 999px; border: 0; background: #fff; color: #00897e; font: inherit; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; transition: transform .2s; }
 .tl-add:hover { transform: translateY(-1px); }
+.tl-hero-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.tl-add.ghost { background: rgba(255, 255, 255, .18); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6); }
 .tl-stat { position: relative; z-index: 1; flex: none; width: 300px; display: flex; flex-direction: column; gap: 6px; padding: 18px 24px; border-radius: 20px; background: #fff; color: var(--ink); }
 .tl-stat small { font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .tl-stat-n { display: flex; align-items: center; gap: 10px; font-size: 38px; font-weight: 800; color: #0f2a33; line-height: 1.1; }
@@ -2679,6 +2684,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ss-side .ss-nav { flex-direction: column; overflow: visible; padding: 10px; border-radius: 22px; background: var(--surface); }
   .ss-side .ss-nav-item { height: 46px; }
   .ss-side .ss-nav-item.on { background: var(--teal-bg); }
+  .ss-side .ss-staff { margin: 0; padding: 10px; border-top: 0; }
   .ss-side .ss-projects { display: inline-flex; }
   .ss-side > .ss-grow, .ss-side > .theme-toggle { display: none; }
   .ss-dhead .theme-toggle { display: inline-flex; margin: 0; }

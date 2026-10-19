@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
-import { requireSection, canSee, GRANTABLE, STATUS_LABELS, ago } from "@/lib/admin";
+import { requireSection, canSee, STATUS_LABELS, ago } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
-import { adminSetRole, setPerms, restrictUser, adjustPoints } from "../../actions";
+import { adminSetRole, restrictUser, adjustPoints } from "../../actions";
 import Head, { Chip, Flash, who, STATUS_TONE } from "../../_c/Head";
 import { Avatar } from "../../../components/Bits";
 
@@ -80,24 +80,12 @@ export default async function UserDetail({ params, searchParams }) {
                 <select name="role" defaultValue={u.role}>
                   <option value="user">Хэрэглэгч</option>
                   <option value="reviewer">Хянагч</option>
-                  <option value="admin">Админ</option>
+                  <option value="admin">Редакцийн админ</option>
                 </select>
                 <button className="adm-btn dark">Хадгалах</button>
               </form>
             )}
-            {sup && u.role === "admin" && (
-              <form action={setPerms} className="adm-perms">
-                <input type="hidden" name="user_id" value={u.id} />
-                <p className="adm-muted">Энэ админд харагдах хэсгүүд («Тойм» үргэлж харагдана):</p>
-                {GRANTABLE.map((s) => (
-                  <label key={s.key} className="adm-check">
-                    <input type="checkbox" name="perm" value={s.key} defaultChecked={(u.perms || []).includes(s.key)} />
-                    <span>{s.label}{s.soon && <small> · удахгүй</small>}</span>
-                  </label>
-                ))}
-                <button className="adm-btn dark">Хэсгүүдийг хадгалах</button>
-              </form>
-            )}
+            <p className="adm-muted small">Хянагч: нийтлэл, мэдээ, эвент, шинэ үг, ангилал хянана. Редакцийн админ: дээрээс нь клубын даалгавар, тайлан батлаж оч тогтооно, логик алдааны мэдэгдэл шийдэж, контент нууна.</p>
           </section>
 
           <section className="adm-card">

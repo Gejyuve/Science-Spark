@@ -2,7 +2,7 @@ import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
-import { TERM_KIND, ALPHABET } from "@/lib/terms";
+import { TERM_KIND, ALPHABET, canApproveWords } from "@/lib/terms";
 import Shell from "../components/Shell";
 import DictAdd from "../components/DictAdd";
 import { TermCard } from "../components/Terms";
@@ -80,7 +80,11 @@ export default async function DictPage({ searchParams }) {
         <div className="tl-hero-main">
           <h1>Шинжлэх ухааны нэр томьёоны толь</h1>
           <p>Бүгдээрээ хэлэлцвэл буруугүй, бүлээн усаар угаавал хиргүй</p>
-          <DictAdd className="tl-add" loggedIn={!!user} />
+          <div className="tl-hero-acts">
+            <DictAdd className="tl-add" loggedIn={!!user} />
+            {/* 5-р түвшнээс дээш хэрэглэгч шинэ үг зөвшөөрнө (нийтлэл хянах эрх биш) */}
+            {canApproveWords(user) && <Link href="/review?t=words" className="tl-add ghost">Шинэ үг зөвшөөрөх</Link>}
+          </div>
         </div>
         <div className="tl-stat">
           <small>Толь дахь нэр томьёо</small>
