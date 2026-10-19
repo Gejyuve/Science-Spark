@@ -7,7 +7,7 @@ export default function EntityGate({ icon = "tclub", title, text, actions }) {
       <img src={`/icons/${icon}.svg`} width={56} height={56} alt="" />
       <b>{title}</b>
       <p>{text}</p>
-      <div>{actions || <><Link href="/login" className="cf-btn">Нэвтрэх</Link><Link href="/register" className="cf-btn ghost">Бүртгүүлэх</Link></>}</div>
+      <div>{actions || <><Link href="/login" className="cf-btn">Нэвтрэх</Link><Link href="/login" className="cf-btn ghost">Бүртгүүлэх</Link></>}</div>
     </section>
   );
 }

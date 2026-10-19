@@ -3175,6 +3175,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ss-maint p { margin: 0; color: var(--muted); }
 .ss-maint-login { margin-top: 8px; font-size: 13px; color: var(--accent); }
 .au-closed { margin: 6px 0 4px; text-align: center; font-weight: 600; color: var(--text); }
+.au-link { border: 0; padding: 0; background: none; font: inherit; color: var(--teal); font-weight: 600; cursor: pointer; }
 /* Админ · Тохиргоо */
 .adm-set { display: grid; gap: 12px; }
 .adm-set-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
