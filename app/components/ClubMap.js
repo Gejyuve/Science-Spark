@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MN_BORDER } from "@/lib/mn-border";
+import { MAP_STYLE, siteColors } from "@/lib/map-style";
 
 const fmtK = (n) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "K" : String(n || 0));
 const MN = [[87.6, 41.4], [120.1, 52.3]];
-const STYLE = "https://tiles.openfreemap.org/styles/dark";
 const MN_POLY = { type: "Polygon", coordinates: [MN_BORDER] };
 const esc = (s) => String(s || "").replace(/[<>&"]/g, "");
 
@@ -30,11 +30,7 @@ function tune(m) {
       } else m.setLayoutProperty(l.id, "visibility", "none");
     }
   }
-  const set = (id, k, v) => m.getLayer(id) && m.setPaintProperty(id, k, v);
-  set("background", "background-color", "#071a1f");
-  set("water", "fill-color", "#0b2b31");
-  set("boundary_state", "line-color", "rgba(91,240,220,0.22)");
-  for (const id of ["boundary_country_z0-4", "boundary_country_z5-"]) set(id, "line-color", "rgba(127,184,181,0.35)");
+  siteColors(m);
   m.addSource("mn", { type: "geojson", data: { type: "Feature", properties: {}, geometry: MN_POLY } });
   m.addLayer({ id: "mn-glow", type: "line", source: "mn", paint: { "line-color": "#37E6D0", "line-opacity": 0.18, "line-width": 7, "line-blur": 5 } });
   m.addLayer({ id: "mn-line", type: "line", source: "mn", paint: { "line-color": "#5BF0DC", "line-opacity": 0.45, "line-width": 1.2 } });
@@ -54,7 +50,7 @@ export default function ClubMap({ clubs, aimags }) {
       const ml = (await import("maplibre-gl")).default;
       if (dead || !box.current || map.current) return;
       const m = new ml.Map({
-        container: box.current, style: STYLE, bounds: MN, fitBoundsOptions: { padding: 16 },
+        container: box.current, style: MAP_STYLE, bounds: MN, fitBoundsOptions: { padding: 16 },
         minZoom: 3, maxZoom: 17, maxBounds: [[70, 33], [138, 60]], attributionControl: false,
         scrollZoom: false, dragRotate: false, pitchWithRotate: false, touchPitch: false,
       });
