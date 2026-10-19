@@ -62,8 +62,8 @@ export default async function Wallet({ searchParams }) {
           <span><b>{history.filter((h) => h.kind === "prize").length}</b><small>шагнал хүртсэн</small></span>
         </div>
         <div className="san-cta">
-          <SupportModal kind="topup" label="Хэтэвч цэнэглэх" className="ss-pill" autoOpen={sp.topup === "1"} {...supportModalProps(user)} />
-          <SupportModal kind="premium" label={isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill ghost" {...supportModalProps(user)} />
+          <SupportModal kind="premium" label={isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill" {...supportModalProps(user)} />
+          <SupportModal kind="topup" label="Хэтэвч цэнэглэх" className="ss-pill ghost" autoOpen={sp.topup === "1"} {...supportModalProps(user)} />
           <Link href="/san" className="ss-pill ghost">Шагналын сан</Link>
         </div>
 
