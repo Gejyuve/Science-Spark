@@ -2,11 +2,11 @@ import Link from "next/link";
 import TopNav from "../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, isAdmin, needsName } from "@/lib/auth";
+import { getUser, isStaff, needsName } from "@/lib/auth";
 import { levelFor } from "@/lib/levels";
 import { canApproveWords } from "@/lib/terms";
 import AdminNav from "../admin/_c/AdminNav";
-import { SECTIONS, canSee } from "@/lib/admin";
+import { visibleSections, homeFor } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хяналт · Science Spark" };
@@ -24,28 +24,23 @@ export default async function ReviewLayout({ children }) {
   let pending = 0;
   if (staff) {
     try {
-      pending = (await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}
-        AND (${isAdmin(user)}::boolean OR kind NOT IN ('Даалгавар', 'Тайлан'))`)[0].n;
+      pending = (await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending'`)[0].n;
     } catch (e) {}
   }
+  // Редакц: засварлах самбар (/review/:id) нь админ боардын Контент хэсгийн нэг хэсэг
   const items = staff
-    ? [
-        { key: "queue", label: "Хяналтын жагсаалт", icon: "a_content", href: "/review", exact: true, match: "^/review/\\d+", badge: pending || null },
-        { key: "archive", label: "Миний шийдвэрүүд", icon: "a_audit", href: "/review/archive" },
-        { key: "rules", label: "Редакцийн дүрэм", icon: "a_requests", href: "/review/rules" },
-        // Редакцийн админы админ боардын хэсгүүд (Админ товч зөвхөн супер админд харагдана)
-        ...(user.role === "admin" ? SECTIONS.filter((s) => s.key !== "overview" && canSee(user, s.key)) : []),
-      ]
+    ? visibleSections(user).map((s) =>
+        s.key === "content" ? { ...s, exact: true, match: "^/(review/(\\d+|word)|admin/content)", badge: pending || null } : s)
     : [
-        { key: "words", label: "Шинэ үг зөвшөөрөх", icon: "a_content", href: "/review?t=words", match: "^/review/word" },
+        { key: "words", label: "Шинэ үг зөвшөөрөх", icon: "a_content", href: "/review", exact: true, match: "^/review/word" },
       ];
   const chip = staff
-    ? `${user.role === "superadmin" ? "СУПЕР АДМИН" : "АДМИН"} · ТҮВШИН ${lv}`
+    ? (user.role === "superadmin" ? "СУПЕР АДМИН · РЕДАКЦ" : "АДМИН · РЕДАКЦ")
     : `ТҮВШИН ${lv}`;
   return (
     <div className="adm">
       <aside className="adm-side">
-        <Link href="/review" className="adm-brand">
+        <Link href={staff ? homeFor(user) : "/review"} className="adm-brand">
           <img src="/icons/a_brand.svg" width={22} height={22} alt="" />
           <b>Science Spark</b>
         </Link>

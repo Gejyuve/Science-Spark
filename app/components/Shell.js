@@ -26,21 +26,20 @@ const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
 );
 
-// Редакцийн товчууд зүүн цэсний доод хэсэгт: «Хянах» редакцид (хянагч, админ), «Админ» зөвхөн супер админд
+// Редакцийн товч зүүн цэсний доод хэсэгт: редакцийн админд «Хянах», супер админд «Админ» (бүх эрх)
 async function StaffNav({ user, active }) {
   if (!isStaff(user)) return null;
-  const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}
-      AND (${isAdmin(user)}::boolean OR kind NOT IN ('Даалгавар', 'Тайлан'))`
+  const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}`
     .then((r) => r[0].n)
     .catch(() => 0);
+  const badge = pending > 0 && <em className="ss-badge red">{pending > 99 ? "99+" : pending}</em>;
   return (
     <nav className="ss-nav ss-staff" aria-label="Редакц">
       <span className="ss-staff-t">Редакц</span>
-      <Link href="/review" className={"ss-nav-item" + (active === "/review" ? " on" : "")}>
-        {I("shield", 24)}<span>Хянах</span>{pending > 0 && <em className="ss-badge red">{pending > 99 ? "99+" : pending}</em>}
-      </Link>
-      {isSuperAdmin(user) && (
-        <Link href="/admin" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("crown", 24)}<span>Админ</span></Link>
+      {isSuperAdmin(user) ? (
+        <Link href="/admin" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("crown", 24)}<span>Админ</span>{badge}</Link>
+      ) : (
+        <Link href="/admin/content" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("shield", 24)}<span>Хянах</span>{badge}</Link>
       )}
     </nav>
   );

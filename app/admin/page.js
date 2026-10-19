@@ -87,7 +87,7 @@ export default async function Overview() {
       {s.stale > 0 && (
         <p className="adm-banner">
           ⚠ {s.stale} контент 3 хоногоос удаан хянагдаагүй хүлээгдэж байна.{" "}
-          <Link href="/review">Хянах →</Link>
+          <Link href="/admin/content?status=pending">Засах →</Link>
         </p>
       )}
 
@@ -163,7 +163,7 @@ export default async function Overview() {
         <div className="adm-card-head">
           <b>Хүлээгдэж буй контент</b>
           <span className="ss-grow" />
-          <Link href="/review" className="adm-link">Бүгдийг хянах →</Link>
+          <Link href="/admin/content?status=pending" className="adm-link">Бүгдийг харах →</Link>
         </div>
         {pending.length === 0 ? (
           <p className="adm-empty">Хүлээгдэж буй контент алга 🎉</p>
@@ -179,7 +179,7 @@ export default async function Overview() {
                     <td><Chip>{p.kind}</Chip></td>
                     <td>{who(p)}</td>
                     <td>{old ? <Chip tone="bad">{ago(p.created_at)}</Chip> : ago(p.created_at)}</td>
-                    <td className="adm-right"><Link href={`/review/${p.id}`} className="adm-btn">Хянах</Link></td>
+                    <td className="adm-right"><Link href={`/review/${p.id}`} className="adm-btn teal">Засах</Link></td>
                   </tr>
                 );
               })}

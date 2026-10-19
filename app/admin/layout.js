@@ -3,7 +3,7 @@ import TopNav from "../components/TopNav";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { SECTIONS, canSee, isAdminRole } from "@/lib/admin";
+import { visibleSections, isAdminRole, homeFor } from "@/lib/admin";
 import AdminNav from "./_c/AdminNav";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +30,11 @@ export default async function AdminLayout({ children }) {
     finance = c.f;
   } catch (e) {}
   const badges = { content: pending, requests, logic, finance };
-  const items = SECTIONS.filter((s) => canSee(user, s.key)).map((s) => ({ ...s, badge: badges[s.key] || null }));
+  const items = visibleSections(user).map((s) => ({ ...s, badge: badges[s.key] || null }));
   return (
     <div className="adm">
       <aside className="adm-side">
-        <Link href="/admin" className="adm-brand">
+        <Link href={homeFor(user)} className="adm-brand">
           <img src="/icons/a_brand.svg" width={22} height={22} alt="" />
           <b>Science Spark</b>
         </Link>
