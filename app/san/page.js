@@ -2,7 +2,7 @@ import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
 import { monthBoard, splitPrizes, currentPeriod, prevPeriod, periodLabel, periodEnd, TOP_N, STAR_SHARE, PAIR_CAP, GIVER_MIN_DAYS } from "@/lib/spark";
-import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
+import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import Shell from "../components/Shell";
 import { Avatar } from "../components/Bits";
 import Countdown from "../components/Countdown";
