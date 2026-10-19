@@ -2758,3 +2758,96 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .fl-list .ss-person:first-child { border-top: 0; }
 #rules { scroll-margin-top: 90px; }
 .wr-coversrc .wr-star { font-style: normal; color: #e5484d; margin-left: 2px; }
+
+/* Шагналын сан, дэмжих, хэтэвч */
+.san { display: flex; flex-direction: column; gap: 14px; }
+.san h1 { margin: 0; }
+.san h2 { margin: 14px 0 0; }
+.san-back { font-size: 13px; font-weight: 600; color: var(--teal); text-decoration: none; }
+.san-hero { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 16px; align-items: center; }
+.san-hero .och-sub { margin: 6px 0 0; }
+.san-pool { display: flex; flex-direction: column; gap: 2px; padding: 16px 18px; border-radius: 18px; background: linear-gradient(135deg, #e5f7f5, #fff3e8); border: 1.5px solid #37c3b3; }
+.san-pool small { font-size: 11px; color: var(--muted); }
+.san-pool b { font-size: 28px; color: #00a89b; font-variant-numeric: tabular-nums; }
+.san-cta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.san-cta button { cursor: pointer; font: inherit; }
+.san-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.san-stats span { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); }
+.san-stats b { font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.san-stats small { font-size: 11px; color: var(--muted); }
+.san-bar span { background: linear-gradient(90deg, #37c3b3, #ff9500); }
+.san-badge { display: inline-flex; align-items: center; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #e3f6ec; color: #16794a; font-size: 11px; font-weight: 700; font-style: normal; text-decoration: none; vertical-align: middle; white-space: nowrap; }
+.san-board .och-brow.san-star { background: #fff8e6; }
+.san-winners { display: flex; flex-direction: column; border-radius: 16px; background: var(--surface-2); padding: 4px 14px; }
+.san-winner { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); text-decoration: none; color: inherit; }
+.san-winner:first-child { border-top: 0; }
+.san-winner .san-wt { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.san-winner b { font-size: 13.5px; color: var(--ink); }
+.san-winner small { font-size: 11px; color: var(--muted); }
+.san-winner em { font-style: normal; font-weight: 700; font-size: 13px; color: #00a89b; white-space: nowrap; }
+.san-winner .och-num { width: 18px; }
+.san-table-wrap { overflow-x: auto; border-radius: 16px; background: var(--surface-2); }
+.san-table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.san-table th { text-align: right; padding: 10px 12px; color: var(--muted); font-weight: 600; font-size: 11px; white-space: nowrap; }
+.san-table td { text-align: right; padding: 9px 12px; border-top: 1px solid var(--border); color: var(--text); white-space: nowrap; }
+.san-table th:first-child, .san-table td:first-child { text-align: left; font-weight: 600; color: var(--ink); }
+.san .neg { color: #cc2633; }
+.san .pos { color: #00a89b; font-weight: 700; }
+.san .och-rule em.neg { background: #fde8e9; color: #cc2633; }
+.san a.och-rule { text-decoration: none; color: inherit; }
+.san-perks { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.san-perks div { display: flex; flex-direction: column; gap: 3px; padding: 14px; border-radius: 14px; background: var(--surface-2); }
+.san-perks span { font-size: 20px; }
+.san-perks b { font-size: 13.5px; color: var(--ink); }
+.san-perks small { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.san-perks div:first-child { background: #e3f6ec; }
+.san-perks div:first-child b { color: #16794a; }
+.san-to { display: flex; align-items: center; gap: 12px; }
+.san-to span { display: flex; flex-direction: column; }
+.san-to b { color: var(--ink); }
+.san-to small { color: var(--muted); font-size: 12px; }
+.san-form { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
+.san-form .ss-pill { align-self: flex-start; cursor: pointer; font: inherit; font-weight: 700; }
+.san-field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.san-field input, .san-field textarea { padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 15px; resize: vertical; }
+.san-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); }
+.san-check input { accent-color: #00a89b; width: 16px; height: 16px; }
+.san-plans, .san-amounts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.san-amounts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.san-plan, .san-amt { position: relative; cursor: pointer; }
+.san-plan input, .san-amt input { position: absolute; opacity: 0; pointer-events: none; }
+.san-plan > span, .san-amt > span { display: flex; flex-direction: column; gap: 2px; padding: 14px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--surface-2); }
+.san-amt > span { align-items: center; padding: 11px 6px; font-weight: 700; color: var(--ink); font-size: 14px; }
+.san-plan b { color: var(--ink); font-size: 14px; }
+.san-plan em { font-style: normal; font-weight: 700; font-size: 18px; color: #00a89b; }
+.san-plan small { font-size: 11px; color: var(--muted); }
+.san-plan input:checked + span, .san-amt input:checked + span { border-color: #37c3b3; background: var(--teal-bg); }
+.san-plan input:focus-visible + span, .san-amt input:focus-visible + span { box-shadow: 0 0 0 2px #37c3b3; }
+.san-pay { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.san-pay div { display: flex; flex-direction: column; gap: 2px; padding: 14px; border-radius: 14px; background: var(--surface-2); min-width: 0; }
+.san-pay small { font-size: 11px; color: var(--muted); }
+.san-pay b { font-size: 16px; color: var(--ink); overflow-wrap: anywhere; }
+.san-pay .san-code { background: #fff3e8; }
+.san-pay .san-code b { font-size: 22px; letter-spacing: .06em; color: #c2400d; font-variant-numeric: tabular-nums; }
+#daily, #board, #glass, #withdraw { scroll-margin-top: 90px; }
+:root[data-theme="dark"] .san-pool { background: linear-gradient(135deg, #12302c, #3a2a1c); }
+:root[data-theme="dark"] .san-badge, :root[data-theme="dark"] .san-perks div:first-child { background: #143a28; color: #6fd8a0; }
+:root[data-theme="dark"] .san-perks div:first-child b { color: #6fd8a0; }
+:root[data-theme="dark"] .san-board .och-brow.san-star { background: #33290f; }
+:root[data-theme="dark"] .san-pay .san-code { background: #3a2a1c; }
+:root[data-theme="dark"] .san-pay .san-code b { color: #ffc48a; }
+:root[data-theme="dark"] .san .och-rule em.neg { background: #450c0f; color: #ec797d; }
+:root[data-theme="dark"] .san .neg { color: #ec797d; }
+@media (max-width: 760px) {
+  .san-hero { grid-template-columns: 1fr; }
+  .san-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .san-stats span { padding: 10px; }
+  .san-stats b { font-size: 15px; }
+  .san-amounts { grid-template-columns: 1fr 1fr; }
+  .san-pay { grid-template-columns: 1fr; }
+  .san-badge { margin-left: 6px; }
+  .san-board .och-who .san-badge { display: none; }
+}
+.san button.ss-pill { border: 0; height: auto; padding: 10px 18px; }
+.san button.ss-pill.ghost { border: 1px solid var(--border); }
+@media (max-width: 760px) { .san-perks { grid-template-columns: 1fr 1fr; } .san-perks div { padding: 12px; } }

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { LEVELS, levelFor, nextLevel, SPARK_GIVE, SPARK_GET } from "@/lib/levels";
+import { LEVELS, levelFor, nextLevel, SPARK_GET_WRITING, SPARK_GET_OTHER, PREMIUM_SPARK_WEIGHT, PREMIUM_DAILY_BONUS, FIRST_SPARK_REWARD, APPROVE_REWARD } from "@/lib/levels";
 import { TERM_REWARD } from "@/lib/terms";
 import { JOIN_REWARD } from "@/lib/clubs-shared";
 import { POINTS_TOTAL } from "@/lib/profile";
+import { dailyLimit, givenToday } from "@/lib/spark";
 import Shell from "../components/Shell";
 import { Avatar, fmtK } from "../components/Bits";
 
@@ -15,8 +16,11 @@ const n = (x) => Number(x || 0).toLocaleString("en-US");
 
 // Одоо ажиллаж буй дүрэм
 const ACTIVE = [
-  ["Оч өгөх", "Нийтлэл, асуулт, хариулт гэх мэт контентод · нэг контентод 1 л удаа", `+${SPARK_GIVE}`],
-  ["Оч авах (контент, хариулт)", "Таны контентод хэн нэгэн оч өгөхөд · нэг хүнээс 1 л удаа", `+${SPARK_GET}`],
+  ["Нийтлэл, мэдээндээ оч авах", "Нэг хүнээс 1 л удаа · премиум гишүүний оч ×" + PREMIUM_SPARK_WEIGHT, `+${SPARK_GET_WRITING}`],
+  ["Асуулт, бодрол, хариултдаа оч авах", "Нэг хүнээс 1 л удаа · премиум гишүүний оч ×" + PREMIUM_SPARK_WEIGHT, `+${SPARK_GET_OTHER}`],
+  ["Нийтлэл редакцаар батлагдах", "Нийтлэгдэхэд 1 л удаа", `+${APPROVE_REWARD["Нийтлэл"]}`],
+  ["Мэдээ редакцаар батлагдах", "Нийтлэгдэхэд 1 л удаа", `+${APPROVE_REWARD["Мэдээ"]}`],
+  ["Анхны очоо өгөх", "Оч өгөх нь үнэгүй дохио: өгсөн хүнд оч нэмэгдэхгүй", `+${FIRST_SPARK_REWARD}`],
   ["Профайлаа бөглөх", "Талбар бүрд нэг л удаа", `+${POINTS_TOTAL} хүртэл`],
   ["Шинэ үг нэмэх", "Толинд нэмсэн үг батлагдвал", `+${TERM_REWARD}`],
   ["Клубт элсэх", "Анхны клубт 1 л удаа", `+${JOIN_REWARD}`],
@@ -28,7 +32,6 @@ const SOON = [
   ["Бодрол хуваалцах", "", "+100"],
   ["Зарлал хуваалцах", "Нийтлэгдвэл", "+200"],
   ["Эвент хуваалцах", "Нийтлэгдвэл", "+500"],
-  ["Нийтлэл бичих", "Түвшин 1-ээс · нийтлэгдвэл", "+1,000"],
   ["Анхны удаагийн шагнал", "Анхны хариулт, үг, нийтлэл тус бүрт 1 л удаа", "+50"],
 ];
 const PERIODS = [["week", "Энэ долоо хоног", "7 days"], ["month", "Энэ сар", "30 days"], ["all", "Бүх цаг", null]];
@@ -47,7 +50,7 @@ function LevelIcon({ l, size = 36 }) {
 export default async function Och({ searchParams }) {
   const sp = await searchParams;
   const period = PERIODS.find((p) => p[0] === sp.p) || PERIODS[0];
-  let user = null, top = [], me = null;
+  let user = null, top = [], me = null, today = 0;
   try {
     user = await getUser();
     await ensureSchema();
@@ -70,6 +73,7 @@ export default async function Och({ searchParams }) {
                me.gained::int AS gained, me.total::int AS total
         FROM s me WHERE me.id = ${user.id}`;
       me = r;
+      today = await givenToday(user.id);
     }
   } catch (e) {}
   const lv = user ? levelFor(user.points) : null;
@@ -79,6 +83,8 @@ export default async function Och({ searchParams }) {
   return (
     <Shell user={user} header="nav">
       <div className="ss-card och">
+        {sp.error && <p className="och-note bad">{sp.error}</p>}
+        {sp.ok && <p className="och-note info">{sp.ok}</p>}
         <h1>🔥 Асаж буй оч</h1>
         <p className="och-sub">Хамгийн их оч цуглуулж буй гишүүд. Түвшин зөвхөн өөрийн хөдөлмөрөөр олсон очоор ахина.</p>
         <div className="ss-feedtabs och-tabs">
@@ -137,6 +143,20 @@ export default async function Och({ searchParams }) {
           </>
         )}
 
+        <h2 id="daily">Өдрийн оч</h2>
+        {user ? (
+          <div className="och-me">
+            <div className="och-me-main">
+              <div>
+                <b>Өнөөдөр {today} / {dailyLimit(user)} оч өгсөн</b>
+                <span className="och-bar"><span style={{ width: `${Math.min(100, Math.round((today / dailyLimit(user)) * 100))}%`, background: "#ff9500" }} /></span>
+                <small>Оч нь «энэ сайн байна» гэсэн таны үнэлгээ. Хамгийн их таалагдсан бичээчдээ хадгалаарай. Шөнө 00:00-д шинэчлэгдэнэ.</small>
+              </div>
+            </div>
+          </div>
+        ) : <p className="och-hint">Өдөрт түвшнээсээ хамаарч 5–20 оч өгнө. Премиум гишүүн +{PREMIUM_DAILY_BONUS}.</p>}
+        <p className="och-note info">Сар бүр хамгийн их оч авсан 10 бичээч шагналын сангаас мөнгөн шагнал хүртэнэ. <Link href="/san">Шагналын сан, шилэн данс →</Link></p>
+
         <h2>Түвшин · очоос хамаарна</h2>
         <p className="och-hint">0 – 999 оч · Түвшин байхгүй (шинэ хэрэглэгч)</p>
         <div className="och-levels">
@@ -144,7 +164,7 @@ export default async function Och({ searchParams }) {
             <div key={l.n} className={"och-lrow" + (l.perkLocked ? " dim" : "") + (lv && lv.n === l.n ? " me" : "")}>
               <span className="och-num">{l.n}</span>
               <LevelIcon l={l} />
-              <span className="och-lname"><b>{l.name}</b><small>{l.tagline}</small></span>
+              <span className="och-lname"><b>{l.name}</b><small>{l.tagline} · өдөрт {l.daily} оч · шагнал ×{l.mult}</small></span>
               <span className="och-min">✦ {n(l.min)}+</span>
               <span className="och-perk">
                 {l.perkLocked ? <small>🔒 Эрх түгжээтэй</small> : <b>✓ {l.perk}</b>}
@@ -172,7 +192,8 @@ export default async function Och({ searchParams }) {
             <li>Нэг хүн нэг контентод нэг л удаа оч өгнө. Өөрийн контентод оч өгөх боломжгүй</li>
             <li>Хариултад өгсөн очоо буцаавал өгсөн, авсан оч хоёулаа буцаж хасагдана</li>
             <li>Хууран мэхлэлт илэрвэл оч хасаж түвшинг бууруулна</li>
-            <li>Очийг мөнгө болгон гаргах боломжгүй</li>
+            <li>Өдрийн хязгаартай: түвшнээсээ хамаарч өдөрт 5–20 оч өгнө (премиум +{PREMIUM_DAILY_BONUS})</li>
+            <li>Оч өөрөө мөнгө биш: зөвхөн шагналын сангийн байрыг тодорхойлно</li>
           </ul>
         </div>
 

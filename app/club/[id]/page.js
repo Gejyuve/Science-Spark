@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { membershipOf, clubFollowSet, BOARD_MAX, JOIN_REWARD, ymd } from "@/lib/clubs";
+import { membershipOf, clubFollowSet, BOARD_MAX, ymd } from "@/lib/clubs";
 import Shell from "../../components/Shell";
 import MiniMap from "../../components/MiniMap";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
@@ -141,7 +141,7 @@ export default async function ClubPage({ params, searchParams }) {
           )}
           {join === "inviteswitch" && mine && (
             <div className="cp-note warn">
-              <span>Та одоо «<b>{mine.name}</b>» клубын гишүүн. Урилгыг хүлээн авбал тэр клубээсээ гарч, анхны клубын урамшуулал ({JOIN_REWARD} оч) хасагдана. Дараа нь 1 сар шилжих боломжгүй.</span>
+              <span>Та одоо «<b>{mine.name}</b>» клубын гишүүн. Урилгыг хүлээн авбал тэр клубээсээ гарч, анхны клубын урамшууллын оч хасагдана. Дараа нь 1 сар шилжих боломжгүй.</span>
               <form action={acceptInvite}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="switch" value="1" /><button type="submit" className="cp-btn sm">Шилжих</button></form>
               <Link href={`/club/${id}`} className="cp-btn sm ghost">Болих</Link>
             </div>
@@ -226,7 +226,7 @@ export default async function ClubPage({ params, searchParams }) {
                     <small>Нэгдэх шалтгаан</small>
                     <p>{r.reason || "—"}</p>
                     {banned ? <em className="bad">1 сарын дотор шилжсэн · {ymd(until)} хүртэл хориотой</em>
-                      : r.other ? <em className="warn">{r.other} клубын гишүүн · зөвшөөрвөл {r.other}-аас хасагдаж, {JOIN_REWARD} оч хасагдана</em> : null}
+                      : r.other ? <em className="warn">{r.other} клубын гишүүн · зөвшөөрвөл {r.other}-аас хасагдаж, анхны клубын оч нь хасагдана</em> : null}
                   </div>
                   <small className="cp-req-date">{ymd(r.created_at)}</small>
                   <form action={decideRequests}><input type="hidden" name="club_id" value={id} /><input type="hidden" name="user_id" value={r.id} /><input type="hidden" name="decision" value="no" />

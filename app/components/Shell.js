@@ -138,8 +138,12 @@ async function RightRail({ user }) {
                 {I("comment18", 18)}<span>Клубын чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
               </Link>
             )}
-            <Link href={`/u/${user.id}`} className="ss-action">
-              {I("wallet", 18)}<span>Данс</span>
+            <Link href="/wallet" className="ss-action">
+              {I("wallet", 18)}<span>Хэтэвч</span>
+              {I("arrow", 14)}
+            </Link>
+            <Link href="/san" className="ss-action">
+              {I("gift", 18)}<span>Шагналын сан</span>
               {I("arrow", 14)}
             </Link>
             {(isStaff(user) || canApproveWords(user)) && (

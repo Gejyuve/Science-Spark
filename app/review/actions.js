@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { validCategory } from "@/lib/tree";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, canApproveEvents } from "@/lib/auth";
+import { APPROVE_REWARD } from "@/lib/levels";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
 
@@ -63,6 +64,13 @@ export async function decidePost(formData) {
   if (d.length) {
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
     await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
+    // Редакц чанарыг нь баталсан нийтлэл, мэдээнд бичээчид нэг удаа оч
+    const reward = APPROVE_REWARD[p.kind];
+    if (reward) {
+      await sql`INSERT INTO points_ledger (user_id, delta, reason)
+                SELECT ${p.author_id}, ${reward}, ${"approved:post:" + id}
+                WHERE NOT EXISTS (SELECT 1 FROM points_ledger WHERE reason = ${"approved:post:" + id})`;
+    }
   }
   revalidatePath("/");
   revalidatePath(`/post/${id}`);

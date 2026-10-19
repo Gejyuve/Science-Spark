@@ -5,6 +5,8 @@ import { Avatar } from "./Bits";
 import { toggleFollow } from "../posts/actions";
 
 const ICON = {
+  tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"],
+  withdraw_ok: ["wallet", "ok"], withdraw_no: ["wallet", "gray"],
   approved: ["f_shield", "ok"], reviewed: ["f_shield", "ok"], reviewer_ok: ["f_shield", "ok"],
   rejected: ["logic", "warn"], reviewer_no: ["f_shield", "gray"], removed: ["logic", "bad"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"],
@@ -24,7 +26,7 @@ function groupOf(n) {
 
 function Item({ n }) {
   const editors = FROM_EDITORS.includes(n.kind) || !n.actor_id;
-  const who = editors ? "Редакц" : `${n.initial}.${n.first_name}`;
+  const who = n.kind === "tip" && !n.actor_id ? "Нэрээ нууцалсан уншигч" : editors ? "Редакц" : `${n.initial}.${n.first_name}`;
   const [ic, tone] = ICON[n.kind] || ["bell", "gray"];
   return (
     <div className={"nf-item" + (n.read_at ? "" : " unread")}>

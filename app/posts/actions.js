@@ -7,7 +7,8 @@ import { getUser, isStaff, isSuperAdmin, isAdmin, needsName, canWrite } from "@/
 import { notify } from "@/lib/notify";
 import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
-import { SPARK_GIVE, SPARK_GET, writeLevel } from "@/lib/levels";
+import { SPARK_GET_WRITING, SPARK_GET_OTHER, WRITING_KINDS, writeLevel } from "@/lib/levels";
+import { sparkWeight, dailyLimit, givenToday, rewardFirstSpark } from "@/lib/spark";
 import { ownImage } from "@/lib/images";
 import { validCategory } from "@/lib/tree";
 import { cleanSources, bodyRule } from "@/lib/md";
@@ -86,8 +87,16 @@ export async function addComment(formData) {
   revalidatePath("/");
 }
 
-// Оч өгөх: нэг хүн нэг нийтлэлд нэг л удаа, өөртөө өгөх боломжгүй.
-// Зохиогчид +1 оч очны дансанд (ledger) бичигдэнэ.
+// Өдрийн очны хязгаар дууссан бол буцаана (хуудас бүр error-г харуулдаггүй тул очны хуудас руу)
+async function checkDaily(user) {
+  const limit = dailyLimit(user);
+  if ((await givenToday(user.id)) >= limit) {
+    redirect(`/och?error=${encodeURIComponent(`Өнөөдрийн ${limit} оч дууслаа. Маргааш дахин өгөх боломжтой. Оч цөөн байх тусам илүү үнэ цэнэтэй.`)}#daily`);
+  }
+}
+
+// Оч өгөх: нэг хүн нэг нийтлэлд нэг л удаа, өөртөө өгөх боломжгүй, өдрийн хязгаартай.
+// Оч өгсөн хүнд оноо өгөхгүй (анхны очоос бусад). Зохиогч нийтлэл, мэдээнд +10, бусдад +5 авна; премиум оч 2 дахин.
 export async function sparkPost(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
@@ -95,16 +104,19 @@ export async function sparkPost(formData) {
   const postId = Number(formData.get("post_id"));
   if (!Number.isInteger(postId)) return;
   await ensureSchema();
-  const post = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
+  const post = await sql`SELECT author_id, kind FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!post.length || post[0].author_id === user.id) return;
+  if ((await sql`SELECT 1 FROM sparks WHERE post_id = ${postId} AND user_id = ${user.id}`).length) return;
+  await checkDaily(user);
+  const w = sparkWeight(user);
   const ins = await sql`
-    INSERT INTO sparks (post_id, user_id) VALUES (${postId}, ${user.id})
+    INSERT INTO sparks (post_id, user_id, weight) VALUES (${postId}, ${user.id}, ${w})
     ON CONFLICT DO NOTHING RETURNING post_id`;
   if (ins.length) {
-    // Очны учир: өгсөн хүнд +5, контентын эзэнд +1
+    const get = (WRITING_KINDS.includes(post[0].kind) ? SPARK_GET_WRITING : SPARK_GET_OTHER) * w;
     await sql`INSERT INTO points_ledger (user_id, delta, reason)
-              VALUES (${post[0].author_id}, ${SPARK_GET}, ${"spark:post:" + postId + ":from:" + user.id}),
-                     (${user.id}, ${SPARK_GIVE}, ${"spark_give:post:" + postId})`;
+              VALUES (${post[0].author_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
+    await rewardFirstSpark(user.id);
   }
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
@@ -373,18 +385,26 @@ export async function likeComment(formData) {
   const [c] = await sql`SELECT c.author_id, c.post_id FROM comments c JOIN posts p ON p.id = c.post_id
                         WHERE c.id = ${id} AND p.status IN ('published', 'discussion')`;
   if (!c || c.author_id === user.id) return;
-  // Хариултад оч: өгсөн хүнд +5, хариултын эзэнд +1. Буцаавал очийг мөн буцаана.
+  // Хариултад оч: хариултын эзэнд +5 (премиум оч 2 дахин). Буцаавал олгосон очийг (хуучин дүрмийн
+  // өгсөн хүний +5-ыг ч) бүртгэлээс үлдэгдлээр нь тооцож буцаана.
   const del = await sql`DELETE FROM comment_likes WHERE comment_id = ${id} AND user_id = ${user.id} RETURNING 1`;
   if (del.length) {
+    const got = `spark:comment:${id}:from:${user.id}`, gotBack = `unspark:comment:${id}:from:${user.id}`;
+    const gave = `spark_give:comment:${id}`, gaveBack = `unspark_give:comment:${id}`;
     await sql`INSERT INTO points_ledger (user_id, delta, reason)
-              VALUES (${c.author_id}, ${-SPARK_GET}, ${"unspark:comment:" + id + ":from:" + user.id}),
-                     (${user.id}, ${-SPARK_GIVE}, ${"unspark_give:comment:" + id})`;
+              SELECT ${c.author_id}, -s, ${gotBack} FROM (SELECT COALESCE(SUM(delta), 0)::int AS s FROM points_ledger
+                WHERE user_id = ${c.author_id} AND reason IN (${got}, ${gotBack})) t WHERE s > 0`;
+    await sql`INSERT INTO points_ledger (user_id, delta, reason)
+              SELECT ${user.id}, -s, ${gaveBack} FROM (SELECT COALESCE(SUM(delta), 0)::int AS s FROM points_ledger
+                WHERE user_id = ${user.id} AND reason IN (${gave}, ${gaveBack})) t WHERE s > 0`;
   } else {
-    const ins = await sql`INSERT INTO comment_likes (comment_id, user_id) VALUES (${id}, ${user.id}) ON CONFLICT DO NOTHING RETURNING 1`;
+    await checkDaily(user);
+    const w = sparkWeight(user);
+    const ins = await sql`INSERT INTO comment_likes (comment_id, user_id, weight) VALUES (${id}, ${user.id}, ${w}) ON CONFLICT DO NOTHING RETURNING 1`;
     if (ins.length) {
       await sql`INSERT INTO points_ledger (user_id, delta, reason)
-                VALUES (${c.author_id}, ${SPARK_GET}, ${"spark:comment:" + id + ":from:" + user.id}),
-                       (${user.id}, ${SPARK_GIVE}, ${"spark_give:comment:" + id})`;
+                VALUES (${c.author_id}, ${SPARK_GET_OTHER * w}, ${"spark:comment:" + id + ":from:" + user.id})`;
+      await rewardFirstSpark(user.id);
     }
   }
   revalidatePath(`/post/${c.post_id}`);

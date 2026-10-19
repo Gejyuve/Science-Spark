@@ -34,7 +34,7 @@ export default async function Join({ params }) {
     if (mine?.club_id === id) redirect(`/club/${id}`);
     cd = await cooldownOf(user.id);
     pending = (await sql`SELECT r.club_id, c.name FROM club_requests r JOIN clubs c ON c.id = r.club_id WHERE r.user_id = ${user.id}`)[0] || null;
-    lose = mine ? (await rewardBalance(user.id)) > 0 : false;
+    lose = mine ? Math.max(0, await rewardBalance(user.id)) : 0; // хасагдах оч
     first = !(await hadFirstReward(user.id));
     if (user.restricted_at) blockMsg = "Таны эрх хязгаарлагдсан тул клубт нэгдэх боломжгүй.";
     else if (mine?.role === "leader") blockMsg = `Та «${mine.name}» клубын удирдагч тул өөр клубт шилжих боломжгүй.`;
@@ -76,13 +76,13 @@ export default async function Join({ params }) {
           <>
             {blockMsg && <p className="jn-box bad"><span className="jn-ic">⛔</span><span>{blockMsg}</span></p>}
             {!blockMsg && mine && (
-              <p className="jn-box warn"><span className="jn-ic">⚠</span><span>Та одоо «{mine.name}» клубын гишүүн байна. «{c.name}»-д нэгдсэнээр «{mine.name}»-аас гишүүнчлэл хасагдана{lose ? `, ${JOIN_REWARD} оч хасагдана` : ""}. Шинэ клубт оч олгогдохгүй. Дараа нь 1 сарын дотор дахин шилжих боломжгүй.</span></p>
+              <p className="jn-box warn"><span className="jn-ic">⚠</span><span>Та одоо «{mine.name}» клубын гишүүн байна. «{c.name}»-д нэгдсэнээр «{mine.name}»-аас гишүүнчлэл хасагдана{lose ? `, ${lose} оч хасагдана` : ""}. Шинэ клубт оч олгогдохгүй. Дараа нь 1 сарын дотор дахин шилжих боломжгүй.</span></p>
             )}
             {mine || !first ? (
               <div className={"jn-reward minus" + (blockMsg ? " dim" : "")}>
                 <img src="/icons/sparkle.svg" width={18} height={18} alt="" />
-                <span><b>{mine && lose ? `Анхны клубээсээ л ${JOIN_REWARD} оч авдаг. Шилжих тул ${JOIN_REWARD} оч хасагдана` : `Анхны клубээсээ л ${JOIN_REWARD} оч авдаг`}</b><small>Клуб өөрийн оч байхгүй, гишүүдийн очийн нийлбэр харагдана. Таны оч шилжсэн клубт нэмэгдэж харагдана.</small></span>
-                <em>{mine && lose ? `−${JOIN_REWARD}` : "0"}</em>
+                <span><b>{mine && lose ? `Анхны клубээсээ л оч авдаг. Шилжих тул ${lose} оч хасагдана` : `Анхны клубээсээ л ${JOIN_REWARD} оч авдаг`}</b><small>Клуб өөрийн оч байхгүй, гишүүдийн очийн нийлбэр харагдана. Таны оч шилжсэн клубт нэмэгдэж харагдана.</small></span>
+                <em>{mine && lose ? `−${lose}` : "0"}</em>
               </div>
             ) : (
               <div className="jn-reward">
