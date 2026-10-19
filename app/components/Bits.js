@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cache } from "react";
 import { relTime } from "@/lib/format";
 import { sql } from "@/lib/db";
+import { levelFor } from "@/lib/levels";
 import { toggleFollow } from "../posts/actions";
 
 // Жижиг дахин ашиглах хэсгүүд: аватар, оч/дагагчийн тоо
@@ -93,13 +94,44 @@ export function FollowBtn({ id, viewer, following }) {
   );
 }
 
-// Товч профайл: зураг, нэр, оч · дагагч, дагах товч
-export function Person({ id, initial, first_name, avatar = null, points = 0, followers = 0, size = 40, viewer, following, className = "" }) {
+// Дэмжигчдийн жагсаалт: цөөхөн тул бүгдийг нэг асуулгаар авч 60 сек хадгална
+const SUP_TTL = 60000;
+let supCache = { at: 0, ids: null };
+export const supporterSet = cache(async () => {
+  if (supCache.ids && Date.now() - supCache.at < SUP_TTL) return supCache.ids;
+  try {
+    const rows = await sql`SELECT id FROM users WHERE premium_until > now()`;
+    supCache = { at: Date.now(), ids: new Set(rows.map((r) => r.id)) };
+  } catch (e) {
+    return supCache.ids || new Set();
+  }
+  return supCache.ids;
+});
+
+// Нэрний хажуугийн тэмдэг: түвшин, дэмжигч бол аянга
+// Тэмдэг саарал байж, хулгана ойртоход эсвэл хааяа анивчихад өнгөө гаргана. seed нь анивчих мөчийг хүн бүрт ялгана.
+export function NameBadges({ points = 0, supporter = false, size = 16, seed = points }) {
+  const l = levelFor(points);
+  if (!l.n && !supporter) return null;
+  return (
+    <span className="ss-nbadges" style={{ "--nb-d": `-${(Number(seed) * 7.3) % 16}s` }}>
+      {l.n > 0 && <img src={`/icons/lv${l.n}.svg`} width={size} height={size} alt={`Түвшин ${l.n} · ${l.name}`} title={`Түвшин ${l.n} · ${l.name}`} />}
+      {supporter && <img src="/icons/bolt.svg" width={size} height={size} alt="Дэмжигч" title="Шинжлэх ухааныг дэмжигч" />}
+    </span>
+  );
+}
+
+// Товч профайл: зураг, нэр, түвшин · дэмжигч тэмдэг, оч · дагагч, дагах товч
+export async function Person({ id, initial, first_name, avatar = null, points = 0, followers = 0, size = 40, viewer, following, className = "" }) {
+  const supporter = (await supporterSet()).has(id);
   return (
     <div className={"ss-person " + className}>
       <Link href={`/u/${id}`} className="ss-person-av"><Avatar user={{ id, first_name, avatar }} size={size} /></Link>
       <div>
-        <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? (initial ? `${initial}.${first_name}` : first_name) : "Шинэ хэрэглэгч"}</b></Link>
+        <span className="ss-person-line">
+          <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? (initial ? `${initial}.${first_name}` : first_name) : "Шинэ хэрэглэгч"}</b></Link>
+          <NameBadges points={points} supporter={supporter} seed={id} />
+        </span>
         <span className="ss-statrow">
           <Stat points={points} followers={followers} followed={!!following?.has(id)} />
           <FollowBtn id={id} viewer={viewer} following={following} />
