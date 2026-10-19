@@ -315,6 +315,25 @@ export async function addBounty(formData) {
   back(`ok=${encodeURIComponent(`${fmtMnt(amount)}-ийн шагнал тавилаа. Мэдлэгээ хуваалцах хүмүүсийг урамшуулсанд баярлалаа!`)}`);
 }
 
+// Асуулт илгээсний дараах баярын цонхноос шагнал нэмэх: хуудас шилжихгүй, үр дүнг буцаана
+export async function popupBounty(postId, raw) {
+  const user = await getUser();
+  if (!user) return { error: "Нэвтэрнэ үү" };
+  const amount = Number(raw);
+  if (!Number.isInteger(postId) || !Number.isInteger(amount) || amount < BOUNTY_MIN || amount > BOUNTY_MAX) {
+    return { error: `Шагналын дүнг ${fmtMnt(BOUNTY_MIN)}-${fmtMnt(BOUNTY_MAX)} хооронд оруулна уу` };
+  }
+  await ensureSchema();
+  const [p] = await sql`SELECT id, title FROM posts WHERE id = ${postId} AND author_id = ${user.id} AND kind = 'Асуулт' AND status = 'published'`;
+  if (!p) return { error: "Асуулт олдсонгүй" };
+  if ((await walletBalance(user.id)) < amount) return { error: "Хэтэвчинд тань хүрэлцэх мөнгө алга. Хэтэвчээ цэнэглээд асуултынхаа хуудаснаас нэмж болно.", low: true };
+  if (!(await lockBounty(user.id, postId, p.title, amount))) return { error: "Шагнал тавьж чадсангүй. Энэ асуулт аль хэдийн шагналтай байж магадгүй." };
+  revalidatePath("/");
+  revalidatePath(`/post/${postId}`);
+  revalidatePath("/wallet");
+  return { ok: true, amount };
+}
+
 // Асуугч зөв гэж үзсэн хариултаа сонгоход шагнал хариулагчийн хэтэвч рүү орно
 export async function awardBounty(formData) {
   const user = await getUser();
@@ -494,6 +513,8 @@ export async function quickPost(formData) {
     kind, status, title: kind === "Асуулт" || kind === "Бодрол" ? "" : title, href: `/post/${rows[0].id}`,
     // Клубын нэрээр хуваалцсан бүтээлийн оч клубт очно
     later: status === "published" && !clubId ? [["Уншигч бүрээс авах оч", SPARK_GET_OTHER]] : [],
+    // Шагналгүй асуулт: цонхонд «Шагнал нэмэх үү?» санал гарна
+    ask: kind === "Асуулт" && !bounty ? { id: rows[0].id, w: await walletBalance(user.id).catch(() => 0) } : null,
   });
   if (bounty > 0) {
     const ok = await lockBounty(user.id, rows[0].id, title, bounty);
