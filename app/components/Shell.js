@@ -177,7 +177,7 @@ async function RightRail({ user }) {
           </div>
         </div>
       ) : (
-        <Link href="/register" className="ss-cta">
+        <Link href="/login" className="ss-cta">
           {I("flame", 32)}
           <span>Асаах</span>
           {I("chev", 14)}
