@@ -5,6 +5,8 @@ import { getUser, isPremium } from "@/lib/auth";
 import { walletBalance, fmtMnt, KIND_LABEL, REQUEST_KIND, REQUEST_STATUS, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import { requestWithdrawal } from "../san/actions";
 import Shell from "../components/Shell";
+import SupportModal from "../components/SupportModal";
+import { supportModalProps } from "@/lib/supportModal";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Миний хэтэвч · Science Spark" };
@@ -56,7 +58,7 @@ export default async function Wallet({ searchParams }) {
           <span><b>{history.filter((h) => h.kind === "prize").length}</b><small>шагнал хүртсэн</small></span>
         </div>
         <div className="san-cta">
-          <Link href="/san/support?kind=premium" className="ss-pill">{isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"}</Link>
+          <SupportModal kind="premium" label={isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill" {...supportModalProps(user)} />
           <Link href="/san" className="ss-pill ghost">Шагналын сан</Link>
         </div>
 
