@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { audit } from "@/lib/admin";
 import { hashPassword, verifyPassword, createSession, destroySession, getUser } from "@/lib/auth";
+import { loadSettings } from "@/lib/settings";
 
 const back = (path, msg) => redirect(`${path}?error=${encodeURIComponent(msg)}`);
 
@@ -12,6 +13,7 @@ export async function register(formData) {
   const password = String(formData.get("password") || "");
   if (!/^\S+@\S+\.\S+$/.test(email)) back("/register", "Имэйл хаяг буруу байна");
   if (password.length < 8) back("/register", "Нууц үг хамгийн багадаа 8 тэмдэгт байна");
+  if (!(await loadSettings()).registrationOpen) back("/register", "Шинэ бүртгэл түр хаалттай байна");
 
   await ensureSchema();
   const exists = await sql`SELECT 1 FROM users WHERE email = ${email}`;

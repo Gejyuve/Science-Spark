@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { register } from "../auth/actions";
 import AuthCard, { Field } from "../components/AuthCard";
+import { loadSettings } from "@/lib/settings";
 
 export const metadata = { title: "Асаах · Science Spark" };
 
 export default async function RegisterPage({ searchParams }) {
   const { error } = await searchParams;
+  if (!(await loadSettings()).registrationOpen) {
+    return (
+      <AuthCard action="/" button="Нүүр хуудас руу" footer={<p className="au-foot">Бүртгэлтэй юу? <Link href="/login">Нэвтрэх</Link></p>}>
+        <p className="au-closed">Шинэ бүртгэл түр хаалттай байна. Удахгүй дахин нээгдэнэ ✦</p>
+      </AuthCard>
+    );
+  }
   return (
     <AuthCard
       action={register}
