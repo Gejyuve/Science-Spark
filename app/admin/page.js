@@ -115,7 +115,7 @@ export default async function Overview() {
         <Stat label="30 хоногт хянасан" value={s.reviewed} note={`Дундаж ${s.avg_h} цаг`} />
         <Stat label="Буцаасан" value={`${rejPct}%`} note={`${s.rejected} контент`} />
         <Stat label="Идэвхтэй админ" value={`${s.staff_active} / ${s.staff}`} note="30 хоногт хянасан" />
-        <Stat label="Логик алдаа" value={s.logic} note="шийдээгүй мэдэгдэл" tone={s.logic ? "warn" : ""} />
+        <Stat label="Гомдол" value={s.logic} note="шийдээгүй гомдол, мэдэгдэл" tone={s.logic ? "warn" : ""} />
       </div>
 
       {money && (

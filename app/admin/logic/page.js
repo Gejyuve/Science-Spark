@@ -5,9 +5,9 @@ import { decideLogic } from "../actions";
 import Head, { Tabs, Chip, Flash, who } from "../_c/Head";
 
 const TABS = [["", "Шийдвэрлээгүй"], ["resolved", "Шийдвэрлэсэн"], ["dismissed", "Татгалзсан"]];
-const TYPES = [["", "Бүгд"], ["error", "Логик алдаа"], ["complaint", "Гомдол"], ["defense", "Сануулгын хариу"]];
+const TYPES = [["", "Бүгд"], ["error", "Логик алдаа"], ["complaint", "Бичээчийн гомдол"], ["defense", "Сануулгын хариу"]];
 const TYPE_TONE = { error: "teal", complaint: "warn", defense: "bad" };
-const TYPE_LABEL = { error: "Логик алдаа", complaint: "Гомдол", defense: "Сануулгын хариу" };
+const TYPE_LABEL = { error: "Логик алдаа", complaint: "Бичээчийн гомдол", defense: "Сануулгын хариу" };
 
 // Уншигчдын мэдэгдсэн логик алдаа, бичээчийн гомдол (редакцын засвар, нуусан контентод), сануулгад бичсэн хариу
 export default async function Logic({ searchParams }) {
@@ -40,7 +40,7 @@ export default async function Logic({ searchParams }) {
   const from = q(st, type);
   return (
     <>
-      <Head user={user} title="Логик алдаа" sub="Уншигчдын мэдэгдсэн алдаа, бичээчийн гомдол, сануулгад бичсэн хариу · шийдвэрлэвэл бичсэн хүнд мэдэгдэл очно" />
+      <Head user={user} title="Гомдол" sub="Уншигчдын мэдэгдсэн алдаа, бичээчийн гомдол, сануулгад бичсэн хариу · шийдвэрлэвэл бичсэн хүнд мэдэгдэл очно" />
       <Flash ok={sp.ok} error={sp.error} />
       <Tabs cur={st === "open" ? "" : st} href={(k) => q(k, type)} tabs={TABS.map(([k, l]) => [k, l, c[k || "open"] || 0])} />
       <Tabs cur={type} href={(k) => q(st, k)} tabs={TYPES.map(([k, l]) => [k, l, k ? tc[k] || 0 : Object.values(tc).reduce((x, y) => x + y, 0)])} />
