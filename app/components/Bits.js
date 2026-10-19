@@ -109,11 +109,12 @@ export const supporterSet = cache(async () => {
 });
 
 // Нэрний хажуугийн тэмдэг: түвшин, дэмжигч бол аянга
-export function NameBadges({ points = 0, supporter = false, size = 16 }) {
+// Тэмдэг саарал байж, хулгана ойртоход эсвэл хааяа анивчихад өнгөө гаргана. seed нь анивчих мөчийг хүн бүрт ялгана.
+export function NameBadges({ points = 0, supporter = false, size = 16, seed = points }) {
   const l = levelFor(points);
   if (!l.n && !supporter) return null;
   return (
-    <span className="ss-nbadges">
+    <span className="ss-nbadges" style={{ "--nb-d": `-${(Number(seed) * 7.3) % 16}s` }}>
       {l.n > 0 && <img src={`/icons/lv${l.n}.svg`} width={size} height={size} alt={`Түвшин ${l.n} · ${l.name}`} title={`Түвшин ${l.n} · ${l.name}`} />}
       {supporter && <img src="/icons/bolt.svg" width={size} height={size} alt="Дэмжигч" title="Шинжлэх ухааныг дэмжигч" />}
     </span>
@@ -129,7 +130,7 @@ export async function Person({ id, initial, first_name, avatar = null, points = 
       <div>
         <span className="ss-person-line">
           <Link href={`/u/${id}`} className="ss-person-name"><b>{first_name ? (initial ? `${initial}.${first_name}` : first_name) : "Шинэ хэрэглэгч"}</b></Link>
-          <NameBadges points={points} supporter={supporter} />
+          <NameBadges points={points} supporter={supporter} seed={id} />
         </span>
         <span className="ss-statrow">
           <Stat points={points} followers={followers} followed={!!following?.has(id)} />

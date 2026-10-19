@@ -88,7 +88,7 @@ export default async function San({ searchParams }) {
           {top.map((r) => (
             <Link key={r.id} href={`/u/${r.id}`} className={"och-brow" + (user?.id === r.id ? " me" : "")}>
               <span>{r.rank}</span>
-              <span className="och-who"><Avatar user={r} size={28} /><b>{r.initial}.{r.first_name}</b>{isPremium(r) && <img className="san-bolt" src="/icons/bolt.svg" width={15} height={15} alt="Дэмжигч" title="Шинжлэх ухааныг дэмжигч" />}</span>
+              <span className="och-who"><Avatar user={r} size={28} /><b>{r.initial}.{r.first_name}</b>{isPremium(r) && <span className="ss-nbadges san-bolt" style={{ "--nb-d": `-${(r.id * 7.3) % 16}s` }}><img src="/icons/bolt.svg" width={15} height={15} alt="Дэмжигч" title="Шинжлэх ухааныг дэмжигч" /></span>}</span>
               <span><Chip l={r.level} /></span>
               <span className="och-plus">{r.sparks}</span>
               <span>{fmtMnt(r.amount)}</span>

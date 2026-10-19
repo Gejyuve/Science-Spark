@@ -116,7 +116,7 @@ async function RightRail({ user }) {
           <Link href={`/u/${user.id}`} className="ss-person big">
             <Avatar user={user} size={40} />
             <div>
-              <span className="ss-person-line"><b>{displayName(user)}</b><NameBadges points={user.points} supporter={isPremium(user)} /></span>
+              <span className="ss-person-line"><b>{displayName(user)}</b><NameBadges points={user.points} supporter={isPremium(user)} seed={user.id} /></span>
               <Stat points={user.points} followers={followers} link={false} />
             </div>
           </Link>

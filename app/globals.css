@@ -2961,6 +2961,10 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 /* Нэрний хажуугийн тэмдэг: түвшин, дэмжигчийн аянга */
 .ss-person-line { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
 .ss-nbadges { display: inline-flex; align-items: center; gap: 3px; flex: none; vertical-align: middle; }
-.ss-nbadges img { display: block; }
+.ss-nbadges img { display: block; filter: grayscale(1) opacity(.55); transition: filter .25s ease; animation: nb-blink 16s ease-in-out var(--nb-d, 0s) infinite; }
+.ss-person:hover .ss-nbadges img, .och-brow:hover .ss-nbadges img, .ss-nbadges:hover img,
+.pu-name .ss-nbadges img { filter: none; animation: none; }
+@keyframes nb-blink { 0%, 86%, 100% { filter: grayscale(1) opacity(.55); } 90%, 95% { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .ss-nbadges img { animation: none; } }
 .pu-name h1 .ss-nbadges { margin-left: 8px; gap: 5px; }
 .san-bolt { margin-left: 6px; flex: none; }
