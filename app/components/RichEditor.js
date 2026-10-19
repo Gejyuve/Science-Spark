@@ -262,7 +262,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
       )}
 
       <div className="wr-inserts">
-        <DictAdd className="wr-insert" label="Шинэ үгийн тайлбар нэмэх" loggedIn={loggedIn} icon={<img src="/icons/book18.svg" width={18} height={18} alt="" />} inEditor />
+        <DictAdd className="wr-insert" label="Шинэ үгийн тайлбар нэмэх" loggedIn={loggedIn} icon={<img src="/icons/book18.svg" width={18} height={18} alt="" />} />
         <button type="button" className="wr-insert" onClick={() => setDlg("src")}><img src="/icons/link18.svg" width={18} height={18} alt="" />Эх сурвалж нэмэх</button>
       </div>
 

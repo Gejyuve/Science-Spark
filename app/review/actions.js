@@ -9,6 +9,7 @@ import { APPROVE_REWARD } from "@/lib/levels";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
 import { recordRevision } from "@/lib/revisions";
+import { firstReward } from "@/lib/celebrate";
 import { TASK_KIND, REPORT_KIND, TASK_APPROVE_REWARD, REWARD_MIN, REWARD_MAX, AUTHOR_SHARE } from "@/lib/tasks-shared";
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
@@ -105,6 +106,7 @@ export async function decidePost(formData) {
                 SELECT ${p.author_id}, ${reward}, ${"approved:post:" + id}
                 WHERE NOT EXISTS (SELECT 1 FROM points_ledger WHERE reason = ${"approved:post:" + id})`;
     }
+    if (p.kind === "Нийтлэл" && !p.club_id) await firstReward(p.author_id, "article");
   }
   revalidatePath("/");
   revalidatePath(`/post/${id}`);

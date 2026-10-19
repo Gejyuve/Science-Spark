@@ -8,6 +8,8 @@ import { ownImage } from "@/lib/images";
 import { cleanSources, bodyRule } from "@/lib/md";
 import { latinShare, LATIN_LIMIT } from "@/lib/format";
 import { TASK_KIND, REPORT_KIND, TYPE_MAX, TYPE_LEN, leaderClub } from "@/lib/tasks";
+import { TASK_APPROVE_REWARD } from "@/lib/tasks-shared";
+import { celebrate } from "@/lib/celebrate";
 
 const back = (msg) => redirect(`/tasks/new?error=${encodeURIComponent(msg)}`);
 const t = (fd, k, n) => String(fd.get(k) || "").trim().replace(/\s+/g, " ").slice(0, n);
@@ -57,6 +59,7 @@ export async function createTask(fd) {
     VALUES (${user.id}, ${club.id}, ${TASK_KIND}, ${title}, ${subtitle}, ${body}, 'pending', ${image}, ${JSON.stringify(meta)}::jsonb)
     RETURNING id`;
   revalidatePath("/review", "layout");
+  await celebrate(user, { kind: TASK_KIND, status: "pending", title, href: `/post/${p.id}`, later: [["Редакц батлахад клубт", TASK_APPROVE_REWARD]] });
   redirect(`/post/${p.id}?ok=${encodeURIComponent("Даалгавар редакц руу илгээгдлээ. Батлагдмагц «Даалгавар» хуудсанд нийтлэгдэнэ.")}`);
 }
 
@@ -96,5 +99,6 @@ export async function createReport(fd) {
     VALUES (${user.id}, ${club.id}, ${taskId}, ${REPORT_KIND}, ${title}, ${subtitle}, ${body}, 'pending', ${image}, ${JSON.stringify(meta)}::jsonb)
     RETURNING id`;
   revalidatePath("/review", "layout");
+  await celebrate(user, { kind: REPORT_KIND, status: "pending", title, href: `/post/${p.id}` });
   redirect(`/post/${p.id}?ok=${encodeURIComponent("Тайлан редакц руу илгээгдлээ. Батлагдмагц нийтлэгдэж, клуб тань даалгаврын очийг авна.")}`);
 }

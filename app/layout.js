@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import ValidityMn from "./components/ValidityMn";
 import Ping from "./components/Ping";
+import Celebrate from "./components/Celebrate";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"], display: "swap", variable: "--font-inter" });
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
       <body>
         <ValidityMn />
         <Ping />
+        <Celebrate />
         {children}
       </body>
     </html>

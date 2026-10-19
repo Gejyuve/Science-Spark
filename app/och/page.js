@@ -4,6 +4,7 @@ import { ensureSchema } from "@/lib/db";
 import { LEVELS, levelFor, nextLevel, SPARK_GET_WRITING, SPARK_GET_OTHER, PREMIUM_SPARK_WEIGHT, PREMIUM_DAILY_BONUS, FIRST_SPARK_REWARD, APPROVE_REWARD } from "@/lib/levels";
 import { TERM_REWARD } from "@/lib/terms";
 import { JOIN_REWARD } from "@/lib/clubs-shared";
+import { FIRST_REWARD } from "@/lib/celebrate";
 import { POINTS_TOTAL } from "@/lib/profile";
 import { dailyLimit, givenToday } from "@/lib/spark";
 import Shell from "../components/Shell";
@@ -23,6 +24,7 @@ const ACTIVE = [
   ["Профайлаа бөглөх", "Талбар бүрд нэг л удаа", `+${POINTS_TOTAL} хүртэл`],
   ["Шинэ үг нэмэх", "Толинд нэмсэн үг батлагдвал", `+${TERM_REWARD}`],
   ["Клубт элсэх", "Анхны клубт 1 л удаа", `+${JOIN_REWARD}`],
+  ["Анхны удаагийн шагнал", "Бусдын асуултад өгсөн анхны хариулт, батлагдсан анхны үг, нийтлэл тус бүрт 1 л удаа", `+${FIRST_REWARD}`],
 ];
 // Удахгүй нэвтрэх (Figma: Очны дүрэм)
 const SOON = [
@@ -31,7 +33,6 @@ const SOON = [
   ["Бодрол хуваалцах", "", "+100"],
   ["Зарлал хуваалцах", "Нийтлэгдвэл", "+200"],
   ["Эвент хуваалцах", "Нийтлэгдвэл", "+500"],
-  ["Анхны удаагийн шагнал", "Анхны хариулт, үг, нийтлэл тус бүрт 1 л удаа", "+50"],
 ];
 function LevelIcon({ l, size = 36 }) {
   if (!l.n) return <span className="och-lv" style={{ "--c": l.color, width: size, height: size }}>·</span>;
