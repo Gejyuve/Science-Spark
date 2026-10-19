@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
-import { monthBoard, splitPrizes, currentPeriod, prevPeriod, periodLabel, daysLeftInPeriod, TOP_N, STAR_SHARE, PAIR_CAP, GIVER_MIN_DAYS } from "@/lib/spark";
+import { monthBoard, splitPrizes, currentPeriod, prevPeriod, periodLabel, periodEnd, TOP_N, STAR_SHARE, PAIR_CAP, GIVER_MIN_DAYS } from "@/lib/spark";
 import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import Shell from "../components/Shell";
 import { Avatar } from "../components/Bits";
+import Countdown from "../components/Countdown";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Шагналын сан · Science Spark" };
@@ -46,7 +47,6 @@ export default async function San({ searchParams }) {
   const top = prizes.filter((p) => p.kind === "top");
   const star = prizes.find((p) => p.kind === "star");
   const mine = user ? board.findIndex((r) => r.id === user.id) : -1;
-  const left = daysLeftInPeriod();
 
   return (
     <Shell user={user} active="/san" header="nav">
@@ -56,20 +56,20 @@ export default async function San({ searchParams }) {
         <section className="san-top">
           <div className="san-rays" aria-hidden="true" />
           <div className="san-top-in">
-            <small className="san-kicker">✦ Шагналын сан · {periodLabel(period)}</small>
+            <Countdown end={periodEnd(period)} initial={Math.max(0, periodEnd(period) - Date.now())} />
+            <small className="san-kicker">✦ Шагналын сан</small>
             <b className="san-amount">{fmtMnt(pool)}</b>
-            <p>Монголын шинжлэх ухааны бичээчид, ирээдүйн залуу судлаачдыг хамтдаа дэмжье. Сар бүрийн эцэст хамгийн их оч авсан {TOP_N} бичээч шагнал хүртэнэ.</p>
+            <p>Монголын шинжлэх ухаан түгээгч, мэдлэг цацруулагч, идэвхтэн бичээчдийг хамтдаа дэмжие.</p>
             <div className="san-cta">
               <Link href="/san/support?kind=premium" className="ss-pill">{user && isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"}</Link>
-              <Link href="/san/support?kind=pool" className="ss-pill ghost">Сан руу хандив өгөх</Link>
-              {user && <Link href="/wallet" className="ss-pill ghost">Миний хэтэвч</Link>}
+              <Link href="/san/support?kind=pool" className="ss-pill ghost">Хандив өгөх</Link>
             </div>
             <div className="san-stats">
-              <span><b>{left}</b><small>хоног үлдлээ</small></span>
               <span><b>{stats.supporters}</b><small>дэмжигч</small></span>
               <span><b>{stats.donors}</b><small>хандивлагч</small></span>
               <span><b>{board.length}</b><small>оч авсан бичээч</small></span>
             </div>
+            <small className="san-period">{periodLabel(period)}</small>
           </div>
         </section>
 

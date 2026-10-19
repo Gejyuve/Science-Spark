@@ -2885,3 +2885,17 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .san-board .och-brow { grid-template-columns: 18px minmax(0, 1fr) 40px 76px; }
   .san-board .och-brow > span:nth-child(3) { display: none; }
 }
+.san-count { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 6px; }
+.san-count > small { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.san-count > div { display: flex; gap: 8px; }
+.san-count span { display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 8px 6px 6px; border-radius: 12px; background: rgba(255, 255, 255, .8); box-shadow: 0 2px 8px -4px rgba(0, 128, 117, .4); }
+.san-count b { font-size: 22px; line-height: 1.1; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.san-count i { font-style: normal; font-size: 10px; color: var(--muted); }
+.san-top .san-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.san-period { margin-top: 2px; font-size: 11px; color: var(--muted); }
+:root[data-theme="dark"] .san-count span { background: rgba(0, 0, 0, .3); }
+@media (max-width: 760px) {
+  .san-count span { min-width: 54px; }
+  .san-count b { font-size: 18px; }
+  .san-top .san-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
