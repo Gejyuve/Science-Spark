@@ -15,6 +15,8 @@ export default async function Logic({ searchParams }) {
   const sp = await searchParams;
   const st = sp.s === "resolved" || sp.s === "dismissed" ? sp.s : "open";
   const type = TYPE_LABEL[sp.t] ? sp.t : "";
+  const q = String(sp.q || "").trim().slice(0, 100);
+  const like = `%${q}%`;
   const rows = await sql`
     SELECT r.id, r.type, r.body, r.status, r.note, r.created_at, r.resolved_at, r.revision_id, p.id AS pid, p.title, p.kind,
       w.note AS warning, w.created_at AS warned_at,
@@ -25,27 +27,41 @@ export default async function Logic({ searchParams }) {
     LEFT JOIN users a ON a.id = p.author_id
     LEFT JOIN user_warnings w ON w.id = r.warning_id
     WHERE r.status = ${st} AND (${type} = '' OR r.type = ${type})
+      AND (${q} = '' OR r.body ILIKE ${like} OR r.note ILIKE ${like} OR p.title ILIKE ${like} OR w.note ILIKE ${like}
+        OR u.first_name ILIKE ${like} OR u.email ILIKE ${like} OR a.first_name ILIKE ${like} OR a.email ILIKE ${like})
     ORDER BY CASE WHEN ${st} = 'open' THEN r.created_at END ASC, r.created_at DESC LIMIT 100`;
-  const counts = await sql`SELECT status, COUNT(*)::int AS n FROM logic_reports WHERE (${type} = '' OR type = ${type}) GROUP BY status`;
-  const c = Object.fromEntries(counts.map((x) => [x.status, x.n]));
-  const typeCounts = await sql`SELECT type, COUNT(*)::int AS n FROM logic_reports WHERE status = ${st} GROUP BY type`;
-  const tc = Object.fromEntries(typeCounts.map((x) => [x.type, x.n]));
-  const q = (s, t) => {
+  // Хайлттай таарсан мөрүүд (таб дээрх тоонд мөн хэрэглэнэ)
+  const hits = await sql`
+    SELECT r.status, r.type, COUNT(*)::int AS n FROM logic_reports r
+    JOIN users u ON u.id = r.user_id
+    LEFT JOIN posts p ON p.id = r.post_id
+    LEFT JOIN users a ON a.id = p.author_id
+    LEFT JOIN user_warnings w ON w.id = r.warning_id
+    WHERE ${q} = '' OR r.body ILIKE ${like} OR r.note ILIKE ${like} OR p.title ILIKE ${like} OR w.note ILIKE ${like}
+      OR u.first_name ILIKE ${like} OR u.email ILIKE ${like} OR a.first_name ILIKE ${like} OR a.email ILIKE ${like}
+    GROUP BY r.status, r.type`;
+  const c = {}, tc = {};
+  for (const h of hits) {
+    if (!type || h.type === type) c[h.status] = (c[h.status] || 0) + h.n;
+    if (h.status === st) tc[h.type] = (tc[h.type] || 0) + h.n;
+  }
+  const url = (s, t) => {
     const p = new URLSearchParams();
     if (s && s !== "open") p.set("s", s);
     if (t) p.set("t", t);
+    if (q) p.set("q", q);
     const x = p.toString();
     return `/admin/logic${x ? `?${x}` : ""}`;
   };
-  const from = q(st, type);
+  const from = url(st, type);
   return (
     <>
-      <Head user={user} title="Гомдол" sub="Уншигчдын мэдэгдсэн алдаа, бичээчийн гомдол, сануулгад бичсэн хариу · шийдвэрлэвэл бичсэн хүнд мэдэгдэл очно" />
+      <Head user={user} title="Гомдол" search="/admin/logic" q={q} hidden={{ s: st === "open" ? "" : st, t: type }} sub="Уншигчдын мэдэгдсэн алдаа, бичээчийн гомдол, сануулгад бичсэн хариу · шийдвэрлэвэл бичсэн хүнд мэдэгдэл очно" />
       <Flash ok={sp.ok} error={sp.error} />
-      <Tabs cur={st === "open" ? "" : st} href={(k) => q(k, type)} tabs={TABS.map(([k, l]) => [k, l, c[k || "open"] || 0])} />
-      <Tabs cur={type} href={(k) => q(st, k)} tabs={TYPES.map(([k, l]) => [k, l, k ? tc[k] || 0 : Object.values(tc).reduce((x, y) => x + y, 0)])} />
+      <Tabs cur={st === "open" ? "" : st} href={(k) => url(k, type)} tabs={TABS.map(([k, l]) => [k, l, c[k || "open"] || 0])} />
+      <Tabs cur={type} href={(k) => url(st, k)} tabs={TYPES.map(([k, l]) => [k, l, k ? tc[k] || 0 : Object.values(tc).reduce((x, y) => x + y, 0)])} />
       <section className="adm-card flush">
-        {rows.length === 0 ? <p className="adm-empty">Мэдэгдэл алга.</p> : (
+        {rows.length === 0 ? <p className="adm-empty">{q ? `«${q}» олдсонгүй.` : "Мэдэгдэл алга."}</p> : (
           <table className="adm-table">
             <thead><tr><th>Төрөл</th><th>Юуны тухай</th><th>Тайлбар</th><th>Бичсэн</th><th>Ирсэн</th><th></th></tr></thead>
             <tbody>
