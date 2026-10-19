@@ -55,7 +55,7 @@ export default function ClubMap({ clubs, aimags }) {
       if (dead || !box.current || map.current) return;
       const m = new ml.Map({
         container: box.current, style: STYLE, bounds: MN, fitBoundsOptions: { padding: 16 },
-        minZoom: 3, maxZoom: 17, maxBounds: [[70, 33], [138, 60]], attributionControl: { compact: true },
+        minZoom: 3, maxZoom: 17, maxBounds: [[70, 33], [138, 60]], attributionControl: false,
         scrollZoom: false, dragRotate: false, pitchWithRotate: false, touchPitch: false,
       });
       m.touchZoomRotate.disableRotation();
@@ -97,10 +97,7 @@ export default function ClubMap({ clubs, aimags }) {
   return (
     <section className={"cm-card" + (full ? " full" : "")} onMouseLeave={() => !full && setSel(null)}>
       <div ref={box} className="cm-leaf" />
-      <div className="cm-head">
-        <h1>Клубын газрын зураг</h1>
-        <p>{total ? `Манай вебд бүртгэлтэй ${total} клубын байршил` : "Манай вебд бүртгэлтэй клубын байршил"}</p>
-      </div>
+      <h1 className="cm-sr">Клубын газрын зураг</h1>
       <span className="cm-legend">✦ {total} клуб · {aimags} аймаг</span>
       <div className="cm-tools">
         <button type="button" onClick={() => map.current?.zoomIn()} aria-label="Томруулах" title="Томруулах">+</button>
@@ -109,6 +106,7 @@ export default function ClubMap({ clubs, aimags }) {
         <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Жижиг болгох" : "Бүтэн дэлгэц"} title={full ? "Жижиг болгох" : "Бүтэн дэлгэц"}>{full ? "×" : "⛶"}</button>
       </div>
       <span className="cm-hint">{!total ? "Клубууд бүртгүүлэхэд байршил нь энд гэрэлтэнэ" : armed ? "Хулганы дугуйгаар томруулж, чирж хөдөлгөнө" : "Оч дээр хулганаа аваачиж клубын мэдээллийг үзнэ үү · Томруулахын тулд зураг дээр дарна уу"}</span>
+      <span className="cm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a></span>
       {sel && (
         <div className={"cm-pop" + (left ? " left" : "")} style={{ left: sel.x, top: sel.y }} role="dialog" aria-label={sel.c.name}>
           <div className="cm-pop-top">
