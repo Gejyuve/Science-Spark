@@ -12,6 +12,8 @@ import { sparkWeight, dailyLimit, givenToday, rewardFirstSpark } from "@/lib/spa
 import { ownImage } from "@/lib/images";
 import { validCategory } from "@/lib/tree";
 import { cleanSources, bodyRule } from "@/lib/md";
+import { walletBalance, fmtMnt } from "@/lib/money";
+import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, refundStatement } from "@/lib/bounty";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 
 // Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
@@ -173,9 +175,66 @@ export async function deletePost(formData) {
   const postId = Number(formData.get("post_id"));
   if (!Number.isInteger(postId)) redirect("/");
   await ensureSchema();
-  await sql`DELETE FROM posts WHERE id = ${postId} AND author_id = ${user.id}`;
+  const [b] = await sql`SELECT id FROM bounties WHERE post_id = ${postId} AND user_id = ${user.id} AND status = 'open'`;
+  if (b && !REFUND_AFTER_ANSWERS) {
+    const [a] = await sql`SELECT COUNT(*)::int AS n FROM comments WHERE post_id = ${postId} AND parent_id IS NULL AND author_id <> ${user.id}`;
+    if (a.n > 0) redirect(`/post/${postId}?error=${encodeURIComponent("Хариулт ирсэн шагналтай асуултыг устгах боломжгүй. Хамгийн зөв хариултыг сонгож шагналаа олгоно уу.")}`);
+  }
+  // Шагнал байвал түгжээг тайлж хэтэвч рүү буцаагаад асуултыг устгана (нэг гүйлгээнд)
+  await sql.transaction([
+    refundStatement(postId, user.id),
+    sql`DELETE FROM posts WHERE id = ${postId} AND author_id = ${user.id}`,
+  ]);
   revalidatePath("/");
-  redirect("/");
+  revalidatePath("/wallet");
+  redirect(b ? `/wallet?ok=${encodeURIComponent("Асуултыг устгаж, түгжсэн шагналын мөнгийг хэтэвчинд тань буцаалаа")}` : "/");
+}
+
+// Асуулт асуухад, эсвэл дараа нь асуугч өөрөө нэмэх шагналын дүн
+function bountyAmount(formData) {
+  const raw = String(formData.get("bounty") || "").replace(/[\s,₮]/g, "");
+  if (!raw) return 0;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < BOUNTY_MIN || n > BOUNTY_MAX) return -1;
+  return n;
+}
+
+export async function addBounty(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const postId = Number(formData.get("post_id"));
+  if (!Number.isInteger(postId)) redirect("/");
+  const back = (q) => redirect(`/post/${postId}?${q}`);
+  const amount = bountyAmount(formData);
+  if (amount <= 0) back(`error=${encodeURIComponent(`Шагналын дүнг ${fmtMnt(BOUNTY_MIN)}-${fmtMnt(BOUNTY_MAX)} хооронд оруулна уу`)}`);
+  await ensureSchema();
+  const [p] = await sql`SELECT id, title FROM posts WHERE id = ${postId} AND author_id = ${user.id} AND kind = 'Асуулт' AND status = 'published'`;
+  if (!p) redirect(`/post/${postId}`);
+  if ((await walletBalance(user.id)) < amount) back(`error=${encodeURIComponent("Хэтэвчинд тань хүрэлцэх мөнгө алга")}`);
+  if (!(await lockBounty(user.id, postId, p.title, amount))) back(`error=${encodeURIComponent("Шагнал тавьж чадсангүй. Хэтэвчээ шалгана уу, эсвэл энэ асуулт аль хэдийн шагналтай байна.")}`);
+  revalidatePath("/");
+  revalidatePath(`/post/${postId}`);
+  back(`ok=${encodeURIComponent(`${fmtMnt(amount)}-ийн шагнал тавилаа. Мэдлэгээ хуваалцах хүмүүсийг урамшуулсанд баярлалаа!`)}`);
+}
+
+// Асуугч зөв гэж үзсэн хариултаа сонгоход шагнал хариулагчийн хэтэвч рүү орно
+export async function awardBounty(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const commentId = Number(formData.get("comment_id"));
+  if (!Number.isInteger(commentId)) redirect("/");
+  await ensureSchema();
+  const [c] = await sql`
+    SELECT c.id, c.post_id, c.author_id, b.id AS bounty_id, b.amount, b.title
+    FROM comments c JOIN bounties b ON b.post_id = c.post_id AND b.status = 'open' AND b.user_id = ${user.id}
+    WHERE c.id = ${commentId} AND c.parent_id IS NULL`;
+  if (!c) redirect("/");
+  if (!c.author_id || c.author_id === user.id) redirect(`/post/${c.post_id}`);
+  const ok = await payBounty({ id: c.bounty_id, amount: c.amount, title: c.title }, c.author_id, c.id);
+  if (ok) await notify({ userId: c.author_id, kind: "bounty_won", actorId: user.id, postId: c.post_id });
+  revalidatePath("/");
+  revalidatePath(`/post/${c.post_id}`);
+  redirect(`/post/${c.post_id}?ok=${encodeURIComponent(ok ? "Шагналыг олголоо. Мэдлэгээ хуваалцсан хүнийг урамшуулсанд баярлалаа!" : "Энэ асуултын шагнал аль хэдийн олгогдсон байна")}#c${c.id}`);
 }
 
 export async function toggleFollow(formData) {
@@ -298,11 +357,14 @@ export async function quickPost(formData) {
   const url = (v) => (v && !/^https?:\/\/\S+$/i.test(v) ? fail("Холбоос https:// -ээр эхэлнэ") : v || null);
   const short = (s) => (s.length > 90 ? s.slice(0, 90).replace(/\s+\S*$/, "") + "…" : s);
 
-  let title, body, meta = {};
+  let title, body, meta = {}, bounty = 0;
   if (kind === "Асуулт" || kind === "Бодрол") {
     body = t("body", 300);
     if (!body) fail("Агуулгаа бичнэ үү");
     title = short(body.split("\n")[0]);
+    if (kind === "Асуулт") bounty = bountyAmount(formData);
+    if (bounty < 0) fail(`Шагналын дүнг ${fmtMnt(BOUNTY_MIN)}-${fmtMnt(BOUNTY_MAX)} хооронд оруулна уу`);
+    if (bounty > 0 && (await walletBalance(user.id)) < bounty) fail("Хэтэвчинд тань хүрэлцэх мөнгө алга");
     if (kind === "Бодрол") meta.source = url(t("source", 300));
   } else if (kind === "Эвент") {
     title = t("title", 200);
@@ -356,6 +418,10 @@ export async function quickPost(formData) {
     VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${imageId})
     RETURNING id`;
   revalidatePath("/");
+  if (bounty > 0) {
+    const ok = await lockBounty(user.id, rows[0].id, title, bounty);
+    redirect(`/post/${rows[0].id}?${ok ? "ok" : "error"}=${encodeURIComponent(ok ? `Асуулт ${fmtMnt(bounty)}-ийн шагналтай нийтлэгдлээ. Мэдлэгээ хуваалцах хүмүүсийг урамшуулсанд баярлалаа!` : "Асуулт нийтлэгдсэн ч шагнал тавьж чадсангүй. Хэтэвчээ шалгаад доороос дахин тавина уу.")}`);
+  }
   redirect(status === "published" ? "/" : `/post/${rows[0].id}`);
 }
 

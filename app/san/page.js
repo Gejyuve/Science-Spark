@@ -39,7 +39,9 @@ export default async function San({ searchParams }) {
       periodSummary(12),
       sql`SELECT m.account, m.kind, m.delta, m.period, m.anonymous, m.note, m.created_at, u.initial, u.first_name
           FROM money_ledger m LEFT JOIN users u ON u.id = m.user_id
-          WHERE m.account <> 'out' OR m.kind IN ('fee', 'tax_withheld')
+          WHERE (m.account <> 'out' OR m.kind IN ('fee', 'tax_withheld'))
+            -- Асуултын шагнал түгжих, буцаах нь хэрэглэгчийн дотоод хөдөлгөөн тул нийтэд харуулахгүй
+            AND m.account <> 'escrow' AND m.kind NOT IN ('bounty_lock', 'bounty_refund')
           ORDER BY m.id DESC LIMIT 30`,
       sql`SELECT (SELECT COUNT(*) FROM users WHERE premium_until > now())::int AS supporters,
                  (SELECT COUNT(DISTINCT user_id) FROM payment_requests WHERE status = 'confirmed')::int AS donors`,

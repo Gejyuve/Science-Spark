@@ -6,7 +6,9 @@ import crypto from "node:crypto";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isStaff, isAdmin } from "@/lib/auth";
 import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
-import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave } from "../../posts/actions";
+import { addComment, sparkPost, removePost, deleteComment, publishOwn, likeComment, toggleSave, awardBounty, addBounty, deletePost } from "../../posts/actions";
+import { waitTone, BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS } from "@/lib/bounty";
+import { walletBalance, fmtMnt } from "@/lib/money";
 import Share from "../../components/Share";
 import EventCover from "../../components/EventCover";
 import LogicReport from "../../components/LogicReport";
@@ -49,11 +51,15 @@ function MetaBlock({ kind, m }) {
 
 
 // Нэг сэтгэгдэл ба түүний хариултууд (Figma: Асуулт · Дэлгэрэнгүй — муруй зураастай давхар хариулт)
-function CommentNode({ c, kids, user, postId, canReply, depth, following }) {
+function CommentNode({ c, kids, user, postId, canReply, depth, following, bounty }) {
   const children = kids[c.id] || [];
+  const won = !depth && bounty?.status === "awarded" && bounty.comment_id === c.id;
+  // Асуугч шагналтай асуултынхаа бусдын үндсэн хариултаас нэгийг сонгоно
+  const canPick = !depth && bounty?.status === "open" && user && bounty.user_id === user.id && c.author_id !== user.id;
   return (
-    <div className={"ar-comment" + (depth ? " reply" : "")} id={`c${c.id}`}>
+    <div className={"ar-comment" + (depth ? " reply" : "") + (won ? " won" : "")} id={`c${c.id}`}>
       {depth > 0 && <span className="ss-curve" aria-hidden="true" />}
+      {won && <span className="bq-won">🏆 Асуугч энэ хариултыг сонгож, {fmtMnt(bounty.amount)}-ийн шагнал олгосон</span>}
       <Person id={c.author_id} initial={c.initial} first_name={c.first_name} avatar={c.avatar} points={c.points} followers={c.followers} size={depth ? 32 : 40} viewer={user} following={following} />
       <p>{c.body}</p>
       <div className="ar-cactions">
@@ -80,6 +86,12 @@ function CommentNode({ c, kids, user, postId, canReply, depth, following }) {
         )}
         {canReply && !user && <Link href="/login" className="ar-link reply">Хариулах</Link>}
         <span className="ss-grow" />
+        {canPick && (
+          <form action={awardBounty}>
+            <input type="hidden" name="comment_id" value={c.id} />
+            <button type="submit" className="bq-pick" title={`${fmtMnt(bounty.amount)}-ийн шагналыг ${c.initial}.${c.first_name}-д олгоно. Буцаах боломжгүй.`}>✓ Энэ хариултыг сонгох</button>
+          </form>
+        )}
         {user && (c.author_id === user.id || isAdmin(user)) && (
           <form action={deleteComment}>
             <input type="hidden" name="comment_id" value={c.id} />
@@ -92,6 +104,59 @@ function CommentNode({ c, kids, user, postId, canReply, depth, following }) {
         <div className="ar-replies">
           {children.map((k) => <CommentNode key={k.id} c={k} kids={kids} user={user} postId={postId} canReply={canReply} depth={depth + 1} following={following} />)}
         </div>
+      )}
+    </div>
+  );
+}
+
+// Шагналтай асуултын тууз: дүн, хариулт хүлээсэн хугацаа (удах тусам дулаан өнгө) эсвэл хэнд олгосон
+function BountyBanner({ b, answers }) {
+  if (b.status === "awarded") {
+    return (
+      <div className="bq-banner done">
+        <span className="bq-amt">🏆 {fmtMnt(b.amount)}</span>
+        <span>Шагналыг <Link href={`/u/${b.winner_id}`}>{b.w_initial}.{b.w_first}</Link>-д олгосон. Мэдлэгээ хуваалцсанд баярлалаа!</span>
+      </div>
+    );
+  }
+  return (
+    <div className="bq-banner">
+      <span className="bq-amt">🏆 {fmtMnt(b.amount)}</span>
+      <span>Шагналтай асуулт. Хамгийн зөв хариулт өгсөн хүнд асуугч шагналыг олгоно.</span>
+      <span className="ss-grow" />
+      <span className={`bq-wait ${waitTone(b.created_at)}`}>
+        <When d={b.created_at} size={12} className="bq-when" /> {answers ? `${answers} хариулт` : "хариулт хүлээж байна"}
+      </span>
+    </div>
+  );
+}
+
+// Асуугчийн хэрэгсэл: шагнал нэмэх, асуултаа устгах (түгжсэн мөнгө буцна)
+function AskerTools({ post, bounty, othersAnswered, wallet }) {
+  const locked = bounty?.status === "open" && othersAnswered && !REFUND_AFTER_ANSWERS;
+  return (
+    <div className="bq-tools">
+      {!bounty && (
+        <details className="bq-add">
+          <summary>🏆 Шагнал нэмэх</summary>
+          <form action={addBounty} className="bq-addform">
+            <input type="hidden" name="post_id" value={post.id} />
+            <input name="bounty" type="number" required min={BOUNTY_MIN} max={BOUNTY_MAX} step={500} placeholder="5000" inputMode="numeric" aria-label="Шагналын дүн" />
+            <button type="submit" className="btn">Шагнал тавих</button>
+            <small>Хэтэвчинд: {fmtMnt(wallet)}. Мөнгө түгжигдэж, таны сонгосон хариулагчийн хэтэвч рүү шууд орно.{wallet < BOUNTY_MIN && <> <Link href="/wallet">Хэтэвч</Link> хоосон байна.</>}</small>
+          </form>
+        </details>
+      )}
+      {bounty?.status === "open" && othersAnswered && <p className="muted bq-hint">Хамгийн зөв хариултын доорх «✓ Энэ хариултыг сонгох» товчийг дарж шагналаа олгоно уу.</p>}
+      {!locked && bounty?.status !== "awarded" && (
+        <details className="bq-del">
+          <summary>Асуултаа устгах</summary>
+          <form action={deletePost}>
+            <input type="hidden" name="post_id" value={post.id} />
+            <p className="muted">{bounty ? `Асуулт устаж, түгжсэн ${fmtMnt(bounty.amount)} хэтэвчинд тань буцна.` : "Асуулт бүр мөсөн устна."}</p>
+            <button type="submit" className="btn ghost danger">Устгах</button>
+          </form>
+        </details>
       )}
     </div>
   );
@@ -343,7 +408,14 @@ export default async function PostPage({ params, searchParams }) {
     WHERE c.post_id = ${postId} ORDER BY c.created_at`;
   const kids = {};
   for (const c of comments) if (c.parent_id) (kids[c.parent_id] ||= []).push(c);
-  const roots = comments.filter((c) => !c.parent_id);
+  const [bounty] = isQ
+    ? await sql`SELECT b.*, w.initial AS w_initial, w.first_name AS w_first FROM bounties b LEFT JOIN users w ON w.id = b.winner_id
+                WHERE b.post_id = ${postId} AND b.status IN ('open', 'awarded')`
+    : [];
+  // Сонгогдсон хариулт хамгийн дээр
+  const roots = comments.filter((c) => !c.parent_id).sort((a, b) => (b.id === bounty?.comment_id) - (a.id === bounty?.comment_id));
+  const othersAnswered = roots.some((c) => c.author_id !== post.author_id);
+  const myWallet = isQ && isAuthor && published && !bounty ? await walletBalance(user.id) : 0;
   const following = await followingSet(user);
   const saved = user
     ? (await sql`SELECT 1 FROM saves WHERE post_id = ${postId} AND user_id = ${user.id}`).length > 0
@@ -476,7 +548,11 @@ export default async function PostPage({ params, searchParams }) {
               </>
             )}
             {isQ ? (
-              <div className="ar-qbox">{post.body}</div>
+              <>
+                {bounty && <BountyBanner b={bounty} answers={roots.length} />}
+                <div className="ar-qbox">{post.body}</div>
+                {isAuthor && published && <AskerTools post={post} bounty={bounty} othersAnswered={othersAnswered} wallet={myWallet} />}
+              </>
             ) : (
               isArticle ? (
                 <div className={"ar-tocwrap" + (heads.length >= 2 ? " has" : "")}>
@@ -581,7 +657,7 @@ export default async function PostPage({ params, searchParams }) {
             {roots.map((c, i) => (
               <div key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
-                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={open} depth={0} following={following} />
+                <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={open} depth={0} following={following} bounty={bounty} />
               </div>
             ))}
 

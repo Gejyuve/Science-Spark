@@ -7,6 +7,7 @@ import PostCard from "./components/PostCard";
 import { followingSet } from "./components/Bits";
 import TimeMenu from "./components/TimeMenu";
 import ScrollActive from "./components/ScrollActive";
+import { fmtMnt } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,14 @@ export const dynamic = "force-dynamic";
 const PERIODS = [["24h", "24 цаг", 24], ["7d", "7 хоног", 168], ["1m", "1 сар", 720], ["6m", "6 сар", 4320], ["1y", "1 жил", 8760], ["all", "Бүх хугацаа", null]];
 
 export default async function Home({ searchParams }) {
-  const { tab, compose, error, f, t } = await searchParams;
+  const { tab, compose, error, f, t, b } = await searchParams;
   // Цагийн шүүлтүүр: анхдагч 24 цаг
   const period = PERIODS.find((x) => x[0] === t) || PERIODS[0];
   const hours = period[2];
   const tq = period[0] === "24h" ? "" : `t=${period[0]}`;
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
+  // «Хэн юу гэв?» доторх шүүлтүүр: open = хариулт хүлээж буй шагналтай асуулт, big = бүх шагналтай асуулт дүнгээр нь
+  const bq = qa && ["open", "big"].includes(b) ? b : "";
   const ann = f === "ann"; // Зарлалууд
   const art = f === "art"; // Нийтлэл
   const news = f === "news"; // Мэдээ
@@ -30,6 +33,7 @@ export default async function Home({ searchParams }) {
   let user = null;
   let posts = [];
   let counts = { all: 0, following: 0, top: 0, qa: 0, ann: 0, art: 0, news: 0 };
+  let bqCounts = { open: 0, total: 0 };
   try {
     user = await getUser();
     await ensureSchema();
@@ -48,8 +52,10 @@ export default async function Home({ searchParams }) {
         ta.id AS ta_id, ta.body AS ta_body, ta.author_id AS ta_author, ta.initial AS ta_initial, ta.first_name AS ta_first,
         ta.points AS ta_points, ta.followers AS ta_followers, ta.avatar AS ta_avatar,
         EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved,
-        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked
+        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked,
+        bq.amount AS bounty_amount, bq.status AS bounty_status
       FROM posts p JOIN users u ON u.id = p.author_id
+      LEFT JOIN bounties bq ON bq.post_id = p.id AND bq.status IN ('open', 'awarded')
       -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
       LEFT JOIN LATERAL (
         SELECT c.id, c.body, c.author_id, cu.initial, cu.first_name, cu.avatar_id AS avatar,
@@ -66,8 +72,9 @@ export default async function Home({ searchParams }) {
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
         AND (NOT ${art}::boolean OR p.kind = 'Нийтлэл')
         AND (NOT ${news}::boolean OR p.kind = 'Мэдээ')
-        -- Цагийн шүүлтүүр (санамсаргүйд хамаарахгүй). Хамгийн тод: тухайн хугацаанд оч авсан
-        AND (${rand}::boolean OR (CASE WHEN ${top}::boolean
+        AND (${bq} = '' OR bq.status = 'open' OR (${bq} = 'big' AND bq.status IS NOT NULL))
+        -- Цагийн шүүлтүүр (санамсаргүй, шагналтай асуултад хамаарахгүй). Хамгийн тод: тухайн хугацаанд оч авсан
+        AND (${rand}::boolean OR ${bq} <> '' OR (CASE WHEN ${top}::boolean
              THEN win.post_id IS NOT NULL
              ELSE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) END))
         AND (${!following || !user}::boolean OR p.author_id IN
@@ -78,6 +85,7 @@ export default async function Home({ searchParams }) {
         CASE WHEN ${rand}::boolean THEN md5(p.id::text || ${seed}) END ASC NULLS LAST,
         CASE WHEN ${top}::boolean THEN win.n END DESC NULLS LAST,
         CASE WHEN ${top}::boolean THEN (SELECT COUNT(*) FROM sparks WHERE post_id = p.id) END DESC NULLS LAST,
+        CASE WHEN ${bq} = 'big' THEN bq.amount END DESC NULLS LAST,
         p.created_at DESC
       LIMIT 30`;
     // Шүүлтүүр бүрийн сонгосон хугацааны контентын тоо
@@ -96,6 +104,13 @@ export default async function Home({ searchParams }) {
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Мэдээ')::int AS news
       FROM posts p WHERE p.status = 'published' AND p.kind <> 'Үг'`;
     counts = c;
+    if (qa) {
+      const [x] = await sql`
+        SELECT COUNT(*) FILTER (WHERE b.status = 'open')::int AS open, COALESCE(SUM(b.amount), 0)::bigint AS total
+        FROM bounties b JOIN posts p ON p.id = b.post_id AND p.status = 'published'
+        WHERE b.status IN ('open', 'awarded')`;
+      bqCounts = { open: x.open, total: Number(x.total) };
+    }
   } catch (e) {
     // Өгөгдлийн сан холбогдоогүй үед нүүр хуудас хэвийн нээгдэнэ
   }
@@ -138,11 +153,23 @@ export default async function Home({ searchParams }) {
           />
         </nav>
       )}
+      {qa && (
+        <nav className="bq-filters" aria-label="Шагналтай асуулт">
+          <Link href={bq === "open" ? "/?f=qa" : "/?f=qa&b=open"} className={bq === "open" ? "on" : ""} title="Хариулт хүлээж буй шагналтай асуултууд">
+            🏆 Шагналтай<em>{bqCounts.open}</em>
+          </Link>
+          <Link href={bq === "big" ? "/?f=qa" : "/?f=qa&b=big"} className={bq === "big" ? "on" : ""} title="Бүх шагналтай асуулт, шагналын дүнгээр нь">
+            Шагналын хэмжээгээр<em>{fmtMnt(bqCounts.total)}</em>
+          </Link>
+        </nav>
+      )}
       {posts.length === 0 && (
         <div className="ss-card">
           <p className="ss-empty">
             {hours && !rand && posts.length === 0 && (qa || top || following || ann || art || news)
               ? `Сонгосон хугацаанд (${period[1]}) энд контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
+              : bq
+              ? "Одоохондоо хариулт хүлээж буй шагналтай асуулт алга. Асуултаа шагналтай асууж, мэдлэгтэй хүмүүсийг урамшуулаарай 🏆"
               : qa
               ? "Одоохондоо асуулт, бодрол алга. Эхнийхийг нь та асуугаарай ✦"
               : following && user
