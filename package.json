@@ -10,7 +10,6 @@
   "dependencies": {
     "@neondatabase/serverless": "1.2.0",
     "@vercel/blob": "2.8.0",
-    "leaflet": "1.9.4",
     "maplibre-gl": "4.7.1",
     "next": "15.5.28",
     "react": "19.3.1",
