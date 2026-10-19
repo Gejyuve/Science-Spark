@@ -2958,3 +2958,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san-bolt { margin-left: 6px; flex: none; }
 .sm-bolt { display: inline-block; margin-left: 6px; vertical-align: -2px; filter: drop-shadow(0 0 4px rgba(255, 176, 32, .55)); }
 .sm-ic img { display: block; filter: drop-shadow(0 0 6px rgba(255, 176, 32, .6)); }
+.san-amounts.tip, .sm-modal .san-amounts.tip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.san-amounts.tip .san-amt > span { gap: 4px; padding: 12px 6px; }
+.san-amounts.tip .san-amt i { font-style: normal; font-size: 22px; line-height: 1; }
