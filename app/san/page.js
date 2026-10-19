@@ -41,7 +41,7 @@ export default async function San({ searchParams }) {
           FROM money_ledger m LEFT JOIN users u ON u.id = m.user_id
           WHERE (m.account <> 'out' OR m.kind IN ('fee', 'tax_withheld'))
             -- Асуултын шагнал түгжих, буцаах нь хэрэглэгчийн дотоод хөдөлгөөн тул нийтэд харуулахгүй
-            AND m.account <> 'escrow' AND m.kind NOT IN ('bounty_lock', 'bounty_refund')
+            AND m.account <> 'escrow' AND m.kind NOT IN ('bounty_lock', 'bounty_refund', 'topup')
           ORDER BY m.id DESC LIMIT 30`,
       sql`SELECT (SELECT COUNT(*) FROM users WHERE premium_until > now())::int AS supporters,
                  (SELECT COUNT(DISTINCT user_id) FROM payment_requests WHERE status = 'confirmed')::int AS donors`,

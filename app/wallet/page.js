@@ -33,7 +33,7 @@ export default async function Wallet({ searchParams }) {
     lockedBalance(user.id),
   ]);
   const pending = withdrawals.find((w) => w.status === "pending");
-  const [given] = await sql`SELECT COALESCE(SUM(amount), 0)::bigint AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'confirmed'`;
+  const [given] = await sql`SELECT COALESCE(SUM(amount), 0)::bigint AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'confirmed' AND kind <> 'topup'`;
   const toGo = Math.max(0, WITHDRAW_MIN - balance);
   const feeNote = `Уншигчдын урамшуулал, асуултын шагналаас сайтыг ажиллуулахад ${Math.round(TIP_FEE * 100)}% шимтгэл суутгадаг.`;
 
@@ -62,7 +62,8 @@ export default async function Wallet({ searchParams }) {
           <span><b>{history.filter((h) => h.kind === "prize").length}</b><small>шагнал хүртсэн</small></span>
         </div>
         <div className="san-cta">
-          <SupportModal kind="premium" label={isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill" {...supportModalProps(user)} />
+          <SupportModal kind="topup" label="Хэтэвч цэнэглэх" className="ss-pill" autoOpen={sp.topup === "1"} {...supportModalProps(user)} />
+          <SupportModal kind="premium" label={isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill ghost" {...supportModalProps(user)} />
           <Link href="/san" className="ss-pill ghost">Шагналын сан</Link>
         </div>
 
@@ -108,7 +109,7 @@ export default async function Wallet({ searchParams }) {
           ))}
         </div>
 
-        <h2>Миний дэмжлэгүүд</h2>
+        <h2>Миний дэмжлэг, цэнэглэлт</h2>
         <div className="och-rules">
           {requests.length === 0 && <p className="och-hint">Та одоохондоо дэмжлэг өгөөгүй байна.</p>}
           {requests.map((r) => (

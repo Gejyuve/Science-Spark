@@ -29,12 +29,15 @@ export async function confirmPayment(formData) {
     await sql`UPDATE users SET premium_until = GREATEST(COALESCE(premium_until, now()), now()) + make_interval(days => ${30 * req.months})
               WHERE id = ${req.user_id}`;
     await notify({ userId: req.user_id, kind: "premium_ok" });
+  } else if (req.kind === "topup") {
+    await notify({ userId: req.user_id, kind: "topup_ok", note: fmtMnt(req.amount - fee) });
   } else {
     await notify({ userId: req.user_id, kind: "pay_ok" });
     if (req.kind === "tip") await notify({ userId: req.writer_id, kind: "tip", actorId: req.anonymous ? null : req.user_id, postId: req.post_id, note: req.message });
   }
   await audit({ actorId: me.id, category: "money", action: `${REQUEST_KIND[req.kind]} баталгаажуулсан ${fmtMnt(req.amount)} (${req.code})`, targetType: "user", targetId: req.user_id });
   revalidatePath("/san");
+  revalidatePath("/wallet");
   revalidatePath("/admin/finance");
   back(`${req.code} баталгаажлаа`, true);
 }
