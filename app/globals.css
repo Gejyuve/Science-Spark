@@ -2851,3 +2851,52 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san button.ss-pill { border: 0; height: auto; padding: 10px 18px; }
 .san button.ss-pill.ghost { border: 1px solid var(--border); }
 @media (max-width: 760px) { .san-perks { grid-template-columns: 1fr 1fr; } .san-perks div { padding: 12px; } }
+/* Шагналын сангийн толгой: ногоон хүрээ, эргэлдэх цацраг */
+.san-top { position: relative; overflow: hidden; isolation: isolate; border-radius: 22px; border: 2px solid #37c3b3; background: linear-gradient(160deg, #f0fbf9 0%, #e5f7f5 55%, #fff7ec 100%); box-shadow: 0 10px 30px -18px rgba(0, 168, 155, .6); }
+.san-rays { position: absolute; z-index: -1; left: 50%; top: 18%; width: 1400px; height: 1400px; margin: -700px 0 0 -700px; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(55, 195, 179, .22) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 0, #000 18%, transparent 52%); mask: radial-gradient(circle, #000 0, #000 18%, transparent 52%);
+  animation: san-spin 60s linear infinite; }
+.san-top::after { content: ""; position: absolute; z-index: -1; left: 50%; top: 18%; width: 360px; height: 360px; margin: -180px 0 0 -180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 196, 92, .45), rgba(55, 195, 179, .12) 45%, transparent 70%); animation: san-glow 5s ease-in-out infinite; }
+@keyframes san-spin { to { transform: rotate(360deg); } }
+@keyframes san-glow { 50% { transform: scale(1.12); opacity: .75; } }
+@media (prefers-reduced-motion: reduce) { .san-rays, .san-top::after { animation: none; } }
+.san-top-in { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 24px 22px; text-align: center; }
+.san-kicker { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #008075; text-transform: uppercase; }
+.san-amount { font-size: 52px; line-height: 1.05; font-weight: 800; color: #00a89b; font-variant-numeric: tabular-nums; text-shadow: 0 2px 18px rgba(255, 255, 255, .9); }
+.san-top-in p { margin: 0; max-width: 520px; font-size: 14px; line-height: 1.55; color: var(--text); }
+.san-top .san-cta { justify-content: center; margin-top: 4px; }
+.san-top .san-cta .ss-pill { padding: 9px 18px; font-size: 13.5px; }
+.san-top .san-stats { width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 8px; }
+.san-top .san-stats span { background: rgba(255, 255, 255, .72); backdrop-filter: blur(4px); align-items: center; }
+:root[data-theme="dark"] .san-top { background: linear-gradient(160deg, #10302c 0%, #0f2623 55%, #2a2216 100%); border-color: #2a9d90; }
+:root[data-theme="dark"] .san-rays { background: repeating-conic-gradient(from 0deg, rgba(63, 179, 165, .18) 0deg 6deg, transparent 6deg 18deg); }
+:root[data-theme="dark"] .san-amount { color: #5fd6c8; text-shadow: none; }
+:root[data-theme="dark"] .san-kicker { color: #73f2d9; }
+:root[data-theme="dark"] .san-top .san-stats span { background: rgba(0, 0, 0, .28); }
+@media (max-width: 760px) {
+  .san-top-in { padding: 26px 14px 16px; }
+  .san-amount { font-size: 40px; }
+  .san-top .san-stats { grid-template-columns: 1fr 1fr; }
+}
+.san-board .och-chip { white-space: nowrap; }
+@media (max-width: 760px) {
+  .san-board .och-brow { grid-template-columns: 18px minmax(0, 1fr) 40px 76px; }
+  .san-board .och-brow > span:nth-child(3) { display: none; }
+}
+.san-count { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 6px; }
+.san-count > small { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.san-count > div { display: flex; gap: 8px; }
+.san-count span { display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 8px 6px 6px; border-radius: 12px; background: rgba(255, 255, 255, .8); box-shadow: 0 2px 8px -4px rgba(0, 128, 117, .4); }
+.san-count b { font-size: 22px; line-height: 1.1; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.san-count i { font-style: normal; font-size: 10px; color: var(--muted); }
+.san-top .san-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.san-period { margin-top: 2px; font-size: 11px; color: var(--muted); }
+:root[data-theme="dark"] .san-count span { background: rgba(0, 0, 0, .3); }
+@media (max-width: 760px) {
+  .san-count span { min-width: 54px; }
+  .san-count b { font-size: 18px; }
+  .san-top .san-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.san-formula { margin: -6px 0 0; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

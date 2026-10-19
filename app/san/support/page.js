@@ -42,12 +42,12 @@ export default async function Support({ searchParams }) {
   const premium = isPremium(user);
 
   return (
-    <Shell user={user} header="nav">
+    <Shell user={user} active="/san" header="nav">
       <div className="ss-card och san">
         <Link href="/san" className="san-back">← Шагналын сан</Link>
         {sp.error && <p className="och-note bad">{sp.error}</p>}
         <div className="ss-feedtabs och-tabs">
-          <Link href="/san/support?kind=premium" className={kind === "premium" ? "on" : ""}>Премиум</Link>
+          <Link href="/san/support?kind=premium" className={kind === "premium" ? "on" : ""}>Дэмжигч болох</Link>
           <Link href="/san/support?kind=pool" className={kind === "pool" ? "on" : ""}>Сан руу хандив</Link>
           {writer && <Link href={`/san/support?kind=tip&to=${writer.id}${post ? `&post=${post.id}` : ""}`} className="on">Бичээчид</Link>}
         </div>
@@ -56,7 +56,7 @@ export default async function Support({ searchParams }) {
           <>
             <h1>Шинжлэх ухааны дэмжигч болох</h1>
             <p className="och-sub">Таны дэмжлэг Монголын шинжлэх ухааны бичээчид, ирээдүйн залуу судлаачдад хүрнэ. Сайтын сервер, редакцын ажлыг ч тэтгэнэ.</p>
-            {premium && <p className="och-note info">Та {new Date(user.premium_until).toLocaleDateString("sv-SE")} хүртэл премиум гишүүн. Баярлалаа! Доороос сунгах боломжтой.</p>}
+            {premium && <p className="och-note info">Та {new Date(user.premium_until).toLocaleDateString("sv-SE")} хүртэл дэмжигч. Баярлалаа! Доороос сунгах боломжтой.</p>}
             <div className="san-perks">
               {PERKS.map(([i, t, d]) => <div key={t}><span>{i}</span><b>{t}</b><small>{d}</small></div>)}
             </div>

@@ -188,7 +188,7 @@ export default async function Finance({ searchParams }) {
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats">
         <Stat label="Шагналын сан" value={fmtMnt(pool)} note={periodLabel(period)} />
-        <Stat label="Премиум гишүүд" value={cnt.prem} note="идэвхтэй" />
+        <Stat label="Дэмжигчид" value={cnt.prem} note="идэвхтэй" />
         <Stat label="Бичээчдийн хэтэвч" value={fmtMnt(cnt.wallets)} note="нийт үлдэгдэл" />
         <Stat label="Энэ сарын сайтын үлдэгдэл" value={fmtMnt(cur?.platform_net || 0)} note="орлого − зардал" tone={Number(cur?.platform_net) < 0 ? "bad" : ""} />
       </div>
