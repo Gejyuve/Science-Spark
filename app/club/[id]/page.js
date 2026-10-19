@@ -10,6 +10,7 @@ import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bi
 import { chatUnread } from "@/lib/chat";
 import { listTasks, listReports } from "@/lib/tasks";
 import TaskCard, { ReportCard } from "../../components/TaskCard";
+import ScrollActive from "../../components/ScrollActive";
 import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest } from "../../clubs/actions";
 
 export const dynamic = "force-dynamic";
@@ -205,6 +206,7 @@ export default async function ClubPage({ params, searchParams }) {
           <Link href={`/club/${id}?tab=reports`} className={tab === "reports" ? "on" : ""} scroll={false}>Тайлан <em>{reports.length}</em></Link>
           {isLeader && <Link href={`/club/${id}?tab=requests`} className={tab === "requests" ? "on" : ""} scroll={false}>Хүсэлт <em className={requests.length ? "hot" : ""}>{requests.length}</em></Link>}
         </nav>
+        <ScrollActive selector=".cp-tabs a.on" dep={tab} />
 
         {tab === "tasks" ? (
           <section className="cp-card cp-list">
