@@ -10,7 +10,9 @@ import { TERM_KIND } from "@/lib/terms";
 const ALL_KINDS = [...KINDS, ...QUICK_KINDS, "Даалгавар", "Тайлан"];
 // Хяналтын жагсаалт энд нэгтгэгдсэн: шинэ үг, ангиллын санал тусдаа таб
 const VIEWS = { edits: "Бичээчийн засвар", words: "Шинэ үг", cats: "Ангилал" };
-const STATUSES = ["pending", "approved", "published", "rejected", "removed", "merged"];
+const STATUSES = ["pending", "published", "rejected", "removed", "merged"];
+// Эрэмбэ: анхдагч нь хамгийн сүүлд орсон
+const SORTS = [["", "Хамгийн сүүлд орсон"], ["sparks", "Хамгийн их оч"], ["comments", "Хамгийн их сэтгэгдэл"], ["views", "Хамгийн их үзэлт"]];
 
 export default async function Content({ searchParams }) {
   const user = await requireSection("content");
@@ -18,18 +20,21 @@ export default async function Content({ searchParams }) {
   const kind = ALL_KINDS.includes(sp.kind) ? sp.kind : "";
   const view = VIEWS[sp.v] ? sp.v : "";
   const status = STATUSES.includes(sp.status) ? sp.status : "";
+  const sort = SORTS.some(([k]) => k && k === sp.sort) ? sp.sort : "";
   const q = String(sp.q || "");
   const like = `%${q.trim().toLowerCase()}%`;
   const rows = await sql`
-    SELECT p.id, p.author_id, p.kind, p.title, p.body, p.status, p.created_at, p.review_note,
-      u.initial, u.first_name, u.email,
-      (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
-      (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
-    FROM posts p JOIN users u ON u.id = p.author_id
-    WHERE (${kind} = '' OR p.kind = ${kind}) AND (${status} = '' OR p.status = ${status})
-      AND (${like} = '%%' OR lower(p.title) LIKE ${like} OR lower(p.body) LIKE ${like})
-      AND p.kind <> ${TERM_KIND}
-    ORDER BY CASE WHEN ${status} = 'pending' THEN extract(epoch from p.created_at) ELSE -extract(epoch from p.created_at) END
+    SELECT * FROM (
+      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.status, p.created_at, p.review_note, p.views,
+        u.initial, u.first_name, u.email,
+        (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
+      FROM posts p JOIN users u ON u.id = p.author_id
+      WHERE (${kind} = '' OR p.kind = ${kind}) AND (${status} = '' OR p.status = ${status})
+        AND (${like} = '%%' OR lower(p.title) LIKE ${like} OR lower(p.body) LIKE ${like})
+        AND p.kind <> ${TERM_KIND}
+    ) x
+    ORDER BY CASE ${sort} WHEN 'sparks' THEN sparks WHEN 'comments' THEN comments WHEN 'views' THEN views ELSE 0 END DESC, created_at DESC
     LIMIT 100`;
   const counts = await sql`SELECT kind, COUNT(*)::int AS n, COUNT(*) FILTER (WHERE status = 'pending')::int AS pending
                            FROM posts WHERE kind <> ${TERM_KIND} GROUP BY kind`;
@@ -40,14 +45,14 @@ export default async function Content({ searchParams }) {
       (SELECT COUNT(*) FROM post_revisions WHERE role = 'author' AND checked_at IS NULL)::int AS edits,
       ((SELECT COUNT(*) FROM category_requests WHERE status = 'pending') + (SELECT COUNT(*) FROM category_reports WHERE status = 'open'))::int AS cats`;
   const qs = (o) => {
-    const v = { kind, status, q, ...o };
+    const v = { kind, status, sort, q, ...o };
     return "/admin/content?" + new URLSearchParams(Object.entries(v).filter(([, x]) => x));
   };
   const from = qs({});
 
   return (
     <>
-      <Head user={user} title="Контент" sub="Бүх нийтлэл, асуулт, бодрол, эвент, зарлал" search="/admin/content" q={q} hidden={{ kind, status }} />
+      <Head user={user} title="Контент" sub="Бүх нийтлэл, асуулт, бодрол, эвент, зарлал" search="/admin/content" q={q} hidden={{ kind, status, sort }} />
       <Flash ok={sp.ok} error={sp.error} />
       <Tabs cur={view ? "v:" + view : kind}
         href={(k) => (k.startsWith("v:") ? `/admin/content?v=${k.slice(2)}` : qs({ kind: k }))}
@@ -58,10 +63,16 @@ export default async function Content({ searchParams }) {
           <a key={s || "all"} href={qs({ status: s })} className={status === s ? "on" : ""}>{l}{s === "pending" && pendingAll > 0 && <em>{pendingAll}</em>}</a>
         ))}
       </div>
+      <div className="adm-filters adm-sort">
+        <span className="adm-muted">Эрэмбэ:</span>
+        {SORTS.map(([k, l]) => (
+          <a key={k || "new"} href={qs({ sort: k })} className={sort === k ? "on" : ""}>{l}</a>
+        ))}
+      </div>
       <section className="adm-card flush">
         {rows.length === 0 ? <p className="adm-empty">Контент олдсонгүй.</p> : (
           <table className="adm-table">
-            <thead><tr><th>Агуулга</th><th>Төрөл</th><th>Зохиогч</th><th>Төлөв</th><th>Оч · Сэтг.</th><th>Огноо</th><th></th></tr></thead>
+            <thead><tr><th>Агуулга</th><th>Төрөл</th><th>Зохиогч</th><th>Төлөв</th><th>Оч · Сэтг. · Үзэлт</th><th>Огноо</th><th></th></tr></thead>
             <tbody>
               {rows.map((p) => (
                 <tr key={p.id}>
@@ -72,7 +83,7 @@ export default async function Content({ searchParams }) {
                   <td><Chip>{p.kind}</Chip></td>
                   <td>{who(p)}</td>
                   <td><Chip tone={STATUS_TONE[p.status]}>{STATUS_LABELS[p.status]}</Chip></td>
-                  <td>{p.sparks} · {p.comments}</td>
+                  <td>{p.sparks} · {p.comments} · {p.views || 0}</td>
                   <td>{ago(p.created_at)}</td>
                   <td className="adm-right">
                     <span className="adm-acts">
