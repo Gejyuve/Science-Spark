@@ -12,7 +12,10 @@ const fmtT = (d) => new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanb
 export default async function Finance({ searchParams }) {
   const user = await requireSection("finance");
   const sp = await searchParams;
-  const tab = TABS.some(([k]) => k === sp.t) ? sp.t : "";
+  // Админ санхүүг зөвхөн харна: сар хаах, лог, бүх үйлдлийн товч супер админд
+  const sup = user.role === "superadmin";
+  const TABS_ = sup ? TABS : TABS.filter(([k]) => k !== "close" && k !== "log");
+  const tab = TABS_.some(([k]) => k === sp.t) ? sp.t : "";
   const period = currentPeriod();
   const [pool, [cnt], summary] = await Promise.all([
     poolBalance(),
@@ -23,7 +26,7 @@ export default async function Finance({ searchParams }) {
     periodSummary(6),
   ]);
   const cur = summary.find((r) => r.period === period);
-  const tabs = TABS.map(([k, l]) => [k, l, k === "" ? cnt.pay : k === "withdraw" ? cnt.wd : null]);
+  const tabs = TABS_.map(([k, l]) => [k, l, k === "" ? cnt.pay : k === "withdraw" ? cnt.wd : null]);
 
   let body = null;
   if (tab === "") {
@@ -36,7 +39,7 @@ export default async function Finance({ searchParams }) {
         <p className="adm-muted small pad">Банкны хуулгаас гүйлгээний утга дахь кодыг олж, ирсэн дүнг шалгаад баталгаажуулна. Шимтгэлийг бодит дүнгээр засна.{!bankInfo() && " ⚠ Vercel дээр PAY_BANK_INFO тохируулаагүй байна."}</p>
         {rows.length === 0 ? <p className="adm-empty">Хүлээгдэж буй төлбөр алга.</p> : (
           <table className="adm-table">
-            <thead><tr><th>Код</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Дүн</th><th>Хэзээ</th><th className="adm-right">Үйлдэл</th></tr></thead>
+            <thead><tr><th>Код</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Дүн</th><th>Хэзээ</th>{sup && <th className="adm-right">Үйлдэл</th>}</tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
@@ -45,7 +48,7 @@ export default async function Finance({ searchParams }) {
                   <td>{REQUEST_KIND[r.kind]}{r.months ? ` · ${r.months} сар` : ""}{r.kind === "tip" && ` → ${r.w_initial}.${r.w_first_name}`}{r.anonymous && <Chip tone="gray">нууц</Chip>}</td>
                   <td className="adm-mono">{fmtMnt(r.amount)}</td>
                   <td>{ago(r.created_at)}</td>
-                  <td className="adm-right">
+                  {sup && <td className="adm-right">
                     <div className="adm-acts">
                       <form action={confirmPayment} className="adm-inline">
                         <input type="hidden" name="id" value={r.id} />
@@ -54,7 +57,7 @@ export default async function Finance({ searchParams }) {
                       </form>
                       <form action={cancelPayment}><input type="hidden" name="id" value={r.id} /><button className="adm-btn danger">Цуцлах</button></form>
                     </div>
-                  </td>
+                  </td>}
                 </tr>
               ))}
             </tbody>
@@ -84,7 +87,7 @@ export default async function Finance({ searchParams }) {
                   <td className={Number(w.balance) < w.amount ? "adm-neg" : "adm-mono"}>{fmtMnt(w.balance)}</td>
                   <td>{ago(w.created_at)}</td>
                   <td className="adm-right">
-                    {w.status === "pending" ? (
+                    {w.status === "pending" && !sup ? <Chip tone="warn">Хүлээгдэж буй</Chip> : w.status === "pending" ? (
                       <div className="adm-acts">
                         <form action={payWithdrawal}><input type="hidden" name="id" value={w.id} /><button className="adm-btn dark">Шилжүүлсэн</button></form>
                         <details className="adm-pop">
@@ -105,8 +108,8 @@ export default async function Finance({ searchParams }) {
     const rows = await sql`SELECT kind, delta, period, note, created_at FROM money_ledger
                            WHERE account = 'out' AND kind = ANY(${EXPENSE_KINDS}) AND ref_id IS NULL ORDER BY id DESC LIMIT 40`;
     body = (
-      <div className="adm-grid2">
-        <section className="adm-card">
+      <div className={sup ? "adm-grid2" : ""}>
+        {sup && <section className="adm-card">
           <div className="adm-card-head"><b>Зардал бүртгэх</b></div>
           <form action={addExpense} className="adm-form">
             <label>Төрөл
@@ -121,7 +124,7 @@ export default async function Finance({ searchParams }) {
             <button className="adm-btn dark">Бүртгэх</button>
           </form>
           <p className="adm-muted small">Бүх зардал /san хуудасны шилэн дансанд нээлттэй харагдана.</p>
-        </section>
+        </section>}
         <section className="adm-card flush">
           <div className="adm-card-head pad"><b>Сүүлийн зардлууд</b></div>
           {rows.length === 0 ? <p className="adm-empty">Зардал бүртгэгдээгүй.</p> : (
@@ -210,7 +213,7 @@ export default async function Finance({ searchParams }) {
 
   return (
     <>
-      <Head user={user} title="Санхүү" sub={<>Төлбөр баталгаажуулах, бичээчид шилжүүлэх, зардал бүртгэх. Нийтэд: <Link href="/san">/san</Link></>} />
+      <Head user={user} title="Санхүү" sub={sup ? <>Төлбөр баталгаажуулах, бичээчид шилжүүлэх, зардал бүртгэх. Нийтэд: <Link href="/san">/san</Link></> : "Зөвхөн харах. Санхүүгийн үйлдлийг супер админ хийнэ"} />
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats">
         <Stat label="Шагналын сан" value={fmtMnt(pool)} note={periodLabel(period)} />

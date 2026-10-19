@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
-import { requireSection, audit } from "@/lib/admin";
+import { requireSuper, audit } from "@/lib/admin";
 import { notify } from "@/lib/notify";
 import { paymentRows, insertRow, poolBalance, walletBalance, fmtMnt, EXPENSE_KINDS, KIND_LABEL, INCOME_TAX, REQUEST_KIND } from "@/lib/money";
 import { currentPeriod, validPeriod, periodLabel, monthBoard, splitPrizes } from "@/lib/spark";
@@ -13,7 +13,7 @@ const label = (u) => `${u.initial}.${u.first_name}`;
 
 // Шилжүүлэг ирснийг баталгаажуулна: дүнг дансуудад хуваарилж, премиумыг сунгана
 export async function confirmPayment(formData) {
-  const me = await requireSection("finance");
+  const me = await requireSuper("finance");
   const id = Number(formData.get("id"));
   const fee = Math.max(0, Math.round(Number(formData.get("fee") || 0)));
   // Зэрэг дарахад нэг л удаа бичигдэнэ
@@ -43,7 +43,7 @@ export async function confirmPayment(formData) {
 }
 
 export async function cancelPayment(formData) {
-  const me = await requireSection("finance");
+  const me = await requireSuper("finance");
   const id = Number(formData.get("id"));
   const [req] = await sql`UPDATE payment_requests SET status = 'cancelled', decided_by = ${me.id}, decided_at = now()
                           WHERE id = ${id} AND status = 'pending' RETURNING code, user_id`;
@@ -55,7 +55,7 @@ export async function cancelPayment(formData) {
 
 // Сайтын зардал: сервер, редакцын цалин, татвар, шимтгэл, бусад
 export async function addExpense(formData) {
-  const me = await requireSection("finance");
+  const me = await requireSuper("finance");
   const kind = String(formData.get("kind") || "");
   const amount = Math.round(Number(String(formData.get("amount") || "").replace(/[^\d]/g, "")));
   const period = String(formData.get("period") || currentPeriod());
@@ -72,7 +72,7 @@ export async function addExpense(formData) {
 
 // Хэтэвчээс татах: татвар суутгаад шилжүүлсэн гэж тэмдэглэнэ
 export async function payWithdrawal(formData) {
-  const me = await requireSection("finance");
+  const me = await requireSuper("finance");
   const id = Number(formData.get("id"));
   const [w] = await sql`SELECT w.*, u.initial, u.first_name FROM withdrawals w JOIN users u ON u.id = w.user_id WHERE w.id = ${id} AND w.status = 'pending'`;
   if (!w) back("Хүсэлт олдсонгүй", false, "withdraw");
@@ -91,7 +91,7 @@ export async function payWithdrawal(formData) {
 }
 
 export async function rejectWithdrawal(formData) {
-  const me = await requireSection("finance");
+  const me = await requireSuper("finance");
   const id = Number(formData.get("id"));
   const note = String(formData.get("note") || "").trim().slice(0, 300);
   if (!note) back("Буцаах шалтгаанаа бичнэ үү", false, "withdraw");
@@ -107,7 +107,7 @@ export async function rejectWithdrawal(formData) {
 // Сар хаах: дууссан сарын шилдэг 10, Шинэ одыг тооцож сангаас хэтэвчид шилжүүлнэ.
 // Шагнал хуваарилахын өмнө редакц хуурамч очийг шалгасан байх ёстой (7 хоног).
 export async function closeMonth(formData) {
-  const me = await requireSection("finance");
+  const me = await requireSuper("finance");
   const period = String(formData.get("period") || "");
   if (!validPeriod(period) || period >= currentPeriod()) back("Зөвхөн дууссан сарыг хаана", false, "close");
   if ((await sql`SELECT 1 FROM prizes WHERE period = ${period} LIMIT 1`).length) back(`${periodLabel(period)} аль хэдийн хаагдсан`, false, "close");

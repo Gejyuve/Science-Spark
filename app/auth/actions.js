@@ -18,6 +18,8 @@ export async function register(formData) {
   await ensureSchema();
   const exists = await sql`SELECT 1 FROM users WHERE email = ${email}`;
   if (exists.length) back("/register", "Энэ имэйл бүртгэлтэй байна");
+  const banned = await sql`SELECT 1 FROM banned_emails WHERE email = ${email}`;
+  if (banned.length) back("/register", "Энэ имэйлээр дахин бүртгүүлэх боломжгүй");
 
   // Овог, нэрийг бүртгүүлсний дараах профайл үүсгэх хуудсанд (/profile/edit) асууна.
   const rows = await sql`

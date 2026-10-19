@@ -19,17 +19,22 @@ export default async function AdminLayout({ children }) {
   let requests = 0;
   let logic = 0;
   let finance = 0;
+  let del = 0;
   try {
     const [c] = await sql`SELECT (SELECT COUNT(*) FROM posts WHERE status = 'pending')::int AS p,
       (SELECT COUNT(*) FROM reviewer_requests WHERE status = 'pending')::int AS r,
       (SELECT COUNT(*) FROM logic_reports WHERE status = 'open')::int AS l,
-      ((SELECT COUNT(*) FROM payment_requests WHERE status = 'pending') + (SELECT COUNT(*) FROM withdrawals WHERE status = 'pending'))::int AS f`;
+      ((SELECT COUNT(*) FROM payment_requests WHERE status = 'pending') + (SELECT COUNT(*) FROM withdrawals WHERE status = 'pending'))::int AS f,
+      (SELECT COUNT(*) FROM users WHERE delete_pending_at IS NOT NULL)::int AS d`;
     pending = c.p;
     requests = c.r;
     logic = c.l;
     finance = c.f;
+    del = c.d;
   } catch (e) {}
-  const badges = { content: pending, requests, logic, finance };
+  const sup = user.role === "superadmin";
+  // Санхүү, устгах дарааллын тоо зөвхөн шийдэх эрхтэй супер админд
+  const badges = { content: pending, requests, logic, finance: sup ? finance : 0, users: sup ? del : 0 };
   const items = visibleSections(user).map((s) => ({ ...s, badge: badges[s.key] || null }));
   return (
     <div className="adm">
