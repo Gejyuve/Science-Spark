@@ -50,7 +50,7 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
         <div className="sm-hero">
           <Confetti burst={!!done} />
           <button type="button" className="tm-x sm-x" onClick={close} aria-label="Хаах">×</button>
-          <span className="sm-ic">{done ? "🎉" : isPrem ? "💚" : "✦"}</span>
+          <span className="sm-ic">{isPrem ? <img src="/icons/bolt.svg" width={34} height={34} alt="" /> : done ? "🎉" : "✦"}</span>
           <b id="sm-h">{done ? "Баярлалаа!" : isPrem ? (premium ? "Дэмжлэгээ сунгах" : "Шинжлэх ухааны дэмжигч болох") : "Шагналын санд хандив өгөх"}</b>
           <p>
             {done
@@ -127,7 +127,7 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
               <small>{sum ? `Нийт ${fmt(sum)}` : ""}</small>
               <span className="ss-grow" />
               <button type="button" className="tm-btn ghost" onClick={close}>Болих</button>
-              <button type="submit" className="tm-btn sm-go" disabled={pending}>{pending ? "Түр хүлээнэ үү…" : isPrem ? "Дэмжигч болох 💚" : "Хандив өгөх ✦"}</button>
+              <button type="submit" className="tm-btn sm-go" disabled={pending}>{pending ? "Түр хүлээнэ үү…" : isPrem ? <>Дэмжигч болох <img className="sm-bolt" src="/icons/bolt.svg" width={16} height={16} alt="" /></> : "Хандив өгөх ✦"}</button>
             </div>
           </form>
         )}

@@ -51,7 +51,7 @@ export default async function San({ searchParams }) {
   // Цонхонд дамжуулах өгөгдөл (дансны мэдээлэл нийтэд харагддаг тул илгээхэд аюулгүй)
   const modal = {
     loggedIn: !!user, premium: !!user && isPremium(user), plans: PREMIUM_PLANS, bank: bankInfo(), min: DONATION_MIN, max: DONATION_MAX, poolShare: POOL_SHARE,
-    perks: [["🚫", "Сурталчилгаагүй"], ["🎬", "Видео контент"], ["✦", `Таны оч ×${PREMIUM_SPARK_WEIGHT}`], ["🔥", `Өдөрт +${PREMIUM_DAILY_BONUS} оч`], ["⚡", "Аянга тэмдэг"], ["💚", "Бичээчдэд урам"]],
+    perks: [["🚫", "Сурталчилгаагүй"], ["🎬", "Видео контент"], ["✦", `Таны оч ×${PREMIUM_SPARK_WEIGHT}`], ["🔥", `Өдөрт +${PREMIUM_DAILY_BONUS} оч`], ["⚡", "Дэмжигч тэмдэг"], ["💚", "Бичээчдэд урам"]],
   };
   const mine = user ? board.findIndex((r) => r.id === user.id) : -1;
 
