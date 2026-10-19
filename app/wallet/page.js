@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
+import { lockedBalance } from "@/lib/bounty";
 import { walletBalance, fmtMnt, KIND_LABEL, REQUEST_KIND, REQUEST_STATUS, WITHDRAW_MIN, INCOME_TAX, TIP_FEE } from "@/lib/money";
 import { requestWithdrawal } from "../san/actions";
 import Shell from "../components/Shell";
@@ -20,7 +21,7 @@ export default async function Wallet({ searchParams }) {
   const user = await getUser();
   if (!user) redirect("/login");
   await ensureSchema();
-  const [balance, history, requests, withdrawals] = await Promise.all([
+  const [balance, history, requests, withdrawals, locked] = await Promise.all([
     walletBalance(user.id),
     sql`SELECT m.kind, m.delta, m.note, m.anonymous, m.created_at, g.initial, g.first_name
         FROM money_ledger m
@@ -29,11 +30,12 @@ export default async function Wallet({ searchParams }) {
         WHERE m.account = 'wallet' AND m.user_id = ${user.id} ORDER BY m.id DESC LIMIT 50`,
     sql`SELECT code, kind, amount, months, status, created_at FROM payment_requests WHERE user_id = ${user.id} ORDER BY id DESC LIMIT 20`,
     sql`SELECT amount, status, note, created_at FROM withdrawals WHERE user_id = ${user.id} ORDER BY id DESC LIMIT 10`,
+    lockedBalance(user.id),
   ]);
   const pending = withdrawals.find((w) => w.status === "pending");
   const [given] = await sql`SELECT COALESCE(SUM(amount), 0)::bigint AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'confirmed'`;
   const toGo = Math.max(0, WITHDRAW_MIN - balance);
-  const feeNote = `Уншигчдын урамшууллаас сайтыг ажиллуулахад ${Math.round(TIP_FEE * 100)}% шимтгэл суутгадаг.`;
+  const feeNote = `Уншигчдын урамшуулал, асуултын шагналаас сайтыг ажиллуулахад ${Math.round(TIP_FEE * 100)}% шимтгэл суутгадаг.`;
 
   return (
     <Shell user={user} header="nav">
@@ -43,12 +45,13 @@ export default async function Wallet({ searchParams }) {
         <div className="san-hero">
           <div>
             <h1>Миний хэтэвч</h1>
-            <p className="och-sub">Уншигчдын урамшуулал, сарын шагнал энд орно. Таны бичсэн бүхэн хэн нэгний сонирхлыг асааж байна.</p>
+            <p className="och-sub">Уншигчдын урамшуулал, сарын шагнал, асуултын шагнал энд орно. Таны бичсэн бүхэн хэн нэгний сонирхлыг асааж байна.</p>
           </div>
           <div className="san-pool">
             <small>Үлдэгдэл</small>
             <b>{fmtMnt(balance)}</b>
             <small>{toGo ? `Татахад ${fmtMnt(toGo)} дутуу` : "Татах боломжтой"}</small>
+            {locked > 0 && <small>Асуултын шагналд түгжсэн: {fmtMnt(locked)}</small>}
           </div>
         </div>
         <span className="och-bar san-bar"><span style={{ width: `${Math.min(100, Math.round((balance / WITHDRAW_MIN) * 100))}%` }} /></span>

@@ -2961,3 +2961,56 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san-amounts.tip, .sm-modal .san-amounts.tip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .san-amounts.tip .san-amt > span { gap: 4px; padding: 12px 6px; }
 .san-amounts.tip .san-amt i { font-style: normal; font-size: 22px; line-height: 1; }
+
+/* Шагналтай асуулт: шошго, хүлээсэн хугацааны өнгө (удах тусам дулаан), самбар */
+:root { --bq: #b7791f; --bq-bg: #fdf3e1; --bq-w1: #0f9488; --bq-w2: #c27c0e; --bq-w3: #d4533b; }
+:root[data-theme="dark"] { --bq: #f0b54d; --bq-bg: #3a2c12; --bq-w1: #3fc4b5; --bq-w2: #f0b54d; --bq-w3: #f07b62; }
+.bq-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 8px; border-radius: 10px; background: var(--bq-bg); color: var(--bq); font-weight: 700; font-size: 12px; white-space: nowrap; }
+.bq-row .bq-chip { margin-left: 0; }
+.bq-chip.done { background: var(--teal-bg); color: var(--teal); }
+.bq-age { font-weight: 700; }
+.bq-age.w1 { color: var(--bq-w1); }
+.bq-age.w2 { color: var(--bq-w2); }
+.bq-age.w3 { color: var(--bq-w3); }
+.bq-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 4px 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--bq-bg); color: var(--ink); font-size: 14px; }
+.bq-banner.done { background: var(--teal-bg); }
+.bq-amt { font-weight: 800; font-size: 18px; color: var(--bq); white-space: nowrap; }
+.bq-banner.done .bq-amt { color: var(--teal); }
+.bq-wait { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+.bq-wait.w1, .bq-wait.w1 .bq-when { color: var(--bq-w1); }
+.bq-wait.w2, .bq-wait.w2 .bq-when { color: var(--bq-w2); }
+.bq-wait.w3, .bq-wait.w3 .bq-when { color: var(--bq-w3); }
+.bq-when { display: inline-flex; gap: 4px; align-items: center; }
+.bq-tools { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-start; margin-top: 10px; font-size: 13px; }
+.bq-tools summary { cursor: pointer; color: var(--text); font-weight: 600; }
+.bq-add summary { color: var(--bq); }
+.bq-addform { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.bq-addform input { width: 140px; }
+.bq-addform small, .bq-del p { flex-basis: 100%; color: var(--muted); }
+.bq-hint { flex-basis: 100%; margin: 0; }
+.bq-pick { border: 1px solid var(--bq); background: transparent; color: var(--bq); border-radius: 14px; padding: 4px 12px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.bq-pick:hover { background: var(--bq-bg); }
+.ar-comment.won { border-left: 3px solid var(--teal); padding-left: 12px; }
+.bq-won { display: block; margin-bottom: 8px; color: var(--teal); font-weight: 700; font-size: 13px; }
+.cp-bounty-add { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; margin: 6px 0 0 40px; padding: 0; border: 0; background: none; color: var(--bq); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; text-align: left; }
+.cp-bounty-add small { color: var(--muted); font-weight: 400; font-size: 12px; }
+.cp-bounty { position: relative; margin: 8px 0 0 40px; padding: 10px 34px 10px 12px; border-radius: 12px; background: var(--bq-bg); }
+.cp-bounty label { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--bq); font-size: 14px; }
+.cp-bounty input { width: 130px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; }
+.cp-bounty small { display: block; margin-top: 6px; color: var(--text); font-size: 12px; line-height: 1.45; }
+.cp-bounty-x { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+.cp-ask .cp-actions { margin-top: 6px; }
+.bq-board { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; border: 1px solid var(--bq-bg); }
+.bq-board h3 { margin: 0 0 10px; font-size: 14px; color: var(--ink); }
+.bq-board ol { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+.bq-board li { font-size: 13px; }
+.bq-board li a { color: var(--ink); font-weight: 600; text-decoration: none; display: block; }
+.bq-board li a:hover { color: var(--teal); }
+.bq-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 3px; }
+.bq-row small { color: var(--muted); }
+@media (max-width: 700px) {
+  .bq-board { grid-template-columns: 1fr; }
+  .cp-bounty-add, .cp-bounty { margin-left: 0; }
+}
+.bq-banner a { color: inherit; font-weight: 700; text-decoration: none; }
+.bq-banner a:hover { text-decoration: underline; }

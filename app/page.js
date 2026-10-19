@@ -7,6 +7,8 @@ import PostCard from "./components/PostCard";
 import { followingSet } from "./components/Bits";
 import TimeMenu from "./components/TimeMenu";
 import ScrollActive from "./components/ScrollActive";
+import BountyBoard from "./components/BountyBoard";
+import { bountyBoard } from "@/lib/bounty";
 
 export const dynamic = "force-dynamic";
 
@@ -48,8 +50,10 @@ export default async function Home({ searchParams }) {
         ta.id AS ta_id, ta.body AS ta_body, ta.author_id AS ta_author, ta.initial AS ta_initial, ta.first_name AS ta_first,
         ta.points AS ta_points, ta.followers AS ta_followers, ta.avatar AS ta_avatar,
         EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved,
-        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked
+        EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked,
+        bq.amount AS bounty_amount, bq.status AS bounty_status
       FROM posts p JOIN users u ON u.id = p.author_id
+      LEFT JOIN bounties bq ON bq.post_id = p.id AND bq.status IN ('open', 'awarded')
       -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
       LEFT JOIN LATERAL (
         SELECT c.id, c.body, c.author_id, cu.initial, cu.first_name, cu.avatar_id AS avatar,
@@ -101,6 +105,8 @@ export default async function Home({ searchParams }) {
   }
 
   const followSet = await followingSet(user);
+  // «Хэн юу гэв?»: шагналтай асуултууд хамгийн дээр
+  const board = qa ? await bountyBoard().catch(() => null) : null;
   return (
     <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {(
@@ -138,6 +144,7 @@ export default async function Home({ searchParams }) {
           />
         </nav>
       )}
+      {board && (board.open.length > 0 || board.top.length > 0) && <BountyBoard {...board} />}
       {posts.length === 0 && (
         <div className="ss-card">
           <p className="ss-empty">

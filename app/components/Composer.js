@@ -27,6 +27,33 @@ function Counted({ name, max, min = 0, rows, placeholder, required, latinCheck }
   );
 }
 
+// Асуултын шагнал: хэтэвчнээсээ мөнгө түгжиж, хамгийн зөв хариулт өгсөн хүнд олгоно
+function BountyField({ wallet }) {
+  const [open, setOpen] = useState(false);
+  const fmt = (n) => `${Math.round(n).toLocaleString("en-US")}₮`;
+  if (!open) {
+    return (
+      <button type="button" className="cp-bounty-add" onClick={() => setOpen(true)}>
+        🏆 Шагнал нэмэх <small>Шагналтай асуулт хамгийн дээр гарч, мэдлэгтэй хүмүүсийг хариулахад урамшуулна</small>
+      </button>
+    );
+  }
+  return (
+    <div className="cp-bounty">
+      <label>
+        <span>🏆 Шагнал</span>
+        <input name="bounty" type="number" min={1000} max={5000000} step={500} placeholder="5000" inputMode="numeric" autoFocus />
+        <b>₮</b>
+      </label>
+      <small>
+        Хэтэвчинд: {fmt(wallet)}. Мөнгө түгжигдэж, таны сонгосон хариулагчийн хэтэвч рүү шууд орно. Хариулт ирэхээс өмнө асуултаа устгавал буцааж авна.
+        {wallet < 1000 && <> <a href="/wallet">Хэтэвч</a> хоосон байна.</>}
+      </small>
+      <button type="button" className="cp-bounty-x" aria-label="Шагналгүй" onClick={() => setOpen(false)}>×</button>
+    </div>
+  );
+}
+
 // Огноо + цаг тусдаа: хагас цаг тутмаар сонгоно, анхааруулга монголоор
 const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}`);
 const msg = (text) => ({
@@ -84,7 +111,7 @@ function Head({ icon, title, right }) {
 
 const Req = () => <i className="cp-req">*</i>;
 
-export default function Composer({ loggedIn, me, initial, error }) {
+export default function Composer({ loggedIn, me, initial, error, wallet = 0 }) {
   const [mode, setMode] = useState(initial || null);
   const [start, setStart] = useState({ full: "", date: "" });
   const [now, setNow] = useState({ date: "", time: "" });
@@ -101,6 +128,7 @@ export default function Composer({ loggedIn, me, initial, error }) {
           {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}
           <Counted name="body" max={300} rows={3} required latinCheck placeholder="Хариултаас илүү асуултаар нь хүнийг амархан таньж болно.   -Voltaire" />
         </div>
+        <BountyField wallet={wallet} />
         <div className="cp-actions"><span className="ss-grow" /><button type="submit" className="cp-btn">Асуух</button></div>
       </form>
     );

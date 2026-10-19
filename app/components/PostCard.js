@@ -4,6 +4,8 @@ import { fmtEventRange, spanText, validLocal } from "@/lib/events";
 import EventCover from "./EventCover";
 import { nodeOf } from "@/lib/tree";
 import { strip } from "@/lib/md";
+import { fmtMnt } from "@/lib/money";
+import { waitTone } from "@/lib/bounty";
 import { Avatar, Stat, When, Person } from "./Bits";
 import Share from "./Share";
 import { toggleSave, sparkPost } from "../posts/actions";
@@ -117,8 +119,10 @@ export default function PostCard({ p, viewer, following }) {
         <span className="evc-crumb">
           {KIND_HREF[p.kind] ? <Link href={KIND_HREF[p.kind]} className="ss-kind">{p.kind}</Link> : <span className="ss-kind">{p.kind}</span>}
           {p.category && nodeOf(p.category) && <><i>·</i><Link href={`/tree/${p.category}`} className="pc-cat">{nodeOf(p.category).name}</Link></>}
+          {p.bounty_amount && <span className={"bq-chip" + (p.bounty_status === "awarded" ? " done" : "")} title={p.bounty_status === "awarded" ? "Шагналыг олгосон" : "Шагналтай асуулт: хамгийн зөв хариултад олгоно"}>🏆 {fmtMnt(p.bounty_amount)}{p.bounty_status === "awarded" && " ✓"}</span>}
         </span>
-        <When d={p.created_at} />
+        {/* Шагналтай асуулт хариултаа хүлээж буй бол өнгөрсөн хугацаа өнгөөр тодорно */}
+        <When d={p.created_at} className={p.bounty_status === "open" ? `ss-date bq-age ${waitTone(p.created_at)}` : undefined} />
       </div>
       <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
       <Link href={`/post/${p.id}`} className="ss-card-body">
