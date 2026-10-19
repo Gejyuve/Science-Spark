@@ -7,6 +7,7 @@ import { getUser, needsName } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { audit } from "@/lib/admin";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
+import { celebrate, firstReward, hadFirst, FIRST_KEYS, FIRST_REWARD } from "@/lib/celebrate";
 import { TERM_KIND, DISCUSS_DAYS, DEF_MAX, TERM_REWARD, canApproveWords, synonyms } from "@/lib/terms";
 
 const clean = (fd, k, max) => String(fd.get(k) || "").trim().replace(/\s+/g, " ").slice(0, max);
@@ -48,6 +49,9 @@ export async function proposeTerm(prev, fd) {
                           VALUES (${user.id}, ${TERM_KIND}, ${t.title}, ${t.body}, 'discussion', ${JSON.stringify(t.meta)}::jsonb)
                           RETURNING id`;
   revalidatePath("/dict");
+  const later = [["Толь-д батлагдахад", TERM_REWARD]];
+  if (!(await hadFirst(user.id, "word"))) later.push([FIRST_KEYS.word, FIRST_REWARD]);
+  await celebrate(user, { kind: TERM_KIND, status: "discussion", title: t.title, href: `/post/${row.id}`, later });
   return { ok: true, id: row.id, title: t.title };
 }
 
@@ -107,6 +111,7 @@ export async function decideTerm(fd) {
     await sql`UPDATE posts SET status = 'published', reviewer_id = ${user.id}, reviewed_at = now(), review_note = NULL,
               meta = ${JSON.stringify(m)}::jsonb WHERE id = ${id}`;
     await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${p.author_id}, ${TERM_REWARD}, ${"term_approved:" + id})`;
+    await firstReward(p.author_id, "word");
     await notify({ userId: p.author_id, kind: "term_ok", actorId: user.id, postId: id });
     await audit({ actorId: user.id, category: "content", action: "Шинэ үг баталсан", targetType: "post", targetId: id, targetLabel: p.title });
   } else if (action === "reject") {

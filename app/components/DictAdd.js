@@ -33,8 +33,7 @@ export function TermCard({ v }) {
   );
 }
 
-export default function DictAdd({ label = "Үг нэмэх", className = "", loggedIn = true, icon = false, inEditor = false }) {
-  const [copied, setCopied] = useState(false);
+export default function DictAdd({ label = "Үг нэмэх", className = "", loggedIn = true, icon = false }) {
   const [open, setOpen] = useState(false);
   const [v, setV] = useState({ title: "", en: "", ru: "", la: "", body: "", synonyms: "", source: "" });
   const [state, action, pending] = useActionState(proposeTerm, null);
@@ -48,7 +47,8 @@ export default function DictAdd({ label = "Үг нэмэх", className = "", log
     return () => { document.removeEventListener("keydown", esc); document.body.style.overflow = ""; };
   }, [open]);
   useEffect(() => {
-    if (state?.ok) setV({ title: "", en: "", ru: "", la: "", body: "", synonyms: "", source: "" });
+    // Амжилттай бол цонхоо хааж, баярын цонхыг (Celebrate) гаргана
+    if (state?.ok) { setV({ title: "", en: "", ru: "", la: "", body: "", synonyms: "", source: "" }); setOpen(false); }
   }, [state]);
   const set = (k) => (e) => {
     setV((x) => ({ ...x, [k]: e.target.value }));
@@ -69,31 +69,6 @@ export default function DictAdd({ label = "Үг нэмэх", className = "", log
           </div>
           <button type="button" className="tm-x" onClick={() => setOpen(false)} aria-label="Хаах">×</button>
         </div>
-        {state?.ok ? (
-          <div className="tm-done">
-            <span className="tm-done-ic">✓</span>
-            <b>«{state.title}» хэлэлцүүлэгт орлоо</b>
-            <p>Хүмүүс 7 хоногийн турш саналаа өгч, сэтгэгдлээ үлдээнэ. Дэмжлэг авбал зөвшөөрөгч баталж Толь-д оруулна.</p>
-            {inEditor ? (
-              // Бичих самбараас: зөвхөн холбоос, хуулах дүрс
-              <div className="tm-copy">
-                <input readOnly value={`${typeof window !== "undefined" ? window.location.origin : ""}/post/${state.id}`} onFocus={(e) => e.target.select()} aria-label="Үгийн холбоос" />
-                <button type="button" className={"tm-copyic" + (copied ? " ok" : "")} title={copied ? "Хуулагдлаа" : "Холбоос хуулах"} aria-label="Холбоос хуулах" onClick={async () => {
-                  try { await navigator.clipboard.writeText(`${window.location.origin}/post/${state.id}`); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
-                }}>
-                  {copied
-                    ? <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    : <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4h-6A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9" fill="none" stroke="currentColor" strokeWidth="2" /></svg>}
-                </button>
-              </div>
-            ) : (
-              <div>
-                <Link href={`/post/${state.id}`} className="tm-btn">Хэлэлцүүлгийг харах</Link>
-                <button type="button" className="tm-btn ghost" onClick={() => setOpen(false)}>Хаах</button>
-              </div>
-            )}
-          </div>
-        ) : (
           <form action={action} className="tm-form">
             {state?.error && (
               <p className="tm-err">{state.error}{state.dup && <> · <Link href={`/post/${state.dup}`}>Үзэх →</Link></>}</p>
@@ -134,7 +109,6 @@ export default function DictAdd({ label = "Үг нэмэх", className = "", log
               <button type="submit" className="tm-btn" disabled={pending}>{pending ? "Илгээж байна…" : "Хадгалах"}</button>
             </div>
           </form>
-        )}
       </div>
     </div>
   );

@@ -3354,3 +3354,89 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .fin-tabs .adm-tabs { flex: 1; min-width: 0; }
 .fin-tabs .adm-btn.dark .adm-count { background: #fff; color: var(--ink); }
 @media (max-width: 720px) { .fin-tabs .adm-tabs { flex-basis: 100%; } }
+
+/* Баярын цонх: контент илгээсний дараа (Celebrate.js). --k = контентын төрлийн өнгө */
+.cel-ov { align-items: center; z-index: 120; }
+.cel { position: relative; width: 100%; max-width: 480px; overflow: hidden; border-radius: 28px; background: var(--surface);
+  box-shadow: 0 30px 80px -12px color-mix(in srgb, var(--k) 60%, transparent); animation: cel-pop .5s cubic-bezier(.2, 1.5, .4, 1); }
+@keyframes cel-pop { from { opacity: 0; transform: translateY(30px) scale(.85) rotate(-2deg); } }
+.cel-hero { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 34px 26px 22px; text-align: center;
+  background: radial-gradient(130% 100% at 50% 0%, #fff4c9 0%, color-mix(in srgb, var(--k) 22%, #fff) 55%, color-mix(in srgb, var(--k) 38%, #fff) 100%); }
+.cel-rays { position: absolute; left: 50%; top: 78px; width: 520px; height: 520px; margin: -260px 0 0 -260px; pointer-events: none; opacity: .45;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .9) 0 9deg, transparent 9deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%); mask: radial-gradient(circle, #000 18%, transparent 62%); animation: cel-spin 18s linear infinite; }
+@keyframes cel-spin { to { transform: rotate(360deg); } }
+.cel-confetti { position: absolute; inset: 0; pointer-events: none; }
+.cel-confetti i { position: absolute; top: 40%; left: 50%; width: var(--s); height: calc(var(--s) * .55); border-radius: 2px; background: var(--c); opacity: 0;
+  animation: cel-burst 1.6s cubic-bezier(.15, .7, .4, 1) var(--d) forwards, cel-fall 5s linear calc(var(--d) + 1.6s) infinite; }
+.cel-confetti i:nth-child(3n) { border-radius: 50%; height: var(--s); }
+@keyframes cel-burst { 0% { opacity: 1; transform: translate(-50%, 0) scale(.3); } 100% { opacity: .9; left: var(--x); top: 6%; transform: rotate(var(--r)) scale(1); } }
+@keyframes cel-fall { 0% { opacity: .9; top: -4%; left: var(--x); } 100% { opacity: 0; top: 104%; left: var(--x); transform: rotate(calc(var(--r) * 2)); } }
+.cel-x { position: absolute; top: 14px; right: 14px; z-index: 3; background: rgba(255, 255, 255, .85); }
+.cel-badge { position: relative; z-index: 1; display: grid; place-items: center; width: 92px; height: 92px; margin-bottom: 6px; border-radius: 50%;
+  background: conic-gradient(from 0deg, #ffb547, #ff7aa8, #c13bff, #37c3b3, #9be15d, #ffb547); padding: 5px;
+  box-shadow: 0 14px 30px -10px color-mix(in srgb, var(--k) 80%, transparent); animation: cel-bounce 2.6s ease-in-out .5s infinite; }
+.cel-badge span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: #fff; font-size: 42px; line-height: 1; }
+@keyframes cel-bounce { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-6px) rotate(-6deg); } 50% { transform: translateY(0) rotate(0); } 75% { transform: translateY(-3px) rotate(5deg); } }
+.cel-kicker { position: relative; z-index: 1; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--k); }
+.cel-hero b { position: relative; z-index: 1; font-size: 22px; font-weight: 800; line-height: 1.25; color: #0d2b33; }
+.cel-title { position: relative; z-index: 1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 600; color: #2f4a55; }
+.cel-hero p { position: relative; z-index: 1; margin: 6px 0 0; max-width: 400px; font-size: 13.5px; line-height: 1.55; color: #33505a; }
+.cel-body { display: flex; flex-direction: column; gap: 14px; padding: 18px 22px 22px; }
+.cel-earn { display: flex; flex-direction: column; gap: 8px; }
+.cel-chip { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: var(--surface-2); }
+.cel-chip b { font-size: 14px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cel-chip small { font-size: 12px; color: var(--muted); }
+.cel-chip.got { padding: 12px 14px; background: linear-gradient(100deg, #fff1c9, #ffe0ee 60%, #e5f7ff); box-shadow: inset 0 0 0 1.5px #ffcf6b; animation: cel-glow 2s ease-in-out infinite; }
+.cel-chip.got > span:last-child { display: flex; flex-direction: column; }
+.cel-chip.got b { font-size: 22px; color: #c2400d; }
+.cel-chip.got small { color: #7a4a2a; font-weight: 600; }
+@keyframes cel-glow { 50% { box-shadow: inset 0 0 0 1.5px #ffcf6b, 0 0 22px -4px #ffb547; } }
+.cel-spark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c9, #ffb547 60%, #ff7a1a); color: #fff; font-size: 22px;
+  text-shadow: 0 1px 3px rgba(150, 60, 0, .5); animation: cel-twinkle 1.4s ease-in-out infinite; }
+@keyframes cel-twinkle { 50% { transform: scale(1.12) rotate(18deg); } }
+.cel-later { display: flex; flex-direction: column; gap: 6px; }
+.cel-lt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cel-later > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.cel-later .cel-chip { flex: 1 1 auto; gap: 8px; padding: 8px 12px; border: 1.5px dashed color-mix(in srgb, var(--k) 45%, var(--border)); background: transparent; }
+.cel-later .cel-chip b { color: var(--k); }
+.cel-lv { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); }
+.cel-lv.up { background: linear-gradient(100deg, #fff1c9, #e6f7f5); animation: cel-glow 2s ease-in-out infinite; }
+.cel-lv-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.cel-lv-row b { font-size: 13.5px; }
+.cel-lv-row span { font-size: 13px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cel-bar { position: relative; height: 10px; border-radius: 99px; overflow: hidden; background: var(--border); }
+.cel-bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; }
+.cel-bar-old { background: color-mix(in srgb, var(--muted) 45%, transparent); }
+.cel-bar-new { transition: width 1.2s cubic-bezier(.2, .9, .3, 1); background-color: var(--k); background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); background-size: 200% 100%;
+  animation: cel-shine 1.8s linear infinite; }
+@keyframes cel-shine { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+.cel-lv small { font-size: 12px; color: var(--muted); }
+.cel-perk { font-size: 12.5px; color: var(--ink); }
+.cel-perk b { color: var(--teal); }
+.cel-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cel-go { flex: 1 1 160px; height: 46px; border: 0; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 800; color: #fff; cursor: pointer;
+  background: linear-gradient(90deg, #00a89b, #37c3b3, #7fd6ff); background-size: 200% 100%; box-shadow: 0 8px 20px -8px rgba(0, 168, 155, .8); transition: background-position .4s, transform .15s; }
+.cel-go:hover { background-position: 100% 0; transform: translateY(-1px); }
+.cel-share { flex: 1 1 160px; height: 46px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--surface); font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer; }
+.cel-share.ok { border-color: #16794a; color: #16794a; }
+.cel-rules { width: 100%; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--muted); text-decoration: none; }
+.cel-rules:hover { color: var(--teal); }
+:root[data-theme="dark"] .cel-hero { background: radial-gradient(130% 100% at 50% 0%, #4a3a16 0%, color-mix(in srgb, var(--k) 30%, #12181b) 55%, color-mix(in srgb, var(--k) 18%, #12181b) 100%); }
+:root[data-theme="dark"] .cel-rays { opacity: .12; }
+:root[data-theme="dark"] .cel-hero b { color: #f2f6f8; }
+:root[data-theme="dark"] .cel-title { color: #d4dde2; }
+:root[data-theme="dark"] .cel-hero p { color: #b8c6cd; }
+:root[data-theme="dark"] .cel-badge span { background: #1b2228; }
+:root[data-theme="dark"] .cel-x { background: rgba(0, 0, 0, .35); }
+:root[data-theme="dark"] .cel-chip.got, :root[data-theme="dark"] .cel-lv.up { background: linear-gradient(100deg, #4a3a16, #3a1f2c 60%, #12302c); }
+:root[data-theme="dark"] .cel-chip.got b { color: #ffc48a; }
+:root[data-theme="dark"] .cel-chip.got small { color: #e3c3a5; }
+@media (max-width: 760px) {
+  .cel-hero { padding: 30px 18px 18px; }
+  .cel-hero b { font-size: 19px; }
+  .cel-body { padding: 16px 16px 18px; }
+  .cel-badge { width: 80px; height: 80px; }
+  .cel-badge span { font-size: 36px; }
+}
+@media (prefers-reduced-motion: reduce) { .cel, .cel-rays, .cel-badge, .cel-chip.got, .cel-spark, .cel-lv.up, .cel-bar-new { animation: none; } .cel-confetti { display: none; } }

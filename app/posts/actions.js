@@ -7,7 +7,7 @@ import { getUser, isStaff, isSuperAdmin, isAdmin, needsName, canWrite } from "@/
 import { notify } from "@/lib/notify";
 import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
-import { SPARK_GET_WRITING, SPARK_GET_OTHER, WRITING_KINDS, writeLevel } from "@/lib/levels";
+import { SPARK_GET_WRITING, SPARK_GET_OTHER, WRITING_KINDS, APPROVE_REWARD, writeLevel } from "@/lib/levels";
 import { sparkWeight, dailyLimit, givenToday, rewardFirstSpark } from "@/lib/spark";
 import { ownImage } from "@/lib/images";
 import { validCategory } from "@/lib/tree";
@@ -17,6 +17,7 @@ import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, re
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 import { leaderClub, CLUB_KINDS } from "@/lib/tasks";
 import { recordRevision, addCredit } from "@/lib/revisions";
+import { celebrate, firstReward, hadFirst, FIRST_KEYS, FIRST_REWARD } from "@/lib/celebrate";
 
 // Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
 function articleMeta(fd) {
@@ -66,7 +67,7 @@ export async function addComment(formData) {
   const body = String(formData.get("body") || "").trim().slice(0, 2000);
   if (!Number.isInteger(postId) || !body) return;
   await ensureSchema();
-  const ok = await sql`SELECT author_id FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
+  const ok = await sql`SELECT author_id, kind FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!ok.length) return;
   // Хариулт: эцэг сэтгэгдэл мөн нийтлэлд байх ёстой. 3-аас гүн бол 2-р түвшинд залгана.
   let parent = Number(formData.get("parent_id")) || null;
@@ -84,6 +85,11 @@ export async function addComment(formData) {
   const [c] = await sql`INSERT INTO comments (post_id, author_id, body, parent_id) VALUES (${postId}, ${user.id}, ${body}, ${parent}) RETURNING id`;
   if (parentAuthor) await notify({ userId: parentAuthor, kind: "reply", actorId: user.id, postId });
   if (ok[0].author_id !== parentAuthor) await notify({ userId: ok[0].author_id, kind: "comment", actorId: user.id, postId });
+  // Бусдын асуултад өгсөн анхны хариултад нэг удаа урамшуулал, баярын цонх
+  if (ok[0].kind === "Асуулт" && !parent && ok[0].author_id !== user.id) {
+    const got = await firstReward(user.id, "answer");
+    if (got) await celebrate(user, { kind: "Хариулт", status: "published", href: `/post/${postId}`, earned: [[FIRST_KEYS.answer, got]], later: [["Хариултад тань өгөх оч бүр", SPARK_GET_OTHER]] });
+  }
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
   redirect(`/post/${postId}#c${c.id}`);
@@ -247,11 +253,17 @@ export async function submitDraft(formData) {
   if (!Number.isInteger(postId)) redirect("/");
   if (!formData.get("agree")) redirect(`/post/${postId}/preview?error=${encodeURIComponent("Дүрэм ба зарчмыг зөвшөөрнө үү")}`);
   await ensureSchema();
-  const [dr] = await sql`SELECT kind, body FROM posts WHERE id = ${postId} AND author_id = ${user.id} AND status = 'draft'`;
+  const [dr] = await sql`SELECT kind, title, body FROM posts WHERE id = ${postId} AND author_id = ${user.id} AND status = 'draft'`;
   if (dr && bodyRule(dr.kind, dr.body).error) redirect(`/post/${postId}/edit?error=${encodeURIComponent(bodyRule(dr.kind, dr.body).error)}`);
   const d = await sql`UPDATE posts SET status = 'pending', created_at = now() WHERE id = ${postId} AND author_id = ${user.id} AND status = 'draft' RETURNING id`;
   revalidatePath("/review", "layout");
   revalidatePath(`/u/${user.id}`);
+  if (d.length) {
+    const later = APPROVE_REWARD[dr.kind] ? [["Редакц батлахад", APPROVE_REWARD[dr.kind]]] : [];
+    if (dr.kind === "Нийтлэл" && !(await hadFirst(user.id, "article"))) later.push([FIRST_KEYS.article, FIRST_REWARD]);
+    if (WRITING_KINDS.includes(dr.kind)) later.push(["Уншигч бүрээс авах оч", SPARK_GET_WRITING]);
+    await celebrate(user, { kind: dr.kind, status: "pending", title: dr.title, href: `/post/${postId}`, later });
+  }
   redirect(d.length ? `/post/${postId}?ok=${encodeURIComponent("Редакц руу илгээлээ. Хянагдсаны дараа танд мэдэгдэл ирнэ.")}` : `/post/${postId}`);
 }
 
@@ -478,6 +490,11 @@ export async function quickPost(formData) {
     VALUES (${user.id}, ${clubId}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${imageId})
     RETURNING id`;
   revalidatePath("/");
+  await celebrate(user, {
+    kind, status, title: kind === "Асуулт" || kind === "Бодрол" ? "" : title, href: `/post/${rows[0].id}`,
+    // Клубын нэрээр хуваалцсан бүтээлийн оч клубт очно
+    later: status === "published" && !clubId ? [["Уншигч бүрээс авах оч", SPARK_GET_OTHER]] : [],
+  });
   if (bounty > 0) {
     const ok = await lockBounty(user.id, rows[0].id, title, bounty);
     redirect(`/post/${rows[0].id}?${ok ? "ok" : "error"}=${encodeURIComponent(ok ? `Асуулт ${fmtMnt(bounty)}-ийн шагналтай нийтлэгдлээ. Мэдлэгээ хуваалцах хүмүүсийг урамшуулсанд баярлалаа!` : "Асуулт нийтлэгдсэн ч шагнал тавьж чадсангүй. Хэтэвчээ шалгаад доороос дахин тавина уу.")}`);
