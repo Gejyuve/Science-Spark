@@ -210,7 +210,7 @@ export async function addBounty(formData) {
   await ensureSchema();
   const [p] = await sql`SELECT id, title FROM posts WHERE id = ${postId} AND author_id = ${user.id} AND kind = 'Асуулт' AND status = 'published'`;
   if (!p) redirect(`/post/${postId}`);
-  if ((await walletBalance(user.id)) < amount) back(`error=${encodeURIComponent("Хэтэвчинд тань хүрэлцэх мөнгө алга")}`);
+  if ((await walletBalance(user.id)) < amount) back(`error=${encodeURIComponent("Хэтэвчинд тань хүрэлцэх мөнгө алга. Хэтэвчээ цэнэглээд дахин оролдоно уу.")}`);
   if (!(await lockBounty(user.id, postId, p.title, amount))) back(`error=${encodeURIComponent("Шагнал тавьж чадсангүй. Хэтэвчээ шалгана уу, эсвэл энэ асуулт аль хэдийн шагналтай байна.")}`);
   revalidatePath("/");
   revalidatePath(`/post/${postId}`);
@@ -364,7 +364,7 @@ export async function quickPost(formData) {
     title = short(body.split("\n")[0]);
     if (kind === "Асуулт") bounty = bountyAmount(formData);
     if (bounty < 0) fail(`Шагналын дүнг ${fmtMnt(BOUNTY_MIN)}-${fmtMnt(BOUNTY_MAX)} хооронд оруулна уу`);
-    if (bounty > 0 && (await walletBalance(user.id)) < bounty) fail("Хэтэвчинд тань хүрэлцэх мөнгө алга");
+    if (bounty > 0 && (await walletBalance(user.id)) < bounty) fail("Хэтэвчинд тань хүрэлцэх мөнгө алга. Хэтэвчээ цэнэглээд дахин оролдоно уу.");
     if (kind === "Бодрол") meta.source = url(t("source", 300));
   } else if (kind === "Эвент") {
     title = t("title", 200);

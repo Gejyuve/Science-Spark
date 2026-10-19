@@ -20,9 +20,9 @@ function Confetti({ burst }) {
   );
 }
 
-// «Дэмжигч болох», «Хандив өгөх», бичээчид «Шагнал» өгөх цонх. Хуудаснаас гаралгүй шилжүүлгийн код гаргана.
-export default function SupportModal({ kind, label, className = "", loggedIn, premium, plans, perks, bank, min, max, poolShare, writer, postId }) {
-  const [open, setOpen] = useState(false);
+// «Дэмжигч болох», «Хандив өгөх», бичээчид «Шагнал» өгөх, «Хэтэвч цэнэглэх» цонх. Хуудаснаас гаралгүй шилжүүлгийн код гаргана.
+export default function SupportModal({ kind, label, className = "", loggedIn, premium, plans, perks, bank, min, max, poolShare, writer, postId, autoOpen = false }) {
+  const [open, setOpen] = useState(autoOpen);
   const [mounted, setMounted] = useState(false);
   const [amount, setAmount] = useState(kind === "tip" ? 20000 : 10000);
   const [custom, setCustom] = useState("");
@@ -43,6 +43,7 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
   if (!loggedIn) return <Link href="/login" className={className}>{label}</Link>;
   const isPrem = kind === "premium";
   const isTip = kind === "tip";
+  const isTop = kind === "topup";
   const done = shown?.code ? shown : null;
   const sum = isPrem ? plans.find((p) => p.months === months)?.price : Number(custom.replace(/[^\d]/g, "")) || amount;
   const close = () => { setOpen(false); setShown(null); setCopied(false); };
@@ -53,12 +54,13 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
         <div className="sm-hero">
           <Confetti burst={!!done} />
           <button type="button" className="tm-x sm-x" onClick={close} aria-label="Хаах">×</button>
-          <span className="sm-ic">{isPrem ? <img src="/icons/bolt.svg" width={34} height={34} alt="" /> : isTip ? <img src="/icons/gift.svg" width={30} height={30} alt="" /> : done ? "🎉" : "✦"}</span>
-          <b id="sm-h">{done ? "Баярлалаа!" : isPrem ? (premium ? "Дэмжлэгээ сунгах" : "Шинжлэх ухааны дэмжигч болох") : isTip ? `${writer.name}-г урамшуулах` : "Шагналын санд хандив өгөх"}</b>
+          <span className="sm-ic">{isPrem ? <img src="/icons/bolt.svg" width={34} height={34} alt="" /> : isTip ? <img src="/icons/gift.svg" width={30} height={30} alt="" /> : isTop ? "🏆" : done ? "🎉" : "✦"}</span>
+          <b id="sm-h">{done ? "Баярлалаа!" : isPrem ? (premium ? "Дэмжлэгээ сунгах" : "Шинжлэх ухааны дэмжигч болох") : isTip ? `${writer.name}-г урамшуулах` : isTop ? "Хэтэвч цэнэглэх" : "Шагналын санд хандив өгөх"}</b>
           <p>
             {done
-              ? isPrem ? "Та шинжлэх ухааны дэмжигчдийн гэр бүлд нэгдлээ. Таны сэтгэл Монголын бичээчдийн дараагийн нийтлэлийг асаана." : isTip ? `Таны урамшуулал ${writer.name}-д хүрч, дараагийн бүтээлийг нь асаах урам болно.` : "Таны хандив Монголын шинжлэх ухаан түгээгч бичээчдэд урам болно. Ийм хүмүүс байгаа цагт мэдлэг цацарсаар байна."
+              ? isPrem ? "Та шинжлэх ухааны дэмжигчдийн гэр бүлд нэгдлээ. Таны сэтгэл Монголын бичээчдийн дараагийн нийтлэлийг асаана." : isTip ? `Таны урамшуулал ${writer.name}-д хүрч, дараагийн бүтээлийг нь асаах урам болно.` : isTop ? "Шилжүүлэг ирмэгц мөнгө хэтэвчинд тань орно. Түүгээр асуултдаа шагнал тавьж, мэдлэгээ хуваалцсан хүмүүсийг урамшуулаарай." : "Таны хандив Монголын шинжлэх ухаан түгээгч бичээчдэд урам болно. Ийм хүмүүс байгаа цагт мэдлэг цацарсаар байна."
               : isTip ? "Таны урамшуулал бичээчийн хэтэвчид орж, цааш бичих урам болно."
+              : isTop ? "Хэтэвчиндээ мөнгө хийж, асуултдаа шагнал тавих, хариулсан хүмүүсийг урамшуулахад ашиглана. Таны мөнгө мэдлэг хуваалцдаг хүмүүст очно."
               : isPrem ? `Таны төлбөрийн ${Math.round(poolShare * 100)}% нь шууд бичээчдийн шагналын санд орж, үлдсэн нь сайтыг ажиллуулахад зарцуулагдана.` : "Хандив бүтнээрээ сар бүрийн шилдэг бичээчдэд хуваарилагдана. Сайт шимтгэл авахгүй."}
           </p>
         </div>
@@ -123,17 +125,19 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
                 <label className="san-field">Өөр дүн (₮)
                   <input name="amount_custom" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value)} placeholder={`${fmt(min)} – ${fmt(max)}`} />
                 </label>
+                {!isTop && <>
                 <label className="san-field">{isTip ? "Бичээчид хэлэх үг" : "Бичээчдэд хэлэх үг"} (заавал биш)
                   <textarea name="message" maxLength={300} rows={2} placeholder={isTip ? "Бичээчдээ урам өгөх үг…" : "Залуу судлаачдад урам өгөх үг…"} />
                 </label>
                 <label className="san-check"><input type="checkbox" name="anonymous" /> Нэрээ нууцлах</label>
+                </>}
               </>
             )}
             <div className="sm-foot">
               <small>{sum ? `Нийт ${fmt(sum)}` : ""}</small>
               <span className="ss-grow" />
               <button type="button" className="tm-btn ghost" onClick={close}>Болих</button>
-              <button type="submit" className="tm-btn sm-go" disabled={pending}>{pending ? "Түр хүлээнэ үү…" : isPrem ? <>Дэмжигч болох <img className="sm-bolt" src="/icons/bolt.svg" width={16} height={16} alt="" /></> : isTip ? "Урамшуулах 🎁" : "Хандив өгөх ✦"}</button>
+              <button type="submit" className="tm-btn sm-go" disabled={pending}>{pending ? "Түр хүлээнэ үү…" : isPrem ? <>Дэмжигч болох <img className="sm-bolt" src="/icons/bolt.svg" width={16} height={16} alt="" /></> : isTip ? "Урамшуулах 🎁" : isTop ? "Цэнэглэх 🏆" : "Хандив өгөх ✦"}</button>
             </div>
           </form>
         )}

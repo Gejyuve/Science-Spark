@@ -143,7 +143,7 @@ function AskerTools({ post, bounty, othersAnswered, wallet }) {
             <input type="hidden" name="post_id" value={post.id} />
             <input name="bounty" type="number" required min={BOUNTY_MIN} max={BOUNTY_MAX} step={500} placeholder="5000" inputMode="numeric" aria-label="Шагналын дүн" />
             <button type="submit" className="btn">Шагнал тавих</button>
-            <small>Хэтэвчинд: {fmtMnt(wallet)}. Мөнгө түгжигдэж, таны сонгосон хариулагчийн хэтэвч рүү шууд орно.{wallet < BOUNTY_MIN && <> <Link href="/wallet">Хэтэвч</Link> хоосон байна.</>}</small>
+            <small>Хэтэвчинд: {fmtMnt(wallet)}. Мөнгө түгжигдэж, таны сонгосон хариулагчийн хэтэвч рүү шууд орно.{wallet < BOUNTY_MIN && <> <Link href="/wallet?topup=1">Хэтэвчээ цэнэглэх →</Link></>}</small>
           </form>
         </details>
       )}

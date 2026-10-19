@@ -48,7 +48,7 @@ export default async function Finance({ searchParams }) {
                     <div className="adm-acts">
                       <form action={confirmPayment} className="adm-inline">
                         <input type="hidden" name="id" value={r.id} />
-                        <input name="fee" type="number" min={0} className="adm-num" defaultValue={Math.round(r.amount * PAYMENT_FEE)} title="Шимтгэл ₮" />
+                        <input name="fee" type="number" min={0} className="adm-num" defaultValue={r.kind === "topup" ? 0 : Math.round(r.amount * PAYMENT_FEE)} title="Шимтгэл ₮" />
                         <button className="adm-btn dark">Ирсэн</button>
                       </form>
                       <form action={cancelPayment}><input type="hidden" name="id" value={r.id} /><button className="adm-btn danger">Цуцлах</button></form>

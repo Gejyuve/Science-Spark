@@ -23,7 +23,7 @@ async function makeRequest(user, formData) {
     if (!plan) return { error: "Хугацаагаа сонгоно уу" };
     amount = plan.price;
     months = plan.months;
-  } else if (kind === "pool" || kind === "tip") {
+  } else if (kind === "pool" || kind === "tip" || kind === "topup") {
     // Өөр дүн бичсэн бол түүнийг, үгүй бол сонгосон товчийг авна
     const raw = String(formData.get("amount_custom") || "").trim() || String(formData.get("amount") || "");
     amount = Math.round(Number(raw.replace(/[^\d]/g, "")));

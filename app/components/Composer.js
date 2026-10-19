@@ -47,7 +47,7 @@ function BountyField({ wallet }) {
       </label>
       <small>
         Хэтэвчинд: {fmt(wallet)}. Мөнгө түгжигдэж, таны сонгосон хариулагчийн хэтэвч рүү шууд орно. Хариулт ирэхээс өмнө асуултаа устгавал буцааж авна.
-        {wallet < 1000 && <> <a href="/wallet">Хэтэвч</a> хоосон байна.</>}
+        {wallet < 1000 && <> <a href="/wallet?topup=1">Хэтэвчээ цэнэглэх →</a></>}
       </small>
       <button type="button" className="cp-bounty-x" aria-label="Шагналгүй" onClick={() => setOpen(false)}>×</button>
     </div>
