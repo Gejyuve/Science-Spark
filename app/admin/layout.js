@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }) {
           <img src="/icons/a_brand.svg" width={22} height={22} alt="" />
           <b>Science Spark</b>
         </Link>
-        <span className="adm-chip">{user.role === "superadmin" ? "СУПЕР АДМИН · РЕДАКЦ" : "РЕДАКЦИЙН АДМИН"}</span>
+        <span className="adm-chip">{user.role === "superadmin" ? "СУПЕР АДМИН · РЕДАКЦ" : "АДМИН · РЕДАКЦ"}</span>
         <AdminNav items={items} />
         <span className="ss-grow" />
         <Link href="/" className="adm-back">

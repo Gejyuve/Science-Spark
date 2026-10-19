@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
-import { requireSection, ago } from "@/lib/admin";
+import { requireSection, ago, maskIp } from "@/lib/admin";
 import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, EXPENSE_KINDS, REQUEST_KIND, PAYMENT_FEE, INCOME_TAX, bankInfo } from "@/lib/money";
 import { currentPeriod, prevPeriod, periodLabel, monthBoard, splitPrizes } from "@/lib/spark";
 import { confirmPayment, cancelPayment, addExpense, payWithdrawal, rejectWithdrawal, closeMonth } from "./actions";
 import Head, { Stat, Flash, Tabs, Chip, who } from "../_c/Head";
 
-const TABS = [["", "Төлбөр"], ["withdraw", "Татах хүсэлт"], ["expense", "Зардал"], ["close", "Сар хаах"]];
+const TABS = [["", "Төлбөр"], ["withdraw", "Татах хүсэлт"], ["expense", "Зардал"], ["close", "Сар хаах"], ["log", "Лог"]];
+const fmtT = (d) => new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).slice(0, 16);
 
 export default async function Finance({ searchParams }) {
   const user = await requireSection("finance");
@@ -135,6 +136,31 @@ export default async function Finance({ searchParams }) {
           )}
         </section>
       </div>
+    );
+  } else if (tab === "log") {
+    // Санхүүгийн үйлдлүүдийн аудит (аудит логоос тусгаарласан)
+    const rows = await sql`SELECT a.*, u.initial, u.first_name, u.email FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
+                           WHERE a.category = 'money' ORDER BY a.created_at DESC LIMIT 200`;
+    body = (
+      <section className="adm-card flush">
+        <div className="adm-card-head pad"><b>Санхүүгийн үйлдлүүд</b></div>
+        {rows.length === 0 ? <p className="adm-empty">Бичлэг алга.</p> : (
+          <table className="adm-table">
+            <thead><tr><th>Хугацаа</th><th>Хэн</th><th>Үйлдэл</th><th>Хэнд</th><th>IP</th></tr></thead>
+            <tbody>
+              {rows.map((a) => (
+                <tr key={a.id}>
+                  <td className="adm-mono">{fmtT(a.created_at)}</td>
+                  <td>{a.actor_id ? who(a) : "Систем"}</td>
+                  <td className="adm-wrap">{a.action}</td>
+                  <td>{a.target_type === "user" && a.target_id ? <Link href={`/admin/users/${a.target_id}`}>{a.target_label || `#${a.target_id}`}</Link> : a.target_label || "—"}</td>
+                  <td className="adm-mono">{maskIp(a.ip)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     );
   } else {
     const target = sp.p && sp.p < period ? sp.p : prevPeriod(period);

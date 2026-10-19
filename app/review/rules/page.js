@@ -16,7 +16,7 @@ export default async function Rules() {
   const user = await getUser();
   return (
     <>
-      <Head user={user} tag="Хянагч" title="Хянагчийн дүрэм" sub="Хянагч бүрийн баримтлах зарчим" />
+      <Head user={user} title="Редакцийн дүрэм" sub="Редакцийн гишүүн бүрийн баримтлах зарчим" />
       <section className="adm-card">
         <ol className="rv-rulelist">
           {RULES.map(([t, d]) => (<li key={t}><b>{t}</b><span>{d}</span></li>))}

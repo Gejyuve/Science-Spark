@@ -20,6 +20,7 @@ import { ClubPerson, ClubAv } from "./ClubBits";
 import { hotClubs, clubFollowSet, membershipOf } from "@/lib/clubs";
 import { chatUnread } from "@/lib/chat";
 import { NAV } from "./navItems";
+import { loadSettings } from "@/lib/settings";
 
 const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
@@ -205,6 +206,18 @@ async function RightRail({ user }) {
 
 export default async function Shell({ user, active, children, header = true, compose, composeError }) {
   if (needsName(user)) redirect("/profile/edit");
+  const site = await loadSettings();
+  // Засвар үйлчилгээний горим: редакцаас бусдад мэдэгдэл л харагдана
+  if (site.maintenance && !isStaff(user)) {
+    children = (
+      <section className="ss-maint">
+        <img src="/icons/logo.svg" width={64} height={64} alt="" />
+        <h1>Сайт түр засвартай байна</h1>
+        <p>Бид сайтыг илүү сайжруулж байна. Удахгүй эргэн уулзъя ✦</p>
+        {!user && <a href="/login" className="ss-maint-login">Редакц нэвтрэх</a>}
+      </section>
+    );
+  }
   return (
     <div className="ss-shell">
       <Sidebar user={user} active={active} />
@@ -214,6 +227,8 @@ export default async function Shell({ user, active, children, header = true, com
         ) : (
           <header className="ss-header compact static"><NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} /></header>
         )}
+        {site.announcement && <p className="ss-announce">{site.announcement}</p>}
+        {site.maintenance && isStaff(user) && <p className="ss-announce warn">Засвар үйлчилгээний горим асаалттай: зөвхөн редакц сайтыг харж байна.</p>}
         {children}
       </main>
       <RightRail user={user} />

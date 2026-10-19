@@ -3148,3 +3148,33 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cp-tabs::-webkit-scrollbar { display: none; }
   .cp-tabs a { flex: none; white-space: nowrap; }
 }
+
+/* Админ · Тойм: хэсгийн гарчиг, түвшний тархалт */
+.adm-sec { margin: 8px 0 -4px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.adm-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.adm-bars li { display: grid; grid-template-columns: 130px minmax(0, 1fr) 48px; align-items: center; gap: 10px; font-size: 13px; }
+.adm-bars i { height: 10px; border-radius: 6px; background: var(--surface-2, #eef3f6); overflow: hidden; }
+.adm-bars em { display: block; height: 100%; border-radius: 6px; min-width: 2px; }
+.adm-bars b { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Сайтын зарлал, засвар үйлчилгээний горим, хаалттай бүртгэл (Тохиргоо) */
+.ss-announce { margin: 0; padding: 12px 16px; border-radius: 14px; background: var(--teal-bg, #e0f7f2); color: #00695f; font-size: 14px; font-weight: 600; line-height: 1.45; }
+.ss-announce.warn { background: #fff3e8; color: #c2400d; }
+:root[data-theme="dark"] .ss-announce { background: #12332f; color: #7fe3d3; }
+:root[data-theme="dark"] .ss-announce.warn { background: #3a2a1c; color: #ffc48a; }
+.ss-maint { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 60px 24px; border-radius: 24px; background: var(--surface); }
+.ss-maint h1 { margin: 6px 0 0; font-size: 24px; color: var(--ink); }
+.ss-maint p { margin: 0; color: var(--muted); }
+.ss-maint-login { margin-top: 8px; font-size: 13px; color: var(--accent); }
+.au-closed { margin: 6px 0 4px; text-align: center; font-weight: 600; color: var(--text); }
+/* Админ · Тохиргоо */
+.adm-set { display: grid; gap: 12px; }
+.adm-set-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.adm-set label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.adm-set input[type="number"], .adm-set input[type="text"], .adm-set textarea { font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line, rgba(127, 140, 150, .3)); background: var(--surface); }
+.adm-set textarea { min-height: 70px; resize: vertical; }
+.adm-set .adm-switch { flex-direction: row; align-items: center; gap: 10px; font-size: 14px; color: var(--ink); }
+.adm-set .adm-switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.adm-set-lv { display: grid; grid-template-columns: 120px repeat(2, minmax(0, 1fr)); gap: 8px; align-items: center; font-size: 13px; }
+.adm-set-lv b { font-weight: 600; color: var(--ink); }
+.adm-set-lv small { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }

@@ -30,7 +30,7 @@ export default async function Archive({ searchParams }) {
   const all = counts.reduce((a, r) => a + r.n, 0);
   return (
     <>
-      <Head user={user} tag="Хянагч" title="Миний шийдвэрүүд" sub="Таны хянасан бүх контентын архив" search="/review/archive" q={q} hidden={{ s: st }} />
+      <Head user={user} title="Миний шийдвэрүүд" sub="Таны хянасан бүх контентын архив" search="/review/archive" q={q} hidden={{ s: st }} />
       <Tabs cur={st} href={(k) => `/review/archive${k ? `?s=${k}` : ""}`} tabs={TABS.map(([k, l]) => [k, l, k ? c[k] || 0 : all])} />
       <section className="adm-card flush">
         {rows.length === 0 ? <p className="adm-empty">Одоохондоо шийдвэр алга.</p> : (

@@ -23,7 +23,7 @@ export async function GET(req) {
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM posts WHERE author_id = u.id)::int AS posts
     FROM users u
-    WHERE (${t} = '' OR (${t} = 'reviewer' AND u.role = 'reviewer') OR (${t} = 'admin' AND u.role IN ('admin','superadmin'))
+    WHERE (${t} = '' OR (${t} = 'admin' AND u.role IN ('admin','superadmin'))
            OR (${t} = 'restricted' AND u.restricted_at IS NOT NULL) OR (${t} = 'new' AND u.created_at > now() - interval '7 days'))
       AND (${like} = '%%' OR lower(u.email) LIKE ${like} OR lower(u.first_name) LIKE ${like} OR lower(COALESCE(u.surname,'')) LIKE ${like})
     ORDER BY u.id`;

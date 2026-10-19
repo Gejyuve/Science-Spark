@@ -79,19 +79,18 @@ export default async function UserDetail({ params, searchParams }) {
                 <input type="hidden" name="from" value={from} />
                 <select name="role" defaultValue={u.role}>
                   <option value="user">Хэрэглэгч</option>
-                  <option value="reviewer">Хянагч</option>
-                  <option value="admin">Редакцийн админ</option>
+                  <option value="admin">Админ</option>
                 </select>
                 <button className="adm-btn dark">Хадгалах</button>
               </form>
             )}
-            <p className="adm-muted small">Хянагч: нийтлэл, мэдээ, эвент, шинэ үг, ангилал хянана. Редакцийн админ: дээрээс нь клубын даалгавар, тайлан батлаж оч тогтооно, логик алдааны мэдэгдэл шийдэж, контент нууна.</p>
+            <p className="adm-muted small">Админ: бүх контент хянаж, клубын даалгавар, тайлан батлан оч тогтоож, логик алдааны мэдэгдэл шийдэж, контент нууна. Хэрэглэгч, оч, санхүү, аудит зөвхөн супер админд.</p>
           </section>
 
           <section className="adm-card">
             <div className="adm-card-head"><b>Хязгаарлалт</b></div>
             {!canRestrict ? (
-              <p className="adm-muted">{protectedUser ? "Энэ хэрэглэгчийг хязгаарлах боломжгүй." : "Хянагч, админыг зөвхөн супер админ хязгаарлана."}</p>
+              <p className="adm-muted">{protectedUser ? "Энэ хэрэглэгчийг хязгаарлах боломжгүй." : "Админыг зөвхөн супер админ хязгаарлана."}</p>
             ) : u.restricted_at ? (
               <form action={restrictUser} className="adm-inline">
                 <input type="hidden" name="user_id" value={u.id} />
@@ -108,7 +107,7 @@ export default async function UserDetail({ params, searchParams }) {
             <p className="adm-muted small">Хязгаарлагдсан хэрэглэгч нийтлэл, асуулт, сэтгэгдэл бичих, оч өгөх боломжгүй.</p>
           </section>
 
-          {canSee(me, "points") && !self && (
+          {me.role === "superadmin" && !self && (
             <section className="adm-card">
               <div className="adm-card-head"><b>Оч нэмэх / хасах</b></div>
               <form action={adjustPoints} className="adm-inline">

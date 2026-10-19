@@ -46,7 +46,7 @@ async function Queue({ user, sp }) {
          AND reviewed_at > now() - interval '30 days')::float AS avg_h`;
   return (
     <>
-      <Head user={user} tag="Хянагч" title="Хяналтын жагсаалт" sub="Хүлээгдэж буй контент · «Хянах» дээр дарж засварлах самбарыг нээнэ" />
+      <Head user={user} title="Хяналтын жагсаалт" sub="Хүлээгдэж буй контент · «Хянах» дээр дарж засварлах самбарыг нээнэ" />
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats">
         <Stat label="Хүлээгдэж буй" value={staff ? s.pending : s.events + s.tasks} note="таны хянах боломжтой" tone={s.pending ? "warn" : ""} />

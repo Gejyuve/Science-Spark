@@ -25,7 +25,7 @@ export async function adminSetRole(formData) {
   if (me.role !== "superadmin") back(from, "Эрх солих нь зөвхөн супер админд");
   const t = await target(formData.get("user_id"));
   const role = String(formData.get("role"));
-  if (!t || !["user", "reviewer", "admin"].includes(role)) back(from, "Буруу хүсэлт");
+  if (!t || !["user", "admin"].includes(role)) back(from, "Буруу хүсэлт");
   if (t.id === me.id || t.role === "superadmin") back(from, "Энэ хэрэглэгчийн эрхийг өөрчлөх боломжгүй");
   if (t.role === role) back(from, "Өөрчлөлт алга", true);
   await sql`UPDATE users SET role = ${role}, perms = '{}'
@@ -44,7 +44,7 @@ export async function restrictUser(formData) {
   const note = String(formData.get("note") || "").trim().slice(0, 500);
   if (!t) back("/admin/users", "Хэрэглэгч олдсонгүй");
   if (t.id === me.id || t.role === "superadmin") back(from, "Энэ хэрэглэгчийг хязгаарлах боломжгүй");
-  if (t.role !== "user" && me.role !== "superadmin") back(from, "Хянагч, админыг зөвхөн супер админ хязгаарлана");
+  if (t.role !== "user" && me.role !== "superadmin") back(from, "Админыг зөвхөн супер админ хязгаарлана");
   if (!undo && !note) back(from, "Хязгаарлах шалтгаанаа бичнэ үү");
   if (undo) await sql`UPDATE users SET restricted_at = NULL, restrict_note = NULL WHERE id = ${t.id}`;
   else await sql`UPDATE users SET restricted_at = now(), restrict_note = ${note} WHERE id = ${t.id}`;
@@ -55,8 +55,9 @@ export async function restrictUser(formData) {
 
 // Оч нэмэх / хасах (торгууль). Өөртөө өгөх боломжгүй.
 export async function adjustPoints(formData) {
-  const me = await requireSection("points");
-  const from = safe(String(formData.get("from") || "/admin/points"));
+  const me = await requireSection("users");
+  if (me.role !== "superadmin") back("/admin/users", "Оч өөрчлөх нь зөвхөн супер админд");
+  const from = safe(String(formData.get("from") || "/admin/users"));
   const who = String(formData.get("who") || "").trim().toLowerCase();
   const delta = Number(formData.get("delta"));
   const note = String(formData.get("note") || "").trim().slice(0, 300);
@@ -99,33 +100,6 @@ export async function moderatePost(formData) {
   revalidatePath(`/post/${id}`);
   revalidatePath("/admin", "layout");
   back(from, op === "hide" ? "Нуулаа" : "Сэргээлээ", true);
-}
-
-// Хянагчийн хүсэлт: эрх нээх эсвэл татгалзах
-export async function decideRequest(formData) {
-  const me = await requireSection("requests");
-  const id = Number(formData.get("request_id"));
-  const from = `/admin/requests/${Number.isInteger(id) ? id : ""}`;
-  const op = String(formData.get("op"));
-  const note = String(formData.get("note") || "").trim().slice(0, 500) || null;
-  const [r] = await sql`SELECT r.id, r.user_id, r.status, u.email, u.initial, u.first_name, u.role
-                        FROM reviewer_requests r JOIN users u ON u.id = r.user_id WHERE r.id = ${id}`;
-  if (!r || r.status !== "pending") back(from, "Хүсэлт шийдэгдсэн эсвэл олдсонгүй");
-  if (r.user_id === me.id) back(from, "Өөрийн хүсэлтийг шийдэх боломжгүй");
-  if (op === "approve") {
-    const u = await sql`UPDATE users SET role = 'reviewer' WHERE id = ${r.user_id} AND role = 'user' RETURNING id`;
-    if (!u.length) back(from, "Энэ хэрэглэгчийн эрх аль хэдийн өөр байна");
-    await sql`UPDATE reviewer_requests SET status = 'approved', decided_by = ${me.id}, decided_at = now(), note = ${note} WHERE id = ${id}`;
-    await audit({ actorId: me.id, category: "role", action: "Эрх: Хэрэглэгч → Хянагч (шалгалтаар)", targetType: "user", targetId: r.user_id, targetLabel: label(r) });
-    await notify({ userId: r.user_id, kind: "reviewer_ok", actorId: me.id });
-  } else if (op === "decline") {
-    if (!note) back(from, "Татгалзах шалтгаанаа бичнэ үү");
-    await sql`UPDATE reviewer_requests SET status = 'declined', decided_by = ${me.id}, decided_at = now(), note = ${note} WHERE id = ${id}`;
-    await audit({ actorId: me.id, category: "role", action: `Хянагчийн хүсэлт татгалзсан (${note})`, targetType: "user", targetId: r.user_id, targetLabel: label(r) });
-    await notify({ userId: r.user_id, kind: "reviewer_no", actorId: me.id, note });
-  } else back(from, "Буруу хүсэлт");
-  revalidatePath("/admin", "layout");
-  back(from, op === "approve" ? "Хянагчийн эрх нээлээ" : "Татгалзлаа", true);
 }
 
 // Логик алдааны мэдэгдлийг шийдвэрлэх
