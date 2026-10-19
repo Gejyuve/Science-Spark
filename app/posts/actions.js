@@ -15,6 +15,7 @@ import { cleanSources, bodyRule } from "@/lib/md";
 import { walletBalance, fmtMnt } from "@/lib/money";
 import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, refundStatement } from "@/lib/bounty";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
+import { leaderClub, CLUB_KINDS } from "@/lib/tasks";
 
 // Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
 function articleMeta(fd) {
@@ -117,7 +118,7 @@ export async function sparkPost(formData) {
     INSERT INTO sparks (post_id, user_id, weight) VALUES (${postId}, ${user.id}, ${w})
     ON CONFLICT DO NOTHING RETURNING post_id`;
   if (ins.length) {
-    const get = (WRITING_KINDS.includes(post[0].kind) || post[0].club_id ? SPARK_GET_WRITING : SPARK_GET_OTHER) * w;
+    const get = (WRITING_KINDS.includes(post[0].kind) || CLUB_KINDS.includes(post[0].kind) ? SPARK_GET_WRITING : SPARK_GET_OTHER) * w;
     // Клубын даалгаварт ирсэн оч бичсэн хүнд биш, клубт очно
     if (post[0].club_id) await sql`INSERT INTO club_points (club_id, delta, reason) VALUES (${post[0].club_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
     else await sql`INSERT INTO points_ledger (user_id, delta, reason)
@@ -413,13 +414,20 @@ export async function quickPost(formData) {
   if (latinShare(body) > LATIN_LIMIT || (meta.register && latinShare(meta.register) > LATIN_LIMIT)) fail(LATIN_MSG);
   await ensureSchema();
   if (kind === "Эвент") meta.program = await ownImage(user.id, formData.get("program"));
+  // Клубын удирдагч бодрол, эвент, зарлалыг клубынхээ нэрээр хуваалцаж болно
+  let clubId = null;
+  if (formData.get("as_club") && kind !== "Асуулт") {
+    const club = await leaderClub(user.id);
+    if (!club) fail("Клубын нэрээр зөвхөн клубын удирдагч хуваалцана");
+    clubId = club.id;
+  }
   const imageId = kind === "Асуулт" ? null : await ownImage(user.id, formData.get("image"));
   // Эвент, зарлалд ковер зураг заавал
   if ((kind === "Эвент" || kind === "Зарлал") && !imageId) fail("Ковер зураг оруулна уу");
   const status = INSTANT_KINDS.includes(kind) ? "published" : "pending";
   const rows = await sql`
-    INSERT INTO posts (author_id, kind, title, body, status, meta, image_id)
-    VALUES (${user.id}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${imageId})
+    INSERT INTO posts (author_id, club_id, kind, title, body, status, meta, image_id)
+    VALUES (${user.id}, ${clubId}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${imageId})
     RETURNING id`;
   revalidatePath("/");
   if (bounty > 0) {

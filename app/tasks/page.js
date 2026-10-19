@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
-import { listTasks, taskTypes, leaderClub } from "@/lib/tasks";
+import { listTasks, taskTypes, leaderClub, taskCount, reportCount } from "@/lib/tasks";
 import Shell from "../components/Shell";
-import TaskCard from "../components/TaskCard";
+import TaskCard, { ClubTabs } from "../components/TaskCard";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Даалгавар · Science Spark" };
@@ -12,16 +12,19 @@ export const metadata = { title: "Даалгавар · Science Spark" };
 export default async function Tasks({ searchParams }) {
   const sp = await searchParams;
   const type = typeof sp.t === "string" && sp.t.length <= 40 ? sp.t : null;
-  let user = null, tasks = [], types = [], club = null;
+  let user = null, tasks = [], types = [], club = null, counts = {};
   try {
     user = await getUser();
     await ensureSchema();
-    [tasks, types, club] = await Promise.all([listTasks({ type, limit: 60 }), taskTypes(), leaderClub(user?.id)]);
+    let nt, nr;
+    [tasks, types, club, nt, nr] = await Promise.all([listTasks({ type, limit: 60 }), taskTypes(), leaderClub(user?.id), taskCount(), reportCount()]);
+    counts = { tasks: nt, reports: nr };
   } catch (e) {}
   const href = (t) => (t ? `/tasks?t=${encodeURIComponent(t)}` : "/tasks");
   return (
     <Shell user={user} active="/clubs" header={false}>
       <div className="tk-page">
+        <ClubTabs on="tasks" counts={counts} />
         <section className="tk-hero">
           <div>
             <h1>Даалгавар</h1>

@@ -9,7 +9,7 @@ import { TERM_KIND, canApproveWords, daysLeft, SUPPORT_NEEDED } from "@/lib/term
 import { crumbs } from "@/lib/tree";
 import { decideCategory, resolveCategoryReport } from "../tree/actions";
 
-const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент", "Зарлал"], tasks: ["Даалгавар"] };
+const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент", "Зарлал"], tasks: ["Даалгавар", "Тайлан"] };
 
 export default async function ReviewHome({ searchParams }) {
   const user = await getUser();
@@ -54,10 +54,10 @@ async function Queue({ user, sp }) {
         <Stat label="Нийт хянасан" value={s.total} />
       </div>
       <Tabs cur={t === "posts" ? "" : t} href={(k) => (k ? `/review?t=${k}` : "/review")}
-        tabs={[...(staff ? [["", "Нийтлэл, мэдээ", s.posts]] : []), ...(ev ? [["events", "Эвент, зарлал", s.events], ["tasks", "Даалгавар", s.tasks]] : []), ["words", "Шинэ үг", s.words], ...(staff ? [["cats", "Ангилал", s.cats]] : [])]} />
+        tabs={[...(staff ? [["", "Нийтлэл, мэдээ", s.posts]] : []), ...(ev ? [["events", "Эвент, зарлал", s.events], ["tasks", "Клуб", s.tasks]] : []), ["words", "Шинэ үг", s.words], ...(staff ? [["cats", "Ангилал", s.cats]] : [])]} />
       {t === "cats" ? <Cats /> : t === "words" ? <Words user={user} can={words} /> : (
       <section className="adm-card flush">
-        <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : t === "tasks" ? "Клубын даалгавар" : "Эвент, зарлал"} ({rows.length})</b></div>
+        <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : t === "tasks" ? "Клубын даалгавар, тайлан" : "Эвент, зарлал"} ({rows.length})</b></div>
         {rows.length === 0 ? (
           <p className="adm-empty">Хүлээгдэж буй зүйл алга ✓</p>
         ) : (

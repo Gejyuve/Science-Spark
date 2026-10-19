@@ -9,10 +9,12 @@ import { decidePost } from "../actions";
 import CategoryPicker from "../../components/CategoryPicker";
 import { plainTree } from "@/lib/tree";
 import { Flash, Chip } from "../../admin/_c/Head";
+import { REWARD_MIN, REWARD_MAX, REWARD_DEFAULT, AUTHOR_SHARE } from "@/lib/tasks-shared";
 
 const CHECK_POST = ["Баримт, эх сурвалж шалгасан", "Зөв бичгийн дүрэм", "Зохиогчийн эрх, хуулбар", "Ангилал, гарчиг тохирсон", "Хэв маяг, ойлгомжтой байдал"];
 const CHECK_EVENT = ["Гарчиг, тайлбар ойлгомжтой, алдаагүй", "Огноо, цаг, байршил бүрэн, бодитой", "Хөтөлбөр, бүртгэлийн заавар байгаа", "Дүрэм зөрчөөгүй, спам, реклам биш", "Холбоос, холбоо барих мэдээлэл зөв", "Ижил контент давхардаагүй"];
 
+const CHECK_REPORT = ["Сонгосон даалгавартай таарч байна", "Клуб өөрөө хийсэн нь харагдаж байна", "Зураг, тайлбар бодитой", "Аюулгүй байдлын зөрчилгүй", "Хуулбар биш, зохиогчийн эрх зөрчөөгүй", "Зөв бичгийн дүрэм, ойлгомжтой"];
 const CHECK_TASK = ["Гарчиг, ковер, төрөл тохирсон", "Алхам, заавар ойлгомжтой", "Аюулгүй байдлын анхааруулга хангалттай", "Сурагчдад тохиромжтой", "Хуулбар биш, зохиогчийн эрх зөрчөөгүй", "Ижил даалгавар давхардаагүй"];
 
 // Figma: Хяналт · Засварлах самбар (631:502), Эвент/Зарлал хянах цонх (692:496, 700:496)
@@ -28,8 +30,9 @@ export default async function ReviewPost({ params, searchParams }) {
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM posts WHERE author_id = u.id AND status = 'published')::int AS published,
       (SELECT COUNT(*) FROM posts WHERE author_id = u.id AND status = 'rejected')::int AS rejected
-      , cl.name AS club_name
-    FROM posts p JOIN users u ON u.id = p.author_id LEFT JOIN clubs cl ON cl.id = p.club_id WHERE p.id = ${n}`;
+      , cl.name AS club_name, t.title AS task_title, t.meta->>'reward' AS task_reward, t.club_id AS task_club, tc.name AS task_club_name
+    FROM posts p JOIN users u ON u.id = p.author_id LEFT JOIN clubs cl ON cl.id = p.club_id
+    LEFT JOIN posts t ON t.id = p.task_id LEFT JOIN clubs tc ON tc.id = t.club_id WHERE p.id = ${n}`;
   if (!p) notFound();
   if (p.status !== "pending") redirect(`/post/${p.id}`);
   if (p.author_id === user.id) redirect("/review?error=" + encodeURIComponent("Өөрийн контентыг өөр хянагч хянана"));
@@ -38,7 +41,11 @@ export default async function ReviewPost({ params, searchParams }) {
   const author = p.first_name ? `${p.initial}.${p.first_name}` : p.email;
   const m = p.meta || {};
   const isTask = p.kind === "Даалгавар";
-  const facts = isTask
+  const isReport = p.kind === "Тайлан";
+  const share = Math.round((Number(p.task_reward) || 0) * AUTHOR_SHARE / 100);
+  const facts = isReport
+    ? [["Клуб", p.club_name], ["Биелүүлсэн даалгавар", p.task_title && `${p.task_title} (${p.task_club_name})`], ["Даалгаврын оч", p.task_reward && `${p.task_reward} оч → ${p.club_name}` + (p.task_club !== p.club_id && share ? `, ${share} оч → ${p.task_club_name}` : "")], ["Товч тайлбар", p.subtitle], ["Ковер зургийн эх сурвалж", m.cover?.source]]
+    : isTask
     ? [["Клуб", p.club_name], ["Төрөл", (m.types || []).join(", ")], ["Товч тайлбар", p.subtitle], ["Ковер зургийн эх сурвалж", m.cover?.source]]
     : p.kind === "Эвент"
     ? [["Огноо, цаг", m.starts_at && fmtEventRange(m)], ["Төрөл", m.type], ["Хэлбэр", m.format], ["Байршил", m.location], ["Үргэлжлэх хугацаа", m.duration], ["Тасалбар", m.price], ["Багтаамж", m.capacity], ["Холбоос", m.link]]
@@ -104,11 +111,21 @@ export default async function ReviewPost({ params, searchParams }) {
           </section>
           <section className="adm-card">
             <div className="adm-card-head"><b>Хяналтын жагсаалт</b></div>
-            {(editable ? CHECK_POST : isTask ? CHECK_TASK : CHECK_EVENT).map((c) => (
+            {(editable ? CHECK_POST : isTask ? CHECK_TASK : isReport ? CHECK_REPORT : CHECK_EVENT).map((c) => (
               <label key={c} className="adm-check rv-chk"><input type="checkbox" name="check" value={c} /><span>{c}</span></label>
             ))}
             <p className="adm-muted small">Зөвшөөрөхийн өмнө бүгдийг тэмдэглэнэ.</p>
           </section>
+          {isTask && (
+            <section className="adm-card">
+              <div className="adm-card-head"><b>Даалгаврын оч</b></div>
+              <label className="rv-reward">
+                <input name="reward" type="number" min={REWARD_MIN} max={REWARD_MAX} step={5} defaultValue={REWARD_DEFAULT} required inputMode="numeric" />
+                <span>оч</span>
+              </label>
+              <p className="adm-muted small">Хийхэд хэр хэцүүгээс нь хамаарч {REWARD_MIN}–{REWARD_MAX} оч. Жишээ нь: энгийн туршилт 30, хэдэн өдрийн ажиглалт 100, том төсөл 300. Биелүүлсэн клуб тайлан нь батлагдмагц энэ очийг авч, даалгаврыг нэмсэн клубт {AUTHOR_SHARE}% нь очно.</p>
+            </section>
+          )}
           <section className="adm-card">
             <div className="adm-card-head"><b>Бичээчид үлдээх тайлбар</b></div>
             <textarea name="note" rows={4} maxLength={1000} className="rv-notebox" placeholder="Юуг зассан, эсвэл яагаад буцааж байгаа вэ (буцаахад заавал)…" />

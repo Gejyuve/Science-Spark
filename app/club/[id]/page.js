@@ -8,8 +8,8 @@ import MiniMap from "../../components/MiniMap";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
 import { chatUnread } from "@/lib/chat";
-import { listTasks } from "@/lib/tasks";
-import TaskCard from "../../components/TaskCard";
+import { listTasks, listReports } from "@/lib/tasks";
+import TaskCard, { ReportCard } from "../../components/TaskCard";
 import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest } from "../../clubs/actions";
 
 export const dynamic = "force-dynamic";
@@ -81,8 +81,8 @@ export default async function ClubPage({ params, searchParams }) {
       (SELECT c2.name FROM club_members m2 JOIN clubs c2 ON c2.id = m2.club_id WHERE m2.user_id = u.id) AS other,
       (SELECT MAX(at) FROM club_moves mv WHERE mv.user_id = u.id) AS moved_at
     FROM club_requests r JOIN users u ON u.id = r.user_id WHERE r.club_id = ${id} ORDER BY r.created_at` : [];
-  const tab = isLeader && sp.tab === "requests" ? "requests" : sp.tab === "tasks" ? "tasks" : "members";
-  const tasks = await listTasks({ clubId: id, limit: 60 });
+  const tab = isLeader && sp.tab === "requests" ? "requests" : sp.tab === "tasks" ? "tasks" : sp.tab === "reports" ? "reports" : "members";
+  const [tasks, reports] = await Promise.all([listTasks({ clubId: id, limit: 60 }), listReports({ clubId: id, limit: 60 })]);
   const unreadChat = isMember ? await chatUnread(user.id, id) : 0;
   const following = await followingSet(user);
   const follows = await clubFollowSet(user);
@@ -202,6 +202,7 @@ export default async function ClubPage({ params, searchParams }) {
             <img className="ic" src="/icons/comment18.svg" width={14} height={14} alt="" />Чат{unreadChat > 0 && <em className="hot">{unreadChat > 99 ? "99+" : unreadChat}</em>}
           </Link>
           <Link href={`/club/${id}?tab=tasks`} className={tab === "tasks" ? "on" : ""} scroll={false}>Даалгавар <em>{tasks.length}</em></Link>
+          <Link href={`/club/${id}?tab=reports`} className={tab === "reports" ? "on" : ""} scroll={false}>Тайлан <em>{reports.length}</em></Link>
           {isLeader && <Link href={`/club/${id}?tab=requests`} className={tab === "requests" ? "on" : ""} scroll={false}>Хүсэлт <em className={requests.length ? "hot" : ""}>{requests.length}</em></Link>}
         </nav>
 
@@ -210,6 +211,12 @@ export default async function ClubPage({ params, searchParams }) {
             {isLeader && <div className="cp-req-head"><h2>Клубын даалгаврууд</h2><Link href="/tasks/new" className="cp-btn sm">+ Даалгавар нэмэх</Link></div>}
             {tasks.length ? <div className="tk-grid">{tasks.map((t) => <TaskCard key={t.id} t={t} />)}</div>
               : <p className="muted">{isLeader ? "Клубынхээ хийж үзсэн туршилт, эвент, воркшопыг даалгавар болгон хуваалцаарай." : "Энэ клуб одоохондоо даалгавар нэмээгүй байна."}</p>}
+          </section>
+        ) : tab === "reports" ? (
+          <section className="cp-card cp-list">
+            {isLeader && <div className="cp-req-head"><h2>Клубын тайлангууд</h2><Link href="/reports/new" className="cp-btn sm">+ Тайлан нэмэх</Link></div>}
+            {reports.length ? <div className="tk-grid">{reports.map((r) => <ReportCard key={r.id} r={r} />)}</div>
+              : <p className="muted">{isLeader ? "Даалгавраас нэгийг клубтэйгээ хийгээд тайлангаа бичээрэй. Батлагдмагц клуб тань оч авна." : "Энэ клуб одоохондоо тайлан бичээгүй байна."}</p>}
           </section>
         ) : tab === "members" ? (
           <section className="cp-card cp-list">

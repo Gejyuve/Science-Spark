@@ -7,11 +7,12 @@ import { strip } from "@/lib/md";
 import { fmtMnt } from "@/lib/money";
 import { waitTone } from "@/lib/bounty";
 import { Avatar, Stat, When, Person } from "./Bits";
+import { ClubPerson } from "./ClubBits";
 import Share from "./Share";
 import { toggleSave, sparkPost } from "../posts/actions";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
-export default function PostCard({ p, viewer, following }) {
+export default function PostCard({ p, viewer, following, clubFollows }) {
   const isQuestion = p.kind === "Асуулт";
   const isShort = isQuestion || p.kind === "Бодрол";
   const m = p.meta || {};
@@ -20,7 +21,10 @@ export default function PostCard({ p, viewer, following }) {
     : p.kind === "Зарлал"
     ? [m.valid_until && ["f_date", `Хүчинтэй: ${m.valid_until}`], m.contact && ["f_phone", m.contact]]
     : [];
-  const plainBody = ["Нийтлэл", "Мэдээ"].includes(p.kind) ? strip(p.body).replace(/\s+/g, " ").trim() : p.body;
+  const isClubKind = p.kind === "Даалгавар" || p.kind === "Тайлан";
+  const plainBody = isClubKind && p.subtitle ? p.subtitle : ["Нийтлэл", "Мэдээ", "Даалгавар", "Тайлан"].includes(p.kind) ? strip(p.body).replace(/\s+/g, " ").trim() : p.body;
+  // Клубын нэрээр нийтэлсэн контент: клуб харагдана, өөрийн клубын гишүүд оч өгөхгүй
+  const club = p.club_id && p.club_name ? { id: p.club_id, name: p.club_name, logo: p.club_logo, followers: p.club_followers, points: p.club_points } : null;
   const excerpt = plainBody.length > 320 ? plainBody.slice(0, 320) + "…" : plainBody;
   // Нийтлэгдээгүй контент: оч, сэтгэгдэлгүй — төлөв ба дараагийн алхам
   const ST = { pending: ["Редакцын хяналтад", "wait"], approved: ["Нийтлэхэд бэлэн", "ok"], rejected: ["Засвар хийхээр буцаасан", "bad"], removed: ["Нуугдсан", "bad"], draft: ["Ноорог", "wait"] };
@@ -36,7 +40,7 @@ export default function PostCard({ p, viewer, following }) {
   );
   const actions = pendingBar || (
         <div className="ss-actionbar">
-          {viewer && viewer.id !== p.author_id && !p.sparked ? (
+          {viewer && viewer.id !== p.author_id && !p.own_club && !p.sparked ? (
             <form action={sparkPost}>
               <input type="hidden" name="post_id" value={p.id} />
               <button type="submit" className="ss-count ss-sparkbtn" title="Оч өгөх">
@@ -124,7 +128,9 @@ export default function PostCard({ p, viewer, following }) {
         {/* Шагналтай асуулт хариултаа хүлээж буй бол өнгөрсөн хугацаа өнгөөр тодорно */}
         <When d={p.created_at} className={p.bounty_status === "open" ? `ss-date bq-age ${waitTone(p.created_at)}` : undefined} />
       </div>
-      <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
+      {club
+        ? <ClubPerson c={club} viewer={viewer} follows={clubFollows} />
+        : <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />}
       <Link href={`/post/${p.id}`} className="ss-card-body">
         {!isShort && <h2>{p.title}</h2>}
         <p>{excerpt}</p>

@@ -3091,3 +3091,54 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .tk-grid.four .tk-title { font-size: 13px; }
   .tk-grid.four .tk-tags a:nth-child(n+2) { display: none; }
 }
+
+/* ===== Клубын тайлан, «Клуб» ангилал ===== */
+.tk-tabs { display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--surface); box-shadow: var(--card-shadow); align-self: flex-start; }
+.tk-tabs a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.tk-tabs a em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); }
+.tk-tabs a.on { background: #37c3b3; color: #fff; }
+.tk-tabs a.on em { color: rgba(255, 255, 255, .85); }
+.tk-cover { position: relative; }
+.tk-reward { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: rgba(15, 30, 40, .72); color: #fff; font-size: 12px; font-weight: 700; font-style: normal; }
+.rp-task { align-self: flex-start; max-width: 100%; padding: 3px 9px; border-radius: 999px; background: #fff3e0; color: #b45309; font-size: 11.5px; font-weight: 600; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-pick { display: flex; flex-direction: column; gap: 10px; position: relative; }
+.rp-search { height: 44px; padding: 0 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
+.rp-list { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
+.rp-opt { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.rp-opt:hover:not(:disabled) { border-color: #37c3b3; }
+.rp-opt.on { border-color: #37c3b3; background: #e6f7f5; box-shadow: inset 0 0 0 1px #37c3b3; }
+.rp-opt:disabled { opacity: .5; cursor: not-allowed; }
+.rp-opt > img, .rp-noimg { flex: none; width: 92px; height: 35px; border-radius: 8px; object-fit: cover; background: var(--surface-2); }
+.rp-txt { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.rp-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-txt small, .rp-txt em { font-size: 12px; font-style: normal; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-rew { flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 700; }
+.rp-empty { margin: 8px 0; color: var(--muted); font-size: 13px; }
+.rp-done { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; padding: 10px 16px 10px 10px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-2); color: var(--ink); text-decoration: none; }
+.rp-done:hover { border-color: #37c3b3; }
+.rp-done > img, .rp-done .rp-noimg { width: 120px; height: 46px; }
+.rp-done small { color: #00a89b; font-weight: 700; }
+.rp-go { flex: none; font-size: 13px; font-weight: 600; color: #00a89b; }
+.tk-rewardline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; padding: 10px 14px; border-radius: 14px; background: #fff7e6; color: #7a4a00; font-size: 13.5px; }
+.tk-done { margin: 24px 0 8px; padding-top: 20px; border-top: 1px solid var(--border); }
+.tk-done-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.tk-done-head b { font-size: 16px; }
+.tk-done-head em { font-style: normal; color: var(--muted); font-weight: 600; margin-left: 4px; }
+.tk-done .tk-card { box-shadow: none; }
+.rv-reward { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rv-reward input { width: 110px; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; font: inherit; font-size: 18px; font-weight: 700; background: var(--surface); color: var(--ink); }
+.rv-reward span { font-weight: 600; }
+.cp-as { display: flex; gap: 6px; margin: 4px 0 2px; }
+.cp-as button { display: inline-flex; align-items: center; gap: 8px; max-width: 50%; padding: 4px 14px 4px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.cp-as button span:not(.ss-avatar) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-as button .ss-avatar, .cp-as button img { flex: none; width: 26px !important; height: 26px !important; }
+.cp-as button.on { border-color: #37c3b3; background: #e6f7f5; color: #0f5c55; font-weight: 600; }
+.cl-composer { padding-top: 12px; }
+[data-theme="dark"] .rp-opt.on, [data-theme="dark"] .cp-as button.on { background: rgba(55, 195, 179, .14); color: #8bffef; }
+[data-theme="dark"] .rp-task, [data-theme="dark"] .tk-rewardline { background: rgba(245, 158, 11, .14); color: #fcd34d; }
+@media (max-width: 720px) {
+  .tk-tabs { align-self: stretch; }
+  .tk-tabs a { flex: 1; justify-content: center; }
+  .rp-done > img, .rp-done .rp-noimg { width: 72px; height: 28px; }
+  .rp-go { display: none; }
+}

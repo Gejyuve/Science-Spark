@@ -111,8 +111,21 @@ function Head({ icon, title, right }) {
 
 const Req = () => <i className="cp-req">*</i>;
 
-export default function Composer({ loggedIn, me, initial, error, wallet = 0 }) {
+export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, initialAs }) {
   const [mode, setMode] = useState(initial || null);
+  // Клубын удирдагч: «Өөрөө» эсвэл «Клуб»-ын нэрээр. Клубын нэрээр бол Даалгавар · Тайлан · Хуваалцъя
+  const [asClub, setAsClub] = useState(!!club && initialAs === "club");
+  // Сүүлд сонгосноо санана (зөвхөн энэ хөтөчид)
+  useEffect(() => {
+    if (!club || initialAs) return;
+    try { if (localStorage.getItem("ss-as") === "club") setAsClub(true); } catch (e) {}
+  }, [club, initialAs]);
+  useEffect(() => {
+    if (!club) return;
+    try { localStorage.setItem("ss-as", asClub ? "club" : "me"); } catch (e) {}
+  }, [club, asClub]);
+  const clubIn = asClub ? <input type="hidden" name="as_club" value="1" /> : null;
+  const by = (k) => (asClub ? `${k} · ${club.name} клубын нэрээр` : k);
   const [start, setStart] = useState({ full: "", date: "" });
   const [now, setNow] = useState({ date: "", time: "" });
   useEffect(() => setNow(nowUB()), [mode]);
@@ -147,7 +160,8 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0 }) {
     panel = (
       <form action={quickPost} className="cp-panel">
         <input type="hidden" name="kind" value="Бодрол" />
-        <Head icon="sh_bulb" title="Бодрол" />
+        {clubIn}
+        <Head icon="sh_bulb" title={by("Бодрол")} />
         <Counted name="body" max={300} rows={5} required latinCheck placeholder={"Би сэтгэж байна, тиймээс би оршиж байна...\n\n-Рене Декарт"} />
         <div className="cp-split">
           <ImageSlot name="image" aspect={2} title="Зураг нэмэх (1 ширхэг)" hint="2:1 · өргөн" wide />
@@ -164,7 +178,8 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0 }) {
     panel = (
       <form action={quickPost} className="cp-panel">
         <input type="hidden" name="kind" value="Эвент" />
-        <Head icon="sh_cal" title="Эвент" right={<span className="cp-note"><Req /> Заавал бөглөх талбар</span>} />
+        {clubIn}
+        <Head icon="sh_cal" title={by("Эвент")} right={<span className="cp-note"><Req /> Заавал бөглөх талбар</span>} />
         <div className="cp-grid">
           <Field icon="f_text"><input name="title" required maxLength={200} placeholder="Эвентийн нэр *" /></Field>
           <Field icon="f_tag">
@@ -216,7 +231,8 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0 }) {
     panel = (
       <form action={quickPost} className="cp-panel">
         <input type="hidden" name="kind" value="Зарлал" />
-        <Head icon="sh_mega" title="Зарлал" right={<span className="cp-note"><Req /> Заавал бөглөх талбар</span>} />
+        {clubIn}
+        <Head icon="sh_mega" title={by("Зарлал")} right={<span className="cp-note"><Req /> Заавал бөглөх талбар</span>} />
         <div className="cp-grid">
           <Field icon="f_text"><input name="title" required maxLength={200} placeholder="Зарлалын гарчиг *" {...msg("Гарчгаа бичнэ үү")} /></Field>
           <Field icon="f_tag">
@@ -248,9 +264,39 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0 }) {
     );
   }
 
+  const asSwitch = club && (
+    <div className="cp-as" role="radiogroup" aria-label="Хэний нэрээр">
+      <button type="button" role="radio" aria-checked={!asClub} className={asClub ? "" : "on"}
+        onClick={() => { setAsClub(false); setMode(null); }}>{me}<span>Өөрөө</span></button>
+      <button type="button" role="radio" aria-checked={asClub} className={asClub ? "on" : ""}
+        onClick={() => { setAsClub(true); setMode((m) => (shareModes.includes(m) ? m : null)); }}>{clubAv}<span>{club.name}</span></button>
+    </div>
+  );
+
+  if (asClub) {
+    return (
+      <>
+        {error && <p className="error cp-error">{error}</p>}
+        {asSwitch}
+        {(mode !== "Асуулт" && panel) || (
+          <Link href="/tasks/new" className="ss-composer">
+            {clubAv}
+            <span>Клубынхээ туршлагыг хуваалцаж, бусад клубт урам өгье</span>
+          </Link>
+        )}
+        <div className="ss-tabs">
+          <Link href="/tasks/new"><Ic n="task" s={22} /><span>Даалгавар</span></Link>
+          <Link href="/reports/new"><Ic n="report" s={22} /><span>Тайлан</span></Link>
+          <button type="button" className={shareModes.includes(mode) ? "on" : ""} onClick={() => setMode((c) => (shareModes.includes(c) ? null : "share"))}><Ic n="share" s={22} /><span>Хуваалцъя</span></button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {error && <p className="error cp-error">{error}</p>}
+      {asSwitch}
       {panel || (
         <Link href={loggedIn ? "/write" : "/login"} className="ss-composer">
           {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}

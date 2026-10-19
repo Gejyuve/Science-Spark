@@ -5,6 +5,7 @@ import { sql, ensureSchema } from "@/lib/db";
 import Shell from "./components/Shell";
 import PostCard from "./components/PostCard";
 import { followingSet } from "./components/Bits";
+import { clubFollowSet } from "@/lib/clubs";
 import TimeMenu from "./components/TimeMenu";
 import ScrollActive from "./components/ScrollActive";
 import { fmtMnt } from "@/lib/money";
@@ -26,13 +27,14 @@ export default async function Home({ searchParams }) {
   const ann = f === "ann"; // Зарлалууд
   const art = f === "art"; // Нийтлэл
   const news = f === "news"; // Мэдээ
+  const club = f === "club"; // Клуб: даалгавар, тайлан
   const top = f === "top"; // Сүүлийн 24 цагт хамгийн их оч авсан
   const rand = f === "rand"; // Санамсаргүй: хэрэглэгч бүрт, дарах бүрт өөр дараалал
   const seed = crypto.randomUUID();
   const following = tab === "following";
   let user = null;
   let posts = [];
-  let counts = { all: 0, following: 0, top: 0, qa: 0, ann: 0, art: 0, news: 0 };
+  let counts = { all: 0, following: 0, top: 0, qa: 0, ann: 0, art: 0, news: 0, club: 0 };
   let bqCounts = { open: 0, total: 0 };
   try {
     user = await getUser();
@@ -44,7 +46,12 @@ export default async function Home({ searchParams }) {
         WHERE ${top}::boolean AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int))
         GROUP BY s.post_id
       )
-      SELECT p.id, p.author_id, p.kind, p.title, p.body, p.meta, p.image_id, p.views, p.created_at, p.category, u.initial, u.first_name, u.avatar_id AS avatar,
+      SELECT p.id, p.author_id, p.kind, p.title, p.subtitle, p.body, p.meta, p.image_id, p.views, p.created_at, p.category, u.initial, u.first_name, u.avatar_id AS avatar,
+        p.club_id, cl.name AS club_name, cl.logo_id AS club_logo,
+        CASE WHEN p.club_id IS NOT NULL THEN (SELECT COUNT(*) FROM club_follows cf WHERE cf.club_id = p.club_id)::int END AS club_followers,
+        CASE WHEN p.club_id IS NOT NULL THEN (COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = p.club_id), 0)
+          + COALESCE((SELECT SUM(k.delta) FROM club_points k WHERE k.club_id = p.club_id), 0))::int END AS club_points,
+        (p.club_id IS NOT NULL AND EXISTS (SELECT 1 FROM club_members cm WHERE cm.club_id = p.club_id AND cm.user_id = ${user ? user.id : 0})) AS own_club,
         (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
         COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
@@ -55,6 +62,7 @@ export default async function Home({ searchParams }) {
         EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked,
         bq.amount AS bounty_amount, bq.status AS bounty_status
       FROM posts p JOIN users u ON u.id = p.author_id
+      LEFT JOIN clubs cl ON cl.id = p.club_id
       LEFT JOIN bounties bq ON bq.post_id = p.id AND bq.status IN ('open', 'awarded')
       -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
       LEFT JOIN LATERAL (
@@ -67,11 +75,12 @@ export default async function Home({ searchParams }) {
         LIMIT 1
       ) ta ON true
       LEFT JOIN win ON win.post_id = p.id
-      WHERE p.status = 'published' AND p.kind NOT IN ('Үг', 'Даалгавар')
+      WHERE p.status = 'published' AND p.kind <> 'Үг'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
         AND (NOT ${ann}::boolean OR p.kind = 'Зарлал')
         AND (NOT ${art}::boolean OR p.kind = 'Нийтлэл')
         AND (NOT ${news}::boolean OR p.kind = 'Мэдээ')
+        AND (NOT ${club}::boolean OR p.kind IN ('Даалгавар', 'Тайлан'))
         AND (${bq} = '' OR bq.status = 'open' OR (${bq} = 'big' AND bq.status IS NOT NULL))
         -- Цагийн шүүлтүүр (санамсаргүй, шагналтай асуултад хамаарахгүй). Хамгийн тод: тухайн хугацаанд оч авсан
         AND (${rand}::boolean OR ${bq} <> '' OR (CASE WHEN ${top}::boolean
@@ -96,13 +105,14 @@ export default async function Home({ searchParams }) {
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
         -- Хугацаандаа оч авсан контент: бүх нийтлэлийг нэг бүрчлэн шалгахын оронд тухайн хугацааны очноос эхэлж тоолно
         (SELECT COUNT(DISTINCT s.post_id) FROM sparks s JOIN posts sp ON sp.id = s.post_id
-         WHERE sp.status = 'published' AND sp.kind NOT IN ('Үг', 'Даалгавар')
+         WHERE sp.status = 'published' AND sp.kind <> 'Үг'
            AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))::int AS top,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Зарлал')::int AS ann,
         COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Нийтлэл')::int AS art,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Мэдээ')::int AS news
-      FROM posts p WHERE p.status = 'published' AND p.kind NOT IN ('Үг', 'Даалгавар')`;
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Мэдээ')::int AS news,
+        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Даалгавар', 'Тайлан'))::int AS club
+      FROM posts p WHERE p.status = 'published' AND p.kind <> 'Үг'`;
     counts = c;
     if (qa) {
       const [x] = await sql`
@@ -116,6 +126,7 @@ export default async function Home({ searchParams }) {
   }
 
   const followSet = await followingSet(user);
+  const clubFollows = posts.some((p) => p.club_id) ? await clubFollowSet(user) : null;
   return (
     <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {(
@@ -129,8 +140,9 @@ export default async function Home({ searchParams }) {
               ["art", "f=art", "Чанартай юм унш", counts.art],
               ["news", "f=news", "Мэдээгүй өнгөрөв өө!", counts.news],
               ["ann", "f=ann", "Гоё юм дуулгая", counts.ann],
+              ["club", "f=club", "Клуб", counts.club],
             ].map(([k, q, label, n]) => {
-              const on = k === "all" ? !qa && !top && !rand && !ann && !art && !news && !following : k === "following" ? following && !!user : k === "top" ? top : k === "ann" ? ann : k === "art" ? art : k === "news" ? news : qa;
+              const on = k === "all" ? !qa && !top && !rand && !ann && !art && !news && !club && !following : k === "following" ? following && !!user : k === "top" ? top : k === "ann" ? ann : k === "art" ? art : k === "news" ? news : k === "club" ? club : qa;
               const qs = q === null ? null : [q, tq].filter(Boolean).join("&");
               const href = qs === null ? "/login" : qs ? `/?${qs}` : "/";
               return (
@@ -147,7 +159,7 @@ export default async function Home({ searchParams }) {
           <TimeMenu
             label={period[1]}
             options={PERIODS.map(([v, name]) => {
-              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : ann ? "f=ann" : art ? "f=art" : news ? "f=news" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
+              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : ann ? "f=ann" : art ? "f=art" : news ? "f=news" : club ? "f=club" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
               return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
             })}
           />
@@ -166,7 +178,7 @@ export default async function Home({ searchParams }) {
       {posts.length === 0 && (
         <div className="ss-card">
           <p className="ss-empty">
-            {hours && !rand && posts.length === 0 && (qa || top || following || ann || art || news)
+            {hours && !rand && posts.length === 0 && (qa || top || following || ann || art || news || club)
               ? `Сонгосон хугацаанд (${period[1]}) энд контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
               : bq
               ? "Одоохондоо хариулт хүлээж буй шагналтай асуулт алга. Асуултаа шагналтай асууж, мэдлэгтэй хүмүүсийг урамшуулаарай 🏆"
@@ -181,7 +193,7 @@ export default async function Home({ searchParams }) {
         </div>
       )}
       {posts.map((p) => (
-        <PostCard key={p.id} p={p} viewer={user} following={followSet} />
+        <PostCard key={p.id} p={p} viewer={user} following={followSet} clubFollows={clubFollows} />
       ))}
     </Shell>
   );
