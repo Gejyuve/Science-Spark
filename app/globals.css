@@ -2770,7 +2770,8 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san-pool small { font-size: 11px; color: var(--muted); }
 .san-pool b { font-size: 28px; color: #00a89b; font-variant-numeric: tabular-nums; }
 .san-cta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.san-cta button { cursor: pointer; font: inherit; }
+.san-cta button { cursor: pointer; font-family: inherit; }
+.san-cta .ss-pill:not(.ghost) { border: 1px solid transparent; }
 .san-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .san-stats span { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); }
 .san-stats b { font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -2807,7 +2808,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .san-to b { color: var(--ink); }
 .san-to small { color: var(--muted); font-size: 12px; }
 .san-form { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
-.san-form .ss-pill { align-self: flex-start; cursor: pointer; font: inherit; font-weight: 700; }
+.san-form .ss-pill { align-self: flex-start; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 18px; }
 .san-field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .san-field input, .san-field textarea { padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 15px; resize: vertical; }
 .san-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); }
@@ -2848,7 +2849,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .san-badge { margin-left: 6px; }
   .san-board .och-who .san-badge { display: none; }
 }
-.san button.ss-pill { border: 0; height: auto; padding: 10px 18px; }
+.san button.ss-pill { border: 0; height: auto; }
 .san button.ss-pill.ghost { border: 1px solid var(--border); }
 @media (max-width: 760px) { .san-perks { grid-template-columns: 1fr 1fr; } .san-perks div { padding: 12px; } }
 /* Шагналын сангийн толгой: ногоон хүрээ, эргэлдэх цацраг */
