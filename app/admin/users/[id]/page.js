@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
-import { requireSection, canSee, STATUS_LABELS, ago } from "@/lib/admin";
+import { requireSection, canSee, STATUS_LABELS, ago, WARN_LIMIT } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
-import { adminSetRole, restrictUser, adjustPoints } from "../../actions";
+import { adminSetRole, restrictUser, adjustPoints, warnUser, cancelDeletion, deleteUser } from "../../actions";
 import Head, { Chip, Flash, who, STATUS_TONE } from "../../_c/Head";
 import { Avatar } from "../../../components/Bits";
 
@@ -22,6 +22,8 @@ export default async function UserDetail({ params, searchParams }) {
     FROM users u WHERE u.id = ${n}`;
   if (!u) notFound();
   const posts = await sql`SELECT id, kind, title, status, created_at FROM posts WHERE author_id = ${n} ORDER BY created_at DESC LIMIT 10`;
+  const warnings = await sql`SELECT w.note, w.created_at, x.initial, x.first_name, x.email FROM user_warnings w
+                             LEFT JOIN users x ON x.id = w.admin_id WHERE w.user_id = ${n} ORDER BY w.created_at`;
   const ledger = await sql`SELECT delta, reason, created_at FROM points_ledger WHERE user_id = ${n} ORDER BY created_at DESC LIMIT 10`;
   const log = canSee(me, "audit")
     ? await sql`SELECT a.action, a.created_at, x.initial, x.first_name, x.email FROM audit_log a
@@ -31,7 +33,7 @@ export default async function UserDetail({ params, searchParams }) {
   const sup = me.role === "superadmin";
   const self = u.id === me.id;
   const protectedUser = self || u.role === "superadmin";
-  const canRestrict = !protectedUser && (u.role === "user" || sup);
+  const canRestrict = !protectedUser && sup;
   const lv = levelFor(u.points);
   const from = `/admin/users/${u.id}`;
 
@@ -50,6 +52,7 @@ export default async function UserDetail({ params, searchParams }) {
                 <Chip tone="dark">{ROLE_LABELS[u.role]}</Chip>
                 <Chip>{{ person: "Хувь хүн", org: "Байгууллага", club: "Клуб" }[u.account_type] || u.account_type}</Chip>
                 {u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
+                {u.delete_pending_at && <Chip tone="bad">Устгахаар хүлээгдэж буй</Chip>}
               </span>
             </div>
           </div>
@@ -84,13 +87,59 @@ export default async function UserDetail({ params, searchParams }) {
                 <button className="adm-btn dark">Хадгалах</button>
               </form>
             )}
-            <p className="adm-muted small">Админ: бүх контент хянаж, клубын даалгавар, тайлан батлан оч тогтоож, логик алдааны мэдэгдэл шийдэж, контент нууна. Хэрэглэгч, оч, санхүү, аудит зөвхөн супер админд.</p>
+            <p className="adm-muted small">Админ: контент хянаж засах, нуух, клубын даалгавар, тайлан батлах, логик алдаа шийдэх, хэрэглэгчид сануулга өгөх. Санхүүг зөвхөн харна. Эрх, оч, хязгаарлалт, устгах, тохиргоо зөвхөн супер админд.</p>
           </section>
 
           <section className="adm-card">
+            <div className="adm-card-head"><b>Сануулга ({warnings.length}/{WARN_LIMIT})</b></div>
+            {warnings.length > 0 && (
+              <ul className="adm-feed">
+                {warnings.map((w, i) => (
+                  <li key={i}><span><b>{i + 1}.</b> {w.note} <small className="adm-muted">· {who(w)}</small></span><small>{fmtDate(w.created_at)}</small></li>
+                ))}
+              </ul>
+            )}
+            {u.delete_pending_at ? (
+              <p className="adm-banner">Энэ профайл {WARN_LIMIT} сануулга авч устгах дараалалд орсон. Супер админ эцэслэн шийднэ.</p>
+            ) : u.role === "user" && !self ? (
+              <form action={warnUser} className="adm-inline">
+                <input type="hidden" name="user_id" value={u.id} />
+                <input name="note" required maxLength={500} placeholder="Шалтгаан (хэрэглэгчид очно)" />
+                <button className="adm-btn danger">Сануулга өгөх</button>
+              </form>
+            ) : (
+              <p className="adm-muted">Сануулга зөвхөн энгийн хэрэглэгчид өгнө.</p>
+            )}
+            <p className="adm-muted small">{WARN_LIMIT} дахь сануулгаар профайл хязгаарлагдаж, устгах дараалалд орно. Устгагдсан имэйлээр дахин бүртгүүлэх боломжгүй.</p>
+          </section>
+
+          {sup && !protectedUser && (
+            <section className="adm-card">
+              <div className="adm-card-head"><b>Профайл устгах</b></div>
+              {u.delete_pending_at && (
+                <form action={cancelDeletion} className="adm-inline">
+                  <input type="hidden" name="user_id" value={u.id} />
+                  <button className="adm-btn">Дарааллаас гаргаж сэргээх</button>
+                </form>
+              )}
+              <details className="adm-pop">
+                <summary className="adm-btn danger">Эцэслэн устгах</summary>
+                <form action={deleteUser} className="adm-form">
+                  <input type="hidden" name="user_id" value={u.id} />
+                  <input name="note" maxLength={300} placeholder="Шалтгаан (хоосон бол сануулгууд)" />
+                  <input name="confirm" required placeholder={`Баталгаажуулах: ${u.email}`} />
+                  <button className="adm-btn danger">Устгаж, имэйлийг хаах</button>
+                </form>
+              </details>
+              <p className="adm-muted small">Профайл, нийтлэл, сэтгэгдэл бүгд устаж, буцаах боломжгүй.</p>
+            </section>
+          )}
+
+          {sup && (
+          <section className="adm-card">
             <div className="adm-card-head"><b>Хязгаарлалт</b></div>
             {!canRestrict ? (
-              <p className="adm-muted">{protectedUser ? "Энэ хэрэглэгчийг хязгаарлах боломжгүй." : "Админыг зөвхөн супер админ хязгаарлана."}</p>
+              <p className="adm-muted">Энэ хэрэглэгчийг хязгаарлах боломжгүй.</p>
             ) : u.restricted_at ? (
               <form action={restrictUser} className="adm-inline">
                 <input type="hidden" name="user_id" value={u.id} />
@@ -106,6 +155,7 @@ export default async function UserDetail({ params, searchParams }) {
             )}
             <p className="adm-muted small">Хязгаарлагдсан хэрэглэгч нийтлэл, асуулт, сэтгэгдэл бичих, оч өгөх боломжгүй.</p>
           </section>
+          )}
 
           {me.role === "superadmin" && !self && (
             <section className="adm-card">

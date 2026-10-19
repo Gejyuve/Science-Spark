@@ -5,30 +5,39 @@ import { ROLE_LABELS } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { levelFor } from "@/lib/levels";
 import Head, { Tabs, Chip, Flash, who } from "../_c/Head";
+import { adminSetRole } from "../actions";
 import { Avatar } from "../../components/Bits";
 
 const TABS = [["", "Бүгд"], ["admin", "Редакц"], ["restricted", "Хязгаарласан"], ["new", "Шинэ"]];
+// Устгах дараалал зөвхөн супер админд
+const DEL_TAB = ["delete", "Устгах дараалал"];
 const ROLE_TONE = { superadmin: "dark", admin: "ok", user: "" };
 
 export default async function Users({ searchParams }) {
   const user = await requireSection("users");
   const { tab = "", q = "", page = "1", ok, error } = await searchParams;
-  const t = TABS.some(([k]) => k === tab) ? tab : "";
+  const sup = user.role === "superadmin";
+  const tabs = sup ? [...TABS, DEL_TAB] : TABS;
+  const t = tabs.some(([k]) => k === tab) ? tab : "";
   const pg = Math.max(1, Number(page) || 1);
   const like = `%${String(q).trim().toLowerCase()}%`;
   const rows = await sql`
-    SELECT u.id, u.email, u.initial, u.first_name, u.surname, u.role, u.account_type, u.restricted_at, u.created_at,
+    SELECT u.id, u.email, u.initial, u.first_name, u.surname, u.role, u.account_type, u.restricted_at, u.delete_pending_at, u.created_at,
+      (SELECT string_agg(note, ' · ' ORDER BY created_at) FROM user_warnings WHERE user_id = u.id) AS warnings,
+      (SELECT COUNT(*) FROM user_warnings WHERE user_id = u.id)::int AS warns,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM posts WHERE author_id = u.id)::int AS posts
     FROM users u
     WHERE (${t} = '' OR (${t} = 'admin' AND u.role IN ('admin','superadmin'))
-           OR (${t} = 'restricted' AND u.restricted_at IS NOT NULL) OR (${t} = 'new' AND u.created_at > now() - interval '7 days'))
+           OR (${t} = 'restricted' AND u.restricted_at IS NOT NULL) OR (${t} = 'new' AND u.created_at > now() - interval '7 days')
+           OR (${t} = 'delete' AND u.delete_pending_at IS NOT NULL))
       AND (${like} = '%%' OR lower(u.email) LIKE ${like} OR lower(u.first_name) LIKE ${like} OR lower(COALESCE(u.surname,'')) LIKE ${like})
     ORDER BY u.created_at DESC LIMIT 51 OFFSET ${(pg - 1) * 50}`;
   const [c] = await sql`SELECT COUNT(*)::int AS all,
       COUNT(*) FILTER (WHERE role IN ('admin','superadmin'))::int AS admin,
       COUNT(*) FILTER (WHERE restricted_at IS NOT NULL)::int AS restricted,
-      COUNT(*) FILTER (WHERE created_at > now() - interval '7 days')::int AS new
+      COUNT(*) FILTER (WHERE created_at > now() - interval '7 days')::int AS new,
+      COUNT(*) FILTER (WHERE delete_pending_at IS NOT NULL)::int AS delete
     FROM users`;
   const more = rows.length > 50;
   // Редакц таб: админ бүрийн хяналтын ажлын үзүүлэлт
@@ -48,7 +57,7 @@ export default async function Users({ searchParams }) {
       <Head user={user} title="Хэрэглэгчид" sub={`Нийт ${c.all} хэрэглэгч`} search="/admin/users" q={q} hidden={{ tab: t }} />
       <Flash ok={ok} error={error} />
       <div className="adm-bar">
-        <Tabs cur={t} href={(k) => href(k)} tabs={TABS.map(([k, l]) => [k, l, c[k || "all"]])} />
+        <Tabs cur={t} href={(k) => href(k)} tabs={tabs.map(([k, l]) => [k, l, c[k || "all"]])} />
         <span className="ss-grow" />
         <a href={`/admin/users/csv?${new URLSearchParams({ tab: t, q })}`} className="adm-btn">CSV татах</a>
       </div>
@@ -69,7 +78,9 @@ export default async function Users({ searchParams }) {
                   </td>
                   <td>
                     <Chip tone={ROLE_TONE[u.role]}>{ROLE_LABELS[u.role]}</Chip>
-                    {u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
+                    {u.delete_pending_at ? <Chip tone="bad">Устгах</Chip> : u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
+                    {u.warns > 0 && <Chip tone="warn">{u.warns} сануулга</Chip>}
+                    {t === "delete" && u.warnings && <small className="adm-note">{u.warnings}</small>}
                   </td>
                   <td>{levelFor(u.points).n} · {levelFor(u.points).name}</td>
                   {work ? (() => {
@@ -86,7 +97,19 @@ export default async function Users({ searchParams }) {
                     <td>{u.posts}</td>
                     <td>{fmtDate(u.created_at)}</td>
                   </>)}
-                  <td className="adm-right"><Link href={`/admin/users/${u.id}`} className="adm-btn">Харах</Link></td>
+                  <td className="adm-right">
+                    <span className="adm-acts">
+                      {sup && u.role === "user" && !u.delete_pending_at && (
+                        <form action={adminSetRole}>
+                          <input type="hidden" name="user_id" value={u.id} />
+                          <input type="hidden" name="role" value="admin" />
+                          <input type="hidden" name="from" value={href(t, pg)} />
+                          <button className="adm-btn teal">Админ болгох</button>
+                        </form>
+                      )}
+                      <Link href={`/admin/users/${u.id}`} className={"adm-btn" + (t === "delete" ? " danger" : "")}>{t === "delete" ? "Шийдэх" : "Харах"}</Link>
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

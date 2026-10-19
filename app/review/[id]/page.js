@@ -55,7 +55,7 @@ export default async function ReviewPost({ params, searchParams }) {
   return (
     <form action={decidePost} className="rv-editor">
       <input type="hidden" name="post_id" value={p.id} />
-      <Link href="/review" className="rv-backlink">← Хяналтын жагсаалт</Link>
+      <Link href="/admin/content?status=pending" className="rv-backlink">← Контент</Link>
       <Flash error={error} />
       <div className="rv-cols">
         <div className="rv-mainc">

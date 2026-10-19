@@ -904,6 +904,7 @@ details.mod summary { cursor: pointer; }
 .adm-tabs em { font-style: normal; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--surface-3); color: var(--muted); }
 .adm-filters a { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); color: #708c9e; font-size: 12px; font-weight: 600; text-decoration: none; }
 .adm-filters a.on { background: #12232e; border-color: #12232e; color: #fff; }
+.adm-filters em { font-style: normal; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #e4572e; color: #fff; font-size: 11px; }
 .adm-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .adm-pager { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 13px; color: var(--muted); }
 
