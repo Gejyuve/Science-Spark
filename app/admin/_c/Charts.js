@@ -1,6 +1,8 @@
 // Тоймын энгийн SVG графикууд (сервер дээр зурагдана, сан хэрэглэхгүй)
 const W = 640, H = 200, PAD = { l: 36, r: 10, t: 12, b: 26 };
 const n = (v) => Number(v || 0).toLocaleString("en-US");
+// Тэнхлэгийн товч бичлэг: 60000 → 60k, 1200000 → 1.2M
+const short = (v) => (v >= 1e6 ? `${+(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${+(v / 1e3).toFixed(0)}k` : n(v));
 
 function ticks(max) {
   if (max <= 4) return [0, Math.max(1, max)];
@@ -30,7 +32,7 @@ export function GrowthChart({ data, bar, line, barLabel, lineLabel, barColor = "
           return (
             <g key={v}>
               <line x1={PAD.l} x2={W - PAD.r} y1={y} y2={y} className="ov-grid" />
-              <text x={PAD.l - 6} y={y + 4} className="ov-ax" textAnchor="end">{n(v)}</text>
+              <text x={PAD.l - 6} y={y + 4} className="ov-ax" textAnchor="end">{short(v)}</text>
             </g>
           );
         })}
