@@ -3455,5 +3455,40 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cel-body { padding: 16px 16px 18px; }
   .cel-badge { width: 80px; height: 80px; }
   .cel-badge span { font-size: 36px; }
+  .cel-ref-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 48px; font-size: 11.5px; }
 }
+/* Шинэ профайл: «Хаанаас сонссон бэ?» */
+.cel.tall { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+.cel-ref { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; background: var(--surface-2); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--k) 30%, transparent); }
+.cel-ref > b { font-size: 15.5px; font-weight: 800; color: var(--ink); }
+.cel-ref > small { font-size: 12.5px; line-height: 1.5; color: var(--text); }
+.cel-ref > small b { color: var(--k); }
+.cel-ref.done { background: linear-gradient(100deg, #fff1c9, #e6f7f5); box-shadow: inset 0 0 0 1.5px #ffcf6b; }
+.cel-ref.done > small b { color: #c2400d; }
+.cel-ref-tabs { display: flex; gap: 6px; }
+.cel-ref-tabs button { flex: 1 1 0; min-width: 0; height: 36px; padding: 0 6px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.cel-ref-tabs button.on { border-color: var(--k); background: var(--k); color: #fff; }
+.cel-ref-q { height: 40px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; outline: none; }
+.cel-ref-q:focus { border-color: var(--k); }
+.cel-ref-list { display: flex; flex-direction: column; max-height: 196px; overflow-y: auto; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
+.cel-ref-list button { display: block; width: 100%; padding: 7px 10px; border: 0; background: none; text-align: left; font: inherit; cursor: pointer; }
+.cel-ref-list button:hover, .cel-ref-list button:focus-visible { background: color-mix(in srgb, var(--k) 10%, transparent); }
+.cel-ref-none { padding: 10px; font-size: 12.5px; color: var(--muted); }
+.cel-ref-it { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cel-ref-img { flex: none; display: grid; place-items: center; width: 34px; height: 34px; overflow: hidden; border-radius: 9px; background: color-mix(in srgb, var(--k) 18%, var(--surface)); color: var(--k); font-weight: 800; }
+.cel-ref-img.r { border-radius: 50%; }
+.cel-ref-img img { width: 100%; height: 100%; object-fit: cover; }
+.cel-ref-nm { display: flex; flex-direction: column; min-width: 0; }
+.cel-ref-nm b { font-size: 13.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cel-ref-nm small { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cel-ref-pick { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--k); }
+.cel-ref-chg { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.cel-ref-chg:hover { color: var(--k); }
+.cel-ref-go { height: 42px; border: 0; border-radius: 12px; background: linear-gradient(90deg, #ffb547, #ff7a1a); color: #fff; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.cel-ref-go:disabled { opacity: .6; cursor: wait; }
+.cel-ref-err { font-size: 12.5px; color: #d43a3a; }
+:root[data-theme="dark"] .cel-ref.done { background: linear-gradient(100deg, #4a3a16, #12302c); }
+:root[data-theme="dark"] .cel-ref.done > small b { color: #ffc48a; }
+:root[data-theme="dark"] .cel-ref-tabs button.on { color: #06221f; }
 @media (prefers-reduced-motion: reduce) { .cel, .cel-rays, .cel-badge, .cel-chip.got, .cel-spark, .cel-lv.up, .cel-bar-new { animation: none; } .cel-confetti { display: none; } }

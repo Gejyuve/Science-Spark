@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import ReferralAsk from "./ReferralAsk";
 
 // Контент илгээсний дараах баярын цонх. Сервер үйлдэл (lib/celebrate.js) «ss_yay» күүки тавина,
 // энд уншаад цонхоо гаргаж, күүкийг устгана. Сервер үйлдлийн дараах шилжилт хуудсыг дахин ачаалдаггүй тул байн байн шалгана.
@@ -21,6 +22,7 @@ const KIND = {
   Даалгавар: { ic: "🧪", c: "#0a84ff", noun: "Даалгавар" },
   Тайлан: { ic: "🏅", c: "#f5a700", noun: "Тайлан" },
   Хариулт: { ic: "🤝", c: "#9b3df0", noun: "Хариулт" },
+  Профайл: { ic: "🚀", c: "#00a89b", noun: "Профайл" },
 };
 const WHY = {
   Нийтлэл: "Таны бичсэн мэдлэг дараагийн үеийнхний замыг гэрэлтүүлнэ. Монгол хэл дээрх шинжлэх ухааны уран зохиолд хувь нэмэр орууллаа.",
@@ -33,10 +35,12 @@ const WHY = {
   Даалгавар: "Клубууд туршиж, бүтээж, хамтдаа суралцах шинэ сорилт нэмэгдлээ. Редакц хянаад нийтэлнэ.",
   Тайлан: "Клубынхоо хөдөлмөрийг бусдад үлгэр болгон хуваалцлаа. Редакц хянаад нийтэлнэ.",
   Хариулт: "Мэдлэгээ хуваалцаж, хэн нэгний асуултад гэрэл тусгалаа. Анхны хариултын урамшуулал танд олгогдлоо!",
+  Профайл: "Science Spark-ийн гэр бүлд тавтай морил! Монголын шинжлэх ухааныг хамтдаа асааж, мэдлэгээ дараагийн үедээ түгээцгээе.",
 };
 const head = (d) => {
   const noun = KIND[d.k]?.noun || "Бүтээл";
   if (d.k === "Хариулт") return "Анхны хариулт тань нийтлэгдлээ!";
+  if (d.k === "Профайл") return "Таны профайл үүслээ!";
   if (d.s === "published") return `${noun} тань нийтлэгдлээ!`;
   if (d.s === "discussion") return `${noun} хэлэлцүүлэгт орлоо!`;
   return `${noun} тань редакц руу илгээгдлээ!`;
@@ -114,7 +118,7 @@ export default function Celebrate() {
 
   return createPortal(
     <div className="tm-overlay cel-ov" onMouseDown={(e) => e.target === e.currentTarget && close()}>
-      <div className="cel" role="dialog" aria-modal="true" aria-labelledby="cel-h" style={{ "--k": kind.c }}>
+      <div className={"cel" + (d.k === "Профайл" ? " tall" : "")} role="dialog" aria-modal="true" aria-labelledby="cel-h" style={{ "--k": kind.c }}>
         <div className="cel-hero">
           <span className="cel-rays" aria-hidden="true" />
           <span className="cel-confetti" aria-hidden="true">
@@ -150,6 +154,8 @@ export default function Celebrate() {
             </div>
           )}
 
+          {d.k === "Профайл" && <ReferralAsk />}
+
           <div className={"cel-lv" + (d.up ? " up" : "")}>
             <div className="cel-lv-row">
               <b style={{ color: d.lv.c }}>{d.up ? `🎉 Түвшин ахилаа: ${d.lv.name}!` : d.lv.n ? `Түвшин ${d.lv.n} · ${d.lv.name}` : "Шинэ гишүүн"}</b>
@@ -166,7 +172,7 @@ export default function Celebrate() {
           <div className="cel-foot">
             <button type="button" className="cel-go" onClick={close}>Үргэлжлүүлэх</button>
             {d.h && d.s !== "pending" && (
-              <button type="button" className={"cel-share" + (copied ? " ok" : "")} onClick={share}>{copied ? "✓ Холбоос хуулагдлаа" : "🔗 Найздаа хуваалцах"}</button>
+              <button type="button" className={"cel-share" + (copied ? " ok" : "")} onClick={share}>{copied ? "✓ Холбоос хуулагдлаа" : d.k === "Профайл" ? "🔗 Найзаа урих" : "🔗 Найздаа хуваалцах"}</button>
             )}
             <Link href="/och" className="cel-rules" onClick={close}>Оч олох дүрэм →</Link>
           </div>
