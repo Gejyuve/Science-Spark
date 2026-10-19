@@ -5,7 +5,7 @@ import ImageInput from "../../components/ImageInput";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { saveProfile } from "../actions";
-import { POINTS, POINTS_TOTAL, OPTIONS, COUNTRIES, MN_CITIES, SCHOOLS, SOCIALS, countWords } from "@/lib/profile";
+import { POINTS, POINTS_TOTAL, OPTIONS, COUNTRIES, MN_CITIES, SCHOOLS, SOCIALS, countWords, nameCase } from "@/lib/profile";
 import { useDraft, hhmm } from "@/lib/useDraft";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
@@ -67,7 +67,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
   const [about, setAbout] = useState(p.about || "");
   const total = Object.keys(earned).reduce((a, k) => a + (POINTS[k] || 0), 0);
   const bd = p.birth_date ? new Date(p.birth_date) : null;
-  const preview = surname && first ? `${surname[0].toUpperCase()}.${first[0].toUpperCase()}${first.slice(1)}` : "Х.Нэр";
+  const preview = surname && first ? `${surname.trim()[0]?.toUpperCase() || ""}.${nameCase(first.trim(), user.account_type || "person")}` : "Х.Нэр";
   const latin = /[A-Za-z]/.test(surname + first);
 
   return (

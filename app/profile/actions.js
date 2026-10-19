@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { ownImage, cleanPos } from "@/lib/images";
-import { checkName, capitalize, POINTS, OPTIONS, COUNTRIES, SOCIALS, countWords } from "@/lib/profile";
+import { checkName, nameCase, POINTS, OPTIONS, COUNTRIES, SOCIALS, countWords } from "@/lib/profile";
 import { celebrate } from "@/lib/celebrate";
 import { saveReferral } from "@/lib/referral";
 
@@ -80,8 +80,8 @@ export async function saveProfile(formData) {
   const coverSrc = coverId ? await ownImage(user.id, formData.get("cover_src")) : null;
   const avatarPos = avatarSrc ? cleanPos(formData.get("avatar_pos")) : null;
   const coverPos = coverSrc ? cleanPos(formData.get("cover_pos")) : null;
-  await sql`UPDATE users SET surname = ${capitalize(surname)}, initial = ${surname[0].toUpperCase()},
-            first_name = ${capitalize(first)}, avatar_id = ${avatarId},
+  await sql`UPDATE users SET surname = ${nameCase(surname, type)}, initial = ${surname[0].toUpperCase()},
+            first_name = ${nameCase(first, type)}, avatar_id = ${avatarId},
             avatar_src = ${avatarSrc}, avatar_pos = ${avatarPos} WHERE id = ${user.id}`;
   await sql`
     INSERT INTO profiles (user_id, email_public, gender, birth_date, about, birth_country, birth_city,
