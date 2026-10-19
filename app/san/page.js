@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
+import { PREMIUM_SPARK_WEIGHT, PREMIUM_DAILY_BONUS } from "@/lib/levels";
 import { monthBoard, splitPrizes, currentPeriod, prevPeriod, periodLabel, periodEnd, TOP_N, STAR_SHARE, PAIR_CAP, GIVER_MIN_DAYS } from "@/lib/spark";
-import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
+import { poolBalance, periodSummary, fmtMnt, bankInfo, PREMIUM_PLANS, DONATION_MIN, DONATION_MAX, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import Shell from "../components/Shell";
 import { Avatar } from "../components/Bits";
 import Countdown from "../components/Countdown";
+import SupportModal from "../components/SupportModal";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Шагналын сан · Science Spark" };
@@ -46,6 +48,11 @@ export default async function San({ searchParams }) {
   const prizes = splitPrizes(board, pool);
   const top = prizes.filter((p) => p.kind === "top");
   const star = prizes.find((p) => p.kind === "star");
+  // Цонхонд дамжуулах өгөгдөл (дансны мэдээлэл нийтэд харагддаг тул илгээхэд аюулгүй)
+  const modal = {
+    loggedIn: !!user, premium: !!user && isPremium(user), plans: PREMIUM_PLANS, bank: bankInfo(), min: DONATION_MIN, max: DONATION_MAX, poolShare: POOL_SHARE,
+    perks: [["🚫", "Сурталчилгаагүй"], ["🎬", "Видео контент"], ["✦", `Таны оч ×${PREMIUM_SPARK_WEIGHT}`], ["🔥", `Өдөрт +${PREMIUM_DAILY_BONUS} оч`], ["🏅", "«Дэмжигч» тэмдэг"], ["💚", "Бичээчдэд урам"]],
+  };
   const mine = user ? board.findIndex((r) => r.id === user.id) : -1;
 
   return (
@@ -61,8 +68,8 @@ export default async function San({ searchParams }) {
             <b className="san-amount">{fmtMnt(pool)}</b>
             <p>Монголын шинжлэх ухаан түгээгч, мэдлэг цацруулагч, идэвхтэн бичээчдийг хамтдаа дэмжие.</p>
             <div className="san-cta">
-              <Link href="/san/support?kind=premium" className="ss-pill">{user && isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"}</Link>
-              <Link href="/san/support?kind=pool" className="ss-pill ghost">Хандив өгөх</Link>
+              <SupportModal kind="premium" label={user && isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"} className="ss-pill" {...modal} />
+              <SupportModal kind="pool" label="Хандив өгөх" className="ss-pill ghost" {...modal} />
             </div>
             <div className="san-stats">
               <span><b>{stats.supporters}</b><small>дэмжигч</small></span>

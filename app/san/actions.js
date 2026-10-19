@@ -9,34 +9,30 @@ import { PREMIUM_PLANS, DONATION_MIN, DONATION_MAX, WITHDRAW_MIN, payCode, walle
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
 
-// Дэмжих хүсэлт: премиум, сан руу хандив, бичээчид хандив. Төлбөрийн систем холбогдох хүртэл
+// Дэмжих хүсэлт: дэмжигч, сан руу хандив, бичээчид хандив. Төлбөрийн систем холбогдох хүртэл
 // хэрэглэгч кодыг утгандаа бичиж шилжүүлэг хийгээд, редакц шалгаж баталгаажуулна.
-export async function createSupport(formData) {
-  const user = await getUser();
-  if (!user) redirect("/login");
-  if (needsName(user)) redirect("/profile/edit");
-  await ensureSchema();
+// Буцаах утга: { code, amount } эсвэл { error, to? } (to: шилжих хуудас)
+async function makeRequest(user, formData) {
+  if (user.restricted_at) return { error: "Таны эрх хязгаарлагдсан байна" };
   const kind = String(formData.get("kind") || "");
-  const back = `/san/support?kind=${encodeURIComponent(kind)}${formData.get("writer_id") ? `&to=${Number(formData.get("writer_id"))}` : ""}`;
-  if (user.restricted_at) go(back, "error", "Таны эрх хязгаарлагдсан байна");
   const anonymous = formData.get("anonymous") === "on";
   const message = String(formData.get("message") || "").trim().slice(0, 300) || null;
   let amount = 0, months = null, writerId = null, postId = null;
   if (kind === "premium") {
     const plan = PREMIUM_PLANS.find((p) => p.months === Number(formData.get("months")));
-    if (!plan) go(back, "error", "Хугацаагаа сонгоно уу");
+    if (!plan) return { error: "Хугацаагаа сонгоно уу" };
     amount = plan.price;
     months = plan.months;
   } else if (kind === "pool" || kind === "tip") {
     // Өөр дүн бичсэн бол түүнийг, үгүй бол сонгосон товчийг авна
     const raw = String(formData.get("amount_custom") || "").trim() || String(formData.get("amount") || "");
     amount = Math.round(Number(raw.replace(/[^\d]/g, "")));
-    if (!(amount >= DONATION_MIN && amount <= DONATION_MAX)) go(back, "error", `Дүн ${fmtMnt(DONATION_MIN)}-с ${fmtMnt(DONATION_MAX)} хооронд байна`);
+    if (!(amount >= DONATION_MIN && amount <= DONATION_MAX)) return { error: `Дүн ${fmtMnt(DONATION_MIN)}-с ${fmtMnt(DONATION_MAX)} хооронд байна` };
     if (kind === "tip") {
       writerId = Number(formData.get("writer_id"));
       const [w] = Number.isInteger(writerId) ? await sql`SELECT id FROM users WHERE id = ${writerId} AND first_name <> ''` : [];
-      if (!w) go("/san", "error", "Бичээч олдсонгүй");
-      if (writerId === user.id) go(back, "error", "Өөртөө хандив өгөх боломжгүй");
+      if (!w) return { error: "Бичээч олдсонгүй", to: "/san" };
+      if (writerId === user.id) return { error: "Өөртөө хандив өгөх боломжгүй" };
       const p = Number(formData.get("post_id"));
       if (Number.isInteger(p) && p > 0) {
         const [ok] = await sql`SELECT id FROM posts WHERE id = ${p} AND author_id = ${writerId}`;
@@ -44,22 +40,48 @@ export async function createSupport(formData) {
       }
     }
   } else {
-    go("/san", "error", "Буруу хүсэлт");
+    return { error: "Буруу хүсэлт", to: "/san" };
   }
   // Нэг хүн нэг дор 5-аас олон хүлээгдэж буй хүсэлттэй байхгүй (спамаас сэргийлнэ)
   const [{ n }] = await sql`SELECT COUNT(*)::int AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'pending'`;
-  if (n >= 5) go("/wallet", "error", "Хүлээгдэж буй 5 хүсэлт байна. Шилжүүлгээ хийх эсвэл цуцлаад дахин оролдоно уу.");
-  let code = null;
-  for (let i = 0; i < 5 && !code; i++) {
+  if (n >= 5) return { error: "Хүлээгдэж буй 5 хүсэлт байна. Шилжүүлгээ хийх эсвэл цуцлаад дахин оролдоно уу.", to: "/wallet" };
+  for (let i = 0; i < 5; i++) {
     const c = payCode();
     const r = await sql`INSERT INTO payment_requests (code, user_id, kind, writer_id, post_id, amount, months, anonymous, message)
                         VALUES (${c}, ${user.id}, ${kind}, ${writerId}, ${postId}, ${amount}, ${months}, ${anonymous}, ${message})
                         ON CONFLICT (code) DO NOTHING RETURNING code`;
-    if (r.length) code = c;
+    if (r.length) {
+      revalidatePath("/wallet");
+      return { code: c, amount };
+    }
   }
-  if (!code) go(back, "error", "Түр алдаа гарлаа. Дахин оролдоно уу.");
-  revalidatePath("/wallet");
-  redirect(`/san/pay/${code}`);
+  return { error: "Түр алдаа гарлаа. Дахин оролдоно уу." };
+}
+
+async function supportUser() {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  if (needsName(user)) redirect("/profile/edit");
+  await ensureSchema();
+  return user;
+}
+
+// /san/support хуудасны маягт: алдаа гарвал буцааж, амжилттай бол шилжүүлгийн хуудас руу
+export async function createSupport(formData) {
+  const user = await supportUser();
+  const r = await makeRequest(user, formData);
+  if (r.error) {
+    const kind = String(formData.get("kind") || "");
+    const back = `/san/support?kind=${encodeURIComponent(kind)}${formData.get("writer_id") ? `&to=${Number(formData.get("writer_id"))}` : ""}`;
+    go(r.to || back, "error", r.error);
+  }
+  redirect(`/san/pay/${r.code}`);
+}
+
+// Шагналын сангийн цонх: хуудаснаас гаралгүй дүн, кодыг буцаана
+export async function startSupport(prev, formData) {
+  const user = await supportUser();
+  return { ...(await makeRequest(user, formData)), at: Date.now() };
 }
 
 export async function cancelSupport(formData) {

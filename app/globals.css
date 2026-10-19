@@ -2900,3 +2900,61 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .san-top .san-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .san-formula { margin: -6px 0 0; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Дэмжих цонх: урам өгөх, баярын өнгө аяс */
+.sm-modal { width: 100%; max-width: 560px; overflow: hidden; border-radius: 26px; background: var(--surface); box-shadow: 0 30px 70px -10px rgba(0, 90, 80, .45); animation: sm-pop .32s cubic-bezier(.2, 1.3, .4, 1); }
+@keyframes sm-pop { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+.sm-hero { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 30px 28px 22px; text-align: center;
+  background: radial-gradient(120% 90% at 50% 0%, #fff6dd 0%, #e2f8f3 45%, #c9f0e8 100%); border-bottom: 2px solid #37c3b3; }
+.sm-hero b { position: relative; font-size: 21px; font-weight: 800; color: #0d3b36; }
+.sm-hero p { position: relative; margin: 0; max-width: 420px; font-size: 13.5px; line-height: 1.55; color: #2f5a55; }
+.sm-ic { position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; font-size: 30px; color: #00a89b;
+  background: #fff; box-shadow: 0 0 0 6px rgba(55, 195, 179, .18), 0 10px 24px -8px rgba(0, 128, 117, .5); animation: sm-beat 2.4s ease-in-out infinite; }
+@keyframes sm-beat { 50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(55, 195, 179, .08), 0 10px 24px -8px rgba(0, 128, 117, .5); } }
+.sm-x { position: absolute; top: 14px; right: 14px; z-index: 2; background: rgba(255, 255, 255, .8); }
+.sm-confetti { position: absolute; inset: 0; pointer-events: none; }
+.sm-confetti i { position: absolute; top: -12px; left: var(--x); width: var(--s); height: calc(var(--s) * .6); border-radius: 2px; background: var(--c); opacity: .85;
+  animation: sm-fall 4.5s linear var(--d) infinite; }
+.sm-confetti i:nth-child(3n) { border-radius: 50%; height: var(--s); }
+@keyframes sm-fall { to { transform: translateY(260px) rotate(540deg); opacity: 0; } }
+.sm-confetti.burst i { animation-duration: 2.2s; }
+.sm-body { display: flex; flex-direction: column; gap: 14px; padding: 20px 26px 22px; }
+.sm-perks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.sm-perks span { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); font-size: 12px; font-weight: 600; color: var(--ink); }
+.sm-perks i { font-style: normal; }
+.sm-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sm-foot small { font-size: 13px; font-weight: 700; color: #00a89b; }
+.sm-go { background: linear-gradient(90deg, #00a89b, #37c3b3) !important; box-shadow: 0 6px 16px -6px rgba(0, 168, 155, .7); }
+.sm-steps { margin: 0; padding: 0 0 0 4px; list-style: none; counter-reset: s; display: flex; flex-direction: column; gap: 12px; }
+.sm-steps li { counter-increment: s; position: relative; padding-left: 36px; display: flex; flex-direction: column; gap: 6px; }
+.sm-steps li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #e3f6f3; color: #00a89b; font-size: 12px; font-weight: 800; }
+.sm-steps span { font-size: 13.5px; color: var(--ink); font-weight: 600; }
+.sm-steps em { font-style: normal; font-size: 13px; color: var(--text); padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.sm-code { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #fff3e8; border: 1.5px dashed #ffb06b; }
+.sm-code b { flex: 1; font-size: 22px; letter-spacing: .08em; color: #c2400d; font-variant-numeric: tabular-nums; }
+.sm-copy { height: 32px; padding: 0 12px; border-radius: 10px; border: 0; background: #c2400d; color: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.sm-copy.ok { background: #16794a; }
+.sm-modal.done .sm-hero { background: radial-gradient(120% 90% at 50% 0%, #fff1c9 0%, #ffe9d6 40%, #d9f5ee 100%); }
+@media (prefers-reduced-motion: reduce) { .sm-modal, .sm-ic, .sm-confetti i { animation: none; } .sm-confetti { display: none; } }
+:root[data-theme="dark"] .sm-hero { background: radial-gradient(120% 90% at 50% 0%, #3a3018 0%, #123632 50%, #0f2a27 100%); border-color: #2a9d90; }
+:root[data-theme="dark"] .sm-modal.done .sm-hero { background: radial-gradient(120% 90% at 50% 0%, #4a3a16 0%, #3a2a1c 40%, #123632 100%); }
+:root[data-theme="dark"] .sm-hero b { color: #e8fbf7; }
+:root[data-theme="dark"] .sm-hero p { color: #a9d6cf; }
+:root[data-theme="dark"] .sm-ic { background: #0f2a27; }
+:root[data-theme="dark"] .sm-x { background: rgba(0, 0, 0, .35); }
+:root[data-theme="dark"] .sm-code { background: #3a2a1c; border-color: #8a5a2a; }
+:root[data-theme="dark"] .sm-code b { color: #ffc48a; }
+:root[data-theme="dark"] .sm-steps li::before { background: #12302c; color: #5fd6c8; }
+@media (max-width: 760px) {
+  .sm-hero { padding: 26px 18px 18px; }
+  .sm-body { padding: 16px 16px 18px; }
+  .sm-perks { grid-template-columns: 1fr 1fr; }
+  .sm-code b { font-size: 18px; }
+}
+.sm-modal .san-plans { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 760px) {
+  .sm-modal .san-plan > span { padding: 10px 8px; }
+  .sm-modal .san-plan em { font-size: 15px; }
+  .sm-foot .sm-go { flex: 1; justify-content: center; }
+  .sm-foot .ss-grow { display: none; }
+}
