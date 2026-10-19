@@ -9,7 +9,7 @@ import { TERM_KIND, canApproveWords, daysLeft, SUPPORT_NEEDED } from "@/lib/term
 import { crumbs } from "@/lib/tree";
 import { decideCategory, resolveCategoryReport } from "../tree/actions";
 
-const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент", "Зарлал"] };
+const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент", "Зарлал"], tasks: ["Даалгавар", "Тайлан"] };
 
 export default async function ReviewHome({ searchParams }) {
   const user = await getUser();
@@ -24,7 +24,7 @@ async function Queue({ user, sp }) {
   const words = canApproveWords(user);
   const staff = isStaff(user);
   const ev = canApproveEvents(user);
-  const t = sp.t === "words" ? "words" : !staff ? (ev ? "events" : "words") : sp.t === "cats" ? "cats" : sp.t === "events" ? "events" : "posts";
+  const t = sp.t === "words" ? "words" : !staff ? (ev ? (sp.t === "tasks" ? "tasks" : "events") : "words") : sp.t === "cats" ? "cats" : sp.t === "events" ? "events" : sp.t === "tasks" ? "tasks" : "posts";
   const kinds = GROUPS[t] || [];
   const rows = await sql`
     SELECT p.id, p.kind, p.title, p.created_at, p.author_id, u.initial, u.first_name, u.email, u.account_type
@@ -35,6 +35,7 @@ async function Queue({ user, sp }) {
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND author_id <> ${user.id})::int AS pending,
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.posts}))::int AS posts,
       (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.events}))::int AS events,
+      (SELECT COUNT(*) FROM posts WHERE status = 'pending' AND kind = ANY(${GROUPS.tasks}))::int AS tasks,
       (SELECT COUNT(*) FROM posts WHERE status = 'discussion' AND kind = ${TERM_KIND})::int AS words,
       ((SELECT COUNT(*) FROM category_requests WHERE status = 'pending') + (SELECT COUNT(*) FROM category_reports WHERE status = 'open'))::int AS cats,
       (SELECT COUNT(*) FROM posts WHERE reviewer_id = ${user.id} AND reviewed_at > date_trunc('day', now()))::int AS today,
@@ -47,16 +48,16 @@ async function Queue({ user, sp }) {
       <Head user={user} tag="Хянагч" title="Хяналтын жагсаалт" sub="Хүлээгдэж буй контент · «Хянах» дээр дарж засварлах самбарыг нээнэ" />
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats">
-        <Stat label="Хүлээгдэж буй" value={staff ? s.pending : s.events} note="таны хянах боломжтой" tone={s.pending ? "warn" : ""} />
+        <Stat label="Хүлээгдэж буй" value={staff ? s.pending : s.events + s.tasks} note="таны хянах боломжтой" tone={s.pending ? "warn" : ""} />
         <Stat label="Өнөөдөр хянасан" value={s.today} />
         <Stat label="Дундаж хугацаа" value={`${s.avg_h} цаг`} note="ирснээс шийдвэр хүртэл" />
         <Stat label="Нийт хянасан" value={s.total} />
       </div>
       <Tabs cur={t === "posts" ? "" : t} href={(k) => (k ? `/review?t=${k}` : "/review")}
-        tabs={[...(staff ? [["", "Нийтлэл, мэдээ", s.posts]] : []), ...(ev ? [["events", "Эвент, зарлал", s.events]] : []), ["words", "Шинэ үг", s.words], ...(staff ? [["cats", "Ангилал", s.cats]] : [])]} />
+        tabs={[...(staff ? [["", "Нийтлэл, мэдээ", s.posts]] : []), ...(ev ? [["events", "Эвент, зарлал", s.events], ["tasks", "Клуб", s.tasks]] : []), ["words", "Шинэ үг", s.words], ...(staff ? [["cats", "Ангилал", s.cats]] : [])]} />
       {t === "cats" ? <Cats /> : t === "words" ? <Words user={user} can={words} /> : (
       <section className="adm-card flush">
-        <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : "Эвент, зарлал"} ({rows.length})</b></div>
+        <div className="adm-card-head pad"><b>{t === "posts" ? "Нийтлэл, мэдээ" : t === "tasks" ? "Клубын даалгавар, тайлан" : "Эвент, зарлал"} ({rows.length})</b></div>
         {rows.length === 0 ? (
           <p className="adm-empty">Хүлээгдэж буй зүйл алга ✓</p>
         ) : (
@@ -70,7 +71,7 @@ async function Queue({ user, sp }) {
                   <tr key={p.id}>
                     <td className="adm-strong adm-clip">{p.title}</td>
                     <td>{who(p)}</td>
-                    <td><Chip tone={p.kind === "Эвент" ? "ok" : p.kind === "Зарлал" ? "teal" : ""}>{p.kind}</Chip></td>
+                    <td><Chip tone={p.kind === "Эвент" ? "ok" : p.kind === "Зарлал" || p.kind === "Даалгавар" ? "teal" : ""}>{p.kind}</Chip></td>
                     <td>{old ? <Chip tone="bad">{fmtDate(p.created_at)}</Chip> : fmtDate(p.created_at)}</td>
                     <td className="adm-right">
                       {own ? <Chip tone="gray">Өөрийн · өөр хянагч</Chip> : <Link href={`/review/${p.id}`} className="adm-btn teal">Хянах</Link>}

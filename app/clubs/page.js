@@ -4,7 +4,11 @@ import { ensureSchema } from "@/lib/db";
 import { clubBoard, PERIODS, clubFollowSet } from "@/lib/clubs";
 import Shell from "../components/Shell";
 import ClubMap from "../components/ClubMap";
-import { ClubPerson } from "../components/ClubBits";
+import { ClubPerson, ClubAv } from "../components/ClubBits";
+import TaskCard, { ReportCard } from "../components/TaskCard";
+import Composer from "../components/Composer";
+import { Avatar } from "../components/Bits";
+import { listTasks, taskCount, leaderClub, listReports, reportCount } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Клуб · Science Spark" };
@@ -15,11 +19,11 @@ const PER = 10;
 export default async function Clubs({ searchParams }) {
   const sp = await searchParams;
   const period = PERIODS[sp.t] ? sp.t : "all";
-  let user = null, board = [];
+  let user = null, board = [], tasks = [], tasksN = 0, myClub = null, reports = [], reportsN = 0;
   try {
     user = await getUser();
     await ensureSchema();
-    board = await clubBoard(period);
+    [board, tasks, tasksN, myClub, reports, reportsN] = await Promise.all([clubBoard(period), listTasks({ limit: 4 }), taskCount(), leaderClub(user?.id), listReports({ limit: 4 }), reportCount()]);
   } catch (e) {}
   const follows = await clubFollowSet(user);
 
@@ -46,6 +50,49 @@ export default async function Clubs({ searchParams }) {
   return (
     <Shell user={user} active="/clubs" header={false}>
       <div className="cl-page">
+        {/* Клубын нүүр: удирдагчид Даалгавар · Тайлан · Хуваалцъя, бусдад даалгаврын тухай товч */}
+        {myClub ? (
+          <div className="ss-header static cl-composer">
+            <Composer loggedIn me={<Avatar user={user} size={32} />} club={{ name: myClub.name }} clubAv={<ClubAv c={myClub} size={32} />} initialAs="club" />
+          </div>
+        ) : (
+          <Link href={user ? "/tasks" : "/login"} className="cl-compose">
+            {user ? <Avatar user={user} size={36} /> : <img src="/icons/person.svg" width={36} height={36} alt="" />}
+            <span>Клубуудын хийж үзсэн туршилт, эвент, воркшопын санаа, тайлангууд. Клубын удирдагч клубынхээ нэрээр нэмнэ.</span>
+            <b className="cm-join">Даалгаврууд үзэх</b>
+          </Link>
+        )}
+
+        <section className="cl-tasks">
+          <div className="cl-head">
+            <div>
+              <h2>Даалгавар</h2>
+              <p>Клубуудын хуваалцсан санаа · {tasksN} даалгавар</p>
+            </div>
+            <span className="ss-grow" />
+            <Link href="/tasks" className="cl-new">Бүгдийг үзэх →</Link>
+          </div>
+          {tasks.length ? (
+            <div className="tk-grid four">{tasks.map((t) => <TaskCard key={t.id} t={t} compact />)}</div>
+          ) : (
+            <p className="muted">Одоохондоо даалгавар алга. Клубын удирдагч анхны даалгаврыг нэмээрэй.</p>
+          )}
+        </section>
+
+        {reports.length > 0 && (
+          <section className="cl-tasks">
+            <div className="cl-head">
+              <div>
+                <h2>Тайлан</h2>
+                <p>Клубууд даалгаврыг хэрхэн биелүүлсэн бэ · {reportsN} тайлан</p>
+              </div>
+              <span className="ss-grow" />
+              <Link href="/reports" className="cl-new">Бүгдийг үзэх →</Link>
+            </div>
+            <div className="tk-grid four">{reports.map((r) => <ReportCard key={r.id} r={r} compact />)}</div>
+          </section>
+        )}
+
         <ClubMap clubs={onMap} aimags={aimags} />
 
         <section className="cl-board">

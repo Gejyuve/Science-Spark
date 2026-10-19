@@ -46,7 +46,7 @@ export default async function PublicProfile({ params, searchParams }) {
       (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
       (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments
     FROM posts p JOIN users u ON u.id = p.author_id
-    WHERE p.author_id = ${uid} AND (p.status = 'published' OR ${isMe}::boolean)
+    WHERE p.author_id = ${uid} AND p.club_id IS NULL AND (p.status = 'published' OR ${isMe}::boolean)
     ORDER BY p.created_at DESC LIMIT 100`;
   for (const p of all) { p.author_points = u.points; p.author_followers = u.followers; }
   const savedList = isMe

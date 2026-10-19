@@ -21,6 +21,11 @@ import { TERM_KIND, daysLeft, synonyms, shortUrl } from "@/lib/terms";
 import { crumbs } from "@/lib/tree";
 import { render, outline } from "@/lib/md";
 import { Sources } from "../../components/RichEditor";
+import { ClubPerson } from "../../components/ClubBits";
+import { clubFollowSet } from "@/lib/clubs";
+import { TASK_KIND, REPORT_KIND, AUTHOR_SHARE } from "@/lib/tasks-shared";
+import { listReports, leaderClub } from "@/lib/tasks";
+import { ReportCard } from "../../components/TaskCard";
 
 export const dynamic = "force-dynamic";
 
@@ -356,12 +361,20 @@ export default async function PostPage({ params, searchParams }) {
     SELECT p.*, u.initial, u.first_name, u.avatar_id AS avatar,
            (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
-           (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers
-    FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id = ${postId}`;
+           (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers,
+           cl.name AS club_name, cl.logo_id AS club_logo,
+           (SELECT COUNT(*) FROM club_follows f WHERE f.club_id = cl.id)::int AS club_followers,
+           (COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = cl.id), 0)
+            + COALESCE((SELECT SUM(k.delta) FROM club_points k WHERE k.club_id = cl.id), 0))::int AS club_points
+    FROM posts p JOIN users u ON u.id = p.author_id LEFT JOIN clubs cl ON cl.id = p.club_id WHERE p.id = ${postId}`;
   if (!posts.length) notFound();
   const post = posts[0];
   const isAuthor = !!user && user.id === post.author_id;
   const isArticle = post.kind === "Нийтлэл" || post.kind === "Мэдээ";
+  // Даалгавар: нийтлэл шиг тэмдэглэгээтэй агуулга, ковертой. Клубын нэрээр харагдана.
+  const isTask = post.kind === TASK_KIND;
+  const isReport = post.kind === REPORT_KIND;
+  const rich = isArticle || isTask || isReport;
   // Үзсэн хүний тоо: нийтлэгдсэн контентыг зохиогчоос бусад хүн анх нээхэд +1
   let views = post.views || 0;
   if ((post.status === "published" || (post.kind === TERM_KIND && post.status === "discussion")) && !isAuthor) {
@@ -434,17 +447,31 @@ export default async function PostPage({ params, searchParams }) {
   const usedTerms = new Set();
   const plain = post.kind === "Зарлал"; // зарлал: бүх догол мөр ижил
   // Нийтлэл, мэдээ: тэмдэглэгээтэй агуулга (lib/md.js) тул эхний догол мөрийг автоматаар тодруулахгүй
-  const lead = plain ? null : post.subtitle || (!isArticle && paras.length > 1 ? paras[0] : null);
-  const rest = plain || post.subtitle || isArticle ? paras : paras.length > 1 ? paras.slice(1) : paras;
-  const srcList = isArticle && Array.isArray(post.meta?.sources) ? post.meta.sources : [];
-  const heads = isArticle ? outline(post.body) : [];
-  const cover = isArticle ? post.meta?.cover : null;
+  const lead = plain ? null : post.subtitle || (!rich && paras.length > 1 ? paras[0] : null);
+  const rest = plain || post.subtitle || rich ? paras : paras.length > 1 ? paras.slice(1) : paras;
+  const srcList = rich && Array.isArray(post.meta?.sources) ? post.meta.sources : [];
+  const heads = rich ? outline(post.body) : [];
+  const cover = rich ? post.meta?.cover : null;
+  const club = post.club_id ? { id: post.club_id, name: post.club_name, logo: post.club_logo, followers: post.club_followers, points: post.club_points } : null;
+  const clubFollows = club ? await clubFollowSet(user) : null;
+  // Өөрийн клубын даалгаварт оч өгөхгүй
+  const ownClub = !!club && !!user && (await sql`SELECT 1 FROM club_members WHERE club_id = ${club.id} AND user_id = ${user.id}`).length > 0;
+  // Тайлан: биелүүлсэн даалгаврын товч мэдээлэл
+  const [doneTask] = isReport && post.task_id
+    ? await sql`SELECT t.id, t.title, t.subtitle, t.image_id, t.meta, c.id AS club_id, c.name AS club_name, c.logo_id AS club_logo
+                FROM posts t JOIN clubs c ON c.id = t.club_id WHERE t.id = ${post.task_id}`
+    : [];
+  // Даалгавар: биелүүлсэн клубуудын тайлан, удирдагчид «Тайлан нэмэх»
+  const taskReports = isTask && published ? await listReports({ taskId: post.id, limit: 12 }) : [];
+  const myClub = isTask && published && user ? await leaderClub(user.id) : null;
+  const myReported = myClub ? taskReports.some((x) => x.club_id === myClub.id) || (await sql`SELECT 1 FROM posts WHERE task_id = ${post.id} AND club_id = ${myClub.id} AND kind = ${REPORT_KIND} AND status = 'pending'`).length > 0 : false;
+  const reward = isTask ? Number(post.meta?.reward) || 0 : 0;
 
   return (
     <Shell user={user} header={false}>
       <div className="ar-col">
         <div className="ar-pagebar">
-          <Link href={isTerm ? "/dict" : "/"} className="ar-back">← Буцах</Link>
+          <Link href={isTerm ? "/dict" : isTask ? "/tasks" : isReport ? "/reports" : "/"} className="ar-back">← Буцах</Link>
         </div>
 
         <article className="ar-card">
@@ -462,7 +489,7 @@ export default async function PostPage({ params, searchParams }) {
             </span>
           </div>
 
-          {post.image_id && isArticle && (
+          {post.image_id && rich && (
             <figure className="ar-coverfig">
               <img className="ar-cover" src={`/img/${post.image_id}`} alt="" />
               {cover?.source && (
@@ -484,8 +511,25 @@ export default async function PostPage({ params, searchParams }) {
               {post.category && crumbs(post.category).map((c) => (
                 <Link key={c.path} href={`/tree/${c.path}`} className="ar-chip cat">{c.name}</Link>
               ))}
+              {isTask && (post.meta?.types || []).map((t) => (
+                <Link key={t} href={`/tasks?t=${encodeURIComponent(t)}`} className="ar-chip cat">{t}</Link>
+              ))}
             </div>}
             {!["Асуулт", "Бодрол", "Эвент", "Зарлал", TERM_KIND].includes(post.kind) && <h1 className="ar-title">{post.title}</h1>}
+            {isTask && reward > 0 && (
+              <p className="tk-rewardline"><img src="/icons/spark.svg" width={16} height={16} alt="" />Биелүүлж тайлан бичсэн клуб <b>{reward} оч</b> авна. Даалгаврыг нэмсэн клубт {Math.round((reward * AUTHOR_SHARE) / 100)} оч очно.</p>
+            )}
+            {doneTask && (
+              <Link href={`/post/${doneTask.id}`} className="rp-done">
+                {doneTask.image_id ? <img src={`/img/${doneTask.image_id}`} alt="" /> : <span className="rp-noimg" />}
+                <span className="rp-txt">
+                  <small>✓ Биелүүлсэн даалгавар</small>
+                  <b>{doneTask.title}</b>
+                  <em>{doneTask.club_name}{(doneTask.meta?.types || []).length ? ` · ${doneTask.meta.types.join(", ")}` : ""}{doneTask.meta?.reward ? ` · ${doneTask.meta.reward} оч` : ""}</em>
+                </span>
+                <span className="rp-go">Даалгавар →</span>
+              </Link>
+            )}
 
             {error && <p className="error">{error}</p>}
             {ok && <p className="notice">{ok}</p>}
@@ -554,11 +598,11 @@ export default async function PostPage({ params, searchParams }) {
                 {isAuthor && published && <AskerTools post={post} bounty={bounty} othersAnswered={othersAnswered} wallet={myWallet} />}
               </>
             ) : (
-              isArticle ? (
+              rich ? (
                 <div className={"ar-tocwrap" + (heads.length >= 2 ? " has" : "")}>
                   {heads.length >= 2 && (
                     <nav className="ar-toc" aria-label="Нийтлэлийн бүтэц">
-                      <b>Энэ нийтлэлд</b>
+                      <b>{isTask ? "Энэ даалгаварт" : isReport ? "Энэ тайланд" : "Энэ нийтлэлд"}</b>
                       <ol>{heads.map((x) => <li key={x.id} className={`l${x.level}`}><a href={`#${x.id}`}>{x.text}</a></li>)}</ol>
                     </nav>
                   )}
@@ -569,7 +613,7 @@ export default async function PostPage({ params, searchParams }) {
                 </div>
               ) : rest.map((para, i) => <p key={i} className="ar-text">{glossary.length ? withTerms(para, glossary, usedTerms) : para}</p>)
             )}
-            {post.image_id && !isArticle && !isAnn && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
+            {post.image_id && !rich && !isAnn && <img className={"ar-img" + (["Эвент", "Зарлал"].includes(post.kind) ? " sq" : "")} src={`/img/${post.image_id}`} alt="" />}
             {!isAnn && <MetaBlock kind={post.kind} m={post.meta || {}} />}
             {post.meta?.program && <figure className="ar-program"><figcaption>Хөтөлбөр</figcaption><img src={`/img/${post.meta.program}`} alt="Хөтөлбөр" /></figure>}
             {post.kind === "Эвент" && published && googleCalUrl(post.title, post.meta || {}, post.body, `https://science-spark-sable.vercel.app/post/${post.id}`) && (
@@ -581,11 +625,33 @@ export default async function PostPage({ params, searchParams }) {
             )}
             </>}
 
+            {isTask && published && (
+              <section className="tk-done">
+                <div className="tk-done-head">
+                  <b>Биелүүлсэн клубууд <em>{taskReports.length}</em></b>
+                  <span className="ss-grow" />
+                  {myClub && !myReported && <Link href={`/reports/new?task=${post.id}`} className="cl-new">+ Тайлан нэмэх</Link>}
+                </div>
+                {taskReports.length
+                  ? <div className="tk-grid">{taskReports.map((x) => <ReportCard key={x.id} r={x} compact />)}</div>
+                  : <p className="muted">Энэ даалгаврыг хараахан хэн ч тайлагнаагүй байна. Клубтэйгээ хийгээд анхны тайланг бичээрэй!</p>}
+              </section>
+            )}
+
             {!isQ && !isTerm && <div className="ar-credits">
-              <div>
-                <span className="ar-label">{isAnn ? "Зарласан:" : "Бичсэн:"}</span>
-                <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
-              </div>
+              {club ? (
+                <div>
+                  <span className="ar-label">{isTask ? "Нэмсэн клуб:" : "Клуб:"}</span>
+                  <ClubPerson c={club} viewer={user} follows={clubFollows} />
+                </div>
+              ) : null}
+              {/* Даалгаврыг клубын нэрээр харуулна, жинхэнэ бичсэн хүнийг зөвхөн редакц харна */}
+              {(!club || isStaff(user)) && (
+                <div>
+                  <span className="ar-label">{isAnn ? "Зарласан:" : club ? "Бичсэн (редакцад харагдана):" : "Бичсэн:"}</span>
+                  <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
+                </div>
+              )}
               {published && reviewer && (
                 <div>
                   <span className="ar-label">Хянасан:</span>
@@ -597,7 +663,7 @@ export default async function PostPage({ params, searchParams }) {
             <div className="ar-divider" />
             <div className="ar-reactions">
               <span className="ar-left">
-                {open && user && !isAuthor && !mine ? (
+                {open && user && !isAuthor && !ownClub && !mine ? (
                   <form action={sparkPost}>
                     <input type="hidden" name="post_id" value={post.id} />
                     <button type="submit" className="ar-react teal ar-sparkbtn" title="Оч өгөх">
@@ -613,7 +679,7 @@ export default async function PostPage({ params, searchParams }) {
               </span>
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
-              {published && !isQ && !isAuthor && (
+              {published && !isQ && !club && !isAuthor && (
                 <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Шагнал</>}
                   writer={{ id: post.author_id, name: `${post.initial}.${post.first_name}` }} postId={post.id} {...supportModalProps(user)} />
               )}
