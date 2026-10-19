@@ -28,7 +28,8 @@ export default async function EditPage({ params, searchParams }) {
   if (post.status === "merged") redirect(`/post/${post.meta?.merged_into || ""}`);
   // Хүлээгдэж буй контентыг редакц засварлах самбараас засна
   if (staff && post.status === "pending") redirect(`/review/${post.id}`);
-  const live = staff || post.status === "published";
+  // Редакцын засвар шууд хэрэгжинэ. Бичээчийн нийтлэл, мэдээний засвар дахин хяналтад орно.
+  const live = staff || (post.status === "published" && !KINDS.includes(post.kind));
   const noteField = live && (
     <label className="ed-note">
       <span>Юу зассан бэ? (засварын түүхэнд нийтэд харагдана)</span>
@@ -43,11 +44,11 @@ export default async function EditPage({ params, searchParams }) {
           action={updatePost}
           post={post}
           error={error}
-          heading={staff ? "Редакц: нийтлэл засварлах" : "Нийтлэлээ засварлах"}
           kinds={["Нийтлэл", "Мэдээ"].filter((k) => k === post.kind || canWrite(user, k))}
           locked={{ Нийтлэл: writeLevel("Нийтлэл"), Мэдээ: writeLevel("Мэдээ") }}
           submit={live ? "Засвар хадгалах" : undefined}
-          extra={<>{noteField}<Link href={`/post/${post.id}`} className="wr-cancel">Цуцлах</Link></>}
+          heading={staff ? "Редакц: нийтлэл засварлах" : post.status === "published" ? "Нийтлэлээ засварлах (дахин хяналтад орно)" : "Нийтлэлээ засварлах"}
+          extra={<>{noteField || (post.status === "published" && <label className="ed-note"><span>Юу зассан бэ? (засварын түүхэнд харагдана)</span><input name="edit_note" maxLength={300} /></label>)}<Link href={`/post/${post.id}`} className="wr-cancel">Цуцлах</Link></>}
         />
         {own && (
           <form action={deletePost} className="wr-delete">

@@ -156,14 +156,18 @@ export async function updatePost(formData) {
   // Редакц бичээчийн ковер зургийг хэвээр үлдээж болно
   const imageId = (await ownImage(user.id, formData.get("image"))) ?? (Number(formData.get("image")) === cur.image_id ? cur.image_id : null);
   const meta = JSON.stringify(articleMeta(formData));
-  if (staffEdit || cur.status === "published") {
-    // Нийтлэгдсэн контент нийтлэгдсэн хэвээр. Засвар бүр түүхэнд үлдэж, бичээчийн засварыг редакц тусад нь харна.
+  if (staffEdit) {
+    // Редакцын засвар: нийтлэгдсэн хэвээр, түүхэнд үлдэнэ.
     await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
               meta = COALESCE(meta, '{}'::jsonb) || ${meta}::jsonb WHERE id = ${postId}`;
     await afterEdit(cur, user, staffEdit, { title, subtitle, body, note });
     redirect(`/post/${postId}?ok=${encodeURIComponent("Засвар хадгалагдлаа")}`);
   }
-  // Нийтлэгдээгүй нийтлэл засвар хийсний дараа дахин редакцын шалгалтад орно.
+  // Бичээчийн засвар (нийтлэгдсэн ч) дахин редакцын шалгалтад орно. Нийтлэгдсэн нийтлэлийн засвар түүхэнд үлдэнэ.
+  if (cur.status === "published") {
+    await recordRevision(cur, { editorId: user.id, role: "author", note, title, subtitle, body, checked: true });
+    await audit({ actorId: user.id, category: "content", action: `${cur.kind} засварлаж дахин хяналтад илгээх (бичээч)`, targetType: "post", targetId: cur.id, targetLabel: title });
+  }
   await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
             meta = COALESCE(meta, '{}'::jsonb) || ${meta}::jsonb,
             status = 'draft', reviewer_id = NULL, reviewed_at = NULL, review_note = NULL
