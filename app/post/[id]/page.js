@@ -633,6 +633,13 @@ export default async function PostPage({ params, searchParams }) {
             )}
             </>}
 
+            {(post.meta?.merge_notes || []).map((n, i) => (
+              <aside key={i} className="ar-ednote">
+                <b>Редакцын тайлбар · {fmtDate(n.at)}-нд нэгтгэсэн</b>
+                <p>{n.text}</p>
+              </aside>
+            ))}
+
             {isTask && published && (
               <section className="tk-done">
                 <div className="tk-done-head">

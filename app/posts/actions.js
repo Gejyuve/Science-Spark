@@ -607,3 +607,57 @@ export async function reportLogic(formData) {
   await audit({ actorId: user.id, category: "content", action: "Логик алдаа мэдэгдсэн", targetType: "post", targetId: postId, targetLabel: p.title });
   back("ok", "Баярлалаа! Таны мэдэгдэл редакцад очлоо. Шийдвэрлэгдэхэд мэдэгдэл ирнэ.");
 }
+
+// Төстэй агуулгатай хоёр нийтлэлийг нэгтгэх (редакц). B-ийн агуулга A-гийн төгсгөлөөс үргэлжилж,
+// сэтгэгдэл, бичээч, хянагч A руу шилжинэ. B-ийн холбоос A руу чиглэнэ. Редакцын тайлбар нийтлэлийн доор харагдана.
+export async function mergePosts(formData) {
+  const me = await getUser();
+  if (!isStaff(me)) redirect("/");
+  const a = Number(formData.get("post_id"));
+  const b = Number(formData.get("b"));
+  const back = `/post/${a}/merge?b=${b}`;
+  const fail = (m) => redirect(`${back}&error=${encodeURIComponent(m)}`);
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a === b) redirect("/admin/content/merge");
+  const title = String(formData.get("title") || "").trim().slice(0, 200);
+  const subtitle = String(formData.get("subtitle") || "").trim().slice(0, 250) || null;
+  const body = String(formData.get("body") || "").trim().slice(0, 40000);
+  const note = String(formData.get("merge_note") || "").trim().slice(0, 500);
+  const category = String(formData.get("category") || "");
+  if (!title || !body) fail("Гарчиг, агуулгаа бичнэ үү");
+  if (!note) fail("Нэгтгэсэн тухай редакцын тайлбараа бичнэ үү");
+  if (!validCategory(category)) fail("Ангиллаа (дор хаяж салбар хүртэл) сонгоно уу");
+  const rule = bodyRule("Нийтлэл", body);
+  if (rule.error) fail(rule.error);
+  if (!formData.get("image") || !String(formData.get("cover_source") || "").trim()) fail("Ковер зураг болон түүний эх сурвалжийг заавал оруулна уу");
+  await ensureSchema();
+  const rows = await sql`SELECT * FROM posts WHERE id IN (${a}, ${b})`;
+  const A = rows.find((r) => r.id === a);
+  const B = rows.find((r) => r.id === b);
+  if (!A || !B || A.kind !== "Нийтлэл" || B.kind !== "Нийтлэл" || A.status !== "published" || B.status !== "published") fail("Нийтлэгдсэн хоёр нийтлэлийг л нэгтгэнэ");
+  const raw = Number(formData.get("image"));
+  const imageId = (await ownImage(me.id, raw)) ?? ([A.image_id, B.image_id].includes(raw) ? raw : null);
+  // Бичээчдийн дараалал: редакцын сонгосноор
+  const order = [...formData.entries()].filter(([k]) => k.startsWith("order_"))
+    .map(([k, v]) => [Number(k.slice(6)), Number(v)]).filter(([u, n]) => Number.isInteger(u) && Number.isFinite(n))
+    .sort((x, y) => x[1] - y[1]).map(([u]) => u);
+  const notes = [...(A.meta?.merge_notes || []), { text: note, at: new Date().toISOString(), by: me.id, from: b }];
+  const meta = { ...articleMeta(formData), merge_notes: notes, ...(order.length ? { author_order: order } : {}) };
+  await sql`UPDATE posts SET title = ${title}, subtitle = ${subtitle}, body = ${body}, category = ${category}, image_id = ${imageId},
+            meta = COALESCE(meta, '{}'::jsonb) || ${JSON.stringify(meta)}::jsonb WHERE id = ${a}`;
+  await recordRevision(A, { editorId: me.id, role: "merge", note: `«${B.title}» нийтлэлтэй нэгтгэсэн: ${note}`, title, subtitle, body });
+  await addCredit(a, B.author_id, "author", B.created_at);
+  if (B.reviewer_id) await addCredit(a, B.reviewer_id, "reviewer", B.reviewed_at || B.created_at);
+  await sql`INSERT INTO post_credits (post_id, user_id, role, at) SELECT ${a}, user_id, role, at FROM post_credits WHERE post_id = ${b}
+            ON CONFLICT (post_id, user_id, role) DO NOTHING`;
+  await addCredit(a, me.id, "reviewer");
+  await sql`UPDATE comments SET post_id = ${a} WHERE post_id = ${b}`;
+  await sql`UPDATE posts SET status = 'merged', reviewed_at = now(), meta = COALESCE(meta, '{}'::jsonb) || ${JSON.stringify({ merged_into: a })}::jsonb WHERE id = ${b}`;
+  await audit({ actorId: me.id, category: "content", action: `Нийтлэл нэгтгэсэн: #${b} «${B.title}» → #${a}`, targetType: "post", targetId: a, targetLabel: title });
+  await notify({ userId: B.author_id, kind: "merged", actorId: me.id, postId: a });
+  if (A.author_id !== B.author_id) await notify({ userId: A.author_id, kind: "merged", actorId: me.id, postId: a });
+  revalidatePath("/");
+  revalidatePath(`/post/${a}`);
+  revalidatePath(`/post/${b}`);
+  revalidatePath("/admin", "layout");
+  redirect(`/post/${a}?ok=${encodeURIComponent("Нэгтгэлээ")}`);
+}
