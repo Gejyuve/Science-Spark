@@ -14,7 +14,6 @@ import { sql } from "@/lib/db";
 import { displayName, needsName, isStaff, isAdmin, isSuperAdmin, isPremium } from "@/lib/auth";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
-import { walletBalance } from "@/lib/money";
 import { Avatar, Stat, Person, NameBadges, followingSet } from "./Bits";
 import { ClubPerson, ClubAv } from "./ClubBits";
 import { hotClubs, clubFollowSet, membershipOf } from "@/lib/clubs";
@@ -85,14 +84,13 @@ function Sidebar({ user, active }) {
 
 async function Header({ user, compact, compose, composeError, active }) {
   // Асуултад шагнал тавихад хэтэвчний үлдэгдлийг харуулна
-  const wallet = user && !compact ? await walletBalance(user.id).catch(() => 0) : 0;
   // Клубын удирдагч бичих самбараас клубынхээ нэрээр даалгавар, тайлан нэмж, хуваалцана
   const club = user && !compact ? await leaderClub(user.id).catch(() => null) : null;
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
       <NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} />
-      {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} wallet={wallet}
+      {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError}
         club={club ? { name: club.name } : null} clubAv={club ? <ClubAv c={club} size={32} /> : null} />}
     </header>
   );
