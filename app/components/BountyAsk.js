@@ -6,13 +6,13 @@ import Link from "next/link";
 
 // «Асуух» дарахад нийтлэхээс өмнө гарах цонх: асуултдаа шагнал нэмэх үү?
 // Шагнал хэтэвчнээс түгжигдэж, асуугчийн сонгосон хамгийн зөв хариулагчийн хэтэвч рүү орно (lib/bounty.js).
-const PICKS = [5000, 10000, 20000, 50000];
+const PICKS = [[5000, "☕"], [20000, "📖"]];
+const VALS = PICKS.map(([v]) => v);
 const n = (x) => Number(x || 0).toLocaleString("en-US");
 
 // onPick(дүн): 0 бол шагналгүй асууна. onClose: асуултаа засахаар буцна.
 export default function BountyAsk({ wallet, onPick, onClose }) {
-  const fits = PICKS.filter((v) => v <= wallet);
-  const [amt, setAmt] = useState(fits.length ? fits[Math.min(1, fits.length - 1)] : PICKS[0]);
+  const [amt, setAmt] = useState(VALS[0]);
   const low = wallet < 1000;
   const short = amt > wallet;
 
@@ -29,7 +29,6 @@ export default function BountyAsk({ wallet, onPick, onClose }) {
         <button type="button" className="tm-x cel-x" onClick={onClose} aria-label="Буцах">×</button>
         <span className="bqa-ic" aria-hidden="true">🏆</span>
         <b id="bqa-h">Асуултдаа шагнал нэмэх үү?</b>
-        <p>Шагналтай асуулт «Шагналтай» шүүлтүүрт гарч, мэдлэгтэй хүмүүсийг хариулахад урамшуулна. Мөнгө түгжигдэж, таны сонгосон хамгийн зөв хариулагчийн хэтэвч рүү орно.</p>
         <div className="cel-bq">
           {low ? (
             <div className="cel-bq-row">
@@ -39,12 +38,12 @@ export default function BountyAsk({ wallet, onPick, onClose }) {
           ) : (
             <>
               <div className="cel-bq-picks" role="group" aria-label="Шагналын дүн">
-                {PICKS.map((v) => (
-                  <button key={v} type="button" className={amt === v ? "on" : ""} disabled={v > wallet} onClick={() => setAmt(v)}>{n(v)}₮</button>
+                {PICKS.map(([v, ic]) => (
+                  <button key={v} type="button" className={amt === v ? "on" : ""} disabled={v > wallet} onClick={() => setAmt(v)}>{ic} {n(v)}₮</button>
                 ))}
                 <label className="cel-bq-own">
                   <input type="number" min={1000} max={Math.min(5000000, wallet)} step={500} inputMode="numeric" aria-label="Өөр дүн"
-                    value={PICKS.includes(amt) ? "" : amt || ""} placeholder="Өөр дүн" onChange={(e) => setAmt(Math.round(Number(e.target.value) || 0))} />
+                    value={VALS.includes(amt) ? "" : amt || ""} placeholder="Өөр дүн" onChange={(e) => setAmt(Math.round(Number(e.target.value) || 0))} />
                   <span>₮</span>
                 </label>
               </div>
