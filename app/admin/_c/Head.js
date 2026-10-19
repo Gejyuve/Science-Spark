@@ -2,13 +2,14 @@ import { displayName } from "@/lib/auth";
 import { Avatar } from "../../components/Bits";
 
 // Хуудасны толгой: гарчиг, тайлбар, хайлт, хэрэглэгчийн chip
-export default function Head({ user, title, sub, search, q, hidden = {}, tag = "Редакц" }) {
+export default function Head({ user, title, sub, search, q, hidden = {}, tag = "Редакц", tools }) {
   return (
     <header className="adm-head">
       <div className="adm-title">
         <h1>{title}</h1>
         {sub && <p>{sub}</p>}
       </div>
+      {tools && <div className="adm-tools">{tools}</div>}
       <span className="ss-grow" />
       {search && (
         <form action={search} method="get" className="adm-search">
@@ -64,3 +65,23 @@ export function Flash({ ok, error }) {
 
 export const who = (r, p = "") =>
   r[p + "first_name"] ? `${r[p + "initial"]}.${r[p + "first_name"]}` : r[p + "email"] || "—";
+
+// Жижиг сонголттой товч: дарахад сонголтууд (холбоос) гарна
+export function Pick({ label, value, options, badge }) {
+  return (
+    <details className="adm-dd">
+      <summary>
+        <span>{label}:</span> <b>{options.find((o) => o.on)?.label || value}</b>
+        {badge > 0 && <em>{badge}</em>}
+        <img className="ic" src="/icons/chevdown.svg" width={12} height={12} alt="" />
+      </summary>
+      <div className="adm-dd-menu">
+        {options.map((o) => (
+          <a key={o.href} href={o.href} className={o.on ? "on" : ""}>
+            {o.label}{o.badge > 0 && <em>{o.badge}</em>}{o.on && <i>✓</i>}
+          </a>
+        ))}
+      </div>
+    </details>
+  );
+}

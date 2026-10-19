@@ -3,7 +3,7 @@ import { sql } from "@/lib/db";
 import { requireSection, STATUS_LABELS, ago } from "@/lib/admin";
 import { KINDS, QUICK_KINDS } from "@/lib/format";
 import { moderatePost, checkRevision } from "../actions";
-import Head, { Tabs, Chip, Flash, who, STATUS_TONE } from "../_c/Head";
+import Head, { Tabs, Chip, Flash, who, STATUS_TONE, Pick } from "../_c/Head";
 import { Words, Cats } from "../_c/Queues";
 import { TERM_KIND } from "@/lib/terms";
 
@@ -52,23 +52,17 @@ export default async function Content({ searchParams }) {
 
   return (
     <>
-      <Head user={user} title="Контент" sub="Бүх нийтлэл, асуулт, бодрол, эвент, зарлал" search="/admin/content" q={q} hidden={{ kind, status, sort }} />
+      <Head user={user} title="Контент" search="/admin/content" q={q} hidden={{ kind, status, sort }}
+        tools={!view && (<>
+          <Pick label="Төлөв" badge={status ? 0 : pendingAll}
+            options={[["", "Бүх төлөв"], ...STATUSES.map((s) => [s, STATUS_LABELS[s]])].map(([s, l]) => ({ href: qs({ status: s }), label: l, on: status === s, badge: s === "pending" ? pendingAll : 0 }))} />
+          <Pick label="Эрэмбэ" options={SORTS.map(([k, l]) => ({ href: qs({ sort: k }), label: l, on: sort === k }))} />
+        </>)} />
       <Flash ok={sp.ok} error={sp.error} />
       <Tabs cur={view ? "v:" + view : kind}
         href={(k) => (k.startsWith("v:") ? `/admin/content?v=${k.slice(2)}` : qs({ kind: k }))}
         tabs={[["", "Бүгд", total], ...ALL_KINDS.map((k) => [k, k, cnt[k] || 0]), ["v:edits", VIEWS.edits, qc.edits], ["v:words", VIEWS.words, qc.words], ["v:cats", VIEWS.cats, qc.cats]]} />
       {view === "edits" ? <Edits /> : view === "words" ? <Words user={user} can /> : view === "cats" ? <Cats /> : (<>
-      <div className="adm-filters">
-        {[["", "Бүх төлөв"], ...STATUSES.map((s) => [s, STATUS_LABELS[s]])].map(([s, l]) => (
-          <a key={s || "all"} href={qs({ status: s })} className={status === s ? "on" : ""}>{l}{s === "pending" && pendingAll > 0 && <em>{pendingAll}</em>}</a>
-        ))}
-      </div>
-      <div className="adm-filters adm-sort">
-        <span className="adm-muted">Эрэмбэ:</span>
-        {SORTS.map(([k, l]) => (
-          <a key={k || "new"} href={qs({ sort: k })} className={sort === k ? "on" : ""}>{l}</a>
-        ))}
-      </div>
       <section className="adm-card flush">
         {rows.length === 0 ? <p className="adm-empty">Контент олдсонгүй.</p> : (
           <table className="adm-table">
