@@ -51,12 +51,12 @@ export default async function Wallet({ searchParams }) {
         <span className="och-bar san-bar"><span style={{ width: `${Math.min(100, Math.round((balance / WITHDRAW_MIN) * 100))}%` }} /></span>
 
         <div className="san-stats">
-          <span><b>{isPremium(user) ? day(user.premium_until) : "—"}</b><small>{isPremium(user) ? "хүртэл премиум" : "премиум биш"}</small></span>
+          <span><b>{isPremium(user) ? day(user.premium_until) : "—"}</b><small>{isPremium(user) ? "хүртэл дэмжигч" : "дэмжигч биш"}</small></span>
           <span><b>{fmtMnt(given.n)}</b><small>таны өгсөн дэмжлэг</small></span>
           <span><b>{history.filter((h) => h.kind === "prize").length}</b><small>шагнал хүртсэн</small></span>
         </div>
         <div className="san-cta">
-          <Link href="/san/support?kind=premium" className="ss-pill">{isPremium(user) ? "Премиумаа сунгах" : "Премиум болох"}</Link>
+          <Link href="/san/support?kind=premium" className="ss-pill">{isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"}</Link>
           <Link href="/san" className="ss-pill ghost">Шагналын сан</Link>
         </div>
 

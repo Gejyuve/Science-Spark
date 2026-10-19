@@ -142,10 +142,6 @@ async function RightRail({ user }) {
               {I("wallet", 18)}<span>Хэтэвч</span>
               {I("arrow", 14)}
             </Link>
-            <Link href="/san" className="ss-action">
-              {I("gift", 18)}<span>Шагналын сан</span>
-              {I("arrow", 14)}
-            </Link>
             {(isStaff(user) || canApproveWords(user)) && (
               <Link href={isStaff(user) ? "/review" : "/review?t=words"} className="ss-action">
                 {I("shield", 18)}<span>Хянах</span>

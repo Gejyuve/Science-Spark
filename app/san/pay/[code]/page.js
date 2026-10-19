@@ -20,10 +20,10 @@ export default async function Pay({ params }) {
                         WHERE r.code = ${String(code)} AND r.user_id = ${user.id}`;
   if (!r) notFound();
   const bank = bankInfo();
-  const what = r.kind === "premium" ? `Премиум · ${r.months} сар` : r.kind === "tip" ? `${r.w_initial}.${r.w_first_name}-д хандив` : REQUEST_KIND[r.kind];
+  const what = r.kind === "premium" ? `Дэмжигч · ${r.months} сар` : r.kind === "tip" ? `${r.w_initial}.${r.w_first_name}-д хандив` : REQUEST_KIND[r.kind];
 
   return (
-    <Shell user={user} header="nav">
+    <Shell user={user} active="/san" header="nav">
       <div className="ss-card och san">
         <Link href="/wallet" className="san-back">← Миний хэтэвч</Link>
         <h1>{r.status === "confirmed" ? "Баярлалаа! 💚" : "Шилжүүлгээ хийнэ үү"}</h1>

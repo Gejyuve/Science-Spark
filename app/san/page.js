@@ -49,31 +49,29 @@ export default async function San({ searchParams }) {
   const left = daysLeftInPeriod();
 
   return (
-    <Shell user={user} header="nav">
+    <Shell user={user} active="/san" header="nav">
       <div className="ss-card och san">
         {sp.error && <p className="och-note bad">{sp.error}</p>}
         {sp.ok && <p className="och-note info">{sp.ok}</p>}
-        <div className="san-hero">
-          <div>
-            <h1>✦ Шагналын сан</h1>
-            <p className="och-sub">Монголын шинжлэх ухааны бичээчид, ирээдүйн залуу судлаачдыг хамтдаа дэмжье. Сар бүрийн эцэст хамгийн их оч авсан {TOP_N} бичээч шагнал хүртэнэ.</p>
+        <section className="san-top">
+          <div className="san-rays" aria-hidden="true" />
+          <div className="san-top-in">
+            <small className="san-kicker">✦ Шагналын сан · {periodLabel(period)}</small>
+            <b className="san-amount">{fmtMnt(pool)}</b>
+            <p>Монголын шинжлэх ухааны бичээчид, ирээдүйн залуу судлаачдыг хамтдаа дэмжье. Сар бүрийн эцэст хамгийн их оч авсан {TOP_N} бичээч шагнал хүртэнэ.</p>
+            <div className="san-cta">
+              <Link href="/san/support?kind=premium" className="ss-pill">{user && isPremium(user) ? "Дэмжлэгээ сунгах" : "Дэмжигч болох"}</Link>
+              <Link href="/san/support?kind=pool" className="ss-pill ghost">Сан руу хандив өгөх</Link>
+              {user && <Link href="/wallet" className="ss-pill ghost">Миний хэтэвч</Link>}
+            </div>
+            <div className="san-stats">
+              <span><b>{left}</b><small>хоног үлдлээ</small></span>
+              <span><b>{stats.supporters}</b><small>дэмжигч</small></span>
+              <span><b>{stats.donors}</b><small>хандивлагч</small></span>
+              <span><b>{board.length}</b><small>оч авсан бичээч</small></span>
+            </div>
           </div>
-          <div className="san-pool">
-            <small>Одоогийн сан</small>
-            <b>{fmtMnt(pool)}</b>
-            <small>{periodLabel(period)} дуусахад {left} хоног</small>
-          </div>
-        </div>
-        <div className="san-cta">
-          <Link href="/san/support?kind=premium" className="ss-pill">{user && isPremium(user) ? "Премиумаа сунгах" : "Премиум болж дэмжих"}</Link>
-          <Link href="/san/support?kind=pool" className="ss-pill ghost">Сан руу хандив өгөх</Link>
-          {user && <Link href="/wallet" className="ss-pill ghost">Миний хэтэвч</Link>}
-        </div>
-        <div className="san-stats">
-          <span><b>{stats.supporters}</b><small>премиум дэмжигч</small></span>
-          <span><b>{stats.donors}</b><small>хандивлагч</small></span>
-          <span><b>{board.length}</b><small>энэ сард оч авсан бичээч</small></span>
-        </div>
+        </section>
 
         <h2 id="board">Энэ сарын шилдэг {TOP_N} · бодит цагаар</h2>
         <p className="och-hint">Шагнал = сан × (оч × түвшний жин) / шилдэг {TOP_N}-ын нийт оноо. Одоогийн сангаар тооцсон урьдчилсан дүн.</p>
@@ -133,11 +131,10 @@ export default async function San({ searchParams }) {
         )}
 
         <h2 id="glass">Шилэн данс · сар бүрээр</h2>
-        <p className="och-hint">Сайтын бүх орлого, зардлыг нээлттэй харуулна. Премиумын цэвэр орлогын {pct(POOL_SHARE)} нь шагналын санд, үлдсэн нь сервер, редакцын зардалд зарцуулагдана.</p>
         <div className="san-table-wrap">
           <table className="san-table">
             <thead>
-              <tr><th>Сар</th><th>Премиум</th><th>Шимтгэл</th><th>Санд {pct(POOL_SHARE)}</th><th>Санд хандив</th><th>Шагнал</th><th>Бичээчид хандив</th><th>Сервер</th><th>Редакц</th><th>Татвар</th><th>Бусад</th><th>Сайтын үлдэгдэл</th></tr>
+              <tr><th>Сар</th><th>Дэмжигчид</th><th>Шимтгэл</th><th>Санд {pct(POOL_SHARE)}</th><th>Санд хандив</th><th>Шагнал</th><th>Бичээчид хандив</th><th>Сервер</th><th>Редакц</th><th>Татвар</th><th>Бусад</th><th>Сайтын үлдэгдэл</th></tr>
             </thead>
             <tbody>
               {summary.length === 0 && <tr><td colSpan={12} className="ss-empty">Одоохондоо гүйлгээ алга.</td></tr>}
@@ -172,7 +169,7 @@ export default async function San({ searchParams }) {
           <ul>
             <li>Түвшин 1 (Лаа)-аас дээш бичээч оролцоно. Нийтлэл, мэдээ, хариулт, сэтгэгдэлдээ тухайн сард авсан оч тооцогдоно.</li>
             <li>Шилдэг {TOP_N} сангийн {pct(1 - STAR_SHARE)}-ийг оноогоороо, «Шинэ од» (шилдэг {TOP_N}-т ороогүй Түвшин 1-2 бичээч) {pct(STAR_SHARE)}-ийг авна.</li>
-            <li>Премиум гишүүний оч 2-оор тооцогдоно. Нэг хүнээс нэг бичээчид сард {PAIR_CAP} хүртэл оч, {GIVER_MIN_DAYS} хоногоос дээш настай дансны оч л тооцогдоно.</li>
+            <li>Дэмжигчийн оч 2-оор тооцогдоно. Нэг хүнээс нэг бичээчид сард {PAIR_CAP} хүртэл оч, {GIVER_MIN_DAYS} хоногоос дээш настай дансны оч л тооцогдоно.</li>
             <li>Бичээчид өгсөн хандив хэтэвчид нь орно, сайт {pct(TIP_FEE)} шимтгэл авна. Сан руу өгсөн хандиваас шимтгэл авахгүй.</li>
             <li>Хэтэвч {fmtMnt(WITHDRAW_MIN)}-д хүрмэгц татах боломжтой. Хувь хүний орлогын албан татвар {pct(INCOME_TAX)}-ийг суутгана.</li>
             <li>Сар дууссаны дараа редакц хуурамч очийг 7 хоног шалгаад шагналыг хэтэвчид шилжүүлнэ. Хуваарилагдаагүй дүн дараа сард шилжинэ.</li>

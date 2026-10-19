@@ -4,6 +4,7 @@ export const NAV = [
   { icon: "dict", label: "Толь", href: "/dict" },
   { icon: "event", label: "Эвент", href: "/events" },
   { icon: "club", label: "Клуб", href: "/clubs" },
+  { icon: "prize", label: "Шагнал", href: "/san" },
   { icon: "game", label: "Тоглоом" },
   { icon: "market", label: "Маркет" },
 ];
