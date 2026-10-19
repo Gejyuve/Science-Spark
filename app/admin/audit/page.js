@@ -15,11 +15,11 @@ export default async function Audit({ searchParams }) {
   const rows = await sql`
     SELECT a.*, u.initial, u.first_name, u.email
     FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
-    WHERE (${cat} = '' OR a.category = ${cat})
+    WHERE a.category <> 'money' AND (${cat} = '' OR a.category = ${cat})
       AND (${like} = '%%' OR lower(a.action) LIKE ${like} OR lower(COALESCE(a.target_label,'')) LIKE ${like}
            OR lower(COALESCE(u.email,'')) LIKE ${like} OR lower(COALESCE(u.first_name,'')) LIKE ${like})
     ORDER BY a.created_at DESC LIMIT 101 OFFSET ${(pg - 1) * 100}`;
-  const counts = await sql`SELECT category, COUNT(*)::int AS n FROM audit_log GROUP BY category`;
+  const counts = await sql`SELECT category, COUNT(*)::int AS n FROM audit_log WHERE category <> 'money' GROUP BY category`;
   const cnt = Object.fromEntries(counts.map((r) => [r.category, r.n]));
   const total = counts.reduce((a, r) => a + r.n, 0);
   const href = (o) => "/admin/audit?" + new URLSearchParams(Object.entries({ cat, q, ...o }).filter(([, x]) => x && x !== 1));
@@ -27,7 +27,7 @@ export default async function Audit({ searchParams }) {
 
   return (
     <>
-      <Head user={user} title="Аудит лог" sub="Бүх эрх, оч, контент, нэвтрэлтийн үйлдэл. Засах, устгах боломжгүй." search="/admin/audit" q={q} hidden={{ cat }} />
+      <Head user={user} title="Аудит лог" sub="Эрх, оч, контент, нэвтрэлтийн үйлдэл. Санхүүгийнх Санхүү хэсэгт. Засах, устгах боломжгүй." search="/admin/audit" q={q} hidden={{ cat }} />
       <Tabs cur={cat} href={(k) => href({ cat: k, page: null })} tabs={AUDIT_TABS.map(([k, l]) => [k, l, k ? cnt[k] || 0 : total])} />
       <section className="adm-card flush">
         {rows.length === 0 ? <p className="adm-empty">Бичлэг алга.</p> : (

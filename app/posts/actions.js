@@ -296,7 +296,7 @@ export async function setRole(formData) {
   const target = Number(formData.get("user_id"));
   const role = String(formData.get("role"));
   // Супер админ эрхийг зөвхөн SUPER_ADMIN_EMAILS-ээр олгоно, энд томилохгүй.
-  if (!Number.isInteger(target) || !["user", "reviewer", "admin"].includes(role)) return;
+  if (!Number.isInteger(target) || !["user", "admin"].includes(role)) return;
   if (target === user.id) return; // өөрийн эрхийг өөрчлөхгүй
   await ensureSchema();
   await sql`UPDATE users SET role = ${role} WHERE id = ${target} AND role <> 'superadmin'`;

@@ -87,7 +87,7 @@ export default async function ReviewWord({ params, searchParams }) {
         <aside className="rv-side">
           <section className="adm-card">
             <span className="adm-chips"><Chip tone="teal">Шинэ үг</Chip><Chip tone="gray">Түвшин 5+ зөвшөөрнө</Chip></span>
-            <h2 className="wd-title">Хянагчийн самбар</h2>
+            <h2 className="wd-title">Редакцийн самбар</h2>
             <p className="adm-muted small">Дараалал {pos || 1} / {Math.max(queue.length, 1)} · Илгээсэн {fmtDate(p.created_at)}</p>
             <div className="wd-who">
               <Avatar user={{ id: p.author_id, first_name: p.first_name, avatar: p.avatar }} size={36} />

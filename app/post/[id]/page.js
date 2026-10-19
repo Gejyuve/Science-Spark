@@ -555,8 +555,8 @@ export default async function PostPage({ params, searchParams }) {
                 <div className="ar-ready">
                   <b>Редакц таны нийтлэлийг хянаж зөвшөөрлөө 🎉</b>
                   <p>
-                    {post.original ? "Хянагч зарим засвар оруулсан. Доорх хувилбарыг шалгаад нийтлээрэй." : "Доорх хувилбарыг шалгаад нийтлээрэй."}
-                    {post.review_note && <><br />Хянагчийн тайлбар: “{post.review_note}”</>}
+                    {post.original ? "Редакц зарим засвар оруулсан. Доорх хувилбарыг шалгаад нийтлээрэй." : "Доорх хувилбарыг шалгаад нийтлээрэй."}
+                    {post.review_note && <><br />Редакцийн тайлбар: “{post.review_note}”</>}
                   </p>
                   {post.original && (
                     <details className="ar-orig">

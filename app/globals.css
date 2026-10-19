@@ -3148,3 +3148,11 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cp-tabs::-webkit-scrollbar { display: none; }
   .cp-tabs a { flex: none; white-space: nowrap; }
 }
+
+/* Админ · Тойм: хэсгийн гарчиг, түвшний тархалт */
+.adm-sec { margin: 8px 0 -4px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.adm-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.adm-bars li { display: grid; grid-template-columns: 130px minmax(0, 1fr) 48px; align-items: center; gap: 10px; font-size: 13px; }
+.adm-bars i { height: 10px; border-radius: 6px; background: var(--surface-2, #eef3f6); overflow: hidden; }
+.adm-bars em { display: block; height: 100%; border-radius: 6px; min-width: 2px; }
+.adm-bars b { text-align: right; font-variant-numeric: tabular-nums; }
