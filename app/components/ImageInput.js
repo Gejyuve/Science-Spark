@@ -65,6 +65,29 @@ export async function uploadImageFile(file, { maxW = 1600, aspect = null } = {})
   return upload(await render(b, aspect, maxW));
 }
 
+// Сайтад хадгалагдах эцсийн хэмжээ (render()-тэй ижил тооцоо): тайрсны дараа maxW, өндөр нь maxW*1.5 хүртэл
+export function outSize(aspect, maxW) {
+  if (!aspect) return null;
+  const h = Math.min(maxW / aspect, maxW * 1.5);
+  return { w: Math.round(h * aspect), h: Math.round(h) };
+}
+export const sizeLabel = (aspect, maxW) => {
+  const o = outSize(aspect, maxW);
+  return o ? `${o.w}×${o.h} px` : `өргөн нь ${maxW} px хүртэл`;
+};
+
+// Сонгосон зураг шаардлагад хэр таарч байгааг хэлнэ
+function fitNote(bw, bh, aspect, maxW, adjust) {
+  const o = outSize(aspect, maxW);
+  if (!o) return "";
+  const yours = `Таны зураг ${bw}×${bh} px`;
+  if (bw < o.w || bh < o.h) return `${yours} — ${o.w}×${o.h} px-ээс жижиг тул бүдэг харагдаж магадгүй.`;
+  const r = bw / bh;
+  if (Math.abs(r - aspect) / aspect < 0.02) return "";
+  const side = r > aspect ? "хоёр хажуу" : "дээд, доод";
+  return `${yours} — харьцаа өөр тул ${side} хэсгээс тайрагдана.` + (adjust ? " Чирж байрлалыг тохируулж болно." : "");
+}
+
 const parsePos = (s) => {
   const m = /^(\d{1,3})% (\d{1,3})%$/.exec(s || "");
   return m ? { x: Math.min(100, +m[1]), y: Math.min(100, +m[2]) } : { x: 50, y: 50 };
@@ -74,7 +97,7 @@ const parsePos = (s) => {
 // adjust=true: эх зургийг хадгалж, чирж байрлалыг нь тохируулна (профайлын зураг, ковер).
 export default function ImageInput({
   name, aspect = null, maxW = 1600, initial = null, initialSrc = null, initialPos = null,
-  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, requiredMsg = "Ковер зураг оруулна уу", children,
+  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, requiredMsg = "Ковер зураг оруулна уу", size = true, children,
 }) {
   const input = useRef(null);
   const box = useRef(null);
@@ -87,6 +110,7 @@ export default function ImageInput({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [moved, setMoved] = useState(false);
+  const [note, setNote] = useState("");
 
   // Хадгалсан эх зураг байвал чирэх боломжтой болгоно
   useEffect(() => {
@@ -109,9 +133,10 @@ export default function ImageInput({
     if (!f) return;
     if (!/^image\//.test(f.type)) { setErr("Зөвхөн зураг сонгоно уу"); return; }
     if (f.size > 25_000_000) { setErr("Зураг хэт том байна (25MB-аас бага)"); return; }
-    setErr(""); setBusy(true);
+    setErr(""); setNote(""); setBusy(true);
     try {
       const b = await loadBitmap(f);
+      setNote(fitNote(b.width, b.height, aspect, maxW, adjust));
       const start = { x: 50, y: 50 };
       if (adjust) {
         // Эх зургийг (тайралгүй) хадгална — дараа нь дахин чирж болно
@@ -168,7 +193,9 @@ export default function ImageInput({
     return () => clearTimeout(t);
   }, [moved, pos, aspect, maxW]);
 
-  const remove = () => { setId(""); setSrcId(""); setPreview(null); bmp.current = null; };
+  const remove = () => { setNote(""); setId(""); setSrcId(""); setPreview(null); bmp.current = null; };
+  // Жижиг дөрвөлжин ба дугуй талбарт хэмжээг хажуугийн тайлбарт бичнэ
+  const showSize = size && !/^(avatar|slot)$/.test(variant);
   const shown = preview || (id ? `/img/${id}` : null);
   const hasImg = !!(id || preview);
   return (
@@ -216,6 +243,8 @@ export default function ImageInput({
         )}
       </div>
       {badge && <button type="button" className="ii-badge" onClick={pick} aria-label="Зураг сонгох">{badge}</button>}
+      {showSize && <small className="ii-size">Сайтад <b>{sizeLabel(aspect, maxW)}</b> хэмжээтэй орно. Ийм харьцаатай, эсвэл үүнээс том зураг оруулбал зөв тайрагдана.</small>}
+      {note && !err && <small className="ii-note">{note}</small>}
       {err && <small className="ii-err">{err}</small>}
     </div>
   );

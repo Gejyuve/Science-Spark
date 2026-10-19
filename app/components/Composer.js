@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { quickPost } from "../posts/actions";
-import ImageInput from "./ImageInput";
+import ImageInput, { sizeLabel } from "./ImageInput";
 import { EVENT_TYPES, EVENT_FORMATS, EVENT_BODY_MIN, ANNOUNCE_TYPES, latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 
 // Figma: Нүүр · Асуулт бичих (шууд) / Хуваалцах (шууд) / Бодрол / Эвент / Зарлал
@@ -94,8 +94,9 @@ function Field({ icon, children }) {
   return <label className="cp-field"><Ic n={icon} />{children}</label>;
 }
 
+const slotW = (aspect) => (aspect && aspect <= 1 ? 1080 : 1600);
 function ImageSlot({ name, title, hint, wide, aspect, required }) {
-  return <ImageInput name={name} aspect={aspect} maxW={aspect && aspect <= 1 ? 1080 : 1600} variant={wide ? "slot wide" : "slot"} title={title} hint={hint} required={required} />;
+  return <ImageInput name={name} aspect={aspect} maxW={slotW(aspect)} variant={wide ? "slot wide" : "slot"} title={title} hint={hint} required={required} />;
 }
 
 function Head({ icon, title, right }) {
@@ -210,7 +211,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
         <div className="cp-split">
           <div className="cp-col">
             <span className="cp-label">Ковер зураг <Req /></span>
-            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1) хэмжээтэй, зөвхөн 1 зураг оруулна.</small></div>
+            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1), сайтад <b>{sizeLabel(1, slotW(1))}</b> хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг оруулбал тайрагдахгүй. Зөвхөн 1 зураг.</small></div>
           </div>
           <div className="cp-col">
             <span className="cp-label">Хөтөлбөрийн зураг <em className="cp-opt">Заавал биш</em></span>
@@ -254,7 +255,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
         </div>
         <Counted name="body" max={500} min={EVENT_BODY_MIN} rows={5} required latinCheck placeholder={`Зарлалын агуулга (дор хаяж ${EVENT_BODY_MIN} тэмдэгт)… *`} />
         <span className="cp-label">Зураг <Req /></span>
-        <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1) харьцаатай, зөвхөн 1 зураг оруулна.</small></div>
+        <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1), сайтад <b>{sizeLabel(1, slotW(1))}</b> хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг оруулбал тайрагдахгүй. Зөвхөн 1 зураг.</small></div>
         <div className="cp-actions">
           <span className="cp-review"><img src="/icons/f_shield.svg" width={18} height={18} alt="" />Редакцын зөвшөөрлөөр нийтлэгдэнэ</span>
           <span className="ss-grow" />

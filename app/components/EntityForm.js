@@ -165,7 +165,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
           <ImageInput name="cover" aspect={3} maxW={1920} variant="cover" adjust initial={e.cover_id || null} initialSrc={e.cover_src || null} initialPos={e.cover_pos || null}>
             <img src="/icons/camera18.svg" width={18} height={18} alt="" />
             <b>Ковер зураг нэмэх</b>
-            <small>Өргөн зураг (3:1) · JPG, PNG, WEBP</small>
+            <small>Өргөн зураг · 1920×640 px (3:1) · JPG, PNG, WEBP</small>
           </ImageInput>
         </div>
         <div className="pf-photo">
@@ -173,7 +173,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
             badge={<span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>}>
             <img src={org ? "/icons/torg.svg" : "/icons/clubstar.svg"} width={40} height={40} alt="" />
           </ImageInput>
-          <div><b>{L} лого <em className="cf-req">Заавал</em></b><small className="cf-hint">PNG эсвэл JPG, 512×512-ээс багагүй. Лого оруулаагүй бол бүртгэл баталгаажихгүй.</small></div>
+          <div><b>{L} лого <em className="cf-req">Заавал</em></b><small className="cf-hint">Дөрвөлжин, сайтад 512×512 px хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг (PNG, JPG) оруулна уу. Лого оруулаагүй бол бүртгэл баталгаажихгүй.</small></div>
         </div>
       </section>
 
