@@ -170,7 +170,7 @@ async function RightRail({ user }) {
       )}
 
       <div className="ss-panel">
-        <Link href="/och" className="ss-panel-title orange ss-panel-link">🔥 Асаж буй оч</Link>
+        <Link href="/san#board" className="ss-panel-title orange ss-panel-link">🔥 Асаж буй оч</Link>
         {top.length === 0 && <p className="muted">Одоохондоо оч цуглуулсан хүн алга.</p>}
         {top.map((t) => (
           <Person key={t.id} id={t.id} initial={t.initial} first_name={t.first_name} avatar={t.avatar} points={t.points} followers={t.followers} viewer={user} following={following} />

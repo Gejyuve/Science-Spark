@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
+import { levelFor } from "@/lib/levels";
 import { monthBoard, splitPrizes, currentPeriod, prevPeriod, periodLabel, periodEnd, TOP_N, STAR_SHARE, PAIR_CAP, GIVER_MIN_DAYS } from "@/lib/spark";
 import { poolBalance, periodSummary, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, POOL_SHARE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import Shell from "../components/Shell";
@@ -23,7 +24,9 @@ function Chip({ l }) {
 export default async function San({ searchParams }) {
   const sp = await searchParams;
   const period = currentPeriod();
-  let user = null, pool = 0, board = [], last = [], donors = [], summary = [], recent = [], stats = { supporters: 0, donors: 0 };
+  // Жагсаалт: анхдагч нь энэ сарын шилдэг 10 (шагналын байр), сонголтоор бүх цаг үеийн хөдөлмөрийн оч
+  const allTime = sp.b === "all";
+  let user = null, pool = 0, board = [], last = [], donors = [], summary = [], recent = [], stats = { supporters: 0, donors: 0 }, ever = [];
   try {
     user = await getUser();
     await ensureSchema();
@@ -46,6 +49,15 @@ export default async function San({ searchParams }) {
       sql`SELECT (SELECT COUNT(*) FROM users WHERE premium_until > now())::int AS supporters,
                  (SELECT COUNT(DISTINCT user_id) FROM payment_requests WHERE status = 'confirmed')::int AS donors`,
     ]);
+    if (allTime) {
+      ever = await sql`
+        SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar, u.premium_until, SUM(l.delta)::int AS points,
+               COALESCE((SELECT SUM(z.amount) FROM prizes z WHERE z.user_id = u.id), 0)::bigint AS won
+        FROM points_ledger l JOIN users u ON u.id = l.user_id
+        WHERE u.first_name <> '' AND u.restricted_at IS NULL
+        GROUP BY u.id HAVING SUM(l.delta) > 0
+        ORDER BY points DESC, u.id ASC LIMIT ${TOP_N}`;
+    }
   } catch (e) {}
   const prizes = splitPrizes(board, pool);
   const top = prizes.filter((p) => p.kind === "top");
@@ -79,7 +91,29 @@ export default async function San({ searchParams }) {
           </div>
         </section>
 
-        <h2 id="board">Энэ сарын шилдэг {TOP_N}</h2>
+        <h2 id="board">{allTime ? "Бүх цаг үеийн шилдэг" : `Энэ сарын шилдэг ${TOP_N}`}</h2>
+        <div className="ss-feedtabs och-tabs">
+          <Link href="/san#board" className={allTime ? "" : "on"}>Энэ сар</Link>
+          <Link href="/san?b=all#board" className={allTime ? "on" : ""}>Бүх цаг үе</Link>
+        </div>
+        {allTime ? (
+          <>
+            <p className="san-formula">Хөдөлмөрөөрөө олсон нийт оч, хүртсэн нийт шагнал</p>
+            <div className="och-board san-board">
+              <div className="och-brow head"><span>№</span><span>Бичээч</span><span>Түвшин</span><span>Оч</span><span>Шагнал</span></div>
+              {ever.length === 0 && <p className="ss-empty">Одоохондоо мэдээлэл алга.</p>}
+              {ever.map((r, i) => (
+                <Link key={r.id} href={`/u/${r.id}`} className={"och-brow" + (user?.id === r.id ? " me" : "")}>
+                  <span>{i + 1}</span>
+                  <span className="och-who"><Avatar user={r} size={28} /><b>{r.initial}.{r.first_name}</b>{isPremium(r) && <span className="ss-nbadges san-bolt" style={{ "--nb-d": `-${(r.id * 7.3) % 16}s` }}><img src="/icons/bolt.svg" width={15} height={15} alt="Дэмжигч" title="Шинжлэх ухааныг дэмжигч" /></span>}</span>
+                  <span><Chip l={levelFor(r.points)} /></span>
+                  <span className="och-plus">{r.points.toLocaleString("en-US")}</span>
+                  <span>{fmtMnt(r.won)}</span>
+                </Link>
+              ))}
+            </div>
+          </>
+        ) : <>
         <p className="san-formula">Шагнал ≈ сан × (оч × түвшний жин) ÷ шилдэг 10-ын оноо</p>
         <div className="och-board san-board">
           <div className="och-brow head"><span>№</span><span>Бичээч</span><span>Түвшин</span><span>Оч</span><span>Шагнал</span></div>
@@ -106,6 +140,7 @@ export default async function San({ searchParams }) {
         {user && mine >= TOP_N && (
           <p className="och-hint">Та {mine + 1}-р байрт байна. {TOP_N}-р байр хүртэл {Math.max(1, board[TOP_N - 1].sparks - board[mine].sparks + 1)} оч дутуу.</p>
         )}
+        </>}
 
         {last.length > 0 && (
           <>
