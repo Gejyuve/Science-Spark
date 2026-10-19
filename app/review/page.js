@@ -1,10 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { sql } from "@/lib/db";
-import { getUser, isStaff, canReview, canApproveEvents } from "@/lib/auth";
-import { EVENT_APPROVE_REWARD, ARTICLE_REVIEW_REWARD, EVENT_PENALTY, ARTICLE_PENALTY } from "@/lib/levels";
+import { getUser, isStaff, canApproveEvents } from "@/lib/auth";
 import { ago } from "@/lib/admin";
 import { fmtDate } from "@/lib/format";
-import { examState, MAX_FAILS, PASS_SCORE } from "@/lib/exam";
 import Head, { Stat, Tabs, Chip, Flash, who } from "../admin/_c/Head";
 import { TERM_KIND, canApproveWords, daysLeft, SUPPORT_NEEDED } from "@/lib/terms";
 import { crumbs } from "@/lib/tree";
@@ -15,8 +14,9 @@ const GROUPS = { posts: ["Нийтлэл", "Мэдээ"], events: ["Эвент",
 export default async function ReviewHome({ searchParams }) {
   const user = await getUser();
   const sp = await searchParams;
-  if (isStaff(user) || (sp.t === "words" && canApproveWords(user)) || (canApproveEvents(user) && (sp.t === "events" || !canReview(user)))) return <Queue user={user} sp={sp} />;
-  return <Become user={user} sp={sp} />;
+  // Редакц бүх жагсаалтыг, Түвшин 5+ хэрэглэгч зөвхөн шинэ үгийг харна
+  if (isStaff(user) || canApproveWords(user)) return <Queue user={user} sp={sp} />;
+  redirect("/");
 }
 
 // Хянагчийн хяналтын жагсаалт (Figma 628:1121, 628:1294)
@@ -83,8 +83,8 @@ async function Queue({ user, sp }) {
         )}
         <p className="adm-banner inset">
           {t === "posts"
-            ? `Зөвшөөрсөн нийтлэл, мэдээ бүрт +${ARTICLE_REVIEW_REWARD.toLocaleString("en-US")} оч. Хэтэрхий алдаатай нийтлэлийг зөвшөөрсөн нь илэрвэл −${ARTICLE_PENALTY.toLocaleString("en-US")} оч, хянагчийн эрхийг түдгэлзүүлж болно. Өөрийн нийтлэлийг хянах боломжгүй.`
-            : `Зөвшөөрсөн эвент, зарлал бүрт +${EVENT_APPROVE_REWARD} оч. Асуудалтай эвент, зарлалыг зөвшөөрсөн нь илэрвэл −${EVENT_PENALTY.toLocaleString("en-US")} оч. Огноо, байршил, холбоосыг заавал шалгаарай.`}
+            ? "Нийтлэл, мэдээг зөвхөн редакц хянана. Өөрийн нийтлэлийг хянах боломжгүй."
+            : "Эвент, зарлалыг зөвхөн редакц зөвшөөрнө. Огноо, байршил, холбоосыг заавал шалгаарай."}
         </p>
       </section>
       )}
@@ -195,83 +195,6 @@ async function Cats() {
         )}
         <p className="adm-banner inset">Ангиллыг засах, зөөх, устгах шаардлагатай бол хөгжүүлэгчид мэдэгдэнэ. Шинэ ангиллыг энд батлахад Мод-нд шууд нэмэгдэнэ.</p>
       </section>
-    </>
-  );
-}
-
-// Түвшин 4+ хэрэглэгч: хянагч болох шалгалт (Figma 628:1218, 709:496)
-async function Become({ user, sp }) {
-  const st = await examState(user);
-  const step = st.state === "pending" ? 2 : 1;
-  const steps = [
-    ["Шалгалт өгөх", st.state === "pending" ? "Тэнцсэн" : `${st.fails}/${MAX_FAILS} оролдлого ашигласан`],
-    ["Редакц шалгах", st.state === "pending" ? "Таны нийтлэл, шалгалтыг хянаж байна" : "Тэнцсэний дараа"],
-    ["Хянагчийн эрх", "Редакц эрх нээнэ"],
-  ];
-  return (
-    <>
-      <Head user={user} tag="Түвшин 4+" title="Хянагч болох" sub="Хянагч болохыг хүсэж байвал шалгалт өгөөрэй" />
-      <Flash ok={sp.ok} error={sp.error} />
-      <section className="adm-card">
-        <div className="adm-card-head"><b>Хянагчийн шалгалт</b></div>
-        <p className="adm-lead">
-          Та 4-р түвшинд хүрсэн тул нийтлэл хянах эрх авах боломжтой боллоо. Шалгалтад танд жишээ нийтлэл өгөгдөнө.
-          Түүн доторх алдаатай өгүүлбэрүүдийг олж, алдааны төрлийг нь сонгоод, нийтлэлийг юу хийх вэ гэдэг шийдвэрээ гаргана.
-        </p>
-        <div className="rv-steps">
-          {steps.map(([t, d], i) => (
-            <div key={t} className={"rv-step" + (i + 1 < step ? " done" : i + 1 === step ? " on" : "")}>
-              <span>{i + 1 < step ? "✓" : i + 1}</span>
-              <b>{t}</b>
-              <small>{d}</small>
-            </div>
-          ))}
-        </div>
-
-        {st.state === "open" && (
-          <div className="rv-cta">
-            <ul className="rv-rules">
-              <li>Тэнцэх босго: {PASS_SCORE} оноо, эцсийн шийдвэр зөв байх.</li>
-              <li>Буруу тэмдэглэсэн өгүүлбэр бүр оноо хасна.</li>
-              <li>Унавал дараагийн оролдлогод өөр жишээ нийтлэл өгөгдөнө.</li>
-              <li>{MAX_FAILS} удаа унавал шалгалт өгөх эрх 1 сар хаагдана. Танд <b>{st.left}</b> оролдлого үлдсэн.</li>
-            </ul>
-            <Link href="/review/exam" className="adm-btn teal big">{st.fails ? "Дахин шалгалт өгөх" : "Шалгалт эхлүүлэх"}</Link>
-          </div>
-        )}
-        {st.state === "locked" && (
-          <p className="adm-banner">
-            Та {MAX_FAILS} удаа тэнцээгүй тул шалгалт өгөх эрх <b>{fmtDate(st.unlockAt)}</b> хүртэл хаагдсан. Энэ хугацаанд нийтлэл бичиж, туршлагаа хуримтлуулаарай.
-          </p>
-        )}
-        {st.state === "pending" && (
-          <p className="adm-flash ok">
-            Баяр хүргэе! Та шалгалтад тэнцлээ. Редакц таны бичсэн нийтлэл, шалгалтын дүнг хянаад хянагчийн эрх нээнэ. Шийдвэрийг мэдэгдлээр хүлээн авна.
-          </p>
-        )}
-        {st.request?.status === "declined" && st.state !== "pending" && (
-          <p className="adm-muted small">Өмнөх хүсэлтийн хариу: {st.request.note || "хүлээж аваагүй"}</p>
-        )}
-      </section>
-
-      {st.history.length > 0 && (
-        <section className="adm-card flush">
-          <div className="adm-card-head pad"><b>Миний оролдлогууд</b></div>
-          <table className="adm-table">
-            <thead><tr><th>Огноо</th><th>Оноо</th><th>Дүн</th><th></th></tr></thead>
-            <tbody>
-              {st.history.map((a) => (
-                <tr key={a.id}>
-                  <td>{ago(a.created_at)}</td>
-                  <td className="adm-strong">{a.score}</td>
-                  <td>{a.passed ? <Chip tone="ok">Тэнцсэн</Chip> : <Chip tone="bad">Тэнцээгүй</Chip>}</td>
-                  <td className="adm-right"><Link href={`/review/exam/${a.id}`} className="adm-btn">Дэлгэрэнгүй</Link></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
     </>
   );
 }

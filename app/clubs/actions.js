@@ -215,7 +215,9 @@ async function doJoin(userId, club, role) {
   if (mine) {
     await sql`DELETE FROM club_members WHERE user_id = ${userId}`;
     await sql`INSERT INTO club_moves (user_id, from_club, from_name, to_club) VALUES (${userId}, ${mine.club_id}, ${mine.name}, ${club.id})`;
-    if ((await rewardBalance(userId)) > 0) await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${userId}, ${-JOIN_REWARD}, 'club:switch')`;
+    // Анхны клубын урамшууллын үлдэгдлийг (хуучин дүрмээр 600 байж болно) бүтнээр нь хасна
+    const bal = await rewardBalance(userId);
+    if (bal > 0) await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${userId}, ${-bal}, 'club:switch')`;
   } else if (!(await hadFirstReward(userId))) {
     await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${userId}, ${JOIN_REWARD}, 'club:first')`;
   }

@@ -535,10 +535,10 @@ export default async function PostPage({ params, searchParams }) {
               </span>
               {isAuthor && ["Нийтлэл", "Мэдээ"].includes(post.kind) && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
-              {published && !isQ && (
-                <span className="ar-gift soon" title="Шагнах · тун удахгүй">
-                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Шагнах
-                </span>
+              {published && !isQ && !isAuthor && (
+                <Link href={user ? `/san/support?kind=tip&to=${post.author_id}&post=${post.id}` : "/login"} className="ar-gift" title="Бичээчид хандив өгч урамшуулах">
+                  <img src="/icons/gift.svg" width={15} height={15} alt="" />Бичээчийг дэмжих
+                </Link>
               )}
               <span className="ar-right">
                 {published && !isAuthor && <LogicReport postId={post.id} kind={post.kind} title={post.title} loggedIn={!!user} />}

@@ -56,7 +56,7 @@ export default async function Points({ searchParams }) {
               })}
             </tbody>
           </table>
-          <p className="adm-muted small">Хянагч болох босго: 4-р түвшин. Түгжээтэй түвшнүүд одоохондоо нээгдээгүй.</p>
+          <p className="adm-muted small">Нийтлэл, эвент хянах эрхийг зөвхөн админ олгоно (түвшнээр нээгдэхгүй). Түгжээтэй түвшнүүд одоохондоо нээгдээгүй.</p>
         </section>
         <section className="adm-card">
           <div className="adm-card-head"><b>Оч нэмэх / хасах</b></div>

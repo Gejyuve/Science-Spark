@@ -10,7 +10,8 @@ import { markAllRead } from "../posts/actions";
 import NotifMenu from "./NotifMenu";
 import { NotifList } from "./Notif";
 import { sql } from "@/lib/db";
-import { displayName, isAdmin, needsName, canReview, canEnterReview } from "@/lib/auth";
+import { displayName, isAdmin, needsName, isStaff } from "@/lib/auth";
+import { canApproveWords } from "@/lib/terms";
 import { unreadCount, listNotifications } from "@/lib/notify";
 import { levelFor } from "@/lib/levels";
 import { Avatar, Stat, Person, followingSet } from "./Bits";
@@ -137,12 +138,16 @@ async function RightRail({ user }) {
                 {I("comment18", 18)}<span>Клубын чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
               </Link>
             )}
-            <Link href={`/u/${user.id}`} className="ss-action">
-              {I("wallet", 18)}<span>Данс</span>
+            <Link href="/wallet" className="ss-action">
+              {I("wallet", 18)}<span>Хэтэвч</span>
               {I("arrow", 14)}
             </Link>
-            {canEnterReview(user) && (
-              <Link href={canReview(user) ? "/review" : "/review?t=events"} className="ss-action">
+            <Link href="/san" className="ss-action">
+              {I("gift", 18)}<span>Шагналын сан</span>
+              {I("arrow", 14)}
+            </Link>
+            {(isStaff(user) || canApproveWords(user)) && (
+              <Link href={isStaff(user) ? "/review" : "/review?t=words"} className="ss-action">
                 {I("shield", 18)}<span>Хянах</span>
                 {I("arrow", 14)}
               </Link>

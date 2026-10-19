@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser } from "@/lib/auth";
+import { getUser, isPremium } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { toggleFollow } from "../../posts/actions";
 import Shell from "../../components/Shell";
@@ -30,7 +30,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const me = await getUser();
   const myFollowing = await followingSet(me);
   const rows = await sql`
-    SELECT u.id, u.initial, u.first_name, u.surname, u.avatar_id AS avatar, u.email, u.created_at,
+    SELECT u.id, u.initial, u.first_name, u.surname, u.avatar_id AS avatar, u.email, u.created_at, u.premium_until,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers
     FROM users u WHERE u.id = ${uid}`;
@@ -134,7 +134,7 @@ export default async function PublicProfile({ params, searchParams }) {
           <span className="pu-avatar"><Avatar user={u} size={96} /></span>
           <div className="pu-name">
             {/* Овгийг бүтнээр нь зөвхөн тухайн хүний өөрийн хуудсанд харуулна */}
-            <h1>{u.surname ? `${u.surname} ${u.first_name}` : `${u.initial}.${u.first_name}`}</h1>
+            <h1>{u.surname ? `${u.surname} ${u.first_name}` : `${u.initial}.${u.first_name}`}{isPremium(u) && <Link href="/san" className="san-badge" title="Премиум гишүүн · шинжлэх ухааныг дэмжигч">💚 Дэмжигч</Link>}</h1>
             <div className="pu-stats">
               {isMe ? (
                 <>
