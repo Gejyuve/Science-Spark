@@ -92,7 +92,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
           <ImageInput name="cover" aspect={3} maxW={1920} variant="cover" adjust initial={p.cover_id || null} initialSrc={p.cover_src || null} initialPos={p.cover_pos || null}>
             <img src="/icons/camera18.svg" width={18} height={18} alt="" />
             <b>Ковер зураг нэмэх</b>
-            <small>Өргөн зураг (3:1) · JPG, PNG, WEBP</small>
+            <small>Өргөн зураг · 1920×640 px (3:1) · JPG, PNG, WEBP</small>
           </ImageInput>
           <span className="pf-cover-pts"><Pts k="cover" on={!!p.cover_id} /></span>
         </div>
@@ -101,7 +101,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
             badge={<span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>}>
             <img src="/icons/person40.svg" width={40} height={40} alt="" />
           </ImageInput>
-          <div><b>Нүүр зураг</b><Pts k="photo" /></div>
+          <div><b>Нүүр зураг</b><Pts k="photo" /><small className="cf-hint pf-size">Дөрвөлжин, сайтад 480×480 px хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг оруулбал тайрагдахгүй.</small></div>
         </div>
         <label className="pf-email">
           <span className="pf-mailtile"><img src="/icons/mail.svg" width={20} height={20} alt="" /></span>

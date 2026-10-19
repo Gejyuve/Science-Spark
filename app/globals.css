@@ -1390,6 +1390,11 @@ a.ss-kind:hover { text-decoration: underline; }
 .ii.has .ii-box { padding: 0; border-style: solid; background: var(--surface-2); }
 .ii-img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .ii-err { color: #cc2633; font-size: 12px; }
+.ii-size { font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.ii-size b { color: var(--ink); font-weight: 600; }
+.ii-note { font-size: 12px; color: #b26a00; line-height: 1.45; }
+.ii-avatar .ii-note, .ii-avatar .ii-err { margin-top: 34px; max-width: 180px; }
+.pf-size { max-width: 340px; margin-top: 0; }
 .ii-spin { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .55); }
 .ii-spin::after { content: ""; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #37c3b3; border-top-color: transparent; animation: ii-rot .8s linear infinite; }
 @keyframes ii-rot { to { transform: rotate(360deg); } }
@@ -1439,6 +1444,7 @@ a.ss-kind:hover { text-decoration: underline; }
 .ev-photo { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
 @media (max-width: 760px) { .ev-photo { aspect-ratio: 2 / 1; } }
 :root[data-theme="dark"] .ii-spin { background: rgba(0, 0, 0, .45); }
+:root[data-theme="dark"] .ii-note { color: #f0b45c; }
 
 /* ── Мэдэгдэл (Figma 581:430, 789:693) ── */
 .nf-menu { position: relative; }

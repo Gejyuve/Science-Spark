@@ -102,7 +102,7 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
           <span className="wr-ring"><img src="/icons/imgadd.svg" width={26} height={26} alt="" /></span>
           <b>Ковер зураг нэмэх</b>
           <span className="wr-pick"><img src="/icons/plus16.svg" width={16} height={16} alt="" />Зураг сонгох</span>
-          <small>JPG, PNG, WEBP · 740×280 харьцаагаар автоматаар тайрна</small>
+          <small>JPG, PNG, WEBP · 1600×605 px (740:280 харьцаа)</small>
         </ImageInput>
         <div className="wr-coversrc">
           <label><span>Ковер зургийн эх сурвалж <i className="wr-star">*</i></span>
