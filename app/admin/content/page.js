@@ -81,7 +81,7 @@ export default async function Content({ searchParams }) {
                         ? <Chip tone="gray">Өөрийн · өөр админ</Chip>
                         : <Link href={`/review/${p.id}`} className="adm-btn teal">Засах</Link>)}
                       {p.status === "published" && <Link href={`/post/${p.id}/edit`} className="adm-btn teal">Засах</Link>}
-                      {p.status === "published" && <Link href={`/admin/content/merge?a=${p.id}`} className="adm-btn">Нэгтгэх</Link>}
+                      {p.status === "published" && p.kind === "Нийтлэл" && <Link href={`/admin/content/merge?a=${p.id}`} className="adm-btn">Нэгтгэх</Link>}
                       {p.status === "published" && (
                         <details className="adm-pop">
                           <summary className="adm-btn danger">Нуух</summary>
