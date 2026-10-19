@@ -73,8 +73,8 @@ export default async function San({ searchParams }) {
           </div>
         </section>
 
-        <h2 id="board">Энэ сарын шилдэг {TOP_N} · бодит цагаар</h2>
-        <p className="och-hint">Шагнал = сан × (оч × түвшний жин) / шилдэг {TOP_N}-ын нийт оноо. Одоогийн сангаар тооцсон урьдчилсан дүн.</p>
+        <h2 id="board">Энэ сарын шилдэг {TOP_N}</h2>
+        <p className="san-formula">Шагнал ≈ сан × (оч × түвшний жин) ÷ шилдэг 10-ын оноо</p>
         <div className="och-board san-board">
           <div className="och-brow head"><span>№</span><span>Бичээч</span><span>Түвшин</span><span>Оч</span><span>Шагнал</span></div>
           {top.length === 0 && <p className="ss-empty">Энэ сард одоохондоо оч аваагүй байна. Эхний бичээч та байж болно!</p>}
