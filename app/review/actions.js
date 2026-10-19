@@ -63,9 +63,9 @@ export async function decidePost(formData) {
     changed = title !== p.title || (subtitle || null) !== (p.subtitle || null) || body !== p.body;
     if (changed && !original) original = { title: p.title, subtitle: p.subtitle, body: p.body };
   }
-  // Нийтлэл, мэдээ: бичээч рүү буцаж, бичээч өөрөө нийтэлнэ. Эвент, зарлал: шууд нийтлэгдэнэ.
-  const next = editable ? "approved" : "published";
-  const d = await sql`UPDATE posts SET status = ${next}, reviewer_id = ${user.id}, reviewed_at = now(), review_note = ${note},
+  // Редакц зөвшөөрсөн контент шууд нийтлэгдэнэ. Бичээч засварыг профайлын «Редакцаас хариу ирсэн» хэсгээс харж, гомдол гаргаж болно.
+  const d = await sql`UPDATE posts SET status = 'published', reviewer_id = ${user.id}, reviewed_at = now(), review_note = ${note},
+                        created_at = CASE WHEN ${editable}::boolean THEN now() ELSE created_at END,
                         title = ${title}, subtitle = ${subtitle}, body = ${body}, category = ${category},
                         original = ${original ? JSON.stringify(original) : null}::jsonb,
                         meta = CASE WHEN ${isTask}::boolean THEN COALESCE(meta, '{}'::jsonb) || jsonb_build_object('reward', ${isTask ? reward : 0}::int) ELSE meta END
@@ -74,7 +74,7 @@ export async function decidePost(formData) {
     // Хяналтын үеийн засвар засварын түүхэнд үлдэнэ
     if (changed) await recordRevision(p, { editorId: user.id, role: "editor", note: "Хяналтын үед засварласан", title, subtitle, body });
     await audit({ actorId: user.id, category: "content", action: `${p.kind} зөвшөөрсөн${original && !p.original ? " (засвартай)" : ""}`, targetType: "post", targetId: id, targetLabel: title });
-    await notify({ userId: p.author_id, kind: editable ? "reviewed" : "approved", actorId: user.id, postId: id, note });
+    await notify({ userId: p.author_id, kind: changed ? "approved_edited" : "approved", actorId: user.id, postId: id, note });
     // Редакц чанарыг нь баталсан нийтлэл, мэдээнд бичээчид нэг удаа оч
     // Батлагдсан даалгаварт клубт нэг удаа
     if (p.club_id && isTask) {
@@ -109,5 +109,5 @@ export async function decidePost(formData) {
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
   revalidatePath("/review", "layout");
-  go(editable ? "/review" : p.club_id ? "/review?t=tasks" : "/review?t=events", "ok", editable ? "Зөвшөөрлөө. Бичээч нийтлэхэд бэлэн боллоо" : "Нийтлэгдлээ");
+  go(editable ? "/review" : p.club_id ? "/review?t=tasks" : "/review?t=events", "ok", "Нийтлэгдлээ");
 }

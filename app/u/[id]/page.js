@@ -4,6 +4,8 @@ import { sql, ensureSchema } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { toggleFollow } from "../../posts/actions";
+import { fileComplaint, answerWarning } from "../../profile/actions";
+import { paraDiff } from "@/lib/diff";
 import Shell from "../../components/Shell";
 import PostCard from "../../components/PostCard";
 import { Avatar, fmtK, followingSet, NameBadges } from "../../components/Bits";
@@ -20,10 +22,23 @@ function ago(d) {
 
 const SOCIAL_ICON = { facebook: "s_fb", instagram: "s_ig", x: "s_x", linkedin: "s_li", youtube: "s_yt" };
 
+// Гомдол, хариуны төлөв
+function Answer({ status, body, note, label }) {
+  if (!status) return null;
+  const st = status === "open" ? ["Редакц шалгаж байна", "wait"] : status === "resolved" ? ["Хүлээн авсан", "ok"] : ["Үндэслэлгүй гэж үзсэн", "bad"];
+  return (
+    <div className="rp-answer">
+      <span><b>{label}:</b> “{body}”</span>
+      <em className={st[1]}>{st[0]}</em>
+      {note && <small>Редакцын хариу: “{note}”</small>}
+    </div>
+  );
+}
+
 // Figma: Нийтийн профайл
 export default async function PublicProfile({ params, searchParams }) {
   const { id } = await params;
-  const { tab = "published", k: kindParam = "" } = await searchParams;
+  const { tab = "published", k: kindParam = "", ok, error } = await searchParams;
   const uid = Number(id);
   if (!Number.isInteger(uid)) notFound();
   await ensureSchema();
@@ -61,11 +76,40 @@ export default async function PublicProfile({ params, searchParams }) {
       WHERE s.user_id = ${uid} AND p.status = 'published'
       ORDER BY s.created_at DESC LIMIT 100`
     : [];
+  // «Редакцаас хариу ирсэн»: редакцын засвар, нэгтгэл (өмнөх хувилбартай нь), сануулга, тэдгээрт бичсэн гомдол, хариу
+  const edits = isMe
+    ? await sql`
+      SELECT x.*, l.status AS c_status, l.body AS c_body, l.note AS c_note FROM (
+        SELECT r.id, r.post_id, r.role, r.note, r.title, r.body, r.created_at, r.editor_id,
+          LAG(r.title) OVER w AS prev_title, LAG(r.body) OVER w AS prev_body
+        FROM post_revisions r
+        WHERE r.post_id IN (SELECT id FROM posts WHERE author_id = ${uid}
+                            UNION SELECT post_id FROM post_credits WHERE user_id = ${uid} AND role = 'author')
+        WINDOW w AS (PARTITION BY r.post_id ORDER BY r.created_at, r.id)
+      ) x
+      LEFT JOIN LATERAL (SELECT status, body, note FROM logic_reports WHERE revision_id = x.id AND user_id = ${uid} ORDER BY id DESC LIMIT 1) l ON true
+      WHERE x.role IN ('editor', 'merge') AND x.editor_id IS DISTINCT FROM ${uid}
+      ORDER BY x.created_at DESC LIMIT 50`
+    : [];
+  const postTitle = isMe && edits.length
+    ? Object.fromEntries((await sql`SELECT id, title, kind, status FROM posts WHERE id = ANY(${[...new Set(edits.map((e) => e.post_id))]})`).map((p) => [p.id, p]))
+    : {};
+  const warnings = isMe
+    ? await sql`
+      SELECT w.id, w.note, w.created_at, l.status AS c_status, l.body AS c_body, l.note AS c_note
+      FROM user_warnings w
+      LEFT JOIN LATERAL (SELECT status, body, note FROM logic_reports WHERE warning_id = w.id ORDER BY id DESC LIMIT 1) l ON true
+      WHERE w.user_id = ${uid} ORDER BY w.created_at DESC`
+    : [];
+  const hiddenComplaints = isMe
+    ? Object.fromEntries((await sql`SELECT DISTINCT ON (post_id) post_id, status, body, note FROM logic_reports
+                                    WHERE user_id = ${uid} AND type = 'complaint' AND revision_id IS NULL ORDER BY post_id, id DESC`).map((r) => [r.post_id, r]))
+    : {};
   const groups = {
     saved: isMe ? savedList : null,
     all,
     published: all.filter((p) => p.status === "published"),
-    pending: all.filter((p) => ["pending", "approved", "discussion", "draft"].includes(p.status)),
+    pending: all.filter((p) => ["pending", "discussion", "draft"].includes(p.status)),
     replied: all.filter((p) => p.status === "rejected" || p.status === "removed"),
   };
   const current = groups[tab] && (isMe || tab === "published") ? tab : "published";
@@ -195,16 +239,99 @@ export default async function PublicProfile({ params, searchParams }) {
         </details>
         <TabLink k="published" icon="t_pub" label="Нийтлэгдсэн" count={groups.published.length} mobIcon />
         {isMe && <TabLink k="pending" icon="t_wait" label="Редакцын хяналт хүлээж байгаа" count={groups.pending.length} warn iconOnly />}
-        {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length} iconOnly />}
+        {isMe && <TabLink k="replied" icon="t_reply" label="Редакцаас хариу ирсэн" count={groups.replied.length + edits.length + warnings.length} iconOnly />}
         <span className="ss-grow" />
         {isMe && <TabLink k="saved" icon="t_saved" label="Хадгалсан" count={groups.saved.length} iconOnly />}
       </div>
 
       {current === "saved" && <p className="pu-savednote">Хадгалсан контент зөвхөн танд харагдана · {list.length} контент</p>}
-      {list.length === 0 && <div className="ss-card"><p className="ss-empty">{current === "saved" ? "Хадгалсан контент алга. Нийтлэл дээрх хадгалах дүрсээр хадгална." : kind ? `${kind} алга.` : "Нийтлэл алга."}</p></div>}
+      {current === "replied" && (
+        <>
+          {(ok || error) && <p className={error ? "error" : "notice"}>{error || ok}</p>}
+          <p className="pu-savednote">Редакцын засвар, сануулга зөвхөн танд харагдана. Санал нийлэхгүй бол гомдол, хариугаа бичээрэй. Редакц шалгаад мэдэгдэнэ.</p>
+          {warnings.length > 0 && (
+            <section className="ss-card rp-box">
+              <h2>Сануулга <em>{warnings.length}</em></h2>
+              {warnings.map((w) => (
+                <article key={w.id} className="rp-item warn">
+                  <div className="rp-head"><b>Редакцаас сануулга</b><small>{fmtDate(w.created_at)}</small></div>
+                  <p className="rp-text">“{w.note}”</p>
+                  <Answer status={w.c_status} body={w.c_body} note={w.c_note} label="Таны хариу" />
+                  {w.c_status !== "open" && (
+                    <details className="rp-form">
+                      <summary>{w.c_status ? "Дахин хариу бичих" : "Хариу бичих"}</summary>
+                      <form action={answerWarning}>
+                        <input type="hidden" name="warning_id" value={w.id} />
+                        <textarea name="body" required minLength={10} maxLength={1000} rows={3} placeholder="Сануулгатай санал нийлэхгүй бол шалтгаанаа бичнэ үү" />
+                        <button className="btn">Илгээх</button>
+                      </form>
+                    </details>
+                  )}
+                </article>
+              ))}
+            </section>
+          )}
+          {edits.length > 0 && (
+            <section className="ss-card rp-box">
+              <h2>Редакцын засвар <em>{edits.length}</em></h2>
+              {edits.map((e) => {
+                const post = postTitle[e.post_id] || {};
+                const diff = paraDiff(e.prev_body, e.body);
+                return (
+                  <article key={e.id} className="rp-item">
+                    <div className="rp-head">
+                      <b>{e.role === "merge" ? "Нэгтгэсэн" : "Засварласан"}: <Link href={`/post/${e.post_id}`}>{post.title || e.title}</Link></b>
+                      <small>{fmtDate(e.created_at)}</small>
+                    </div>
+                    {e.note && <p className="rp-text">Редакцын тайлбар: “{e.note}”</p>}
+                    <details className="rp-diff">
+                      <summary>Юу өөрчлөгдсөнийг харах</summary>
+                      {e.prev_title && e.prev_title !== e.title && (
+                        <p className="rp-title"><del>{e.prev_title}</del> <ins>{e.title}</ins></p>
+                      )}
+                      {diff.length === 0 ? <p className="muted">Агуулгад өөрчлөлт ороогүй.</p> : diff.map((d, i) =>
+                        d.op === "gap" ? <p key={i} className="rp-gap">…</p> : d.op === "add" ? <ins key={i}>{d.text}</ins> : <del key={i}>{d.text}</del>
+                      )}
+                      <Link href={`/post/${e.post_id}/history`} className="rp-more">Засварын бүх түүх</Link>
+                    </details>
+                    <Answer status={e.c_status} body={e.c_body} note={e.c_note} label="Таны гомдол" />
+                    {!e.c_status && (
+                      <details className="rp-form">
+                        <summary>Гомдол гаргах</summary>
+                        <form action={fileComplaint}>
+                          <input type="hidden" name="post_id" value={e.post_id} />
+                          <input type="hidden" name="revision_id" value={e.id} />
+                          <textarea name="body" required minLength={10} maxLength={1000} rows={3} placeholder="Засварын аль хэсэгтэй санал нийлэхгүй байгаа, яагаад гэдгээ бичнэ үү" />
+                          <button className="btn">Илгээх</button>
+                        </form>
+                      </details>
+                    )}
+                  </article>
+                );
+              })}
+            </section>
+          )}
+        </>
+      )}
+      {list.length === 0 && !(current === "replied" && edits.length + warnings.length > 0) && <div className="ss-card"><p className="ss-empty">{current === "saved" ? "Хадгалсан контент алга. Нийтлэл дээрх хадгалах дүрсээр хадгална." : current === "replied" ? "Редакцаас хариу ирээгүй байна." : kind ? `${kind} алга.` : "Нийтлэл алга."}</p></div>}
       {list.map((p) => (
         <div key={p.id} className="pu-post">
           <PostCard p={p} viewer={me} following={myFollowing} />
+          {current === "replied" && p.status === "removed" && (
+            <div className="rp-under">
+              <Answer status={hiddenComplaints[p.id]?.status} body={hiddenComplaints[p.id]?.body} note={hiddenComplaints[p.id]?.note} label="Таны гомдол" />
+              {!hiddenComplaints[p.id] && (
+                <details className="rp-form">
+                  <summary>Нуусанд гомдол гаргах</summary>
+                  <form action={fileComplaint}>
+                    <input type="hidden" name="post_id" value={p.id} />
+                    <textarea name="body" required minLength={10} maxLength={1000} rows={3} placeholder="Яагаад нуух шаардлагагүй гэж үзэж байгаагаа бичнэ үү" />
+                    <button className="btn">Илгээх</button>
+                  </form>
+                </details>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </Shell>

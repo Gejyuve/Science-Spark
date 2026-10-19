@@ -116,3 +116,50 @@ export async function saveProfile(formData) {
   revalidatePath("/");
   redirect(`/u/${user.id}`);
 }
+
+const replied = (uid, key, msg) => redirect(`/u/${uid}?tab=replied&${key}=${encodeURIComponent(msg)}`);
+
+// Бичээч редакцын засвар, нэгтгэл эсвэл нуусан контентод гомдол гаргана. Логик алдааны хэсэгт «Гомдол» болж очно.
+export async function fileComplaint(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  await ensureSchema();
+  const postId = Number(formData.get("post_id"));
+  const revId = Number(formData.get("revision_id")) || null;
+  const body = String(formData.get("body") || "").trim().slice(0, 1000);
+  if (!Number.isInteger(postId)) replied(user.id, "error", "Буруу хүсэлт");
+  if (body.length < 10) replied(user.id, "error", "Гомдлоо дэлгэрэнгүй бичнэ үү");
+  // Зөвхөн өөрийн (нэгтгэлээр нэмэгдсэн бичээчийг оруулаад) контентод
+  const [p] = await sql`SELECT id FROM posts p WHERE id = ${postId}
+    AND (author_id = ${user.id} OR EXISTS (SELECT 1 FROM post_credits c WHERE c.post_id = p.id AND c.user_id = ${user.id} AND c.role = 'author'))`;
+  if (!p) replied(user.id, "error", "Энэ контентод гомдол гаргах боломжгүй");
+  if (revId) {
+    const [r] = await sql`SELECT 1 FROM post_revisions WHERE id = ${revId} AND post_id = ${postId} AND role IN ('editor', 'merge')`;
+    if (!r) replied(user.id, "error", "Засвар олдсонгүй");
+  }
+  const ins = await sql`INSERT INTO logic_reports (post_id, user_id, body, type, revision_id)
+                        VALUES (${postId}, ${user.id}, ${body}, 'complaint', ${revId})
+                        ON CONFLICT DO NOTHING RETURNING id`;
+  if (!ins.length) replied(user.id, "error", "Энэ контентод таны илгээсэн гомдол, мэдэгдэл хянагдаж байна");
+  revalidatePath("/admin", "layout");
+  replied(user.id, "ok", "Гомдлыг редакц руу илгээлээ. Шийдвэрлэмэгц мэдэгдэл очно");
+}
+
+// Хэрэглэгч авсан сануулгадаа хариу бичиж өөрийгөө хамгаална. Логик алдааны хэсэгт очно.
+export async function answerWarning(formData) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  await ensureSchema();
+  const wid = Number(formData.get("warning_id"));
+  const body = String(formData.get("body") || "").trim().slice(0, 1000);
+  if (!Number.isInteger(wid)) replied(user.id, "error", "Буруу хүсэлт");
+  if (body.length < 10) replied(user.id, "error", "Хариугаа дэлгэрэнгүй бичнэ үү");
+  const [w] = await sql`SELECT id FROM user_warnings WHERE id = ${wid} AND user_id = ${user.id}`;
+  if (!w) replied(user.id, "error", "Сануулга олдсонгүй");
+  const ins = await sql`INSERT INTO logic_reports (user_id, body, type, warning_id)
+                        VALUES (${user.id}, ${body}, 'defense', ${wid})
+                        ON CONFLICT DO NOTHING RETURNING id`;
+  if (!ins.length) replied(user.id, "error", "Энэ сануулгад бичсэн хариу тань хянагдаж байна");
+  revalidatePath("/admin", "layout");
+  replied(user.id, "ok", "Хариуг редакц руу илгээлээ. Шийдвэрлэмэгц мэдэгдэл очно");
+}

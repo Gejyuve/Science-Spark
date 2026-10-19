@@ -135,12 +135,12 @@ export default async function ReviewPost({ params, searchParams }) {
             <div className="adm-card-head"><b>Хоёр сонголт</b></div>
             <p className="adm-muted small">
               <b>Бичээч рүү буцаах:</b> бичээч засвар хийгээд дахин илгээнэ.<br />
-              <b>Зөвшөөрөх:</b> {editable ? "таны засвартай хувилбар бичээч рүү очиж, бичээч өөрөө нийтэлнэ." : "контент шууд нийтлэгдэнэ."}
+              <b>Зөвшөөрөх:</b> {editable ? "таны засвартай хувилбар шууд нийтлэгдэнэ. Бичээч засварыг харж, санал нийлэхгүй бол гомдол гаргаж болно." : "контент шууд нийтлэгдэнэ."}
             </p>
           </section>
           <div className="rv-decide">
             <button name="decision" value="reject" className="adm-btn danger-solid big" formNoValidate>Бичээч рүү буцаах</button>
-            <button name="decision" value="approve" className="adm-btn teal big">{editable ? "Зөвшөөрч бичээч рүү илгээх" : "Зөвшөөрч нийтлэх"}</button>
+            <button name="decision" value="approve" className="adm-btn teal big">Зөвшөөрч нийтлэх</button>
           </div>
         </aside>
       </div>

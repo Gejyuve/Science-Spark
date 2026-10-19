@@ -174,10 +174,13 @@ export async function decideLogic(formData) {
   const note = String(formData.get("note") || "").trim().slice(0, 300) || null;
   if (!Number.isInteger(id) || !["resolved", "dismissed"].includes(op)) back(from, "Буруу хүсэлт");
   const [r] = await sql`UPDATE logic_reports SET status = ${op}, note = ${note}, resolved_by = ${me.id}, resolved_at = now()
-                        WHERE id = ${id} AND status = 'open' RETURNING user_id, post_id`;
+                        WHERE id = ${id} AND status = 'open' RETURNING user_id, post_id, type`;
   if (!r) back(from, "Энэ мэдэгдэл шийдвэрлэгдсэн байна");
-  await audit({ actorId: me.id, category: "content", action: `Логик алдааны мэдэгдэл: ${op === "resolved" ? "засагдсан" : "алдаа биш"}${note ? ` (${note})` : ""}`, targetType: "post", targetId: r.post_id });
-  await notify({ userId: r.user_id, kind: op === "resolved" ? "logic_ok" : "logic_no", actorId: me.id, postId: r.post_id, note });
+  const err = r.type === "error";
+  const label = err ? "Логик алдааны мэдэгдэл" : r.type === "defense" ? "Сануулгын хариу" : "Бичээчийн гомдол";
+  const verdict = op === "resolved" ? (err ? "засагдсан" : "хүлээн авсан") : (err ? "алдаа биш" : "үндэслэлгүй");
+  await audit({ actorId: me.id, category: "content", action: `${label}: ${verdict}${note ? ` (${note})` : ""}`, targetType: r.post_id ? "post" : "user", targetId: r.post_id || r.user_id });
+  await notify({ userId: r.user_id, kind: err ? (op === "resolved" ? "logic_ok" : "logic_no") : (op === "resolved" ? "complaint_ok" : "complaint_no"), actorId: me.id, postId: r.post_id, note });
   revalidatePath("/admin", "layout");
   back(from, "Шийдвэрлэлээ", true);
 }

@@ -37,7 +37,8 @@ export default async function MergeEditor({ params, searchParams }) {
     ) x JOIN users u ON u.id = x.user_id
     ORDER BY u.id, x.at`;
   const prev = A.meta?.author_order || [];
-  const rank = (u) => (prev.includes(u.id) ? prev.indexOf(u.id) : 1000 + new Date(u.at).getTime() / 1e13);
+  // Анхдагч дараалал: өмнө сонгосон дараалал, эс бөгөөс үндсэн нийтлэлийн бичээч, дараа нь нэгтгэх нийтлэлийнх, бусад нь бичсэн хугацаагаар
+  const rank = (u) => (prev.includes(u.id) ? prev.indexOf(u.id) : u.id === A.author_id ? 100 : u.id === B.author_id ? 101 : 1000 + new Date(u.at).getTime() / 1e13);
   authors.sort((x, y) => rank(x) - rank(y));
 
   const seen = new Set();
@@ -53,11 +54,12 @@ export default async function MergeEditor({ params, searchParams }) {
     <section className="wr-card mg-panel">
       <input type="hidden" name="b" value={B.id} />
       <div className="wr-sec-head">
-        <div><h2>Нэгтгэл</h2><p>«{B.title}» нийтлэл «{A.title}» нийтлэлийн төгсгөлөөс үргэлжилж байна. Агуулгыг давхардалгүй, уялдаатай болгож засаарай.</p></div>
+        <div><h2>Нэгтгэл</h2><p>Хоёр дахь нийтлэл үндсэн нийтлэлийн төгсгөлөөс үргэлжилж байна. Агуулгыг давхардалгүй, уялдаатай болгож засаарай.</p></div>
       </div>
       <div className="mg-pair">
-        <span><b>Үндсэн:</b> <Link href={`/post/${A.id}`} target="_blank">{A.title}</Link></span>
-        <span><b>Нэгтгэх:</b> <Link href={`/post/${B.id}`} target="_blank">{B.title}</Link></span>
+        <Link href={`/post/${A.id}`} target="_blank" className="mg-src"><small>1 · Үндсэн нийтлэл</small><b>{A.title}</b></Link>
+        <span className="mg-plus" aria-hidden="true">+</span>
+        <Link href={`/post/${B.id}`} target="_blank" className="mg-src"><small>2 · Үргэлжлэл</small><b>{B.title}</b></Link>
       </div>
       <label className="wr-label">Бичээчдийн дараалал <em>Заавал</em> <span className="wr-hint">нийтлэлийн доор энэ дарааллаар харагдана</span></label>
       <ol className="mg-order">
@@ -67,14 +69,12 @@ export default async function MergeEditor({ params, searchParams }) {
               {authors.map((_, j) => <option key={j} value={j + 1}>{j + 1}</option>)}
             </select>
             <b>{name(u)}</b>
-            <small>{u.id === A.author_id ? "Үндсэн нийтлэлийн бичээч" : u.id === B.author_id ? "Нэгтгэх нийтлэлийн бичээч" : "Өмнө нэгтгэгдсэн"}</small>
+            <small>{u.id === A.author_id ? "Үндсэн нийтлэлийн бичээч" : u.id === B.author_id ? "Үргэлжлэлийн бичээч" : "Өмнө нэгтгэгдсэн"}</small>
           </li>
         ))}
       </ol>
-      <label className="mg-note">
-        <span>Редакцын тайлбар <em className="wr-req">Заавал</em> · нийтлэлийн доор өөр өнгөөр, нэгтгэсэн огноотойгоо харагдана</span>
-        <textarea name="merge_note" required maxLength={500} rows={3} placeholder="Жишээ нь: Ижил сэдэвтэй хоёр нийтлэлийг нэгтгэж, давхардсан хэсгийг хассан." />
-      </label>
+      <label className="wr-label" htmlFor="merge_note">Редакцын тайлбар <em>Заавал</em> <span className="wr-hint">нийтлэлийн доор өөр өнгөөр, огноотойгоо харагдана</span></label>
+      <textarea id="merge_note" className="wr-sub" name="merge_note" required maxLength={500} rows={3} placeholder="Жишээ нь: Ижил сэдэвтэй хоёр нийтлэлийг нэгтгэж, давхардсан хэсгийг хассан." />
     </section>
   );
 
