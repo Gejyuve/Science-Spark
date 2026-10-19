@@ -3326,3 +3326,20 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .adm-dd-menu a { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 9px; color: var(--ink); font-size: 13px; text-decoration: none; white-space: nowrap; }
 .adm-dd-menu a:hover, .adm-dd-menu a.on { background: var(--surface-2); }
 .adm-dd-menu a i { margin-left: auto; font-style: normal; color: var(--teal); font-weight: 700; }
+
+/* Санхүү: орлого, гүйлгээний түүх */
+.adm-muted.pad { padding: 0 20px 14px; }
+.adm-stats.fit { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.adm-card-head small.adm-muted { margin: 0; font-size: 12px; }
+.adm-card-head.adm-bar { flex-wrap: wrap; padding-bottom: 14px; margin-bottom: 0; }
+.adm-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 4px; padding: 0 5px; border-radius: 9px; background: #cc2633; color: #fff; font-size: 11px; font-style: normal; font-weight: 700; }
+.adm-btn.dark .adm-count { background: #fff; color: var(--ink); }
+.fin-income { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.fin-income > div { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 12px; background: var(--surface-2); }
+.fin-income span { font-size: 12px; font-weight: 600; color: #708c9e; }
+.fin-income b { font-size: 22px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fin-income small { font-size: 11.5px; color: var(--muted); }
+.fin-income .tot { background: var(--teal-bg); }
+.fin-income .tot b { color: var(--teal); }
+@media (max-width: 1100px) { .fin-income { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .adm-stats.fit { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fin-income { grid-template-columns: minmax(0, 1fr); } }
