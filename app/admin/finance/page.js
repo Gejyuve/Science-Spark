@@ -5,6 +5,7 @@ import { poolBalance, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, EXPENSE_KINDS, REQUEST_
 import { currentPeriod, prevPeriod, periodLabel, monthBoard, splitPrizes } from "@/lib/spark";
 import { confirmPayment, cancelPayment, addExpense, payWithdrawal, rejectWithdrawal, closeMonth } from "./actions";
 import Head, { Stat, Flash, Tabs, Chip, who, Pick } from "../_c/Head";
+import { GrowthChart } from "../_c/Charts";
 
 const TABS = [["", "Төлбөр"], ["withdraw", "Татах хүсэлт"], ["tx", "Гүйлгээний түүх"], ["expense", "Зардал"], ["close", "Сар хаах"], ["log", "Лог"]];
 // Яг огноо, цаг минут (Улаанбаатарын цагаар)
@@ -78,6 +79,54 @@ export default async function Finance({ searchParams }) {
     return `/admin/finance${q.size ? `?${q}` : ""}`;
   };
 
+    // Асуудалтай байж болзошгүй гүйлгээ: шалгах шалтгаантай нь
+  const problems = await sql`
+    SELECT * FROM (
+      SELECT r.created_at AS at, 'Төлбөр ' || r.code AS what, r.user_id AS uid, r.amount::bigint AS amount,
+             'Шилжүүлэг 48 цагаас дээш баталгаажаагүй' AS reason
+        FROM payment_requests r WHERE r.status = 'pending' AND r.created_at < now() - interval '48 hours'
+      UNION ALL
+      SELECT r.decided_at, 'Төлбөр ' || r.code, r.user_id, r.amount,
+             'Шимтгэл ' || to_char(f.delta, 'FM999,999,999') || '₮, дүнгийн 5%-аас их'
+        FROM payment_requests r JOIN money_ledger f ON f.account = 'out' AND f.kind = 'fee' AND f.ref_id = r.id
+        WHERE r.status = 'confirmed' AND f.delta > r.amount * 0.05
+      UNION ALL
+      SELECT r.created_at, 'Урамшуулал ' || r.code, r.user_id, r.amount, 'Өөрөө өөртөө урамшуулал илгээсэн'
+        FROM payment_requests r WHERE r.kind = 'tip' AND r.writer_id = r.user_id AND r.status <> 'cancelled'
+      UNION ALL
+      SELECT MAX(r.created_at), 'Урамшуулал ×' || COUNT(*), r.user_id, SUM(r.amount),
+             'Нэг хүн нэг бичээчид нэг өдөр ' || COUNT(*) || ' удаа урамшуулал илгээсэн'
+        FROM payment_requests r WHERE r.kind = 'tip' AND r.status <> 'cancelled'
+        GROUP BY r.user_id, r.writer_id, (r.created_at AT TIME ZONE 'Asia/Ulaanbaatar')::date HAVING COUNT(*) >= 3
+      UNION ALL
+      SELECT r.created_at, 'Төлбөр ' || r.code, r.user_id, r.amount, 'Их дүн (1 сая ₮-өөс дээш), шалгах'
+        FROM payment_requests r WHERE r.amount >= ${BIG} AND r.status <> 'cancelled'
+      UNION ALL
+      SELECT w.created_at, 'Татах хүсэлт', w.user_id, w.amount,
+             CASE WHEN w.amount > (SELECT COALESCE(SUM(delta), 0) FROM money_ledger WHERE account = 'wallet' AND user_id = w.user_id)
+                  THEN 'Хэтэвчийн үлдэгдэл хүрэлцэхгүй' ELSE 'Татах хүсэлт 72 цагаас дээш хүлээгдэж байна' END
+        FROM withdrawals w WHERE w.status = 'pending'
+          AND (w.created_at < now() - interval '72 hours'
+            OR w.amount > (SELECT COALESCE(SUM(delta), 0) FROM money_ledger WHERE account = 'wallet' AND user_id = w.user_id))
+      UNION ALL
+      SELECT MAX(m.created_at), 'Хэтэвч', m.user_id, SUM(m.delta), 'Хэтэвчийн үлдэгдэл хасах дүнтэй'
+        FROM money_ledger m WHERE m.account = 'wallet' GROUP BY m.user_id HAVING SUM(m.delta) < 0
+      UNION ALL
+      SELECT b.decided_at, 'Асуултын шагнал', b.user_id, b.amount, 'Асуугч өөрийн хариултад шагнал олгосон'
+        FROM bounties b WHERE b.status = 'awarded' AND b.winner_id = b.user_id
+    ) x LEFT JOIN users u ON u.id = x.uid ORDER BY x.at DESC NULLS LAST LIMIT 200`;
+  const bad = tab === "tx" && sp.bad === "1";
+  // Супер админ: сүүлийн 12 сарын орлогын өсөлт
+  const growth = sup ? await sql`
+    WITH m AS (
+      SELECT to_char(d, 'YYYY-MM') AS period FROM generate_series(date_trunc('month', now() AT TIME ZONE 'Asia/Ulaanbaatar') - interval '11 months',
+        date_trunc('month', now() AT TIME ZONE 'Asia/Ulaanbaatar'), interval '1 month') d
+    )
+    SELECT m.period, COALESCE(SUM(l.delta) FILTER (WHERE l.kind IN ('premium', 'pool_share', 'donation', 'tip_fee', 'bounty_fee')), 0)::bigint AS income,
+      COALESCE(SUM(l.delta) FILTER (WHERE l.kind IN ('premium', 'pool_share')), 0)::bigint AS premium
+    FROM m LEFT JOIN money_ledger l ON l.period = m.period GROUP BY m.period ORDER BY m.period` : [];
+  let acc = 0;
+  const growthRows = growth.map((g) => ({ label: g.period.slice(2).replace("-", "."), income: Number(g.income), premium: Number(g.premium), total: (acc += Number(g.income)) }));
   let body = null;
   if (tab === "") {
     const rows = await sql`SELECT r.*, u.initial, u.first_name, u.email, w.initial AS w_initial, w.first_name AS w_first_name
@@ -194,43 +243,6 @@ export default async function Finance({ searchParams }) {
     const sort = SORTS.some(([k]) => k === sp.s) ? sp.s || "" : "";
     const kk = TX_KINDS.find(([k]) => k === sp.k) || TX_KINDS[0];
     const kinds = kk[2];
-    const bad = sp.bad === "1";
-    // Асуудалтай байж болзошгүй гүйлгээ: шалгах шалтгаантай нь
-    const problems = await sql`
-      SELECT * FROM (
-        SELECT r.created_at AS at, 'Төлбөр ' || r.code AS what, r.user_id AS uid, r.amount::bigint AS amount,
-               'Шилжүүлэг 48 цагаас дээш баталгаажаагүй' AS reason
-          FROM payment_requests r WHERE r.status = 'pending' AND r.created_at < now() - interval '48 hours'
-        UNION ALL
-        SELECT r.decided_at, 'Төлбөр ' || r.code, r.user_id, r.amount,
-               'Шимтгэл ' || to_char(f.delta, 'FM999,999,999') || '₮, дүнгийн 5%-аас их'
-          FROM payment_requests r JOIN money_ledger f ON f.account = 'out' AND f.kind = 'fee' AND f.ref_id = r.id
-          WHERE r.status = 'confirmed' AND f.delta > r.amount * 0.05
-        UNION ALL
-        SELECT r.created_at, 'Урамшуулал ' || r.code, r.user_id, r.amount, 'Өөрөө өөртөө урамшуулал илгээсэн'
-          FROM payment_requests r WHERE r.kind = 'tip' AND r.writer_id = r.user_id AND r.status <> 'cancelled'
-        UNION ALL
-        SELECT MAX(r.created_at), 'Урамшуулал ×' || COUNT(*), r.user_id, SUM(r.amount),
-               'Нэг хүн нэг бичээчид нэг өдөр ' || COUNT(*) || ' удаа урамшуулал илгээсэн'
-          FROM payment_requests r WHERE r.kind = 'tip' AND r.status <> 'cancelled'
-          GROUP BY r.user_id, r.writer_id, (r.created_at AT TIME ZONE 'Asia/Ulaanbaatar')::date HAVING COUNT(*) >= 3
-        UNION ALL
-        SELECT r.created_at, 'Төлбөр ' || r.code, r.user_id, r.amount, 'Их дүн (1 сая ₮-өөс дээш), шалгах'
-          FROM payment_requests r WHERE r.amount >= ${BIG} AND r.status <> 'cancelled'
-        UNION ALL
-        SELECT w.created_at, 'Татах хүсэлт', w.user_id, w.amount,
-               CASE WHEN w.amount > (SELECT COALESCE(SUM(delta), 0) FROM money_ledger WHERE account = 'wallet' AND user_id = w.user_id)
-                    THEN 'Хэтэвчийн үлдэгдэл хүрэлцэхгүй' ELSE 'Татах хүсэлт 72 цагаас дээш хүлээгдэж байна' END
-          FROM withdrawals w WHERE w.status = 'pending'
-            AND (w.created_at < now() - interval '72 hours'
-              OR w.amount > (SELECT COALESCE(SUM(delta), 0) FROM money_ledger WHERE account = 'wallet' AND user_id = w.user_id))
-        UNION ALL
-        SELECT MAX(m.created_at), 'Хэтэвч', m.user_id, SUM(m.delta), 'Хэтэвчийн үлдэгдэл хасах дүнтэй'
-          FROM money_ledger m WHERE m.account = 'wallet' GROUP BY m.user_id HAVING SUM(m.delta) < 0
-        UNION ALL
-        SELECT b.decided_at, 'Асуултын шагнал', b.user_id, b.amount, 'Асуугч өөрийн хариултад шагнал олгосон'
-          FROM bounties b WHERE b.status = 'awarded' AND b.winner_id = b.user_id
-      ) x LEFT JOIN users u ON u.id = x.uid ORDER BY x.at DESC NULLS LAST LIMIT 200`;
     const rows = bad ? [] : await sql`
       SELECT m.id, m.account, m.kind, m.delta, m.note, m.anonymous, m.ref_id, m.created_at, m.user_id,
              u.initial, u.first_name, u.email, r.code
@@ -253,9 +265,7 @@ export default async function Finance({ searchParams }) {
           <span className="ss-grow" />
           {!bad && <Pick label="Төрөл" options={TX_KINDS.map(([k, l]) => ({ href: link({ k }), label: l, on: kk[0] === k }))} />}
           {!bad && <Pick label="Эрэмбэ" options={SORTS.map(([k, l]) => ({ href: link({ s: k }), label: l, on: sort === k }))} />}
-          <a href={link({ bad: bad ? "" : "1" })} className={"adm-btn" + (bad ? " dark" : problems.length ? " danger" : "")}>
-            {bad ? "← Бүх гүйлгээ" : <>⚠ Асуудалтай гүйлгээ {problems.length > 0 && <em className="adm-count">{problems.length}</em>}</>}
-          </a>
+          {bad && <a href={link({ bad: "" })} className="adm-btn">Бүх гүйлгээ</a>}
         </div>
         {bad ? (
           <>
@@ -371,7 +381,7 @@ export default async function Finance({ searchParams }) {
     <>
       <Head user={user} title="Санхүү"
         tools={<Pick label="Хугацаа" options={RANGES.map(([k, l]) => ({ href: link({ r: k }), label: l, on: range === k }))} />}
-        sub={sup ? <>Төлбөр баталгаажуулах, бичээчид шилжүүлэх, зардал бүртгэх. Нийтэд: <Link href="/san">/san</Link></> : "Зөвхөн харах. Санхүүгийн үйлдлийг супер админ хийнэ"} />
+        sub={sup ? <>Төлбөр баталгаажуулах, бичээчид шилжүүлэх, зардал бүртгэх. Нийтэд: <Link href="/san">/san</Link></> : null} />
       <Flash ok={sp.ok} error={sp.error} />
       <div className="adm-stats fit">
         <Stat label="Шагналын сан" value={fmtMnt(pool)} note={`${periodLabel(period)} · одоогийн үлдэгдэл`} />
@@ -391,7 +401,24 @@ export default async function Finance({ searchParams }) {
           <div className="tot"><span>Нийт орлого</span><b>{fmtMnt(income)}</b><small>Банкны шимтгэл {fmtMnt(inc.pay_fees)} хассаны дараах дүн</small></div>
         </div>
       </section>
-      <Tabs tabs={tabs} cur={tab} href={(k) => (k ? `/admin/finance?t=${k}` : "/admin/finance")} />
+      {sup && (
+        <div className="adm-grid2">
+          <section className="adm-card">
+            <div className="adm-card-head"><b>Орлогын өсөлт</b><small className="adm-muted">сүүлийн 12 сар</small></div>
+            <GrowthChart data={growthRows} bar="income" line="total" barLabel="сарын орлого (₮)" lineLabel="нийт хуримтлагдсан" />
+          </section>
+          <section className="adm-card">
+            <div className="adm-card-head"><b>Дэмжигчдийн орлого</b><small className="adm-muted">сүүлийн 12 сар</small></div>
+            <GrowthChart data={growthRows} bar="premium" barLabel="дэмжигчийн хураамж (₮)" barColor="#ff9500" />
+          </section>
+        </div>
+      )}
+      <div className="fin-tabs">
+        <Tabs tabs={tabs} cur={bad ? "-" : tab} href={(k) => (k ? `/admin/finance?t=${k}` : "/admin/finance")} />
+        <a href="/admin/finance?t=tx&bad=1" className={"adm-btn" + (bad ? " dark" : problems.length ? " danger" : "")}>
+          ⚠ Асуудалтай гүйлгээ <em className="adm-count">{problems.length}</em>
+        </a>
+      </div>
       {body}
     </>
   );
