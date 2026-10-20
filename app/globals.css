@@ -3687,3 +3687,17 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
   .pf-foot .pf-grow { display: none; }
 }
 .pf-photo .pf-pts { align-self: flex-start; }
+/* Зураг оруулсны дараа хэмжээний тайлбар хэрэггүй */
+.pf-photo:has(.ii.has) .pf-size { display: none; }
+/* Профайл: «зураг жижиг» сануулга нүүр зургийн ард дарагдахгүй */
+.pf-coverwrap .ii-note, .pf-coverwrap .ii-err {
+  position: absolute; bottom: 10px; right: 12px; z-index: 3; max-width: min(60%, 360px); margin: 0; font-size: 11.5px;
+  padding: 5px 10px; border-radius: 10px; background: rgba(255, 255, 255, .94); box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+:root[data-theme="dark"] .pf-coverwrap .ii-note, :root[data-theme="dark"] .pf-coverwrap .ii-err { background: rgba(20, 32, 40, .92); }
+.pf-photo .ii-avatar .ii-note, .pf-photo .ii-avatar .ii-err { position: absolute; top: calc(100% + 40px); left: 0; width: min(340px, 75vw); max-width: none; margin: 0; }
+.pf-photo:has(.ii-avatar .ii-note, .ii-avatar .ii-err) { margin-bottom: 84px; }
+@media (max-width: 760px) {
+  .pf-photo { margin-top: -30px; }
+  .pf-coverwrap .ii-note, .pf-coverwrap .ii-err { bottom: 6px; right: 6px; font-size: 10.5px; padding: 3px 8px; }
+}
