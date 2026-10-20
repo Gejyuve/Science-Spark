@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
 import { AGREEMENT_TITLE, AGREEMENT_VERSION, AGREEMENT_DATE, agreementSections } from "@/lib/agreement";
+import { WRITING_TITLE, writingRules, ruleText } from "@/lib/writing";
+import { ARTICLE_LEVEL, NEWS_LEVEL } from "@/lib/levels";
 import Shell from "../components/Shell";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,7 @@ export default async function Terms() {
   // getUser нь Тохиргооны утгуудыг (шимтгэл, доод дүн) ачаална
   try { user = await getUser(); } catch (e) {}
   const sections = agreementSections({ poolShare: POOL_SHARE, tipFee: TIP_FEE, withdrawMin: WITHDRAW_MIN, incomeTax: INCOME_TAX });
+  const annex = writingRules({ articleLevel: ARTICLE_LEVEL, newsLevel: NEWS_LEVEL });
 
   return (
     <Shell user={user} active="/help" header={false}>
@@ -37,6 +40,7 @@ export default async function Terms() {
           <ol>
             {sections.map(([id, title]) => <li key={id}><a href={`#${id}`}>{title}</a></li>)}
           </ol>
+          <p className="tm-toc-annex"><a href="#writing">Хавсралт. {WRITING_TITLE}</a></p>
         </nav>
 
         {sections.map(([id, title, items], i) => (
@@ -49,6 +53,19 @@ export default async function Terms() {
         ))}
 
         <p className="tm-end">--- Гэрээний төгсгөл ---</p>
+
+        <section id="writing" className="tm-annex">
+          <h2>Хавсралт. {WRITING_TITLE}</h2>
+          {annex.map(([id, title, items], i) => (
+            <div key={id} id={id}>
+              <h3>Х{i + 1}. {title}</h3>
+              {clauses(`Х${i + 1}`, items).map((c) => (
+                <p key={c.no + c.text} className={c.sub ? "tm-sub" : ""}><span>{c.no}</span>{ruleText(c.text)}</p>
+              ))}
+            </div>
+          ))}
+        </section>
+        <p className="tm-end">--- Хавсралтын төгсгөл ---</p>
         <p className="tm-meta">Асуулт байвал <Link href="/help#send">Тусламж</Link> хуудсаар хандана уу.</p>
       </article>
     </Shell>

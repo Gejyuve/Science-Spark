@@ -1,6 +1,7 @@
 import TopNav from "./TopNav";
 import WriteForm from "./WriteForm";
 import { plainTree } from "@/lib/tree";
+import { writeLevel } from "@/lib/levels";
 
 // Figma: Нийтлэл бичих. Шинэ болон засах хуудсанд хоёуланд нь ашиглана.
 export default function PostForm({ action, post = {}, error, extra, heading = "Мэдлэг бол хуваалцах тусам арвижих баялаг юм.", kinds, locked, submit, draftKey, panel }) {
@@ -10,7 +11,7 @@ export default function PostForm({ action, post = {}, error, extra, heading = "�
       <span className="au-blob b" aria-hidden="true" />
       <TopNav className="wr-nav" />
 
-      <WriteForm action={action} post={post} tree={plainTree()} error={error} extra={extra} heading={heading} kinds={kinds} locked={locked} submit={submit} draftKey={draftKey} panel={panel} />
+      <WriteForm action={action} post={post} tree={plainTree()} error={error} extra={extra} heading={heading} kinds={kinds} locked={locked || { Нийтлэл: writeLevel("Нийтлэл"), Мэдээ: writeLevel("Мэдээ") }} submit={submit} draftKey={draftKey} panel={panel} />
       <div className="wr-mobile">
         <img src="/icons/logo.svg" width={56} height={56} alt="" />
         <b>Бичих самбар зөвхөн компьютерээс ажиллана</b>

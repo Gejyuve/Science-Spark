@@ -3285,6 +3285,17 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .ed-form .btn { align-self: flex-end; }
 .wr-foot .ed-note { flex: 1 1 320px; max-width: 460px; }
+
+/* Бичих самбарын доорх «Нийтлэл, мэдээ бичих дүрэм» */
+.wr-rules .wr-sec-head p a { color: #00a89b; font-weight: 600; white-space: nowrap; }
+.wr-rule { border-top: 1px solid var(--border); }
+.wr-rule summary { padding: 12px 2px; font-size: 15px; font-weight: 700; color: var(--ink); cursor: pointer; list-style-position: inside; }
+.wr-rule summary:hover { color: #00a89b; }
+.wr-rule p { margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: var(--ink); }
+.wr-rule p > span { display: inline-block; min-width: 40px; font-weight: 700; color: var(--muted); }
+.wr-rule p.sub { padding-left: 40px; }
+.wr-rule p.sub > span { min-width: 20px; font-weight: 500; }
+.wr-rule[open] { padding-bottom: 8px; }
 .ar-chain { display: flex; flex-direction: column; gap: 10px; }
 .rv-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .rv-hist > li { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; border-bottom: 1px solid var(--border); }
@@ -3745,6 +3756,11 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 .tm-toc ol { margin: 6px 0 0; padding-left: 24px; columns: 2; column-gap: 32px; }
 .tm-toc li { break-inside: avoid; }
 .tm-end { margin-top: 28px !important; text-align: center; color: #444; }
+.tm-toc-annex { margin: 8px 0 0; }
+.tm-annex h3 { margin: 20px 0 8px; font-size: 15.5px; font-weight: 700; text-align: left; }
+.tm-annex > div { scroll-margin-top: 80px; }
+.tm-annex p > span { min-width: 54px; }
+.tm-doc .tm-annex p.tm-sub { padding-left: 54px; }
 .pf-terms-more { align-self: flex-start; color: #00a89b; font-weight: 600; font-size: 13.5px; }
 [data-theme="dark"] .tm-doc { background: #fff; color: #111; }
 @media (max-width: 720px) {
