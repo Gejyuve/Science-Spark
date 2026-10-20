@@ -669,7 +669,7 @@ export default async function PostPage({ params, searchParams }) {
               {canEdit && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && !club && !isAuthor && (
-                <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Шагнал</>}
+                <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Урамшуулах</>}
                   writer={{ id: post.author_id, name: `${post.initial}.${post.first_name}` }} postId={post.id} {...supportModalProps(user)} />
               )}
               <span className="ar-right">

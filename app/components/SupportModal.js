@@ -7,9 +7,8 @@ import { startSupport } from "../san/actions";
 import QpayBox from "./QpayBox";
 
 const fmt = (n) => `${Math.round(Number(n || 0)).toLocaleString("en-US")}₮`;
-const AMOUNTS = [5000, 10000, 20000, 50000];
-// Бичээчийг урамшуулах дүн: аяга кофе, ном, пуужин
-const TIP_AMOUNTS = [[5000, "☕"], [20000, "📖"], [100000, "🚀"]];
+// Урамшуулал, хандив, цэнэглэлтийн дүн бүх цонхонд ижил: аяга кофе, ном, пуужин
+const AMOUNTS = [[5000, "☕"], [20000, "📖"], [100000, "🚀"]];
 // Баярын цацраг: өнгө, байрлал, хоцролт
 const BITS = Array.from({ length: 18 }, (_, i) => ({ c: ["#37c3b3", "#ffb547", "#ff7aa8", "#7fd6ff", "#9be15d"][i % 5], x: (i * 37) % 100, d: (i % 6) * 0.35, s: 6 + (i % 4) * 2 }));
 
@@ -25,7 +24,7 @@ function Confetti({ burst }) {
 export default function SupportModal({ kind, label, className = "", loggedIn, premium, plans, perks, bank, min, max, poolShare, writer, postId, autoOpen = false }) {
   const [open, setOpen] = useState(autoOpen);
   const [mounted, setMounted] = useState(false);
-  const [amount, setAmount] = useState(kind === "tip" ? 20000 : 10000);
+  const [amount, setAmount] = useState(20000);
   const [custom, setCustom] = useState("");
   const [months, setMonths] = useState(plans?.[0]?.months || 1);
   const [copied, setCopied] = useState(false);
@@ -132,8 +131,8 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
               </>
             ) : (
               <>
-                <div className={"san-amounts" + (isTip ? " tip" : "")}>
-                  {(isTip ? TIP_AMOUNTS : AMOUNTS.map((a) => [a])).map(([a, ic]) => (
+                <div className="san-amounts tip">
+                  {AMOUNTS.map(([a, ic]) => (
                     <label key={a} className="san-amt">
                       <input type="radio" name="amount" value={a} checked={!custom && amount === a} onChange={() => { setAmount(a); setCustom(""); }} />
                       <span>{ic && <i aria-hidden="true">{ic}</i>}{fmt(a)}</span>
