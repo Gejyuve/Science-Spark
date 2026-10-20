@@ -72,10 +72,10 @@ function Sidebar({ user, active }) {
           <span className="emoji">🔥💯</span>
           <span>Төслүүд</span>
         </span>
-        <span className="ss-nav-item soon" title="Тун удахгүй">
+        <Link href="/help" className={"ss-nav-item" + (active === "/help" ? " on" : "")}>
           {I("help", 22)}
           <span>Тусламж</span>
-        </span>
+        </Link>
       </nav>
       <StaffNav user={user} active={active} />
       <div className="ss-grow" />

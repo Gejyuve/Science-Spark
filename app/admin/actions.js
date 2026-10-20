@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { requireSection, audit, WARN_LIMIT } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
+import { HELP_LABEL } from "@/lib/help";
 
 const safe = (f) => (/^\/admin(\/|\?|$)/.test(f) ? f : "/admin");
 const back = (path, msg, ok) => redirect(`${path}${path.includes("?") ? "&" : "?"}${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
@@ -174,18 +175,22 @@ export async function moderatePost(formData) {
 export async function decideLogic(formData) {
   const me = await requireSection("logic");
   const from = safe(String(formData.get("from") || "/admin/logic"));
-  const id = Number(formData.get("id"));
+  // «id» нэртэй талбар form.id-г дарж, React дарсан товчны op утгыг алддаг тул «rid» гэж нэрлэнэ
+  const id = Number(formData.get("rid"));
   const op = String(formData.get("op"));
   const note = String(formData.get("note") || "").trim().slice(0, 300) || null;
   if (!Number.isInteger(id) || !["resolved", "dismissed"].includes(op)) back(from, "Буруу хүсэлт");
   const [r] = await sql`UPDATE logic_reports SET status = ${op}, note = ${note}, resolved_by = ${me.id}, resolved_at = now()
                         WHERE id = ${id} AND status = 'open' RETURNING user_id, post_id, type`;
   if (!r) back(from, "Энэ мэдэгдэл шийдвэрлэгдсэн байна");
-  const err = r.type === "error";
-  const label = err ? "Логик алдааны мэдэгдэл" : r.type === "defense" ? "Сануулгын хариу" : "Бичээчийн гомдол";
-  const verdict = op === "resolved" ? (err ? "засагдсан" : "хүлээн авсан") : (err ? "алдаа биш" : "үндэслэлгүй");
+  const err = r.type === "error" || r.type === "bug";
+  const help = HELP_LABEL[r.type];
+  const label = help ? `Тусламж: ${help}` : err ? "Логик алдааны мэдэгдэл" : r.type === "defense" ? "Сануулгын хариу" : "Бичээчийн гомдол";
+  const verdict = op === "resolved" ? (err ? "засагдсан" : "хүлээн авсан") : (err ? "алдаа биш" : r.type === "idea" ? "татгалзсан" : "үндэслэлгүй");
   await audit({ actorId: me.id, category: "content", action: `${label}: ${verdict}${note ? ` (${note})` : ""}`, targetType: r.post_id ? "post" : "user", targetId: r.post_id || r.user_id });
-  await notify({ userId: r.user_id, kind: err ? (op === "resolved" ? "logic_ok" : "logic_no") : (op === "resolved" ? "complaint_ok" : "complaint_no"), actorId: me.id, postId: r.post_id, note });
+  const kind = help ? (op === "resolved" ? "help_ok" : "help_no") : err ? (op === "resolved" ? "logic_ok" : "logic_no") : (op === "resolved" ? "complaint_ok" : "complaint_no");
+  await notify({ userId: r.user_id, kind, actorId: me.id, postId: r.post_id, note });
+  revalidatePath("/help");
   revalidatePath("/admin", "layout");
   back(from, "Шийдвэрлэлээ", true);
 }
