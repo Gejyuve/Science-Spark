@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
 import { listPosts, kindCount } from "@/lib/archive";
 import Shell from "./Shell";
+import PageHero from "./PageHero";
 import { ArchiveRow } from "./Cards";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
@@ -24,11 +25,7 @@ export default async function ArchivePage({ kind, path, title, sub, sp }) {
   };
   return (
     <Shell user={user} header="nav">
-      <section className="ct-hero big">
-        <h1>{title}</h1>
-        <p>{sub}</p>
-        <i className="tl-star a" aria-hidden="true" /><i className="tl-star b" aria-hidden="true" /><i className="tl-star c" aria-hidden="true" />
-      </section>
+      <PageHero tone={kind === "Мэдээ" ? "news" : "article"} title={title} text={sub} />
       <div className="ct-tools">
         <small>{fmt(total)} {kind.toLowerCase()}</small>
         <span className="ss-grow" />

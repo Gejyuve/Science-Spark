@@ -3,12 +3,13 @@ import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
 import { listTasks, taskTypes, leaderClub, taskCount, reportCount } from "@/lib/tasks";
 import Shell from "../components/Shell";
+import PageHero from "../components/PageHero";
 import TaskCard, { ClubTabs } from "../components/TaskCard";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Даалгавар · Science Spark" };
 
-// Клубүүдын хуваалцсан туршилт, эвент, воркшопын санаанууд
+// Клубүүдийн хуваалцсан туршилт, эвент, воркшопын санаанууд
 export default async function Tasks({ searchParams }) {
   const sp = await searchParams;
   const type = typeof sp.t === "string" && sp.t.length <= 40 ? sp.t : null;
@@ -25,14 +26,9 @@ export default async function Tasks({ searchParams }) {
     <Shell user={user} active="/clubs" header={false}>
       <div className="tk-page">
         <ClubTabs on="tasks" counts={counts} />
-        <section className="tk-hero">
-          <div>
-            <h1>Даалгавар</h1>
-            <p>Клубүүдын хуваалцсан туршилт, эвент, воркшопын санаа. Клубтэйгээ хийж үзээд, өөрсдийн санаагаа нэмээрэй.</p>
-          </div>
-          <span className="ss-grow" />
-          <Link href={user ? "/tasks/new" : "/login"} className="cl-new">+ Даалгавар нэмэх</Link>
-        </section>
+        <PageHero tone="task" title="Даалгавар" text="Клубүүдийн хуваалцсан туршилт, эвент, воркшопын санаа. Клубтэйгээ хийж үзээд, өөрсдийн санаагаа нэмээрэй.">
+          <Link href={user ? "/tasks/new" : "/login"} className="ph-btn solid">+ Даалгавар нэмэх</Link>
+        </PageHero>
         <nav className="tk-filter" aria-label="Төрөл">
           <Link href={href(null)} className={!type ? "on" : ""} scroll={false}>Бүгд</Link>
           {types.map((t) => <Link key={t} href={href(t)} className={type === t ? "on" : ""} scroll={false}>{t}</Link>)}

@@ -3,12 +3,13 @@ import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
 import { listReports, leaderClub, taskCount, reportCount } from "@/lib/tasks";
 import Shell from "../components/Shell";
+import PageHero from "../components/PageHero";
 import { ReportCard, ClubTabs } from "../components/TaskCard";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Тайлан · Science Spark" };
 
-// Клубүүдын биелүүлсэн даалгаврын тайлангууд
+// Клубүүдийн биелүүлсэн даалгаврын тайлангууд
 export default async function Reports() {
   let user = null, reports = [], club = null, counts = {};
   try {
@@ -22,14 +23,9 @@ export default async function Reports() {
     <Shell user={user} active="/clubs" header={false}>
       <div className="tk-page">
         <ClubTabs on="reports" counts={counts} />
-        <section className="tk-hero">
-          <div>
-            <h1>Тайлан</h1>
-            <p>Клубүүд даалгаврыг хэрхэн биелүүлж, юу олж мэдсэнээ хуваалцдаг. Тайлан бүр редакцаар батлагдаж нийтлэгдэнэ.</p>
-          </div>
-          <span className="ss-grow" />
-          {club && <Link href="/reports/new" className="cl-new">+ Тайлан нэмэх</Link>}
-        </section>
+        <PageHero tone="report" title="Тайлан" text="Клубүүд даалгаврыг хэрхэн биелүүлж, юу олж мэдсэнээ хуваалцдаг. Тайлан бүр редакцаар батлагдаж нийтлэгдэнэ.">
+          {club && <Link href="/reports/new" className="ph-btn solid">+ Тайлан нэмэх</Link>}
+        </PageHero>
         {reports.length ? (
           <div className="tk-grid">{reports.map((r) => <ReportCard key={r.id} r={r} />)}</div>
         ) : (
