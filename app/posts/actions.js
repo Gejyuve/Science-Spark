@@ -15,7 +15,7 @@ import { cleanSources, bodyRule } from "@/lib/md";
 import { walletBalance, fmtMnt } from "@/lib/money";
 import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, refundStatement } from "@/lib/bounty";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
-import { leaderClub, CLUB_KINDS } from "@/lib/tasks";
+import { leaderClub, leaderOrg, CLUB_KINDS } from "@/lib/tasks";
 import { recordRevision, addCredit } from "@/lib/revisions";
 import { celebrate, firstReward, hadFirst, FIRST_KEYS, FIRST_REWARD } from "@/lib/celebrate";
 
@@ -474,12 +474,16 @@ export async function quickPost(formData) {
   if (latinShare(body) > LATIN_LIMIT || (meta.register && latinShare(meta.register) > LATIN_LIMIT)) fail(LATIN_MSG);
   await ensureSchema();
   if (kind === "Эвент") meta.program = await ownImage(user.id, formData.get("program"));
-  // Клубийн удирдагч бодрол, эвент, зарлалыг клубийнхээ нэрээр хуваалцаж болно
+  // Клубийн удирдагч, байгууллагын админ бодрол, эвент, зарлалыг клуб, байгууллагынхаа нэрээр хуваалцаж болно
   let clubId = null;
   if (formData.get("as_club") && kind !== "Асуулт") {
     const club = await leaderClub(user.id);
     if (!club) fail("Клубийн нэрээр зөвхөн клубийн удирдагч хуваалцана");
     clubId = club.id;
+  } else if (formData.get("as_org") && kind !== "Асуулт") {
+    const org = await leaderOrg(user.id);
+    if (!org) fail("Байгууллагын нэрээр зөвхөн байгууллагын админ хуваалцана");
+    clubId = org.id;
   }
   const imageId = kind === "Асуулт" ? null : await ownImage(user.id, formData.get("image"));
   // Эвент, зарлалд ковер зураг заавал

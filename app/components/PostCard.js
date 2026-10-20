@@ -24,7 +24,7 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
   const isClubKind = p.kind === "Даалгавар" || p.kind === "Тайлан";
   const plainBody = isClubKind && p.subtitle ? p.subtitle : ["Нийтлэл", "Мэдээ", "Даалгавар", "Тайлан"].includes(p.kind) ? strip(p.body).replace(/\s+/g, " ").trim() : p.body;
   // Клубийн нэрээр нийтэлсэн контент: клуб харагдана, өөрийн клубийн гишүүд оч өгөхгүй
-  const club = p.club_id && p.club_name ? { id: p.club_id, name: p.club_name, logo: p.club_logo, followers: p.club_followers, points: p.club_points } : null;
+  const club = p.club_id && p.club_name ? { id: p.club_id, kind: p.club_kind, name: p.club_name, logo: p.club_logo, followers: p.club_followers, points: p.club_points } : null;
   const excerpt = plainBody.length > 320 ? plainBody.slice(0, 320) + "…" : plainBody;
   // Нийтлэгдээгүй контент: оч, сэтгэгдэлгүй — төлөв ба дараагийн алхам
   const ST = { pending: ["Редакцын хяналтад", "wait"], rejected: ["Засвар хийхээр буцаасан", "bad"], removed: ["Нуугдсан", "bad"], draft: ["Ноорог", "wait"] };

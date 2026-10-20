@@ -363,7 +363,7 @@ export default async function PostPage({ params, searchParams }) {
            (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
            (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers,
-           cl.name AS club_name, cl.logo_id AS club_logo,
+           cl.name AS club_name, cl.logo_id AS club_logo, cl.kind AS club_kind,
            (SELECT COUNT(*) FROM club_follows f WHERE f.club_id = cl.id)::int AS club_followers,
            (COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = cl.id), 0)
             + COALESCE((SELECT SUM(k.delta) FROM club_points k WHERE k.club_id = cl.id), 0))::int AS club_points
@@ -460,7 +460,7 @@ export default async function PostPage({ params, searchParams }) {
   const srcList = rich && Array.isArray(post.meta?.sources) ? post.meta.sources : [];
   const heads = rich ? outline(post.body) : [];
   const cover = rich ? post.meta?.cover : null;
-  const club = post.club_id ? { id: post.club_id, name: post.club_name, logo: post.club_logo, followers: post.club_followers, points: post.club_points } : null;
+  const club = post.club_id ? { id: post.club_id, kind: post.club_kind, name: post.club_name, logo: post.club_logo, followers: post.club_followers, points: post.club_points } : null;
   const clubFollows = club ? await clubFollowSet(user) : null;
   // Өөрийн клубийн даалгаварт оч өгөхгүй
   const ownClub = !!club && !!user && (await sql`SELECT 1 FROM club_members WHERE club_id = ${club.id} AND user_id = ${user.id}`).length > 0;

@@ -4,7 +4,8 @@ import ThemeToggle from "./ThemeToggle";
 import ProfileAction from "./ProfileAction";
 import { DrawerHost, DrawerClose } from "./Drawer";
 import Composer from "./Composer";
-import { leaderClub } from "@/lib/tasks";
+import { actingAs } from "@/lib/acting";
+import { switchAs } from "../clubs/actions";
 import TopNav, { NavRow } from "./TopNav";
 import { logout } from "../auth/actions";
 import { markAllRead } from "../posts/actions";
@@ -83,17 +84,17 @@ function Sidebar({ user, active }) {
   );
 }
 
-async function Header({ user, compact, compose, composeError, active }) {
+async function Header({ user, compact, compose, composeError, active, acting }) {
   // Асуултад шагнал тавихад хэтэвчний үлдэгдлийг харуулна
   const wallet = user && !compact ? await walletBalance(user.id).catch(() => 0) : 0;
-  // Клубийн удирдагч бичих самбараас клубийнхээ нэрээр даалгавар, тайлан нэмж, хуваалцана
-  const club = user && !compact ? await leaderClub(user.id).catch(() => null) : null;
+  // Баруун цэсээр клуб, байгууллагын хаяг руу шилжсэн бол бичих самбар тэдний нэрээр нийтэлнэ
+  const ent = acting?.entity;
   const write = (kind) => (user ? `/write${kind ? `?kind=${encodeURIComponent(kind)}` : ""}` : "/login");
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
       <NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} />
       {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} wallet={wallet}
-        club={club ? { name: club.name } : null} clubAv={club ? <ClubAv c={club} size={32} /> : null} />}
+        as={acting?.as || null} club={ent ? { name: ent.name } : null} clubAv={ent ? <ClubAv c={ent} size={32} /> : null} />}
     </header>
   );
 }
@@ -116,7 +117,33 @@ async function railLists() {
   return railCache.data;
 }
 
-async function RightRail({ user }) {
+// Удирддаг клуб, байгууллагын хаяг руу шилжих товч (баруун цэс)
+function AsSwitch({ user, acting }) {
+  const { club, org, as, entity } = acting;
+  if (!club && !org) return null;
+  const go = (to, body, cls = "") => (
+    <form action={switchAs} key={to}>
+      <input type="hidden" name="to" value={to} />
+      <button type="submit" className={"ss-action ss-as-btn" + cls}>{body}</button>
+    </form>
+  );
+  return (
+    <div className="ss-as-box">
+      {entity && (
+        <p className="ss-as-now">
+          <ClubAv c={entity} size={22} />
+          <span><b>{entity.name}</b><small>{as === "org" ? "Байгууллагын" : "Клубийн"} нэрээр бичиж байна</small></span>
+        </p>
+      )}
+      {entity && go("me", <><Avatar user={user} size={22} /><span><b>{displayName(user)}</b><small>Өөрийн хаяг руу буцах</small></span>{I("arrow", 14)}</>)}
+      {[["club", club], ["org", org]].filter(([k, c]) => c && k !== as).map(([k, c]) =>
+        go(k, <><ClubAv c={c} size={22} /><span><b>{c.name}</b><small>{k === "org" ? "Байгууллагын" : "Клубийн"} хаяг руу шилжих</small></span>{I("arrow", 14)}</>)
+      )}
+    </div>
+  );
+}
+
+async function RightRail({ user, acting }) {
   const none = (v) => () => v;
   // Бие биеэсээ хамааралгүй асуулгуудыг зэрэг явуулна
   const [lists, following, clubFollows, followers, unread, notifs, chat] = await Promise.all([
@@ -148,6 +175,7 @@ async function RightRail({ user }) {
             </div>
           </Link>
           <div className="ss-actions">
+            <AsSwitch user={user} acting={acting} />
             <ProfileAction id={user.id} />
             <NotifMenu trigger={<>{I("bell", 18)}<span>Мэдэгдэл</span>{unread > 0 && <em className="ss-badge red">{unread}</em>}{I("arrow", 14)}</>}>
               <div className="nf-head">
@@ -217,12 +245,13 @@ export default async function Shell({ user, active, children, header = true, com
       </section>
     );
   }
+  const acting = await actingAs(user);
   return (
     <div className="ss-shell">
       <Sidebar user={user} active={active} />
       <main className="ss-main">
         {header === true ? (
-          <Header user={user} compose={compose} composeError={composeError} active={active} />
+          <Header user={user} compose={compose} composeError={composeError} active={active} acting={acting} />
         ) : (
           <header className="ss-header compact static"><NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} /></header>
         )}
@@ -230,7 +259,7 @@ export default async function Shell({ user, active, children, header = true, com
         {site.maintenance && isStaff(user) && <p className="ss-announce warn">Засвар үйлчилгээний горим асаалттай: зөвхөн редакц сайтыг харж байна.</p>}
         {children}
       </main>
-      <RightRail user={user} />
+      <RightRail user={user} acting={acting} />
       <DrawerHost />
     </div>
   );

@@ -23,11 +23,12 @@ export function ClubFollow({ id, viewer, followed }) {
 // Клубийн нэр + оч · дагагч + дагах товч (Figma «Club info»)
 export function ClubPerson({ c, viewer, follows, size = 40, points }) {
   const followed = !!follows?.has(c.id);
+  const href = `/${c.kind === "org" ? "org" : "club"}/${c.id}`;
   return (
     <div className="ss-person">
-      <Link href={`/club/${c.id}`} className="ss-person-av"><ClubAv c={c} size={size} /></Link>
+      <Link href={href} className="ss-person-av"><ClubAv c={c} size={size} /></Link>
       <div>
-        <Link href={`/club/${c.id}`} className="ss-person-name"><b>{c.name}</b></Link>
+        <Link href={href} className="ss-person-name"><b>{c.name}</b></Link>
         <span className="ss-statrow">
           <span className="ss-stat">
             <Link href="/och" className="ss-stat-och" title="Очны учир"><img src="/icons/spark.svg" width={16} height={16} alt="" /><span>{fmtK(points ?? c.points)}</span></Link>

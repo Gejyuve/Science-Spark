@@ -47,7 +47,7 @@ export default async function Home({ searchParams }) {
         GROUP BY s.post_id
       )
       SELECT p.id, p.author_id, p.kind, p.title, p.subtitle, p.body, p.meta, p.image_id, p.views, p.created_at, p.category, u.initial, u.first_name, u.avatar_id AS avatar,
-        p.club_id, cl.name AS club_name, cl.logo_id AS club_logo,
+        p.club_id, cl.name AS club_name, cl.logo_id AS club_logo, cl.kind AS club_kind,
         CASE WHEN p.club_id IS NOT NULL THEN (SELECT COUNT(*) FROM club_follows cf WHERE cf.club_id = p.club_id)::int END AS club_followers,
         CASE WHEN p.club_id IS NOT NULL THEN (COALESCE((SELECT SUM(l.delta) FROM points_ledger l JOIN club_members m ON m.user_id = l.user_id WHERE m.club_id = p.club_id), 0)
           + COALESCE((SELECT SUM(k.delta) FROM club_points k WHERE k.club_id = p.club_id), 0))::int END AS club_points,

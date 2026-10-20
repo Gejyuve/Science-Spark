@@ -9,6 +9,9 @@ import { ownImage, cleanPos } from "@/lib/images";
 import { SOCIALS, countWords } from "@/lib/profile";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 import { resolveLocation, inMongolia } from "@/lib/geo";
+import { cookies } from "next/headers";
+import { AS_COOKIE } from "@/lib/acting";
+import { leaderClub, leaderOrg } from "@/lib/tasks";
 import { BOARD_MAX, JOIN_REWARD, REASON_WORDS, membershipOf, cooldownOf, rewardBalance, hadFirstReward, ymd } from "@/lib/clubs";
 
 const txt = (fd, k, n) => String(fd.get(k) || "").trim().replace(/[ \t]+/g, " ").slice(0, n);
@@ -185,6 +188,18 @@ export async function updateEntity(prev, fd) {
   }
   revalidatePath("/", "layout");
   redirect(`/${cur.kind === "org" ? "org" : "club"}/${id}`);
+}
+
+// Баруун цэсний товч: өөрийн хаяг, удирддаг клуб эсвэл байгууллагын хаяг руу шилжинэ
+export async function switchAs(fd) {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  const to = String(fd.get("to") || "");
+  const jar = await cookies();
+  const ok = (to === "club" && (await leaderClub(user.id))) || (to === "org" && (await leaderOrg(user.id)));
+  if (ok) jar.set(AS_COOKIE, to, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  else jar.delete(AS_COOKIE);
+  revalidatePath("/", "layout");
 }
 
 export async function toggleClubFollow(fd) {
