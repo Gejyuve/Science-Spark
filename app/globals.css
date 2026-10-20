@@ -2538,6 +2538,9 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cp-btn.sm { padding: 7px 16px; font-size: 13px; }
 .cp-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 18px 28px 0; padding: 12px 16px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; }
 .cp-note > span { flex: 1; min-width: 220px; }
+.cp-lead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); font-size: 13px; color: var(--ink); }
+.cp-lead > span { flex: 1 1 200px; }
+.cp-lead .pf-select { flex: 1 1 180px; min-width: 160px; }
 .cp-note.ok { background: #e6f7f5; color: #00796f; }
 .cp-note.warn { background: #fff6e0; color: #8a5a00; }
 .cp-note.bad { background: #fdecec; color: #c2303a; }

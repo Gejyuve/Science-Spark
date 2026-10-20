@@ -361,3 +361,53 @@ export async function removeMember(fd) {
   revalidatePath("/", "layout");
   redirect(`/club/${club}?tab=members`);
 }
+
+// Удирдагчийн эрх шилжүүлэх санал. Хүлээн авагч зөвшөөрөхөд л шилжинэ (Клубүүдийн код)
+export async function offerLead(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  const target = Number(fd.get("user_id"));
+  const [c] = await sql`SELECT id, name, leader_id FROM clubs WHERE id = ${club} AND kind = 'club' AND status = 'active'`;
+  if (!c || c.leader_id !== user.id) redirect(`/club/${club}`);
+  const [m] = await sql`SELECT 1 FROM club_members WHERE club_id = ${club} AND user_id = ${target} AND role <> 'leader'`;
+  if (!m) redirect(`/club/${club}?err=${encodeURIComponent("Клубийнхаа гишүүнийг сонгоно уу")}`);
+  await sql`UPDATE clubs SET lead_offer_to = ${target} WHERE id = ${club}`;
+  await notify({ userId: target, kind: "club_lead_offer", actorId: user.id, note: c.name, clubId: club });
+  revalidatePath(`/club/${club}`);
+  redirect(`/club/${club}?lead=sent`);
+}
+
+export async function cancelLeadOffer(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  await sql`UPDATE clubs SET lead_offer_to = NULL WHERE id = ${club} AND leader_id = ${user.id}`;
+  revalidatePath(`/club/${club}`);
+  redirect(`/club/${club}`);
+}
+
+export async function acceptLead(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  if (user.restricted_at) redirect(`/club/${club}?err=${encodeURIComponent("Таны эрх хязгаарлагдсан тул удирдагч болох боломжгүй")}`);
+  const [m] = await sql`SELECT 1 FROM club_members WHERE club_id = ${club} AND user_id = ${user.id}`;
+  const [c] = await sql`SELECT id, name, leader_id FROM clubs WHERE id = ${club} AND status = 'active' AND lead_offer_to = ${user.id}`;
+  if (!m || !c) redirect(`/club/${club}`);
+  const [done] = await sql`UPDATE clubs SET leader_id = ${user.id}, lead_offer_to = NULL, updated_at = now()
+    WHERE id = ${club} AND lead_offer_to = ${user.id} AND leader_id IS NOT DISTINCT FROM ${c.leader_id} RETURNING id`;
+  if (!done) redirect(`/club/${club}`);
+  if (c.leader_id) await sql`UPDATE club_members SET role = 'board' WHERE club_id = ${club} AND user_id = ${c.leader_id}`;
+  await sql`UPDATE club_members SET role = 'leader' WHERE club_id = ${club} AND user_id = ${user.id}`;
+  await sql`DELETE FROM club_invites WHERE club_id = ${club} AND user_id = ${user.id}`;
+  if (c.leader_id) await notify({ userId: c.leader_id, kind: "club_lead_ok", actorId: user.id, note: c.name, clubId: club });
+  revalidatePath("/", "layout");
+  redirect(`/club/${club}?lead=ok`);
+}
+
+export async function declineLead(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  const [c] = await sql`UPDATE clubs SET lead_offer_to = NULL WHERE id = ${club} AND lead_offer_to = ${user.id} RETURNING leader_id, name`;
+  if (c?.leader_id) await notify({ userId: c.leader_id, kind: "club_lead_no", actorId: user.id, note: c.name, clubId: club });
+  revalidatePath(`/club/${club}`);
+  redirect(`/club/${club}`);
+}

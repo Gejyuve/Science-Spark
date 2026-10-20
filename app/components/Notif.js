@@ -15,7 +15,7 @@ const ICON = {
   help_ok: ["help", "ok"], help_no: ["help", "gray"],
   welcome: ["pts", "ok"], pw_changed: ["shield", "warn"],
 };
-const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "task_new", "task_done", "help_new"];
+const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "club_lead_offer", "club_lead_ok", "club_lead_no", "task_new", "task_done", "help_new"];
 
 // Улаанбаатарын өдрөөр бүлэглэнэ: Шинэ (уншаагүй) · Өнөөдөр · Өчигдөр · Энэ долоо хоног · Өмнө
 function groupOf(n) {
