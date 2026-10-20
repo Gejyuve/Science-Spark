@@ -8,6 +8,7 @@ import { ownImage } from "@/lib/images";
 import { cleanSources, bodyRule } from "@/lib/md";
 import { latinShare, LATIN_LIMIT } from "@/lib/format";
 import { TASK_KIND, REPORT_KIND, TYPE_MAX, TYPE_LEN, leaderClub } from "@/lib/tasks";
+import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { TASK_APPROVE_REWARD } from "@/lib/tasks-shared";
 import { celebrate } from "@/lib/celebrate";
 
@@ -74,6 +75,7 @@ export async function createReport(fd) {
   await ensureSchema();
   const club = await leaderClub(user.id);
   if (!club) fail("Тайланг зөвхөн клубийн удирдагч клубийнхээ нэрээр нэмнэ");
+  if (club.club_type !== TASK_CLUB_TYPE) fail("Даалгавар биелүүлж оч авах эрх зөвхөн ЕБС-ийн клубт байна (Клубүүдийн код)");
   if (!taskId) fail("Биелүүлсэн даалгавраа сонгоно уу");
   const [task] = await sql`SELECT id FROM posts WHERE id = ${taskId} AND kind = ${TASK_KIND} AND status = 'published'`;
   if (!task) fail("Сонгосон даалгавар олдсонгүй");

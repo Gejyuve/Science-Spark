@@ -11,7 +11,7 @@ import { chatUnread } from "@/lib/chat";
 import { listTasks, listReports } from "@/lib/tasks";
 import TaskCard, { ReportCard } from "../../components/TaskCard";
 import ScrollActive from "../../components/ScrollActive";
-import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest } from "../../clubs/actions";
+import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest, offerLead, cancelLeadOffer, acceptLead, declineLead } from "../../clubs/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +70,7 @@ export default async function ClubPage({ params, searchParams }) {
   const leader = members.find((m) => m.role === "leader");
   const board = members.filter((m) => m.role === "board");
   const rest = members.filter((m) => m.role === "member");
+  const offerTo = c.lead_offer_to ? members.find((m) => m.id === c.lead_offer_to) : null;
   const mine = user ? await membershipOf(user.id) : null;
   const isMember = mine?.club_id === id;
   const invited = user && !isMember ? (await sql`SELECT role FROM club_invites WHERE club_id = ${id} AND user_id = ${user.id}`)[0] : null;
@@ -96,6 +97,7 @@ export default async function ClubPage({ params, searchParams }) {
     ["i_home", "Хот", [c.city, c.country].filter(Boolean).join(", ")],
     ["i_mail", "И-мэйл", c.email && <a href={`mailto:${c.email}`}>{c.email}</a>],
     ["f_phone", "Утас", c.phone && <a href={`tel:${c.phone.replace(/\s/g, "")}`}>{c.phone}</a>],
+    ["f_tag", "Төрөл", c.club_type],
     ["f_tag", "Ангилал", c.category],
     ["f_globe", "Вэбсайт", c.website && <a href={c.website} target="_blank" rel="noopener nofollow">{c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}</a>],
   ].filter((x) => x[2]);
@@ -137,6 +139,14 @@ export default async function ClubPage({ params, searchParams }) {
             </div>
           </div>
 
+          {user && c.lead_offer_to === user.id && isMember && (
+            <div className="cp-note ok">
+              <span>Клубийн удирдагч таныг <b>шинэ удирдагч</b> болгох санал илгээлээ. Зөвшөөрвөл клубийн нэрээр нийтлэх, гишүүн элсүүлэх, тайлан илгээх эрх танд шилжинэ.</span>
+              <form action={acceptLead}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm">Зөвшөөрөх</button></form>
+              <form action={declineLead}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm ghost">Татгалзах</button></form>
+            </div>
+          )}
+          {sp.lead === "ok" && isLeader && <p className="cp-note ok"><span>🎉 Та «{c.name}» клубийн шинэ удирдагч боллоо. <Link href="/clubs/code#lead">Клубүүдийн код</Link>-оо дахин нэг харчихаарай.</span></p>}
           {invited && (
             <div className="cp-note ok">
               <span>Таныг энэ клубийн <b>удирдах зөвлөлд</b> урьсан байна.</span>
@@ -186,6 +196,23 @@ export default async function ClubPage({ params, searchParams }) {
             <div className="cp-sec">
               <h3>Удирдагч <small>(Админ эрхтэй)</small></h3>
               <Member m={leader} viewer={user} following={following} />
+              {isLeader && (offerTo ? (
+                <div className="cp-lead">
+                  <span>«<b>{offerTo.initial}.{offerTo.first_name}</b>»-д удирдагчийн эрх шилжүүлэх санал илгээсэн. Зөвшөөрмөгц эрх шилжиж, та удирдах зөвлөлийн гишүүн болно.</span>
+                  <form action={cancelLeadOffer}><input type="hidden" name="club_id" value={id} /><button type="submit" className="cp-btn sm ghost">Цуцлах</button></form>
+                </div>
+              ) : [...board, ...rest].length > 0 && (
+                <form action={offerLead} className="cp-lead">
+                  <input type="hidden" name="club_id" value={id} />
+                  <span>Шинэ удирдагч сонгогдсон уу?</span>
+                  <div className="pf-select"><select name="user_id" required defaultValue="">
+                    <option value="" disabled>Гишүүн сонгох</option>
+                    {board.map((m) => <option key={m.id} value={m.id}>{m.initial}.{m.first_name} · зөвлөл</option>)}
+                    {rest.map((m) => <option key={m.id} value={m.id}>{m.initial}.{m.first_name}</option>)}
+                  </select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
+                  <button type="submit" className="cp-btn sm">Удирдагчийн эрх шилжүүлэх</button>
+                </form>
+              ))}
             </div>
           )}
           <div className="cp-sec">

@@ -6,6 +6,7 @@ import WriteSteps from "./WriteSteps";
 import CatTools from "./CatTools";
 import ImageInput from "./ImageInput";
 import CategoryPicker from "./CategoryPicker";
+import WritingRules from "./WritingRules";
 
 const KINDS = ["Нийтлэл", "Мэдээ"];
 const FIELDS = ["title", "subtitle", "kind", "category", "body", "sources", "image", "cover_source", "cover_url"];
@@ -155,6 +156,8 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
           <img src="/icons/arrowr.svg" width={19} height={19} alt="" />
         </button>
       </section>
+
+      <WritingRules articleLevel={locked.Нийтлэл} newsLevel={locked.Мэдээ} />
     </form>
     <aside className="wr-side right">
       {savedAt && <p className="wo-saved">✓ Ноорог хадгалагдсан · {t(savedAt)}</p>}

@@ -7,7 +7,7 @@ import MiniMap from "./MiniMap";
 import { createClub, createOrg, updateEntity } from "../clubs/actions";
 import { parseLocation, inMongolia } from "@/lib/geo";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
-import { CLUB_CATEGORIES, ORG_TYPES, BOARD_MAX } from "@/lib/clubs-shared";
+import { CLUB_CATEGORIES, ORG_TYPES, BOARD_MAX, BOARD_MIN, CLUB_TYPES, TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { COUNTRIES, MN_CITIES, SOCIALS, countWords } from "@/lib/profile";
 import { useDraft, hhmm } from "@/lib/useDraft";
 
@@ -119,6 +119,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
   const [address, setAddress] = useState(e.address || "");
   const [about, setAbout] = useState(e.about || "");
   const [rules, setRules] = useState(e.rules || "");
+  const [ctype, setCtype] = useState(e.club_type || "");
   const [loc, setLoc] = useState(e._loc ?? (e.lat != null ? `${e.lat}, ${e.lng}` : ""));
   const [country, setCountry] = useState(e.country || "Монгол");
   const [filled, setFilled] = useState(0);
@@ -130,7 +131,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
 
   // Бөглөсөн хувь (Figma: дээд талын 0–100%)
   const KEYS = org ? ["logo", "cover", "name", "category", "fy", "about", "city", "address", "field", "website", "email", "phone"]
-    : ["logo", "cover", "name", "category", "fy", "city", "address", "location", "about", "rules", "website", "email", "phone"];
+    : ["logo", "cover", "name", "club_type", "category", "fy", "city", "address", "location", "about", "rules", "website", "email", "phone"];
   const recount = () => {
     if (!form.current) return;
     const fd = new FormData(form.current);
@@ -182,6 +183,17 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
         <p className="pf-sub">Заавал талбарыг бөглөснөөр бүртгэл баталгаажна</p>
         <Label required>{L} нэр</Label>
         <div className="pf-input"><input name="name" required minLength={2} maxLength={30} value={name} onChange={(ev) => setName(ev.target.value)} placeholder={org ? "Жишээ: Сансар судлалын хүрээлэн" : "Жишээ: Сансрын судлаачид"} {...msg(`${L} нэрээ бичнэ үү`)} /><span>{name.length} / 30</span></div>
+
+        {!org && (
+          <>
+            <Label required>Клубийн төрөл</Label>
+            <div className="pf-select"><select name="club_type" required value={ctype} onChange={(ev) => setCtype(ev.target.value)} {...msg("Клубийн төрлөө сонгоно уу")}>
+              <option value="">Төрөл сонгох</option>
+              {CLUB_TYPES.map((t) => <option key={t} value={t}>{t === TASK_CLUB_TYPE ? "ЕБС (ерөнхий боловсролын сургууль)" : t}</option>)}
+            </select><img src="/icons/chev16.svg" width={16} height={16} alt="" /></div>
+            <small className="cf-hint pf-hint">Даалгавар биелүүлж оч авах эрх зөвхөн ЕБС-ийн клубт байна. <Link href="/clubs/code#types" target="_blank">Клубүүдийн код ↗</Link></small>
+          </>
+        )}
 
         <Label required>{org ? "Байгууллагын төрөл" : "Клубийн ангилал"}</Label>
         <PickOrWrite name="category" options={org ? ORG_TYPES : CLUB_CATEGORIES} initial={e.category || ""} placeholder={org ? "Төрөл сонгох" : "Ангилал сонгох"} required reqMsg={org ? "Төрлөө сонгоно уу" : "Ангиллаа сонгоно уу"} />
@@ -299,7 +311,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
       {!org && (
         <section className="pf-card">
           <h2>Удирдах зөвлөл</h2>
-          <p className="pf-sub">Хамгийн ихдээ {BOARD_MAX} гишүүн. Нэмсэн хүмүүст урилга очих бөгөөд зөвшөөрвөл зөвлөлд орно.</p>
+          <p className="pf-sub">{ctype === TASK_CLUB_TYPE && !entity ? `Дор хаяж ${BOARD_MIN}, хамгийн ихдээ ${BOARD_MAX} гишүүн.` : `Хамгийн ихдээ ${BOARD_MAX} гишүүн.`} Нэмсэн хүмүүст урилга очих бөгөөд зөвшөөрвөл зөвлөлд орно.</p>
           <Board initial={e._board || board} />
         </section>
       )}
@@ -310,7 +322,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
         ) : (
           <label className="pf-agree">
             <input type="checkbox" name="agree" required {...msg("Нөхцөлийг зөвшөөрнө үү")} />
-            <span>{L} бүртгэлийн нөхцөлийг зөвшөөрөх</span>
+            <span>{org ? `${L} бүртгэлийн нөхцөлийг зөвшөөрөх` : <><Link href="/clubs/code" target="_blank">Клубүүдийн код</Link>-ыг уншиж, зөвшөөрч байна</>}</span>
           </label>
         )}
         <span className="pf-grow" />
@@ -326,7 +338,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
 function fromDraft(e, d) {
   if (!d) return e;
   const x = { ...e };
-  for (const k of ["name", "category", "country", "city", "address", "about", "rules", "field", "website", "email", "phone"]) if (k in d) x[k] = d[k];
+  for (const k of ["name", "club_type", "category", "country", "city", "address", "about", "rules", "field", "website", "email", "phone"]) if (k in d) x[k] = d[k];
   x.socials = { ...(e.socials || {}) };
   for (const s of SOCIALS) if (`s_${s.key}` in d) x.socials[s.key] = d[`s_${s.key}`];
   if ("fy" in d) { x._fy = d.fy; x._fm = d.fm; x._fd = d.fd; }

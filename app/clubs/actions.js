@@ -12,7 +12,8 @@ import { resolveLocation, inMongolia } from "@/lib/geo";
 import { cookies } from "next/headers";
 import { AS_COOKIE } from "@/lib/acting";
 import { leaderClub, leaderOrg } from "@/lib/tasks";
-import { BOARD_MAX, JOIN_REWARD, REASON_WORDS, membershipOf, cooldownOf, rewardBalance, hadFirstReward, ymd } from "@/lib/clubs";
+import { CLUB_CODE_VERSION } from "@/lib/clubCode";
+import { BOARD_MAX, BOARD_MIN, CLUB_TYPES, TASK_CLUB_TYPE, JOIN_REWARD, REASON_WORDS, membershipOf, cooldownOf, rewardBalance, hadFirstReward, ymd } from "@/lib/clubs";
 
 const txt = (fd, k, n) => String(fd.get(k) || "").trim().replace(/[ \t]+/g, " ").slice(0, n);
 const withScheme = (v) => (!v || /^https?:\/\//i.test(v) ? v : "https://" + v.replace(/^\/+/, ""));
@@ -30,11 +31,13 @@ async function readEntity(fd, user, kind, current = null) {
   v.address = String(fd.get("address") || "").trim().slice(0, 1000) || null;
   v.about = String(fd.get("about") || "").trim().slice(0, 1500);
   v.rules = kind === "club" ? String(fd.get("rules") || "").trim().slice(0, 1000) || null : null;
+  v.clubType = kind === "club" ? txt(fd, "club_type", 30) : null;
   v.website = withScheme(txt(fd, "website", 200)) || null;
   v.email = txt(fd, "email", 120) || null;
   v.phone = txt(fd, "phone", 30) || null;
   if (v.name.length < 2) return { error: `${L} нэрээ бичнэ үү.` };
   if (!v.category) return { error: kind === "org" ? "Байгууллагын төрлөө сонгоно уу." : "Клубийн ангиллаа сонгоно уу." };
+  if (kind === "club" && !CLUB_TYPES.includes(v.clubType)) return { error: "Клубийн төрлөө сонгоно уу." };
   if (!v.city) return { error: `${L} хот, аймгаа сонгоно уу.` };
   if (!v.about) return { error: `${kind === "org" ? "Байгууллагынхаа" : "Клубийнхаа"} тухай бичнэ үү.` };
   if (kind === "org") {
@@ -114,17 +117,20 @@ export async function createClub(prev, fd) {
   if (user.restricted_at) return { error: "Таны эрх хязгаарлагдсан тул клуб бүртгүүлэх боломжгүй." };
   const mine = await membershipOf(user.id);
   if (mine) return { error: `Та «${mine.name}» клубийн гишүүн байна. Шинэ клуб бүртгүүлэхийн тулд эхлээд тэр клубээсээ гарна уу.` };
-  if (!fd.get("agree")) return { error: "Клубийн бүртгэлийн нөхцөлийг зөвшөөрнө үү." };
+  if (!fd.get("agree")) return { error: "Клубүүдийн кодыг уншиж, зөвшөөрнө үү." };
   const r = await readEntity(fd, user, "club");
   if (r.error) return r;
   const v = r.v;
+  const board = idList(fd, "board").filter((x) => x !== user.id).slice(0, BOARD_MAX);
+  if (v.clubType === TASK_CLUB_TYPE && board.length < BOARD_MIN) return { error: `Удирдах зөвлөлд дор хаяж ${BOARD_MIN} гишүүн урина уу.` };
   let id;
   try {
     const [c] = await sql`
       INSERT INTO clubs (kind, name, logo_id, cover_id, cover_src, cover_pos, category, founded, country, city, address, lat, lng,
-        about, rules, website, email, phone, socials, leader_id)
+        about, rules, website, email, phone, socials, leader_id, club_type, code_version)
       VALUES ('club', ${v.name}, ${v.logo}, ${v.cover}, ${v.coverSrc}, ${v.coverPos}, ${v.category}, ${v.founded}, ${v.country}, ${v.city}, ${v.address},
-        ${v.lat}, ${v.lng}, ${v.about}, ${v.rules}, ${v.website}, ${v.email}, ${v.phone}, ${JSON.stringify(v.socials)}::jsonb, ${user.id})
+        ${v.lat}, ${v.lng}, ${v.about}, ${v.rules}, ${v.website}, ${v.email}, ${v.phone}, ${JSON.stringify(v.socials)}::jsonb, ${user.id},
+        ${v.clubType}, ${CLUB_CODE_VERSION})
       RETURNING id`;
     id = c.id;
   } catch (e) {
@@ -133,7 +139,7 @@ export async function createClub(prev, fd) {
   await sql`DELETE FROM club_requests WHERE user_id = ${user.id}`;
   await sql`INSERT INTO club_members (user_id, club_id, role) VALUES (${user.id}, ${id}, 'leader') ON CONFLICT (user_id) DO NOTHING`;
   if (!(await hadFirstReward(user.id))) await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${user.id}, ${JOIN_REWARD}, 'club:first')`;
-  await inviteBoard(id, v.name, idList(fd, "board").filter((x) => x !== user.id).slice(0, BOARD_MAX), user);
+  await inviteBoard(id, v.name, board, user);
   revalidatePath("/", "layout");
   redirect(`/club/${id}`);
 }
@@ -176,7 +182,7 @@ export async function updateEntity(prev, fd) {
   await sql`UPDATE clubs SET name = ${v.name}, logo_id = ${v.logo}, cover_id = ${v.cover}, cover_src = ${v.coverSrc}, cover_pos = ${v.coverPos},
       category = ${v.category}, field = ${v.field}, founded = ${v.founded}, country = ${v.country}, city = ${v.city}, address = ${v.address},
       lat = ${v.lat}, lng = ${v.lng}, about = ${v.about}, rules = ${v.rules}, website = ${v.website}, email = ${v.email}, phone = ${v.phone},
-      socials = ${JSON.stringify(v.socials)}::jsonb, updated_at = now()
+      socials = ${JSON.stringify(v.socials)}::jsonb, club_type = COALESCE(${v.clubType}, club_type), updated_at = now()
     WHERE id = ${id}`;
   if (cur.kind === "club") {
     // Зөвлөл: хассан гишүүд энгийн гишүүн болно, шинээр нэмсэнд урилга очно
@@ -354,4 +360,54 @@ export async function removeMember(fd) {
   if (gone.length) await notify({ userId: target, kind: "club_removed", actorId: user.id, note: c.name, clubId: club });
   revalidatePath("/", "layout");
   redirect(`/club/${club}?tab=members`);
+}
+
+// Удирдагчийн эрх шилжүүлэх санал. Хүлээн авагч зөвшөөрөхөд л шилжинэ (Клубүүдийн код)
+export async function offerLead(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  const target = Number(fd.get("user_id"));
+  const [c] = await sql`SELECT id, name, leader_id FROM clubs WHERE id = ${club} AND kind = 'club' AND status = 'active'`;
+  if (!c || c.leader_id !== user.id) redirect(`/club/${club}`);
+  const [m] = await sql`SELECT 1 FROM club_members WHERE club_id = ${club} AND user_id = ${target} AND role <> 'leader'`;
+  if (!m) redirect(`/club/${club}?err=${encodeURIComponent("Клубийнхаа гишүүнийг сонгоно уу")}`);
+  await sql`UPDATE clubs SET lead_offer_to = ${target} WHERE id = ${club}`;
+  await notify({ userId: target, kind: "club_lead_offer", actorId: user.id, note: c.name, clubId: club });
+  revalidatePath(`/club/${club}`);
+  redirect(`/club/${club}?lead=sent`);
+}
+
+export async function cancelLeadOffer(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  await sql`UPDATE clubs SET lead_offer_to = NULL WHERE id = ${club} AND leader_id = ${user.id}`;
+  revalidatePath(`/club/${club}`);
+  redirect(`/club/${club}`);
+}
+
+export async function acceptLead(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  if (user.restricted_at) redirect(`/club/${club}?err=${encodeURIComponent("Таны эрх хязгаарлагдсан тул удирдагч болох боломжгүй")}`);
+  const [m] = await sql`SELECT 1 FROM club_members WHERE club_id = ${club} AND user_id = ${user.id}`;
+  const [c] = await sql`SELECT id, name, leader_id FROM clubs WHERE id = ${club} AND status = 'active' AND lead_offer_to = ${user.id}`;
+  if (!m || !c) redirect(`/club/${club}`);
+  const [done] = await sql`UPDATE clubs SET leader_id = ${user.id}, lead_offer_to = NULL, updated_at = now()
+    WHERE id = ${club} AND lead_offer_to = ${user.id} AND leader_id IS NOT DISTINCT FROM ${c.leader_id} RETURNING id`;
+  if (!done) redirect(`/club/${club}`);
+  if (c.leader_id) await sql`UPDATE club_members SET role = 'board' WHERE club_id = ${club} AND user_id = ${c.leader_id}`;
+  await sql`UPDATE club_members SET role = 'leader' WHERE club_id = ${club} AND user_id = ${user.id}`;
+  await sql`DELETE FROM club_invites WHERE club_id = ${club} AND user_id = ${user.id}`;
+  if (c.leader_id) await notify({ userId: c.leader_id, kind: "club_lead_ok", actorId: user.id, note: c.name, clubId: club });
+  revalidatePath("/", "layout");
+  redirect(`/club/${club}?lead=ok`);
+}
+
+export async function declineLead(fd) {
+  const user = await guard();
+  const club = Number(fd.get("club_id"));
+  const [c] = await sql`UPDATE clubs SET lead_offer_to = NULL WHERE id = ${club} AND lead_offer_to = ${user.id} RETURNING leader_id, name`;
+  if (c?.leader_id) await notify({ userId: c.leader_id, kind: "club_lead_no", actorId: user.id, note: c.name, clubId: club });
+  revalidatePath(`/club/${club}`);
+  redirect(`/club/${club}`);
 }
