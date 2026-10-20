@@ -240,6 +240,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
         <Select name="origin_view" options={OPTIONS.origin_view} value={p.origin_view} placeholder="Сонгоно уу" />
         <Label k="belief" on={earned.belief}>Итгэл үнэмшил</Label>
         <Select name="belief" options={OPTIONS.belief} value={p.belief} placeholder="Сонгоно уу" />
+        <small className="cf-hint">Бурхан, дээд хүчин байдагт хэр итгэдгээ бүрэн итгэгчээс бүрэн үгүйсгэгч хүртэлх шатлалаас сонгоно (Ричард Докинзын шатлал).</small>
         <Label k="religion" on={earned.religion}>Шашин</Label>
         <Select name="religion" options={OPTIONS.religion} value={p.religion} placeholder="Сонгоно уу" />
         <Label k="politics" on={earned.politics}>Улс төрийн үзэл</Label>
