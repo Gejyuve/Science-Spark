@@ -30,6 +30,7 @@ export async function updateSettings(f) {
     approveNews: int(f, "approveNews"),
     poolShare: int(f, "poolShare"),
     tipFee: int(f, "tipFee"),
+    qpayFee: Number(String(f.get("qpayFee") ?? "").replace(",", ".")),
     withdrawMin: int(f, "withdrawMin"),
     plans: [0, 1, 2].map((i) => int(f, `plan${i}`)),
     bankInfo: String(f.get("bankInfo") || "").trim().slice(0, 500),
@@ -42,6 +43,8 @@ export async function updateSettings(f) {
   if (![s.articleLevel, s.newsLevel, s.wordLevel].every((v) => inRange(v, 0, LEVELS.length - 1))) back(`Эрхийн түвшин 0–${LEVELS.length - 1} хооронд байна`);
   if (!inRange(s.approveArticle, 0, 1000) || !inRange(s.approveNews, 0, 1000)) back("Батлагдсаны урамшуулал 0–1000 оч");
   if (!inRange(s.poolShare, 0, 100) || !inRange(s.tipFee, 0, 50)) back("Сангийн хувь 0–100%, шимтгэл 0–50% байна");
+  if (!(Number.isFinite(s.qpayFee) && s.qpayFee >= 0 && s.qpayFee <= 10)) back("QPay-ийн шимтгэл 0–10% байна");
+  s.qpayFee = Math.round(s.qpayFee * 10) / 10;
   if (!inRange(s.withdrawMin, 1000, 10000000)) back("Татах доод дүн 1,000–10,000,000₮");
   if (!s.plans.every((v) => inRange(v, 100, 10000000))) back("Дэмжигчийн үнэ 100₮-аас дээш байна");
 

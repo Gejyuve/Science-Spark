@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, needsName } from "@/lib/auth";
 import { audit } from "@/lib/admin";
+import { ensureInvoice, cancelInvoice } from "@/lib/payments";
 import { PREMIUM_PLANS, DONATION_MIN, DONATION_MAX, WITHDRAW_MIN, payCode, walletBalance, fmtMnt } from "@/lib/money";
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
@@ -66,17 +67,24 @@ async function supportUser() {
   return user;
 }
 
-// Дэмжих цонх: хуудаснаас гаралгүй дүн, кодыг буцаана
+// Дэмжих цонх: хуудаснаас гаралгүй дүн, кодыг буцаана. QPay холбогдсон бол QR, банкны апп-ын холбоос нэмнэ.
 export async function startSupport(prev, formData) {
   const user = await supportUser();
-  return { ...(await makeRequest(user, formData)), at: Date.now() };
+  const res = await makeRequest(user, formData);
+  if (res.code) {
+    const [req] = await sql`SELECT * FROM payment_requests WHERE code = ${res.code}`;
+    res.qpay = await ensureInvoice(req);
+  }
+  return { ...res, at: Date.now() };
 }
 
 export async function cancelSupport(formData) {
   const user = await getUser();
   if (!user) redirect("/login");
   const code = String(formData.get("code") || "");
-  await sql`UPDATE payment_requests SET status = 'cancelled', decided_at = now() WHERE code = ${code} AND user_id = ${user.id} AND status = 'pending'`;
+  const [r] = await sql`UPDATE payment_requests SET status = 'cancelled', decided_at = now()
+                        WHERE code = ${code} AND user_id = ${user.id} AND status = 'pending' RETURNING qpay_invoice`;
+  if (r?.qpay_invoice) await cancelInvoice(r.qpay_invoice);
   revalidatePath("/wallet");
   go("/wallet", "ok", "Хүсэлтийг цуцаллаа");
 }

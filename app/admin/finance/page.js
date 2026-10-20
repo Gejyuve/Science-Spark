@@ -2,8 +2,9 @@ import Link from "next/link";
 import { sql } from "@/lib/db";
 import { requireSection, maskIp } from "@/lib/admin";
 import { poolBalance, fmtMnt, KIND_LABEL, ACCOUNT_LABEL, EXPENSE_KINDS, REQUEST_KIND, PAYMENT_FEE, INCOME_TAX, bankInfo } from "@/lib/money";
+import { qpayOn } from "@/lib/qpay";
 import { currentPeriod, prevPeriod, periodLabel, monthBoard, splitPrizes } from "@/lib/spark";
-import { confirmPayment, cancelPayment, addExpense, payWithdrawal, rejectWithdrawal, closeMonth } from "./actions";
+import { confirmPayment, cancelPayment, checkQpayPayment, addExpense, payWithdrawal, rejectWithdrawal, closeMonth } from "./actions";
 import Head, { Stat, Flash, Tabs, Chip, who, Pick } from "../_c/Head";
 import { GrowthChart } from "../_c/Charts";
 
@@ -135,7 +136,7 @@ export default async function Finance({ searchParams }) {
     body = (
       <section className="adm-card flush">
         <div className="adm-card-head pad"><b>Шилжүүлэг хүлээж буй</b></div>
-        <p className="adm-muted small pad">Банкны хуулгаас гүйлгээний утга дахь кодыг олж, ирсэн дүнг шалгаад баталгаажуулна. Шимтгэлийг бодит дүнгээр засна.{!bankInfo() && " ⚠ Vercel дээр PAY_BANK_INFO тохируулаагүй байна."}</p>
+        <p className="adm-muted small pad">Банкны хуулгаас гүйлгээний утга дахь кодыг олж, ирсэн дүнг шалгаад баталгаажуулна. Шимтгэлийг бодит дүнгээр засна.{!bankInfo() && " ⚠ Vercel дээр PAY_BANK_INFO тохируулаагүй байна."} {qpayOn() ? "QPay-ээр төлсөн хүсэлт автоматаар баталгаажна." : "QPay тохируулаагүй байна (QPAY_USERNAME, QPAY_PASSWORD, QPAY_INVOICE_CODE)."}</p>
         {rows.length === 0 ? <p className="adm-empty">Хүлээгдэж буй төлбөр алга.</p> : (
           <table className="adm-table">
             <thead><tr><th>Код</th><th>Хэрэглэгч</th><th>Төрөл</th><th>Дүн</th><th>Хэзээ</th>{sup && <th className="adm-right">Үйлдэл</th>}</tr></thead>
@@ -144,7 +145,7 @@ export default async function Finance({ searchParams }) {
                 <tr key={r.id}>
                   <td className="adm-strong adm-mono">{r.code}</td>
                   <td><Link href={`/u/${r.user_id}`}>{who(r)}</Link></td>
-                  <td>{REQUEST_KIND[r.kind]}{r.months ? ` · ${r.months} сар` : ""}{r.kind === "tip" && ` → ${r.w_initial}.${r.w_first_name}`}{r.anonymous && <Chip tone="gray">нууц</Chip>}</td>
+                  <td>{REQUEST_KIND[r.kind]}{r.months ? ` · ${r.months} сар` : ""}{r.kind === "tip" && ` → ${r.w_initial}.${r.w_first_name}`}{r.anonymous && <Chip tone="gray">нууц</Chip>}{r.qpay_invoice && <Chip tone="gray">QPay</Chip>}</td>
                   <td className="adm-mono">{fmtMnt(r.amount)}</td>
                   <td className="adm-mono">{fmtT(r.created_at)}</td>
                   {sup && <td className="adm-right">
@@ -154,6 +155,7 @@ export default async function Finance({ searchParams }) {
                         <input name="fee" type="number" min={0} className="adm-num" defaultValue={r.kind === "topup" ? 0 : Math.round(r.amount * PAYMENT_FEE)} title="Шимтгэл ₮" />
                         <button className="adm-btn dark">Ирсэн</button>
                       </form>
+                      {r.qpay_invoice && <form action={checkQpayPayment}><input type="hidden" name="id" value={r.id} /><button className="adm-btn">QPay шалгах</button></form>}
                       <form action={cancelPayment}><input type="hidden" name="id" value={r.id} /><button className="adm-btn danger">Цуцлах</button></form>
                     </div>
                   </td>}

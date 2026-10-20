@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { requireSuper, audit } from "@/lib/admin";
 import { notify } from "@/lib/notify";
-import { paymentRows, insertRow, poolBalance, walletBalance, fmtMnt, EXPENSE_KINDS, KIND_LABEL, INCOME_TAX, REQUEST_KIND } from "@/lib/money";
+import { settlePayment, syncQpay, cancelInvoice } from "@/lib/payments";
+import { insertRow, poolBalance, walletBalance, fmtMnt, EXPENSE_KINDS, KIND_LABEL, INCOME_TAX, REQUEST_KIND } from "@/lib/money";
 import { currentPeriod, validPeriod, periodLabel, monthBoard, splitPrizes } from "@/lib/spark";
 
 const back = (msg, ok = false, tab = "") => redirect(`/admin/finance${tab ? `?t=${tab}&` : "?"}${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
@@ -24,30 +25,28 @@ export async function confirmPayment(formData) {
     await sql`UPDATE payment_requests SET status = 'pending', decided_by = NULL, decided_at = NULL WHERE id = ${id}`;
     back("Шимтгэл дүнгээс бага байх ёстой");
   }
-  for (const r of paymentRows(req, fee, me.id)) await insertRow(r);
-  if (req.kind === "premium") {
-    await sql`UPDATE users SET premium_until = GREATEST(COALESCE(premium_until, now()), now()) + make_interval(days => ${30 * req.months})
-              WHERE id = ${req.user_id}`;
-    await notify({ userId: req.user_id, kind: "premium_ok" });
-  } else if (req.kind === "topup") {
-    await notify({ userId: req.user_id, kind: "topup_ok", note: fmtMnt(req.amount - fee) });
-  } else {
-    await notify({ userId: req.user_id, kind: "pay_ok" });
-    if (req.kind === "tip") await notify({ userId: req.writer_id, kind: "tip", actorId: req.anonymous ? null : req.user_id, postId: req.post_id, note: req.message });
-  }
+  await settlePayment(req, fee, me.id);
+  if (req.qpay_invoice) await cancelInvoice(req.qpay_invoice);
   await audit({ actorId: me.id, category: "money", action: `${REQUEST_KIND[req.kind]} баталгаажуулсан ${fmtMnt(req.amount)} (${req.code})`, targetType: "user", targetId: req.user_id });
-  revalidatePath("/san");
-  revalidatePath("/wallet");
-  revalidatePath("/admin/finance");
   back(`${req.code} баталгаажлаа`, true);
+}
+
+// QPay-ээс төлөгдсөн эсэхийг гараар шалгана (callback ирээгүй үед)
+export async function checkQpayPayment(formData) {
+  await requireSuper("finance");
+  const [req] = await sql`SELECT * FROM payment_requests WHERE id = ${Number(formData.get("id"))}`;
+  if (!req?.qpay_invoice) back("QPay нэхэмжлэх алга");
+  const status = await syncQpay(req);
+  back(status === "confirmed" ? `${req.code} QPay-ээр төлөгдсөн, баталгаажлаа` : `${req.code} QPay-ээр хараахан төлөгдөөгүй`, status === "confirmed");
 }
 
 export async function cancelPayment(formData) {
   const me = await requireSuper("finance");
   const id = Number(formData.get("id"));
   const [req] = await sql`UPDATE payment_requests SET status = 'cancelled', decided_by = ${me.id}, decided_at = now()
-                          WHERE id = ${id} AND status = 'pending' RETURNING code, user_id`;
+                          WHERE id = ${id} AND status = 'pending' RETURNING code, user_id, qpay_invoice`;
   if (!req) back("Хүсэлт олдсонгүй");
+  if (req.qpay_invoice) await cancelInvoice(req.qpay_invoice);
   await audit({ actorId: me.id, category: "money", action: `Төлбөрийн хүсэлт цуцалсан (${req.code})`, targetType: "user", targetId: req.user_id });
   await notify({ userId: req.user_id, kind: "pay_no", note: req.code });
   revalidatePath("/admin/finance");

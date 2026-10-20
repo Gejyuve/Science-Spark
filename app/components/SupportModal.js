@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { startSupport } from "../san/actions";
+import QpayBox from "./QpayBox";
 
 const fmt = (n) => `${Math.round(Number(n || 0)).toLocaleString("en-US")}₮`;
 const AMOUNTS = [5000, 10000, 20000, 50000];
@@ -30,6 +31,7 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
   const [copied, setCopied] = useState(false);
   const [state, action, pending] = useActionState(startSupport, null);
   const [shown, setShown] = useState(null); // энэ удаад нээгдэхэд гарсан хариу
+  const [paid, setPaid] = useState(false); // QPay-ээр төлөгдсөн
   useEffect(() => setMounted(true), []);
   useEffect(() => { if (state) setShown(state); }, [state]);
   useEffect(() => {
@@ -45,19 +47,41 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
   const isTip = kind === "tip";
   const isTop = kind === "topup";
   const done = shown?.code ? shown : null;
+  const qp = done?.qpay && !paid ? done.qpay : null; // QPay-ээр төлөхийг хүлээж буй
   const sum = isPrem ? plans.find((p) => p.months === months)?.price : Number(custom.replace(/[^\d]/g, "")) || amount;
-  const close = () => { setOpen(false); setShown(null); setCopied(false); };
+  const close = () => { setOpen(false); setShown(null); setCopied(false); setPaid(false); };
+
+  const steps = done && (
+    <ol className="sm-steps">
+      <li>
+        <span>Гүйлгээний утганд энэ кодыг бичнэ</span>
+        <div className="sm-code">
+          <b>{done.code}</b>
+          <button type="button" className={"sm-copy" + (copied ? " ok" : "")} onClick={async () => {
+            try { await navigator.clipboard.writeText(done.code); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
+          }}>{copied ? "✓ Хуулсан" : "Хуулах"}</button>
+        </div>
+      </li>
+      <li>
+        <span>{fmt(done.amount)}-г шилжүүлнэ</span>
+        {bank ? <em>{bank}</em> : <em>Дансны мэдээлэл удахгүй нэмэгдэнэ. Одоохондоо редакцтай холбогдоно уу.</em>}
+      </li>
+      <li><span>Шилжүүлэг ирмэгц редакц баталгаажуулж, танд мэдэгдэл ирнэ</span></li>
+    </ol>
+  );
 
   const modal = open && (
     <div className="tm-overlay" onMouseDown={(e) => e.target === e.currentTarget && close()}>
       <div className={"sm-modal" + (done ? " done" : "")} role="dialog" aria-modal="true" aria-labelledby="sm-h">
         <div className="sm-hero">
-          <Confetti burst={!!done} />
+          <Confetti burst={!!done && !qp} />
           <button type="button" className="tm-x sm-x" onClick={close} aria-label="Хаах">×</button>
           <span className="sm-ic">{isPrem ? <img src="/icons/bolt.svg" width={34} height={34} alt="" /> : isTip ? <img src="/icons/gift.svg" width={30} height={30} alt="" /> : isTop ? "🏆" : done ? "🎉" : "✦"}</span>
-          <b id="sm-h">{done ? "Баярлалаа!" : isPrem ? (premium ? "Дэмжлэгээ сунгах" : "Шинжлэх ухааны дэмжигч болох") : isTip ? `${writer.name}-г урамшуулах` : isTop ? "Хэтэвч цэнэглэх" : "Шагналын санд хандив өгөх"}</b>
+          <b id="sm-h">{qp ? "Нэг алхам үлдлээ" : done ? "Баярлалаа!" : isPrem ? (premium ? "Дэмжлэгээ сунгах" : "Шинжлэх ухааны дэмжигч болох") : isTip ? `${writer.name}-г урамшуулах` : isTop ? "Хэтэвч цэнэглэх" : "Шагналын санд хандив өгөх"}</b>
           <p>
-            {done
+            {qp ? "QPay-ээр төлмөгц таны дэмжлэг тэр дор нь баталгаажиж, шинжлэх ухааны бичээчдэд хүрнэ."
+              : done && paid ? (isPrem ? "Та шинжлэх ухааны дэмжигчдийн гэр бүлд нэгдлээ. Таны сэтгэл Монголын бичээчдийн дараагийн нийтлэлийг асаана." : isTip ? `Таны урамшуулал ${writer.name}-д хүрлээ. Энэ нь дараагийн бүтээлийг нь асаах урам болно.` : isTop ? "Мөнгө хэтэвчинд тань орлоо. Асуултдаа шагнал тавьж, мэдлэгээ хуваалцсан хүмүүсийг урамшуулаарай." : "Таны хандив шагналын санд орлоо. Ийм хүмүүс байгаа цагт мэдлэг цацарсаар байна.")
+              : done
               ? isPrem ? "Та шинжлэх ухааны дэмжигчдийн гэр бүлд нэгдлээ. Таны сэтгэл Монголын бичээчдийн дараагийн нийтлэлийг асаана." : isTip ? `Таны урамшуулал ${writer.name}-д хүрч, дараагийн бүтээлийг нь асаах урам болно.` : isTop ? "Шилжүүлэг ирмэгц мөнгө хэтэвчинд тань орно. Түүгээр асуултдаа шагнал тавьж, мэдлэгээ хуваалцсан хүмүүсийг урамшуулаарай." : "Таны хандив Монголын шинжлэх ухаан түгээгч бичээчдэд урам болно. Ийм хүмүүс байгаа цагт мэдлэг цацарсаар байна."
               : isTip ? "Таны урамшуулал бичээчийн хэтэвчид орж, цааш бичих урам болно."
               : isTop ? "Хэтэвчиндээ мөнгө хийж, асуултдаа шагнал тавих, хариулсан хүмүүсийг урамшуулахад ашиглана. Таны мөнгө мэдлэг хуваалцдаг хүмүүст очно."
@@ -65,26 +89,20 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
           </p>
         </div>
 
-        {done ? (
+        {done && paid ? (
           <div className="sm-body">
-            <ol className="sm-steps">
-              <li>
-                <span>Гүйлгээний утганд энэ кодыг бичнэ</span>
-                <div className="sm-code">
-                  <b>{done.code}</b>
-                  <button type="button" className={"sm-copy" + (copied ? " ok" : "")} onClick={async () => {
-                    try { await navigator.clipboard.writeText(done.code); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
-                  }}>{copied ? "✓ Хуулсан" : "Хуулах"}</button>
-                </div>
-              </li>
-              <li>
-                <span>{fmt(done.amount)}-г шилжүүлнэ</span>
-                {bank ? <em>{bank}</em> : <em>Дансны мэдээлэл удахгүй нэмэгдэнэ. Одоохондоо редакцтай холбогдоно уу.</em>}
-              </li>
-              <li><span>Шилжүүлэг ирмэгц редакц баталгаажуулж, танд мэдэгдэл ирнэ</span></li>
-            </ol>
+            <p className="qp-wait ok">✓ Төлбөр орж, баталгаажлаа. Танд мэдэгдэл ирнэ.</p>
             <div className="sm-foot">
-              <Link href={`/san/pay/${done.code}`} className="tm-btn">Шилжүүлгийн хуудас</Link>
+              <Link href="/wallet" className="tm-btn">Миний хэтэвч</Link>
+              <button type="button" className="tm-btn ghost" onClick={close}>Хаах</button>
+            </div>
+          </div>
+        ) : done ? (
+          <div className="sm-body">
+            {qp && <QpayBox code={done.code} qpay={qp} onPaid={() => setPaid(true)} />}
+            {qp ? <details className="qp-alt"><summary>Эсвэл дансаар шилжүүлэх</summary>{steps}</details> : steps}
+            <div className="sm-foot">
+              <Link href={`/san/pay/${done.code}`} className="tm-btn">{qp ? "Төлбөрийн хуудас" : "Шилжүүлгийн хуудас"}</Link>
               <button type="button" className="tm-btn ghost" onClick={close}>Хаах</button>
             </div>
           </div>

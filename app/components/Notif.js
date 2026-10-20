@@ -5,7 +5,7 @@ import { Avatar } from "./Bits";
 import { toggleFollow } from "../posts/actions";
 
 const ICON = {
-  tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"], pay_no: ["wallet", "gray"],
+  tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"], pay_no: ["wallet", "gray"], pay_in: ["wallet", "ok"],
   withdraw_ok: ["wallet", "ok"], withdraw_no: ["wallet", "gray"],
   approved: ["f_shield", "ok"], approved_edited: ["f_shield", "ok"], restored: ["f_shield", "ok"],
   rejected: ["logic", "warn"], removed: ["logic", "bad"], comment_removed: ["logic", "bad"],
