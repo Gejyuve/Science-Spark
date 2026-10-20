@@ -73,7 +73,7 @@ export function outSize(aspect, maxW) {
 }
 export const sizeLabel = (aspect, maxW) => {
   const o = outSize(aspect, maxW);
-  return o ? `${o.w}×${o.h} px` : `өргөн нь ${maxW} px хүртэл`;
+  return o ? `${o.w}×${o.h} px` : `өргөн нь ${maxW} px`;
 };
 
 // Сонгосон зураг шаардлагад хэр таарч байгааг хэлнэ
@@ -243,7 +243,7 @@ export default function ImageInput({
         )}
       </div>
       {badge && <button type="button" className="ii-badge" onClick={pick} aria-label="Зураг сонгох">{badge}</button>}
-      {showSize && <small className="ii-size">Сайтад <b>{sizeLabel(aspect, maxW)}</b> хэмжээтэй орно. Ийм харьцаатай, эсвэл үүнээс том зураг оруулбал зөв тайрагдана.</small>}
+      {showSize && <small className="ii-size">Сайтад <b>{sizeLabel(aspect, maxW)}</b> хүртэл хэмжээтэй орно. Илүү гарсан хэсэг тайрагдана.</small>}
       {note && !err && <small className="ii-note">{note}</small>}
       {err && <small className="ii-err">{err}</small>}
     </div>

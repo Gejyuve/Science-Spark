@@ -749,6 +749,8 @@ details.mod summary { cursor: pointer; }
 .cp-split { display: grid; grid-template-columns: 300px 1fr; gap: 14px; align-items: start; }
 .cp-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .cp-row { display: flex; gap: 16px; align-items: center; }
+.cp-row > .ii { flex-shrink: 0; }
+.cp-row > .cp-hint { flex: 1; min-width: 0; }
 .cp-label { font-size: 12.5px; font-weight: 600; color: #485a66; display: flex; align-items: center; gap: 8px; }
 .cp-opt { margin-left: auto; font-style: normal; font-weight: 500; font-size: 11px; color: #708c9e; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; background: var(--surface); }
 .cp-hint { font-size: 11.5px; color: #708c9e; }
