@@ -3492,3 +3492,19 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 :root[data-theme="dark"] .cel-ref.done > small b { color: #ffc48a; }
 :root[data-theme="dark"] .cel-ref-tabs button.on { color: #06221f; }
 @media (prefers-reduced-motion: reduce) { .cel, .cel-rays, .cel-badge, .cel-chip.got, .cel-spark, .cel-lv.up, .cel-bar-new { animation: none; } .cel-confetti { display: none; } }
+
+/* Баруун цэс: «Профайл солих» цонх (өөрийн, клуб, байгууллагын хаяг) */
+.ss-as-cur { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 400; color: #00a89b; }
+.nf-trigger .ss-avatar { flex: none; }
+.nf-pop.as-pop { width: 300px; padding-bottom: 8px; }
+.as-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.as-row:hover { background: var(--surface-2); }
+.as-row.on { background: var(--teal-bg); cursor: default; }
+.as-row .ss-avatar { flex: none; }
+.as-row span { flex: 1; min-width: 0; }
+.as-row b, .as-row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-row b { font-size: 14px; font-weight: 600; }
+.as-row small { font-size: 12px; color: var(--muted); }
+.as-row em { font-style: normal; font-weight: 700; color: #00a89b; }
+.ss-tabs > :only-child { grid-column: 1 / -1; }
+button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cursor: pointer; }

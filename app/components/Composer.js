@@ -86,21 +86,14 @@ function Head({ icon, title, right }) {
 
 const Req = () => <i className="cp-req">*</i>;
 
-export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, initialAs }) {
+export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, as = null }) {
   const [mode, setMode] = useState(initial || null);
-  // Клубийн удирдагч: «Өөрөө» эсвэл «Клуб»-ын нэрээр. Клубийн нэрээр бол Даалгавар · Тайлан · Хуваалцъя
-  const [asClub, setAsClub] = useState(!!club && initialAs === "club");
-  // Сүүлд сонгосноо санана (зөвхөн энэ хөтөчид)
-  useEffect(() => {
-    if (!club || initialAs) return;
-    try { if (localStorage.getItem("ss-as") === "club") setAsClub(true); } catch (e) {}
-  }, [club, initialAs]);
-  useEffect(() => {
-    if (!club) return;
-    try { localStorage.setItem("ss-as", asClub ? "club" : "me"); } catch (e) {}
-  }, [club, asClub]);
-  const clubIn = asClub ? <input type="hidden" name="as_club" value="1" /> : null;
-  const by = (k) => (asClub ? `${k} · ${club.name} клубийн нэрээр` : k);
+  // Баруун цэсээр клуб («club») эсвэл байгууллагын («org») хаяг руу шилжсэн бол тэдний нэрээр нийтэлнэ.
+  // Клуб: Даалгавар · Тайлан · Хуваалцъя, байгууллага: Хуваалцъя
+  const asOrg = !!club && as === "org";
+  const asClub = !!club && (as === "club" || asOrg);
+  const clubIn = asClub ? <input type="hidden" name={asOrg ? "as_org" : "as_club"} value="1" /> : null;
+  const by = (k) => (asClub ? `${k} · ${club.name} ${asOrg ? "байгууллагын" : "клубийн"} нэрээр` : k);
   const [start, setStart] = useState({ full: "", date: "" });
   const [now, setNow] = useState({ date: "", time: "" });
   useEffect(() => setNow(nowUB()), [mode]);
@@ -256,29 +249,24 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
     );
   }
 
-  const asSwitch = club && (
-    <div className="cp-as" role="radiogroup" aria-label="Хэний нэрээр">
-      <button type="button" role="radio" aria-checked={!asClub} className={asClub ? "" : "on"}
-        onClick={() => { setAsClub(false); setMode(null); }}>{me}<span>Өөрөө</span></button>
-      <button type="button" role="radio" aria-checked={asClub} className={asClub ? "on" : ""}
-        onClick={() => { setAsClub(true); setMode((m) => (shareModes.includes(m) ? m : null)); }}>{clubAv}<span>{club.name}</span></button>
-    </div>
-  );
-
   if (asClub) {
     return (
       <>
         {error && <p className="error cp-error">{error}</p>}
-        {asSwitch}
-        {(mode !== "Асуулт" && panel) || (
+        {(mode !== "Асуулт" && panel) || (asOrg ? (
+          <button type="button" className="ss-composer" onClick={() => setMode("share")}>
+            {clubAv}
+            <span>Байгууллагынхаа мэдээ, эвентийг шинжлэх ухаанд дурлагсадтай хуваалцъя</span>
+          </button>
+        ) : (
           <Link href="/tasks/new" className="ss-composer">
             {clubAv}
             <span>Клубийнхаа туршлагыг хуваалцаж, бусад клубт урам өгье</span>
           </Link>
-        )}
+        ))}
         <div className="ss-tabs">
-          <Link href="/tasks/new"><Ic n="task" s={22} /><span>Даалгавар</span></Link>
-          <Link href="/reports/new"><Ic n="report" s={22} /><span>Тайлан</span></Link>
+          {!asOrg && <Link href="/tasks/new"><Ic n="task" s={22} /><span>Даалгавар</span></Link>}
+          {!asOrg && <Link href="/reports/new"><Ic n="report" s={22} /><span>Тайлан</span></Link>}
           <button type="button" className={shareModes.includes(mode) ? "on" : ""} onClick={() => setMode((c) => (shareModes.includes(c) ? null : "share"))}><Ic n="share" s={22} /><span>Хуваалцъя</span></button>
         </div>
       </>
@@ -288,7 +276,6 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
   return (
     <>
       {error && <p className="error cp-error">{error}</p>}
-      {asSwitch}
       {panel || (
         <Link href={loggedIn ? "/write" : "/login"} className="ss-composer">
           {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}

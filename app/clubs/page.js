@@ -43,7 +43,7 @@ export default async function Clubs({ searchParams }) {
         {/* Клубийн удирдагч: Даалгавар · Тайлан · Хуваалцъя */}
         {myClub && (
           <div className="ss-header static cl-composer">
-            <Composer loggedIn me={<Avatar user={user} size={32} />} club={{ name: myClub.name }} clubAv={<ClubAv c={myClub} size={32} />} initialAs="club" />
+            <Composer loggedIn me={<Avatar user={user} size={32} />} club={{ name: myClub.name }} clubAv={<ClubAv c={myClub} size={32} />} as="club" />
           </div>
         )}
 
