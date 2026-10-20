@@ -2,6 +2,7 @@ import { requireSection } from "@/lib/admin";
 import { loadSettings, defaults } from "@/lib/settings";
 import { LEVELS } from "@/lib/levels";
 import { PREMIUM_PLANS, fmtMnt } from "@/lib/money";
+import { qpayOn } from "@/lib/qpay";
 import { updateSettings } from "./actions";
 import Head, { Flash } from "../_c/Head";
 
@@ -49,6 +50,7 @@ export default async function Settings({ searchParams }) {
               <div className="adm-set-grid">
                 <label>Шагналын санд (%){num("poolShare", s.poolShare, d.poolShare, { min: 0, max: 100 })}</label>
                 <label>Урамшууллын шимтгэл (%){num("tipFee", s.tipFee, d.tipFee, { min: 0, max: 50 })}</label>
+                <label>QPay-ийн шимтгэл (%){num("qpayFee", s.qpayFee, d.qpayFee, { min: 0, max: 10, step: 0.1 })}</label>
                 <label>Татах доод дүн (₮){num("withdrawMin", s.withdrawMin, d.withdrawMin, { min: 1000, step: 1000 })}</label>
                 {PREMIUM_PLANS.map((p, i) => (
                   <label key={p.months}>Дэмжигч · {p.label} (₮){num(`plan${i}`, s.plans[i], d.plans[i], { min: 100, step: 100 })}</label>
@@ -57,6 +59,7 @@ export default async function Settings({ searchParams }) {
               <label>Банкны данс (төлбөрийн зааварт харагдана)
                 <textarea name="bankInfo" defaultValue={s.bankInfo} maxLength={500} disabled={!sup} placeholder={process.env.PAY_BANK_INFO ? `Хоосон бол Vercel-ийн PAY_BANK_INFO: ${process.env.PAY_BANK_INFO}` : "Жишээ: Хаан банк 5000xxxxxx, Science Spark ХХК"} />
               </label>
+              <p className="adm-muted small">QPay: {qpayOn() ? "холбогдсон, төлбөр автоматаар баталгаажна" : "тохируулаагүй (Vercel: QPAY_USERNAME, QPAY_PASSWORD, QPAY_INVOICE_CODE)"}</p>
               <p className="adm-muted small">Одоогийн үнэ: {PREMIUM_PLANS.map((p) => `${p.label} ${fmtMnt(p.price)}`).join(" · ")}</p>
             </section>
 
