@@ -94,6 +94,7 @@ export default async function Events({ searchParams }) {
       <div className="ss-card ev-cal">
         <div className="ev-cal-head">
           <b>{sel.y} оны {sel.m}-р сар</b>
+          <Link href={user ? "/?compose=Эвент" : "/login"} className="ev-add">+ Эвент нэмэх</Link>
           <span className="ss-grow" />
           <Link href={q({ m: (() => { const p = addMonths(sel.y, sel.m, -1); return `${p.y}-${String(p.m).padStart(2, "0")}`; })() })} className="ev-nav" aria-label="Өмнөх сар">‹</Link>
           <Link href={q({ m: (() => { const p = addMonths(sel.y, sel.m, 1); return `${p.y}-${String(p.m).padStart(2, "0")}`; })() })} className="ev-nav" aria-label="Дараах сар">›</Link>
@@ -146,7 +147,6 @@ export default async function Events({ searchParams }) {
         <b>Ойрын эвентүүд</b>
         <span className="ss-grow" />
         <small>Нийт {upcoming.length} эвент</small>
-        <Link href={user ? "/?compose=Эвент" : "/login"} className="ev-add">+ Эвент нэмэх</Link>
       </div>
       <div className="ev-filters">
         <Link href={q({ type: "" })} className={type ? "" : "on"}>Бүгд</Link>

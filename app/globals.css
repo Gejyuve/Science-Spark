@@ -1086,6 +1086,8 @@ details.mod summary { cursor: pointer; }
 .ev-month.on b, .ev-month.on small { color: #fff; }
 .ev-cal { padding: 16px; }
 .ev-cal-head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 15px; color: var(--ink); }
+.ev-cal-head b { white-space: nowrap; }
+.ev-cal-head .ev-add { margin-left: 8px; flex-shrink: 0; }
 .ev-nav { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; border: 1px solid var(--border); color: var(--ink); text-decoration: none; font-size: 18px; }
 .ev-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .ev-wd { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0 6px; }
