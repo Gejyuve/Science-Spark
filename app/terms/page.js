@@ -1,12 +1,24 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { POOL_SHARE, TIP_FEE, WITHDRAW_MIN, INCOME_TAX } from "@/lib/money";
-import { AGREEMENT_VERSION, AGREEMENT_DATE, agreementSections } from "@/lib/agreement";
+import { AGREEMENT_TITLE, AGREEMENT_VERSION, AGREEMENT_DATE, agreementSections } from "@/lib/agreement";
 import Shell from "../components/Shell";
-import PageHero from "../components/PageHero";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Хэрэглэгчийн гэрээ · Science Spark" };
+
+const LETTERS = "абвгдеёжзиклмнопрстуфхцчшщэюя";
+
+// Заалтуудыг дугаарлана: үндсэн заалт 1.1, 1.2..., «• »-ээр эхэлсэн дэд заалт а), б)...
+function clauses(n, items) {
+  const out = [];
+  let k = 0, sub = 0;
+  for (const t of items) {
+    if (t.startsWith("• ")) out.push({ sub: true, no: `${LETTERS[sub++]})`, text: t.slice(2) });
+    else { sub = 0; out.push({ sub: false, no: `${n}.${++k}.`, text: t }); }
+  }
+  return out;
+}
 
 export default async function Terms() {
   let user = null;
@@ -16,29 +28,29 @@ export default async function Terms() {
 
   return (
     <Shell user={user} active="/help" header={false}>
-      <div className="hp-page">
-        <PageHero tone="help" title="Хэрэглэгчийн гэрээ" text={`Science Spark-ийг хамтдаа аюулгүй, шударга, сонирхолтой газар болгох дүрэм. Хувилбар ${AGREEMENT_VERSION} · ${AGREEMENT_DATE}-аас хүчинтэй.`}>
-          <Link href="/help#send" className="ph-btn solid">Асуулт байна уу?</Link>
-        </PageHero>
+      <article className="tm-doc">
+        <h1>{AGREEMENT_TITLE}</h1>
+        <p className="tm-meta">Хувилбар {AGREEMENT_VERSION}. {AGREEMENT_DATE}-ны өдрөөс эхлэн хүчин төгөлдөр.</p>
 
-        <nav className="hp-topics" aria-label="Гэрээний хэсгүүд">
-          {sections.map(([id, e, t], i) => <a key={id} href={`#${id}`}><span>{e}</span>{i + 1}. {t}</a>)}
+        <nav className="tm-toc" aria-label="Агуулга">
+          <b>Агуулга</b>
+          <ol>
+            {sections.map(([id, title]) => <li key={id}><a href={`#${id}`}>{title}</a></li>)}
+          </ol>
         </nav>
 
-        {sections.map(([id, e, title, items], i) => {
-          let k = 0;
-          return (
-            <section key={id} id={id} className="ss-card hp-group tm-sec">
-              <h2><span aria-hidden="true">{e}</span>{i + 1}. {title}</h2>
-              <ol className="tm-list">
-                {items.map((t) => t.startsWith("• ")
-                  ? <li key={t} className="tm-sub">{t.slice(2)}</li>
-                  : <li key={t}><b>{i + 1}.{++k}</b><span>{t}</span></li>)}
-              </ol>
-            </section>
-          );
-        })}
-      </div>
+        {sections.map(([id, title, items], i) => (
+          <section key={id} id={id}>
+            <h2>{i + 1}. {title}</h2>
+            {clauses(i + 1, items).map((c) => (
+              <p key={c.no + c.text} className={c.sub ? "tm-sub" : ""}><span>{c.no}</span>{c.text}</p>
+            ))}
+          </section>
+        ))}
+
+        <p className="tm-end">--- Гэрээний төгсгөл ---</p>
+        <p className="tm-meta">Асуулт байвал <Link href="/help#send">Тусламж</Link> хуудсаар хандана уу.</p>
+      </article>
     </Shell>
   );
 }
