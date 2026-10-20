@@ -4,6 +4,7 @@ import { getUser } from "@/lib/auth";
 import { fmtDate } from "@/lib/format";
 import { TERM_KIND, ALPHABET, canApproveWords } from "@/lib/terms";
 import Shell from "../components/Shell";
+import PageHero from "../components/PageHero";
 import DictAdd from "../components/DictAdd";
 import { TermCard } from "../components/Terms";
 import { followingSet } from "../components/Bits";
@@ -76,23 +77,22 @@ export default async function DictPage({ searchParams }) {
 
   return (
     <Shell user={user} active="/dict" header="nav">
-      <section className="tl-hero">
-        <div className="tl-hero-main">
-          <h1>Шинжлэх ухааны нэр томьёоны толь</h1>
-          <p>Бүгдээрээ хэлэлцвэл буруугүй, бүлээн усаар угаавал хиргүй</p>
-          <div className="tl-hero-acts">
-            <DictAdd className="tl-add" loggedIn={!!user} />
-            {/* 5-р түвшнээс дээш хэрэглэгч шинэ үг зөвшөөрнө (нийтлэл хянах эрх биш) */}
-            {canApproveWords(user) && <Link href="/review?t=words" className="tl-add ghost">Шинэ үг зөвшөөрөх</Link>}
-          </div>
-        </div>
+      <PageHero
+        tone="dict"
+        title="Шинжлэх ухааны нэр томьёоны толь"
+        text="Бүгдээрээ хэлэлцвэл буруугүй, бүлээн усаар угаавал хиргүй"
+        acts={<>
+          <DictAdd className="tl-add" loggedIn={!!user} />
+          {/* 5-р түвшнээс дээш хэрэглэгч шинэ үг зөвшөөрнө (нийтлэл хянах эрх биш) */}
+          {canApproveWords(user) && <Link href="/review?t=words" className="tl-add ghost">Шинэ үг зөвшөөрөх</Link>}
+        </>}
+      >
         <div className="tl-stat">
           <small>Толь дахь нэр томьёо</small>
           <span className="tl-stat-n"><img src="/icons/dict.svg" width={26} height={26} alt="" />{stats.total.toLocaleString("en-US")}</span>
           <small className="tl-stat-g">Энэ сард +{stats.month} · Хэлэлцэж буй {stats.discussing}</small>
         </div>
-        <i className="tl-star a" aria-hidden="true" /><i className="tl-star b" aria-hidden="true" /><i className="tl-star c" aria-hidden="true" /><i className="tl-star d" aria-hidden="true" />
-      </section>
+      </PageHero>
 
       <div className="tl-bar1">
         <Link href="/dict" className={!disc && !letter && !term ? "on" : ""}>Сүүлд батлагдсан</Link>
