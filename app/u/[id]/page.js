@@ -38,7 +38,7 @@ function Answer({ status, body, note, label }) {
 // Figma: Нийтийн профайл
 export default async function PublicProfile({ params, searchParams }) {
   const { id } = await params;
-  const { tab = "published", k: kindParam = "", ok, error } = await searchParams;
+  const { tab = "published", k: kindParam = "", ok, error, saved } = await searchParams;
   const uid = Number(id);
   if (!Number.isInteger(uid)) notFound();
   await ensureSchema();
@@ -139,16 +139,16 @@ export default async function PublicProfile({ params, searchParams }) {
     pr.birth_date && ["i_birth", "Төрсөн он, сар, өдөр", fmtDate(pr.birth_date)],
     (pr.live_city || pr.live_country) && ["i_live", "Амьдарч буй газар", place(pr.live_city, pr.live_country)],
     (pr.birth_city || pr.birth_country) && ["i_home", "Төрсөн газар", place(pr.birth_city, pr.birth_country)],
-    (pr.education || pr.school) && ["i_edu", "Одоогийн боловсролын түвшин", [pr.education, pr.school].filter(Boolean).join(" · ")],
+    (pr.education || pr.school) && ["i_edu", "Боловсрол", [pr.education, pr.school].filter(Boolean).join(" · ")],
   ].filter(Boolean);
   const right = [
     pr.profession && ["i_prof", "Төгссөн мэргэжил", pr.profession],
     pr.job && ["i_job", "Одоо хийж буй ажил", pr.job],
     pr.orcid && ["i_orcid", "ORCID iD", pr.orcid],
-    pr.origin_view && ["i_origin", "Амьдралын үүслийн тухай үзэл", pr.origin_view],
-    pr.religion && ["i_relig", "Шашны урсгал", pr.religion],
+    pr.origin_view && ["i_origin", "Ертөнц, амьдралын үүслийн тухай үзэл", pr.origin_view],
     pr.belief && ["i_belief", "Итгэл үнэмшил", pr.belief],
-    pr.politics && ["i_polit", "Улс төрийн суртал", pr.politics],
+    pr.religion && ["i_relig", "Шашин", pr.religion],
+    pr.politics && ["i_polit", "Улс төрийн үзэл", pr.politics],
   ].filter(Boolean);
   const socials = Object.entries(pr.socials || {}).filter(([k]) => SOCIAL_ICON[k]);
   const Info = ({ items }) => (
@@ -172,6 +172,12 @@ export default async function PublicProfile({ params, searchParams }) {
 
   return (
     <Shell user={me} header="nav">
+      {isMe && saved !== undefined && (
+        <p className="pu-saved" role="status">
+          <span>✓ Профайл тань хадгалагдлаа{Number(saved) > 0 && <> · <b>+{Number(saved)} оч</b> нэмэгдлээ</>}</span>
+          <Link href="/profile/edit">Дахин засах</Link>
+        </p>
+      )}
       <section className="pu-card">
         <div className="pu-cover" style={pr.cover_id ? { backgroundImage: `url(/img/${pr.cover_id})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} />
         <div className="pu-top">

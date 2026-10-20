@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { enter } from "../auth/actions";
 import AuthCard, { Field } from "../components/AuthCard";
+import PwField from "../components/PwField";
 
 // Нэг цонх: нэвтрэх → (бүртгэлгүй бол) нууц үг давтах → шинэ бүртгэл
 export default function LoginForm() {
@@ -36,11 +37,17 @@ export default function LoginForm() {
       )}
       <Field name="email" type="email" required autoComplete="email" placeholder="Мэйл" aria-label="Мэйл"
         value={email} onChange={edit(setEmail)} readOnly={confirmStep} />
-      <Field icon={null} name="password" type="password" required autoComplete={confirmStep ? "new-password" : "current-password"}
+      <PwField name="password" required autoComplete={confirmStep ? "new-password" : "current-password"}
         placeholder="Нууц үг" aria-label="Нууц үг" value={password} onChange={edit(setPassword)} />
       {confirmStep && (
-        <Field icon={null} name="confirm" type="password" required autoFocus autoComplete="new-password"
-          placeholder="Нууц үгээ дахин бичнэ үү" aria-label="Нууц үгээ дахин бичнэ үү" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <>
+          <PwField name="confirm" required autoFocus autoComplete="new-password"
+            placeholder="Нууц үгээ дахин бичнэ үү" aria-label="Нууц үгээ дахин бичнэ үү" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          {/* Бичих зуур шалгана: сервер рүү илгээхээс өмнө алдаагаа харна */}
+          <p className={"au-check" + (confirm && confirm !== password ? " bad" : confirm ? " ok" : "")}>
+            {!confirm ? "Хоёр нууц үг ижил байх ёстой" : confirm === password ? "✓ Нууц үг таарч байна" : "Нууц үг таарахгүй байна"}
+          </p>
+        </>
       )}
     </AuthCard>
   );

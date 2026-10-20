@@ -6,6 +6,7 @@ import { audit } from "@/lib/admin";
 import { hashPassword, verifyPassword, createSession, destroySession, getUser, resetToken, checkResetToken } from "@/lib/auth";
 import { sendMail, mailReady, siteUrl } from "@/lib/mail";
 import { loadSettings } from "@/lib/settings";
+import { notify } from "@/lib/notify";
 
 // «Асаая өө» цонх: эхлээд нэвтрэхийг оролдоно. Имэйл бүртгэлгүй бол нууц үгээ дахин бичүүлж
 // баталгаажуулаад шинэ бүртгэл үүсгэж, профайл үүсгэх хуудас (/profile/edit) руу шилжүүлнэ.
@@ -103,6 +104,7 @@ export async function resetPassword(formData) {
   // Бүх төхөөрөмж дээрх нэвтрэлтийг гаргаж, энэ төхөөрөмж дээр шинээр нэвтрүүлнэ.
   await sql`DELETE FROM sessions WHERE user_id = ${user.id}`;
   await sql`DELETE FROM login_attempts WHERE email = ${user.email}`;
+  await notify({ userId: user.id, kind: "pw_changed" });
   await audit({ category: "login", action: "Нууц үг сэргээсэн", targetType: "user", targetId: user.id, targetLabel: user.email.replace(/^(.{2}).*(@.*)$/, "$1***$2") });
   await createSession(user.id);
   redirect("/");
@@ -118,12 +120,13 @@ export async function changePassword(formData) {
   if (!user) redirect("/login");
   const current = String(formData.get("current") || "");
   const next = String(formData.get("next") || "");
-  const done = (msg, ok) => redirect(`/profile?${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
+  const done = (msg, ok) => redirect(`/profile/edit?${ok ? "pw_ok" : "pw_error"}=${encodeURIComponent(msg)}`);
   if (next.length < 8) done("Шинэ нууц үг хамгийн багадаа 8 тэмдэгт байна");
   await ensureSchema();
   const rows = await sql`SELECT password_hash FROM users WHERE id = ${user.id}`;
   if (!rows.length || !verifyPassword(current, rows[0].password_hash)) done("Одоогийн нууц үг буруу байна");
   await sql`UPDATE users SET password_hash = ${hashPassword(next)} WHERE id = ${user.id}`;
+  await notify({ userId: user.id, kind: "pw_changed" });
   // Бусад төхөөрөмж дээрх нэвтрэлтийг гаргаж, энэ төхөөрөмж дээр шинээр нэвтрүүлнэ.
   await sql`DELETE FROM sessions WHERE user_id = ${user.id}`;
   await createSession(user.id);

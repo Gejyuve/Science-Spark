@@ -496,7 +496,7 @@ details.mod summary { cursor: pointer; }
 .ar-content .muted a, .muted a { color: var(--teal); font-weight: 600; }
 
 /* ===== Figma: Нийтлэл бичих ===== */
-.wr-page { position: relative; min-height: 100vh; padding: 16px 24px 60px; overflow: hidden; background: var(--bg); }
+.wr-page { position: relative; min-height: 100vh; padding: 16px 24px 60px; overflow: hidden; overflow: clip; background: var(--bg); }
 .wr-bar { position: relative; z-index: 1; }
 .wr-col { position: relative; z-index: 1; width: 100%; max-width: 840px; margin: 4px auto 0; display: flex; flex-direction: column; gap: 20px; }
 .wr-card { background: var(--surface); border-radius: 24px; box-shadow: 0 8px 32px rgba(51, 89, 102, 0.07); padding: 28px 32px; display: flex; flex-direction: column; gap: 12px; }
@@ -3657,3 +3657,75 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
   .hp-group, .hp-send, .hp-mine { padding: 18px 16px; }
   .hp-types { grid-template-columns: 1fr; }
 }
+
+/* ===== Бүртгэл, профайл засварын сайжруулалт ===== */
+.pw-field { position: relative; }
+.pw-eye { flex: none; display: grid; place-items: center; width: 32px; height: 32px; margin-right: -6px; border: 0; border-radius: 50%; background: transparent; cursor: pointer; opacity: .75; }
+.pw-eye:hover, .pw-eye:focus-visible { background: var(--surface-2); opacity: 1; }
+.au-check { margin: -4px 4px 0; font-size: 12.5px; color: #708c9e; }
+.au-check.ok { color: #00a89b; }
+.au-check.bad { color: #e5484d; }
+.pf-intro { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--teal-bg, #e6f7f5); color: var(--ink); font-size: 13px; line-height: 1.5; }
+.pf-input.bad { border-color: #e5484d; }
+.pf-foot { position: sticky; bottom: 12px; z-index: 5; box-shadow: 0 10px 36px rgba(51, 89, 102, 0.18); }
+.pf-terms-link { padding: 0; border: 0; background: none; font: inherit; color: #00a89b; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.pf-terms { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
+.pf-terms-list { margin: 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--text); }
+.pf-terms-list li b { display: block; color: var(--ink); font-size: 14px; }
+.pf-terms-ok { align-self: flex-end; margin-top: 6px; }
+.pf-pwcol { margin-top: 20px; margin-bottom: 40px; scroll-margin-top: 16px; }
+.pf-sub a { color: #00a89b; font-weight: 600; }
+.pf-pwfoot { display: flex; justify-content: flex-end; margin-top: 8px; }
+.pf-save.ghost { background: var(--surface-2); color: var(--ink); border: 1px solid var(--border); box-shadow: none; }
+.pu-saved { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; padding: 12px 18px; border-radius: 16px; background: var(--teal-bg, #e6f7f5); color: var(--ink); font-size: 14px; }
+.pu-saved b { color: #00a89b; }
+.pu-saved a { margin-left: auto; font-size: 13px; font-weight: 600; color: #00a89b; }
+@media (max-width: 760px) {
+  .pf-foot { bottom: 8px; }
+  .pf-foot label.pf-agree { flex: 1 1 100%; justify-content: center; }
+  .pf-foot .pf-save { flex: 1; justify-content: center; }
+  .pf-foot .pf-grow { display: none; }
+}
+.pf-photo .pf-pts { align-self: flex-start; }
+/* Зураг оруулсны дараа хэмжээний тайлбар хэрэггүй */
+.pf-photo:has(.ii.has) .pf-size { display: none; }
+/* Профайл: «зураг жижиг» сануулга нүүр зургийн ард дарагдахгүй */
+.pf-coverwrap .ii-note, .pf-coverwrap .ii-err {
+  position: absolute; bottom: 10px; right: 12px; z-index: 3; max-width: min(60%, 360px); margin: 0; font-size: 11.5px;
+  padding: 5px 10px; border-radius: 10px; background: rgba(255, 255, 255, .94); box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+:root[data-theme="dark"] .pf-coverwrap .ii-note, :root[data-theme="dark"] .pf-coverwrap .ii-err { background: rgba(20, 32, 40, .92); }
+.pf-photo .ii-avatar .ii-note, .pf-photo .ii-avatar .ii-err { position: absolute; top: calc(100% + 40px); left: 0; width: min(340px, 75vw); max-width: none; margin: 0; }
+.pf-photo:has(.ii-avatar .ii-note, .ii-avatar .ii-err) { margin-bottom: 84px; }
+@media (max-width: 760px) {
+  .pf-photo { margin-top: -30px; }
+  .pf-coverwrap .ii-note, .pf-coverwrap .ii-err { bottom: 6px; right: 6px; font-size: 10.5px; padding: 3px 8px; }
+}
+
+/* ===== Сайтын загвартай унждаг жагсаалт (SelectMenu) ===== */
+.dd-menu {
+  position: fixed; z-index: 1000; overflow-y: auto; overscroll-behavior: contain; padding: 6px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(18, 35, 46, .18); font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  animation: dd-in .12s ease-out;
+}
+.dd-menu.dd-up { animation-name: dd-in-up; }
+@keyframes dd-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes dd-in-up { from { opacity: 0; transform: translateY(4px); } }
+.dd-opt { position: relative; padding: 10px 34px 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.35; cursor: pointer; user-select: none; }
+.dd-opt.dd-on { background: var(--teal-bg); }
+.dd-opt.dd-sel { color: #00968a; font-weight: 600; }
+.dd-opt.dd-sel::after { content: "✓"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #00a89b; }
+.dd-opt.dd-ph { color: #98aab5; }
+.dd-opt.dd-off { color: #b5c2ca; cursor: default; background: none; }
+:root[data-theme="dark"] .dd-menu { box-shadow: 0 16px 40px rgba(0, 0, 0, .5); }
+:root[data-theme="dark"] .dd-opt.dd-sel { color: #4fd6c6; }
+:root[data-theme="dark"] .dd-opt.dd-off { color: #5d6f7a; }
+.pf-hint a { color: #00a89b; font-weight: 600; }
+.dd-find {
+  position: sticky; top: -6px; z-index: 1; display: block; width: calc(100% + 12px); height: 42px; margin: -6px -6px 6px; padding: 0 12px 0 36px;
+  border: 0; border-bottom: 1px solid var(--border); border-radius: 0; outline: none; font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--surface) url("/icons/search.svg") no-repeat 10px center / 16px;
+}
+.dd-find::placeholder { color: #98aab5; }
+.dd-none { padding: 12px; font-size: 13px; color: var(--muted); text-align: center; }
