@@ -3701,3 +3701,23 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
   .pf-photo { margin-top: -30px; }
   .pf-coverwrap .ii-note, .pf-coverwrap .ii-err { bottom: 6px; right: 6px; font-size: 10.5px; padding: 3px 8px; }
 }
+
+/* ===== Сайтын загвартай унждаг жагсаалт (SelectMenu) ===== */
+.dd-menu {
+  position: fixed; z-index: 1000; overflow-y: auto; overscroll-behavior: contain; padding: 6px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(18, 35, 46, .18); font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  animation: dd-in .12s ease-out;
+}
+.dd-menu.dd-up { animation-name: dd-in-up; }
+@keyframes dd-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes dd-in-up { from { opacity: 0; transform: translateY(4px); } }
+.dd-opt { position: relative; padding: 10px 34px 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.35; cursor: pointer; user-select: none; }
+.dd-opt.dd-on { background: var(--teal-bg); }
+.dd-opt.dd-sel { color: #00968a; font-weight: 600; }
+.dd-opt.dd-sel::after { content: "✓"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #00a89b; }
+.dd-opt.dd-ph { color: #98aab5; }
+.dd-opt.dd-off { color: #b5c2ca; cursor: default; background: none; }
+:root[data-theme="dark"] .dd-menu { box-shadow: 0 16px 40px rgba(0, 0, 0, .5); }
+:root[data-theme="dark"] .dd-opt.dd-sel { color: #4fd6c6; }
+:root[data-theme="dark"] .dd-opt.dd-off { color: #5d6f7a; }
