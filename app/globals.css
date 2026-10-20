@@ -1990,7 +1990,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ct-trail a:hover { text-decoration: underline; }
 .ct-hero .tl-star.a { left: 60%; top: -10px; }
 /* Хуудасны өнгөлөг толгой (PageHero): Мод, Нийтлэл, Мэдээ, Даалгавар */
-.ph { --g1: #0b9f6e; --g2: #13b8a6; --g3: #7fe3c6; --glow: rgba(11, 159, 110, .28); position: relative; overflow: hidden; display: flex; align-items: flex-end; gap: 24px; min-height: 190px; padding: 32px 30px 30px; border-radius: 26px; background: radial-gradient(120% 140% at 100% 0%, var(--g3) 0%, transparent 55%), linear-gradient(125deg, var(--g1) 0%, var(--g2) 100%); color: #fff; box-shadow: 0 14px 30px var(--glow); isolation: isolate; }
+.ph { --g1: #0b9f6e; --g2: #13b8a6; --g3: #7fe3c6; --glow: rgba(11, 159, 110, .28); position: relative; overflow: hidden; display: flex; align-items: flex-end; gap: 24px; min-height: 190px; padding: 32px 30px 30px; border-radius: 26px; background: radial-gradient(120% 140% at 100% 0%, var(--g3) 0%, transparent 55%), linear-gradient(125deg, var(--g1) 0%, var(--g2) 50%, var(--g1) 100%); background-size: 100% 100%, 220% 220%; color: #fff; animation: ph-flow 14s ease-in-out infinite alternate; box-shadow: 0 14px 30px var(--glow); isolation: isolate; }
 .ph-article { --g1: #4338ca; --g2: #7c5cf0; --g3: #c4a8ff; --glow: rgba(79, 70, 229, .28); }
 .ph-news { --g1: #ea580c; --g2: #f43f6e; --g3: #ffc061; --glow: rgba(244, 63, 94, .26); }
 .ph-task { --g1: #1d4ed8; --g2: #0ea5e9; --g3: #8ff0ff; --glow: rgba(14, 165, 233, .28); }
@@ -2006,6 +2006,18 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ph .tl-star.a { width: 70px; height: 70px; left: auto; right: 250px; top: 22px; opacity: .7; }
 .ph .tl-star.b { width: 26px; height: 26px; left: 62%; top: auto; bottom: 22px; }
 .ph .tl-star.c { width: 18px; height: 18px; left: 46%; top: 30px; }
+/* Зөөлөн хөдөлгөөн: өнгө урсах, бөмбөлөг хөвөх, од гялалзах, зураг найгах */
+@keyframes ph-flow { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 100% 50%; } }
+@keyframes ph-float { 0%, 100% { translate: 0 0; } 50% { translate: -18px 14px; } }
+@keyframes ph-twinkle { 0%, 100% { opacity: .35; scale: .8; } 50% { opacity: .95; scale: 1.1; } }
+@keyframes ph-sway { 0%, 100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -8px; rotate: 3deg; } }
+.ph-blob.a { animation: ph-float 11s ease-in-out infinite; }
+.ph-blob.b { animation: ph-float 9s ease-in-out -4s infinite reverse; }
+.ph .tl-star { animation: ph-twinkle 3.6s ease-in-out infinite; }
+.ph .tl-star.b { animation-delay: -1.2s; }
+.ph .tl-star.c { animation-delay: -2.4s; }
+.ph-art { animation: ph-sway 8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ph, .ph-blob, .ph .tl-star, .ph-art { animation: none; } }
 .ph-body { flex: 1; min-width: 0; }
 .ph h1 { display: flex; align-items: center; gap: 14px; margin: 0; font-size: 30px; font-weight: 800; line-height: 1.15; color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, .12); }
 .ph-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: rgba(255, 255, 255, .22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35); font-size: 27px; text-shadow: none; }
