@@ -49,6 +49,7 @@ export async function cancelPayment(formData) {
                           WHERE id = ${id} AND status = 'pending' RETURNING code, user_id`;
   if (!req) back("Хүсэлт олдсонгүй");
   await audit({ actorId: me.id, category: "money", action: `Төлбөрийн хүсэлт цуцалсан (${req.code})`, targetType: "user", targetId: req.user_id });
+  await notify({ userId: req.user_id, kind: "pay_no", note: req.code });
   revalidatePath("/admin/finance");
   back(`${req.code} цуцлагдлаа`, true);
 }

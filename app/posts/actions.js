@@ -131,6 +131,7 @@ export async function sparkPost(formData) {
     else await sql`INSERT INTO points_ledger (user_id, delta, reason)
               VALUES (${post[0].author_id}, ${get}, ${"spark:post:" + postId + ":from:" + user.id})`;
     await rewardFirstSpark(user.id);
+    await notify({ userId: post[0].author_id, kind: "spark", actorId: user.id, postId, once: true });
   }
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
@@ -392,9 +393,12 @@ export async function deleteComment(formData) {
   if (!Number.isInteger(id)) return;
   await ensureSchema();
   const rows = isAdmin(user)
-    ? await sql`DELETE FROM comments WHERE id = ${id} RETURNING post_id`
-    : await sql`DELETE FROM comments WHERE id = ${id} AND author_id = ${user.id} RETURNING post_id`;
+    ? await sql`DELETE FROM comments WHERE id = ${id} RETURNING post_id, author_id, body`
+    : await sql`DELETE FROM comments WHERE id = ${id} AND author_id = ${user.id} RETURNING post_id, author_id, body`;
   if (rows.length) {
+    // Редакц бусдын сэтгэгдлийг устгавал эзэнд нь мэдэгдэнэ
+    const b = rows[0].body || "";
+    await notify({ userId: rows[0].author_id, kind: "comment_removed", actorId: user.id, postId: rows[0].post_id, note: b.length > 80 ? b.slice(0, 80) + "…" : b });
     revalidatePath(`/post/${rows[0].post_id}`);
     revalidatePath("/");
   }
@@ -514,7 +518,7 @@ export async function likeComment(formData) {
   const id = Number(formData.get("comment_id"));
   if (!Number.isInteger(id)) return;
   await ensureSchema();
-  const [c] = await sql`SELECT c.author_id, c.post_id FROM comments c JOIN posts p ON p.id = c.post_id
+  const [c] = await sql`SELECT c.author_id, c.post_id, c.body FROM comments c JOIN posts p ON p.id = c.post_id
                         WHERE c.id = ${id} AND p.status IN ('published', 'discussion')`;
   if (!c || c.author_id === user.id) return;
   // Хариултад оч: хариултын эзэнд +5 (премиум оч 2 дахин). Буцаавал олгосон очийг (хуучин дүрмийн
@@ -537,6 +541,8 @@ export async function likeComment(formData) {
       await sql`INSERT INTO points_ledger (user_id, delta, reason)
                 VALUES (${c.author_id}, ${SPARK_GET_OTHER * w}, ${"spark:comment:" + id + ":from:" + user.id})`;
       await rewardFirstSpark(user.id);
+      // Буцаагаад дахин өгвөл давхар мэдэгдэхгүй
+      await notify({ userId: c.author_id, kind: "comment_spark", actorId: user.id, postId: c.post_id, note: c.body.length > 80 ? c.body.slice(0, 80) + "…" : c.body, once: true });
     }
   }
   revalidatePath(`/post/${c.post_id}`);
