@@ -2463,6 +2463,8 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 /* ===== Клуб бүртгүүлэх, клубийн хуудас ===== */
 .cl-new { padding: 9px 16px; border-radius: 999px; background: #e6f7f5; color: #00a89b; font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; align-self: center; }
 .cl-new:hover { background: #d3f1ec; }
+.cl-code { align-self: center; color: #00a89b; font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.cl-code:hover { text-decoration: underline; }
 .cl-empty { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .cl-empty p { margin: 0; }
 .mm { position: relative; z-index: 0; height: 220px; border-radius: 16px; overflow: hidden; isolation: isolate; background: #071a1f; }
@@ -3733,6 +3735,7 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 :root[data-theme="dark"] .dd-opt.dd-sel { color: #4fd6c6; }
 :root[data-theme="dark"] .dd-opt.dd-off { color: #5d6f7a; }
 .pf-hint a { color: #00a89b; font-weight: 600; }
+.pf-agree span a { color: #00a89b; font-weight: 600; }
 .dd-find {
   position: sticky; top: -6px; z-index: 1; display: block; width: calc(100% + 12px); height: 42px; margin: -6px -6px 6px; padding: 0 12px 0 36px;
   border: 0; border-bottom: 1px solid var(--border); border-radius: 0; outline: none; font: inherit; font-size: 14px; color: var(--ink);
@@ -3757,6 +3760,7 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 .tm-toc li { break-inside: avoid; }
 .tm-end { margin-top: 28px !important; text-align: center; color: #444; }
 .tm-toc-annex { margin: 8px 0 0; }
+.tm-motto { margin: 14px 0 18px !important; text-align: center; font-style: italic; font-size: 16.5px; }
 .tm-annex h3 { margin: 20px 0 8px; font-size: 15.5px; font-weight: 700; text-align: left; }
 .tm-annex > div { scroll-margin-top: 80px; }
 .tm-annex p > span { min-width: 54px; }

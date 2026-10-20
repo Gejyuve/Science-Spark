@@ -25,6 +25,7 @@ import { Sources } from "../../components/RichEditor";
 import { ClubPerson } from "../../components/ClubBits";
 import { clubFollowSet } from "@/lib/clubs";
 import { TASK_KIND, REPORT_KIND, AUTHOR_SHARE } from "@/lib/tasks-shared";
+import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { listReports, leaderClub } from "@/lib/tasks";
 import { ReportCard } from "../../components/TaskCard";
 
@@ -611,7 +612,7 @@ export default async function PostPage({ params, searchParams }) {
                 <div className="tk-done-head">
                   <b>Биелүүлсэн клубүүд <em>{taskReports.length}</em></b>
                   <span className="ss-grow" />
-                  {myClub && !myReported && <Link href={`/reports/new?task=${post.id}`} className="cl-new">+ Тайлан нэмэх</Link>}
+                  {myClub && !myReported && myClub.club_type === TASK_CLUB_TYPE && <Link href={`/reports/new?task=${post.id}`} className="cl-new">+ Тайлан нэмэх</Link>}
                 </div>
                 {taskReports.length
                   ? <div className="tk-grid">{taskReports.map((x) => <ReportCard key={x.id} r={x} compact />)}</div>

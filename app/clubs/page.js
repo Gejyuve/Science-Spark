@@ -56,6 +56,7 @@ export default async function Clubs({ searchParams }) {
               <p>Очоор эрэмбэлсэн · Сүүлд шинэчлэгдсэн {today}</p>
             </div>
             <span className="ss-grow" />
+            <Link href="/clubs/code" className="cl-code">Клубүүдийн код</Link>
             <Link href="/clubs/new" className="cl-new">+ Клуб бүртгүүлэх</Link>
             <nav className="cl-tabs" aria-label="Хугацаа">
               {Object.entries(PERIODS).map(([k, v]) => (

@@ -11,6 +11,7 @@ import { audit } from "@/lib/admin";
 import { recordRevision } from "@/lib/revisions";
 import { firstReward } from "@/lib/celebrate";
 import { TASK_KIND, REPORT_KIND, TASK_APPROVE_REWARD, REWARD_MIN, REWARD_MAX, AUTHOR_SHARE } from "@/lib/tasks-shared";
+import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 
 const go = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
 
@@ -87,7 +88,8 @@ export async function decidePost(formData) {
     if (isTask) await notifyClubLeaders({ kind: "task_new", actorId: p.author_id, postId: id, exceptClub: p.club_id });
     // Батлагдсан тайлан: биелүүлсэн клуб даалгаврын очийг (нэг даалгаварт нэг удаа),
     // даалгаврыг нэмсэн өөр клуб түүний AUTHOR_SHARE хувийг авна
-    if (p.club_id && p.kind === REPORT_KIND && p.task_id) {
+    const [doer] = p.club_id && p.kind === REPORT_KIND ? await sql`SELECT club_type FROM clubs WHERE id = ${p.club_id}` : [];
+    if (p.club_id && p.kind === REPORT_KIND && p.task_id && doer?.club_type === TASK_CLUB_TYPE) {
       const [task] = await sql`SELECT id, club_id, (meta->>'reward')::int AS reward FROM posts WHERE id = ${p.task_id} AND kind = ${TASK_KIND}`;
       if (task && task.reward > 0) {
         const got = await sql`INSERT INTO club_points (club_id, delta, reason)

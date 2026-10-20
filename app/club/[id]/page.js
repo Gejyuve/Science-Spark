@@ -96,6 +96,7 @@ export default async function ClubPage({ params, searchParams }) {
     ["i_home", "Хот", [c.city, c.country].filter(Boolean).join(", ")],
     ["i_mail", "И-мэйл", c.email && <a href={`mailto:${c.email}`}>{c.email}</a>],
     ["f_phone", "Утас", c.phone && <a href={`tel:${c.phone.replace(/\s/g, "")}`}>{c.phone}</a>],
+    ["f_tag", "Төрөл", c.club_type],
     ["f_tag", "Ангилал", c.category],
     ["f_globe", "Вэбсайт", c.website && <a href={c.website} target="_blank" rel="noopener nofollow">{c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}</a>],
   ].filter((x) => x[2]);
