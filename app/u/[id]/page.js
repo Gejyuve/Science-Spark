@@ -145,7 +145,7 @@ export default async function PublicProfile({ params, searchParams }) {
     pr.profession && ["i_prof", "Төгссөн мэргэжил", pr.profession],
     pr.job && ["i_job", "Одоо хийж буй ажил", pr.job],
     pr.orcid && ["i_orcid", "ORCID iD", pr.orcid],
-    pr.origin_view && ["i_origin", "Амьдралын үүслийн тухай үзэл", pr.origin_view],
+    pr.origin_view && ["i_origin", "Ертөнц, амьдралын үүслийн тухай үзэл", pr.origin_view],
     pr.belief && ["i_belief", "Итгэл үнэмшил", pr.belief],
     pr.religion && ["i_relig", "Шашин", pr.religion],
     pr.politics && ["i_polit", "Улс төрийн үзэл", pr.politics],
