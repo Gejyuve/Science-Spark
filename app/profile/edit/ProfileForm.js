@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { saveProfile } from "../actions";
 import { POINTS, POINTS_TOTAL, OPTIONS, COUNTRIES, MN_CITIES, SCHOOLS, SOCIALS, countWords, nameCase, checkName } from "@/lib/profile";
-import { AGREEMENT } from "@/lib/agreement";
+import { AGREEMENT_SUMMARY } from "@/lib/agreement";
 import { useDraft, hhmm } from "@/lib/useDraft";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
@@ -279,8 +279,9 @@ function Agreement({ onClose }) {
           <button type="button" className="lr-x" aria-label="Хаах" onClick={() => dlg.current.close()}>×</button>
         </div>
         <ol className="pf-terms-list">
-          {AGREEMENT.map(([h, t]) => <li key={h}><b>{h}</b><span>{t}</span></li>)}
+          {AGREEMENT_SUMMARY.map(([h, t]) => <li key={h}><b>{h}</b><span>{t}</span></li>)}
         </ol>
+        <a href="/terms" target="_blank" rel="noopener" className="pf-terms-more">Гэрээний бүрэн эхийг унших ↗</a>
         <button type="button" className="pf-save pf-terms-ok" onClick={() => dlg.current.close()}>Ойлголоо</button>
       </div>
     </dialog>

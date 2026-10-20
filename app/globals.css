@@ -3729,3 +3729,15 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 }
 .dd-find::placeholder { color: #98aab5; }
 .dd-none { padding: 12px; font-size: 13px; color: var(--muted); text-align: center; }
+
+/* Хэрэглэгчийн гэрээ (/terms) */
+.tm-list { margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; color: var(--text); font-size: 14.5px; line-height: 1.65; }
+.tm-list li { display: flex; gap: 10px; }
+.tm-list li b { flex: none; min-width: 34px; color: var(--teal); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tm-list li.tm-sub { position: relative; margin-left: 44px; padding-left: 14px; }
+.tm-list li.tm-sub::before { content: ""; position: absolute; left: 0; top: .7em; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+.pf-terms-more { align-self: flex-start; color: #00a89b; font-weight: 600; font-size: 13.5px; }
+@media (max-width: 720px) {
+  .tm-list li.tm-sub { margin-left: 20px; }
+  .tm-list li b { min-width: 28px; }
+}
