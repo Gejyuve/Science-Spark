@@ -43,9 +43,20 @@ async function makeRequest(user, formData) {
   } else {
     return { error: "Буруу хүсэлт", to: "/san" };
   }
-  // Нэг хүн нэг дор 5-аас олон хүлээгдэж буй хүсэлттэй байхгүй (спамаас сэргийлнэ)
-  const [{ n }] = await sql`SELECT COUNT(*)::int AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'pending'`;
-  if (n >= 5) return { error: "Хүлээгдэж буй 5 хүсэлт байна. Шилжүүлгээ хийх эсвэл цуцлаад дахин оролдоно уу.", to: "/wallet" };
+  // Яг ижил хүлээгдэж буй хүсэлт (24 цагийн дотор) байвал шинээр үүсгэхгүй, түүнийгээ дахин ашиглана
+  const [same] = await sql`SELECT code FROM payment_requests
+    WHERE user_id = ${user.id} AND status = 'pending' AND kind = ${kind} AND amount = ${amount}
+      AND months IS NOT DISTINCT FROM ${months}::int AND writer_id IS NOT DISTINCT FROM ${writerId}::int AND post_id IS NOT DISTINCT FROM ${postId}::int
+      AND created_at > now() - interval '24 hours'
+    ORDER BY id DESC LIMIT 1`;
+  if (same) {
+    await sql`UPDATE payment_requests SET anonymous = ${anonymous}, message = ${message} WHERE code = ${same.code}`;
+    return { code: same.code, amount };
+  }
+  // Спамаас сэргийлнэ: нэг цагт 5-аас олон шинэ хүсэлт үүсгэхгүй. Хуучин төлөгдөөгүй хүсэлт саад болохгүй.
+  const [{ n }] = await sql`SELECT COUNT(*)::int AS n FROM payment_requests
+                            WHERE user_id = ${user.id} AND status = 'pending' AND created_at > now() - interval '1 hour'`;
+  if (n >= 5) return { error: "Сүүлийн нэг цагт 5 төлбөрийн хүсэлт үүсгэсэн байна. Түр хүлээгээд дахин оролдоно уу, эсвэл өмнөх хүсэлтээ ашиглаарай.", to: "/wallet" };
   for (let i = 0; i < 5; i++) {
     const c = payCode();
     const r = await sql`INSERT INTO payment_requests (code, user_id, kind, writer_id, post_id, amount, months, anonymous, message)
