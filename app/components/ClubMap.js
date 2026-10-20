@@ -101,7 +101,7 @@ export default function ClubMap({ clubs, aimags }) {
         <button type="button" onClick={() => { map.current?.fitBounds(MN, { padding: 16 }); setSel(null); }} aria-label="Монголыг бүтнээр" title="Монголыг бүтнээр">⌂</button>
         <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Жижиг болгох" : "Бүтэн дэлгэц"} title={full ? "Жижиг болгох" : "Бүтэн дэлгэц"}>{full ? "×" : "⛶"}</button>
       </div>
-      <span className="cm-hint">{!total ? "Клубүүд бүртгүүлэхэд байршил нь энд гэрэлтэнэ" : armed ? "Хулганы дугуйгаар томруулж, чирж хөдөлгөнө" : "Оч дээр хулганаа аваачиж клубийн мэдээллийг үзнэ үү · Томруулахын тулд зураг дээр дарна уу"}</span>
+      {(!total || armed) && <span className="cm-hint">{!total ? "Клубүүд бүртгүүлэхэд байршил нь энд гэрэлтэнэ" : "Хулганы дугуйгаар томруулж, чирж хөдөлгөнө"}</span>}
       <span className="cm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a></span>
       {sel && (
         <div className={"cm-pop" + (left ? " left" : "")} style={{ left: sel.x, top: sel.y }} role="dialog" aria-label={sel.c.name}>
