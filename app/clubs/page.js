@@ -82,32 +82,43 @@ export default async function Clubs({ searchParams }) {
           )}
         </section>
 
-        {/* Хамгийн доор: клубүүдын даалгавар, тайлан */}
-        <section className="cl-tasks">
-          <div className="cl-head">
+        {/* Хамгийн доор: клубүүдийн даалгавар, тайлан */}
+        <section className="cl-tasks ph-task">
+          <div className="cl-band">
+            <span className="cl-band-ico" aria-hidden="true">🧪</span>
             <div>
               <h2>Даалгавар</h2>
-              <p>Клубүүдын хийж үзсэн туршилт, эвент, воркшопын санаа · {tasksN} даалгавар</p>
+              <p>Клубүүдийн хийж үзсэн туршилт, эвент, воркшопын санаа · <b>{tasksN}</b> даалгавар</p>
             </div>
             <span className="ss-grow" />
-            <Link href="/tasks" className="cl-new">Бүгдийг үзэх →</Link>
+            <Link href="/tasks" className="cl-band-btn">Бүгдийг үзэх →</Link>
+            <i className="tl-star a" aria-hidden="true" /><i className="tl-star b" aria-hidden="true" />
           </div>
           {tasks.length ? (
             <div className="tk-grid four">{tasks.map((t) => <TaskCard key={t.id} t={t} compact />)}</div>
           ) : (
-            <p className="muted">Одоохондоо даалгавар алга. Клубийн удирдагч анхны даалгаврыг нэмээрэй.</p>
+            <div className="cl-band-empty">
+              <span aria-hidden="true">🔭</span>
+              <div>
+                <b>Одоохондоо даалгавар алга</b>
+                <p>Клубийн удирдагч анхны туршилт, эвент, воркшопын санаагаа хуваалцаад бусад клубүүдийг урамшуулаарай.</p>
+              </div>
+              {myClub && <Link href="/tasks/new" className="cl-band-add">+ Даалгавар нэмэх</Link>}
+            </div>
           )}
         </section>
 
         {reports.length > 0 && (
-          <section className="cl-tasks">
-            <div className="cl-head">
+          <section className="cl-tasks ph-report">
+            <div className="cl-band">
+              <span className="cl-band-ico" aria-hidden="true">📝</span>
               <div>
                 <h2>Тайлан</h2>
-                <p>Клубүүд даалгаврыг хэрхэн биелүүлсэн бэ · {reportsN} тайлан</p>
+                <p>Клубүүд даалгаврыг хэрхэн биелүүлсэн бэ · <b>{reportsN}</b> тайлан</p>
               </div>
               <span className="ss-grow" />
-              <Link href="/reports" className="cl-new">Бүгдийг үзэх →</Link>
+              <Link href="/reports" className="cl-band-btn">Бүгдийг үзэх →</Link>
+              <i className="tl-star a" aria-hidden="true" /><i className="tl-star b" aria-hidden="true" />
             </div>
             <div className="tk-grid four">{reports.map((r) => <ReportCard key={r.id} r={r} compact />)}</div>
           </section>
