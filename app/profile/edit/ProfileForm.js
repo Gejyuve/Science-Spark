@@ -101,7 +101,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
             badge={<span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>}>
             <img src="/icons/person40.svg" width={40} height={40} alt="" />
           </ImageInput>
-          <div><b>Нүүр зураг</b><Pts k="photo" /><small className="cf-hint pf-size">Дөрвөлжин, сайтад 480×480 px хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг оруулбал тайрагдахгүй.</small></div>
+          <div><b>Нүүр зураг</b><Pts k="photo" /><small className="cf-hint pf-size">Дөрвөлжин, сайтад 480×480 px хүртэл хэмжээтэй орно. Илүү гарсан хэсэг тайрагдана.</small></div>
         </div>
         <label className="pf-email">
           <span className="pf-mailtile"><img src="/icons/mail.svg" width={20} height={20} alt="" /></span>

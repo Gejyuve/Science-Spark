@@ -195,7 +195,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
         <div className="cp-split">
           <div className="cp-col">
             <span className="cp-label">Ковер зураг <Req /></span>
-            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1), сайтад <b>{sizeLabel(1, slotW(1))}</b> хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг оруулбал тайрагдахгүй. Зөвхөн 1 зураг.</small></div>
+            <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1), сайтад <b>{sizeLabel(1, slotW(1))}</b> хүртэл хэмжээтэй орно. Илүү гарсан хэсэг тайрагдана. Зөвхөн 1 зураг.</small></div>
           </div>
           <div className="cp-col">
             <span className="cp-label">Хөтөлбөрийн зураг <em className="cp-opt">Заавал биш</em></span>
@@ -239,7 +239,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
         </div>
         <Counted name="body" max={500} min={EVENT_BODY_MIN} rows={5} required latinCheck placeholder={`Зарлалын агуулга (дор хаяж ${EVENT_BODY_MIN} тэмдэгт)… *`} />
         <span className="cp-label">Зураг <Req /></span>
-        <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1), сайтад <b>{sizeLabel(1, slotW(1))}</b> хэмжээтэй орно. Ийм эсвэл үүнээс том дөрвөлжин зураг оруулбал тайрагдахгүй. Зөвхөн 1 зураг.</small></div>
+        <div className="cp-row"><ImageSlot name="image" aspect={1} title="Зураг нэмэх" hint="1:1" required /><small className="cp-hint">Дөрвөлжин (1:1), сайтад <b>{sizeLabel(1, slotW(1))}</b> хүртэл хэмжээтэй орно. Илүү гарсан хэсэг тайрагдана. Зөвхөн 1 зураг.</small></div>
         <div className="cp-actions">
           <span className="cp-review"><img src="/icons/f_shield.svg" width={18} height={18} alt="" />Редакцын зөвшөөрлөөр нийтлэгдэнэ</span>
           <span className="ss-grow" />
