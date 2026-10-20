@@ -3,11 +3,14 @@ import { sql } from "@/lib/db";
 import { requireSection, ago } from "@/lib/admin";
 import { decideLogic } from "../actions";
 import Head, { Tabs, Chip, Flash, who } from "../_c/Head";
+import { HELP_TOPICS, HELP_LABEL } from "@/lib/help";
 
 const TABS = [["", "Шийдвэрлээгүй"], ["resolved", "Шийдвэрлэсэн"], ["dismissed", "Татгалзсан"]];
-const TYPES = [["", "Бүгд"], ["error", "Логик алдаа"], ["complaint", "Бичээчийн гомдол"], ["defense", "Сануулгын хариу"]];
-const TYPE_TONE = { error: "teal", complaint: "warn", defense: "bad" };
-const TYPE_LABEL = { error: "Логик алдаа", complaint: "Бичээчийн гомдол", defense: "Сануулгын хариу" };
+const TYPES = [["", "Бүгд"], ["error", "Логик алдаа"], ["complaint", "Бичээчийн гомдол"], ["defense", "Сануулгын хариу"], ...HELP_TOPICS.map(([k, l]) => [k, k === "general" ? "Ерөнхий гомдол" : l])];
+const TYPE_TONE = { error: "teal", complaint: "warn", defense: "bad", general: "warn", bug: "teal", idea: "ok" };
+const TYPE_LABEL = { error: "Логик алдаа", complaint: "Бичээчийн гомдол", defense: "Сануулгын хариу", ...HELP_LABEL, general: "Ерөнхий гомдол" };
+// Шийдвэрийн товч, шошго: [хүлээн авсан, татгалзсан]
+const VERDICT = (t) => (t === "error" || t === "bug" ? ["Засагдсан", "Алдаа биш"] : t === "idea" ? ["Хүлээн авсан", "Татгалзсан"] : ["Хүлээн авсан", "Үндэслэлгүй"]);
 
 // Уншигчдын мэдэгдсэн логик алдаа, бичээчийн гомдол (редакцын засвар, нуусан контентод), сануулгад бичсэн хариу
 export default async function Logic({ searchParams }) {
@@ -56,7 +59,7 @@ export default async function Logic({ searchParams }) {
   const from = url(st, type);
   return (
     <>
-      <Head user={user} title="Гомдол" search="/admin/logic" q={q} hidden={{ s: st === "open" ? "" : st, t: type }} sub="Уншигчдын мэдэгдсэн алдаа, бичээчийн гомдол, сануулгад бичсэн хариу · шийдвэрлэвэл бичсэн хүнд мэдэгдэл очно" />
+      <Head user={user} title="Гомдол" search="/admin/logic" q={q} hidden={{ s: st === "open" ? "" : st, t: type }} sub="Уншигчдын мэдэгдсэн алдаа, бичээчийн гомдол, сануулгад бичсэн хариу, Тусламж хэсгээс ирсэн гомдол, санал · шийдвэрлэвэл бичсэн хүнд мэдэгдэл очно" />
       <Flash ok={sp.ok} error={sp.error} />
       <Tabs cur={st === "open" ? "" : st} href={(k) => url(k, type)} tabs={TABS.map(([k, l]) => [k, l, c[k || "open"] || 0])} />
       <Tabs cur={type} href={(k) => url(st, k)} tabs={TYPES.map(([k, l]) => [k, l, k ? tc[k] || 0 : Object.values(tc).reduce((x, y) => x + y, 0)])} />
@@ -67,6 +70,7 @@ export default async function Logic({ searchParams }) {
             <tbody>
               {rows.map((r) => {
                 const err = r.type === "error";
+                const [yes, no] = VERDICT(r.type);
                 return (
                   <tr key={r.id}>
                     <td><Chip tone={TYPE_TONE[r.type]}>{TYPE_LABEL[r.type] || r.type}</Chip></td>
@@ -84,6 +88,10 @@ export default async function Logic({ searchParams }) {
                           <b className="adm-strong">Сануулга</b>
                           <small className="adm-note">“{r.warning}” · {ago(r.warned_at)}</small>
                         </>
+                      ) : HELP_LABEL[r.type] ? (
+                        <>
+                          <b className="adm-strong">Тусламж хэсгээс</b>
+                        </>
                       ) : "—"}
                     </td>
                     <td className="adm-wrap adm-clip">{r.body}{r.note && <small className="adm-note">Хариу: {r.note}</small>}</td>
@@ -94,16 +102,16 @@ export default async function Logic({ searchParams }) {
                         <details className="adm-pop">
                           <summary className="adm-btn teal">Шийдвэрлэх</summary>
                           <form action={decideLogic}>
-                            <input type="hidden" name="id" value={r.id} />
+                            <input type="hidden" name="rid" value={r.id} />
                             <input type="hidden" name="from" value={from} />
-                            <input name="note" maxLength={300} placeholder={err ? "Мэдэгдсэн хүнд очих хариу (заавал биш)" : "Бичээчид очих хариу (заавал биш)"} />
-                            <button name="op" value="resolved" className="adm-btn teal">{err ? "Засагдсан" : "Хүлээн авах"}</button>
-                            <button name="op" value="dismissed" className="adm-btn">{err ? "Алдаа биш" : "Үндэслэлгүй"}</button>
+                            <input name="note" maxLength={300} placeholder={err ? "Мэдэгдсэн хүнд очих хариу (заавал биш)" : HELP_LABEL[r.type] ? "Бичсэн хүнд очих хариу (заавал биш)" : "Бичээчид очих хариу (заавал биш)"} />
+                            <button name="op" value="resolved" className="adm-btn teal">{err || r.type === "bug" ? yes : "Хүлээн авах"}</button>
+                            <button name="op" value="dismissed" className="adm-btn">{r.type === "idea" ? "Татгалзах" : no}</button>
                           </form>
                         </details>
                       ) : (
                         <Chip tone={r.status === "resolved" ? "ok" : "gray"}>
-                          {r.status === "resolved" ? (err ? "Засагдсан" : "Хүлээн авсан") : (err ? "Алдаа биш" : "Үндэслэлгүй")}
+                          {r.status === "resolved" ? yes : no}
                         </Chip>
                       )}
                     </td>

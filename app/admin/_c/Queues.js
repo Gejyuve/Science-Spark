@@ -65,7 +65,7 @@ export async function Cats() {
         <div className="adm-card-head pad"><b>Шинэ ангиллын санал ({reqs.length})</b></div>
         {reqs.length === 0 ? <p className="adm-empty">Хүлээгдэж буй санал алга ✓</p> : reqs.map((r) => (
           <form key={r.id} action={decideCategory} className="cq-item">
-            <input type="hidden" name="id" value={r.id} />
+            <input type="hidden" name="rid" value={r.id} />
             <input type="hidden" name="parent" value={r.parent} />
             <p className="adm-muted small">{who(r)} · {fmtDate(r.created_at)} · Байрлал: <b>{where(r.parent)}</b></p>
             <div className="cq-grid">
@@ -97,7 +97,7 @@ export async function Cats() {
                   <td>{who(r)}</td>
                   <td className="adm-right">
                     <form action={resolveCategoryReport} className="adm-acts">
-                      <input type="hidden" name="id" value={r.id} />
+                      <input type="hidden" name="rid" value={r.id} />
                       <button name="op" value="dismissed" className="adm-btn">Хаах</button>
                       <button name="op" value="resolved" className="adm-btn teal">Зассан</button>
                     </form>

@@ -12,8 +12,9 @@ const ICON = {
   admin_on: ["shield", "ok"], admin_off: ["shield", "gray"], restricted: ["logic", "bad"], unrestricted: ["f_shield", "ok"], unflagged: ["f_shield", "ok"],
   points_adj: ["pts", "ok"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"], complaint_ok: ["flag20", "ok"], complaint_no: ["flag20", "gray"],
+  help_ok: ["help", "ok"], help_no: ["help", "gray"],
 };
-const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "task_new", "task_done"];
+const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "task_new", "task_done", "help_new"];
 
 // Улаанбаатарын өдрөөр бүлэглэнэ: Шинэ (уншаагүй) · Өнөөдөр · Өчигдөр · Энэ долоо хоног · Өмнө
 function groupOf(n) {

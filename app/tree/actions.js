@@ -65,7 +65,7 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
 export async function decideCategory(fd) {
   const user = await getUser();
   if (!isStaff(user)) redirect("/");
-  const id = Number(fd.get("id"));
+  const id = Number(fd.get("rid"));
   const approve = fd.get("decision") === "approve";
   const note = String(fd.get("note") || "").trim().slice(0, 500) || null;
   await ensureSchema();
@@ -97,7 +97,7 @@ export async function decideCategory(fd) {
 export async function resolveCategoryReport(fd) {
   const user = await getUser();
   if (!isStaff(user)) redirect("/");
-  const id = Number(fd.get("id"));
+  const id = Number(fd.get("rid"));
   const ok = fd.get("op") === "resolved";
   await ensureSchema();
   const [r] = await sql`UPDATE category_reports SET status = ${ok ? "resolved" : "dismissed"}, resolved_by = ${user.id}, resolved_at = now()
