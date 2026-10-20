@@ -47,22 +47,22 @@ export default function SelectMenu() {
 
     const highlight = (i, scroll = true) => {
       if (!menu) return;
-      const nodes = menu.querySelectorAll(".dd-opt");
-      nodes[active]?.classList.remove("dd-on");
+      menu.querySelector(`[data-i="${active}"]`)?.classList.remove("dd-on");
       active = i;
-      const n = nodes[i];
+      const n = menu.querySelector(`[data-i="${i}"]`);
       if (n) {
         n.classList.add("dd-on");
         // Зөвхөн жагсаалтыг дотор нь гүйлгэнэ (хуудас хөдлөхгүй)
         if (scroll) {
-          if (n.offsetTop < menu.scrollTop) menu.scrollTop = n.offsetTop - 6;
+          const top = menu.querySelector(".dd-find")?.offsetHeight || 0;
+          if (n.offsetTop - top < menu.scrollTop) menu.scrollTop = n.offsetTop - top - 6;
           else if (n.offsetTop + n.offsetHeight > menu.scrollTop + menu.clientHeight) menu.scrollTop = n.offsetTop + n.offsetHeight - menu.clientHeight + 6;
         }
       }
     };
 
     const step = (from, dir) => {
-      for (let i = from + dir; i >= 0 && i < items.length; i += dir) if (!items[i].disabled) return i;
+      for (let i = from + dir; i >= 0 && i < items.length; i += dir) if (!items[i].disabled && !items[i].out) return i;
       return from;
     };
 
@@ -91,6 +91,26 @@ export default function SelectMenu() {
       menu.setAttribute("role", "listbox");
       const lab = el.getAttribute("aria-label") || el.labels?.[0]?.textContent;
       if (lab) menu.setAttribute("aria-label", lab.trim());
+      // Урт жагсаалтад хайх талбар (жишээ нь шашин, улс)
+      let find = null;
+      if (items.length > 15) {
+        find = document.createElement("input");
+        find.className = "dd-find";
+        find.type = "search";
+        find.placeholder = "Хайх…";
+        find.setAttribute("aria-label", "Жагсаалтаас хайх");
+        find.addEventListener("input", () => {
+          const q = find.value.trim().toLowerCase();
+          items.forEach((o, i) => {
+            o.out = !!q && !o.label.toLowerCase().includes(q);
+            const n = menu.querySelector(`[data-i="${i}"]`);
+            if (n) n.hidden = o.out;
+          });
+          menu.querySelector(".dd-none").hidden = items.some((o) => !o.out && !o.hidden);
+          highlight(step(-1, 1));
+        });
+        menu.appendChild(find);
+      }
       items.forEach((o, i) => {
         if (o.hidden) return;
         const d = document.createElement("div");
@@ -104,15 +124,24 @@ export default function SelectMenu() {
         d.addEventListener("click", (e) => { e.stopPropagation(); pick(i); });
         menu.appendChild(d);
       });
+      if (find) {
+        const none = document.createElement("div");
+        none.className = "dd-none";
+        none.textContent = "Олдсонгүй";
+        none.hidden = true;
+        menu.appendChild(none);
+      }
       // Нуусан мөрүүдийг гараар гүйлгэхэд алгасна
       items = items.map((o) => (o.hidden ? { ...o, disabled: true } : o));
       document.body.appendChild(menu);
+      // Утсан дээр гар шууд гарч ирэхгүйн тулд хайх талбарт зөвхөн компьютер дээр шилжинэ
+      if (find && !touch) find.focus({ preventScroll: true });
       place();
       active = -1;
       const cur = el.selectedIndex >= 0 && !items[el.selectedIndex]?.disabled ? el.selectedIndex : step(-1, 1);
       // Сонгосон мөрийг жагсаалтын голд харуулна
       const n = menu.querySelector(`[data-i="${cur}"]`);
-      if (n) menu.scrollTop = n.offsetTop - menu.clientHeight / 2 + n.offsetHeight / 2;
+      if (n && cur > 0) menu.scrollTop = n.offsetTop - menu.clientHeight / 2 + n.offsetHeight / 2;
       highlight(cur, false);
     };
 
@@ -145,6 +174,8 @@ export default function SelectMenu() {
     const onKey = (e) => {
       if (menu) {
         const k = e.key;
+        const inFind = e.target.classList?.contains("dd-find");
+        if (inFind && (k === " " || k === "Home" || k === "End" || k.length === 1)) return;
         if (k === "ArrowDown" || k === "ArrowUp") { e.preventDefault(); highlight(step(active, k === "ArrowDown" ? 1 : -1)); return; }
         if (k === "Home" || k === "End") { e.preventDefault(); highlight(k === "Home" ? step(-1, 1) : step(items.length, -1)); return; }
         if (k === "Enter" || k === " ") { e.preventDefault(); pick(active); return; }

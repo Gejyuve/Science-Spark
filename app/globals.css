@@ -3722,3 +3722,10 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 :root[data-theme="dark"] .dd-opt.dd-sel { color: #4fd6c6; }
 :root[data-theme="dark"] .dd-opt.dd-off { color: #5d6f7a; }
 .pf-hint a { color: #00a89b; font-weight: 600; }
+.dd-find {
+  position: sticky; top: -6px; z-index: 1; display: block; width: calc(100% + 12px); height: 42px; margin: -6px -6px 6px; padding: 0 12px 0 36px;
+  border: 0; border-bottom: 1px solid var(--border); border-radius: 0; outline: none; font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--surface) url("/icons/search.svg") no-repeat 10px center / 16px;
+}
+.dd-find::placeholder { color: #98aab5; }
+.dd-none { padding: 12px; font-size: 13px; color: var(--muted); text-align: center; }
