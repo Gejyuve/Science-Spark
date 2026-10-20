@@ -1,5 +1,5 @@
 // Хуудасны өнгөлөг толгой: Мод, Нийтлэл, Мэдээ, Даалгавар нэг загвартай, өнгө нь хуудас бүрт өөр.
-// tone: tree | article | news | task | report | dict · acts: гарчгийн доорх товчнууд
+// tone: tree | article | news | task | report
 
 const ART = {
   // Мод: их бие, мөчир, навчис
@@ -46,19 +46,11 @@ const ART = {
       <path d="M80 28h40v20H80zM68 84l10 10 18-20M108 86h30M68 124l10 10 18-20M108 126h30M68 162h70" />
     </>
   ),
-  // Толь: хэлэлцэж буй хоёр яриа, «Аа»
-  dict: (
-    <>
-      <path d="M30 40h96a14 14 0 0 1 14 14v52a14 14 0 0 1-14 14H74l-28 22v-22H30a14 14 0 0 1-14-14V54a14 14 0 0 1 14-14z" />
-      <path d="M154 92h16a14 14 0 0 1 14 14v40a14 14 0 0 1-14 14h-6v20l-24-20h-40a14 14 0 0 1-14-14v-10" />
-      <path d="M48 98l14-36 14 36M53 86h18M92 74c10-6 22-2 22 10v14M114 88c-14-2-24 2-24 8 0 8 14 8 24-2" />
-    </>
-  ),
 };
 
-const EMOJI = { tree: "🌳", article: "📖", news: "📡", task: "🧪", report: "📝", dict: "🔤" };
+const EMOJI = { tree: "🌳", article: "📖", news: "📡", task: "🧪", report: "📝" };
 
-export default function PageHero({ tone, title, text, acts, children }) {
+export default function PageHero({ tone, title, text, children }) {
   return (
     <section className={`ph ph-${tone}`}>
       <i className="ph-blob a" aria-hidden="true" />
@@ -68,7 +60,6 @@ export default function PageHero({ tone, title, text, acts, children }) {
       <div className="ph-body">
         <h1><span className="ph-ico" aria-hidden="true">{EMOJI[tone]}</span>{title}</h1>
         {text && <p>{text}</p>}
-        {acts && <div className="ph-acts">{acts}</div>}
       </div>
       {children && <div className="ph-side">{children}</div>}
     </section>
