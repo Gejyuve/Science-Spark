@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Баруун талын "Мэдэгдэл" мөр: хулгана тавих эсвэл дарахад жагсаалт гарна
-export default function NotifMenu({ trigger, children }) {
+// Баруун талын "Мэдэгдэл" мөр: хулгана тавих эсвэл дарахад жагсаалт гарна (hover={false} бол зөвхөн дарахад)
+export default function NotifMenu({ trigger, children, label = "Мэдэгдэл", popClass = "", hover = true, closeOnSubmit = false }) {
   const [open, setOpen] = useState(false);
   const box = useRef(null);
   const t = useRef(null);
@@ -20,13 +20,13 @@ export default function NotifMenu({ trigger, children }) {
     <div
       className="nf-menu"
       ref={box}
-      onPointerEnter={(e) => { if (e.pointerType === "mouse") { clearTimeout(t.current); t.current = setTimeout(() => setOpen(true), 150); } }}
-      onPointerLeave={(e) => { if (e.pointerType === "mouse" && !pinned.current) { clearTimeout(t.current); t.current = setTimeout(() => setOpen(false), 300); } }}
+      onPointerEnter={(e) => { if (hover && e.pointerType === "mouse") { clearTimeout(t.current); t.current = setTimeout(() => setOpen(true), 150); } }}
+      onPointerLeave={(e) => { if (hover && e.pointerType === "mouse" && !pinned.current) { clearTimeout(t.current); t.current = setTimeout(() => setOpen(false), 300); } }}
     >
-      <button type="button" className="ss-action nf-trigger" aria-expanded={open} onClick={() => { if (open && !pinned.current) { pinned.current = true; return; } pinned.current = !open; setOpen(!open); }}>
+      <button type="button" className="ss-action nf-trigger" aria-expanded={open} onClick={() => { if (hover && open && !pinned.current) { pinned.current = true; return; } pinned.current = !open; setOpen(!open); }}>
         {trigger}
       </button>
-      {open && <div className="nf-pop" role="dialog" aria-label="Мэдэгдэл">{children}</div>}
+      {open && <div className={"nf-pop" + (popClass ? " " + popClass : "")} role="dialog" aria-label={label} onSubmit={closeOnSubmit ? () => setOpen(false) : undefined}>{children}</div>}
     </div>
   );
 }

@@ -117,29 +117,30 @@ async function railLists() {
   return railCache.data;
 }
 
-// Удирддаг клуб, байгууллагын хаяг руу шилжих товч (баруун цэс)
+// «Профайл солих»: дарахад өөрийн, удирддаг клуб, байгууллагын хаяг жижиг цонхонд гарна (баруун цэс)
 function AsSwitch({ user, acting }) {
   const { club, org, as, entity } = acting;
   if (!club && !org) return null;
-  const go = (to, body, cls = "") => (
-    <form action={switchAs} key={to}>
-      <input type="hidden" name="to" value={to} />
-      <button type="submit" className={"ss-action ss-as-btn" + cls}>{body}</button>
-    </form>
-  );
+  const rows = [
+    ["me", <Avatar user={user} size={36} />, displayName(user), "Хувь хүн"],
+    club && ["club", <ClubAv c={club} size={36} />, club.name, "Клуб"],
+    org && ["org", <ClubAv c={org} size={36} />, org.name, "Байгууллага"],
+  ].filter(Boolean);
+  const cur = as || "me";
   return (
-    <div className="ss-as-box">
-      {entity && (
-        <p className="ss-as-now">
-          <ClubAv c={entity} size={22} />
-          <span><b>{entity.name}</b><small>{as === "org" ? "Байгууллагын" : "Клубийн"} нэрээр бичиж байна</small></span>
-        </p>
-      )}
-      {entity && go("me", <><Avatar user={user} size={22} /><span><b>{displayName(user)}</b><small>Өөрийн хаяг руу буцах</small></span>{I("arrow", 14)}</>)}
-      {[["club", club], ["org", org]].filter(([k, c]) => c && k !== as).map(([k, c]) =>
-        go(k, <><ClubAv c={c} size={22} /><span><b>{c.name}</b><small>{k === "org" ? "Байгууллагын" : "Клубийн"} хаяг руу шилжих</small></span>{I("arrow", 14)}</>)
-      )}
-    </div>
+    <NotifMenu label="Профайл солих" popClass="as-pop" hover={false} closeOnSubmit
+      trigger={<>{entity ? <ClubAv c={entity} size={18} /> : I("swap", 18)}<span>{entity ? <>Профайл солих<small className="ss-as-cur">{entity.name}</small></> : "Профайл солих"}</span>{I("arrow", 14)}</>}>
+      <div className="nf-head"><b>Профайл солих</b></div>
+      {rows.map(([k, av, name, kind]) => (
+        <form action={switchAs} key={k}>
+          <input type="hidden" name="to" value={k} />
+          <button type="submit" className={"as-row" + (k === cur ? " on" : "")} disabled={k === cur} aria-current={k === cur}>
+            {av}<span><b>{name}</b><small>{kind}</small></span>
+            {k === cur && <em>✓</em>}
+          </button>
+        </form>
+      ))}
+    </NotifMenu>
   );
 }
 
@@ -175,8 +176,8 @@ async function RightRail({ user, acting }) {
             </div>
           </Link>
           <div className="ss-actions">
-            <AsSwitch user={user} acting={acting} />
             <ProfileAction id={user.id} />
+            <AsSwitch user={user} acting={acting} />
             <NotifMenu trigger={<>{I("bell", 18)}<span>Мэдэгдэл</span>{unread > 0 && <em className="ss-badge red">{unread}</em>}{I("arrow", 14)}</>}>
               <div className="nf-head">
                 <b>Мэдэгдэл</b>{unread > 0 && <em className="ss-badge red">{unread}</em>}
