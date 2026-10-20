@@ -5,13 +5,15 @@ import { Avatar } from "./Bits";
 import { toggleFollow } from "../posts/actions";
 
 const ICON = {
-  tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"],
+  tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"], pay_no: ["wallet", "gray"],
   withdraw_ok: ["wallet", "ok"], withdraw_no: ["wallet", "gray"],
-  approved: ["f_shield", "ok"], approved_edited: ["f_shield", "ok"], reviewed: ["f_shield", "ok"], reviewer_ok: ["f_shield", "ok"],
-  rejected: ["logic", "warn"], reviewer_no: ["f_shield", "gray"], removed: ["logic", "bad"],
+  approved: ["f_shield", "ok"], approved_edited: ["f_shield", "ok"], restored: ["f_shield", "ok"],
+  rejected: ["logic", "warn"], removed: ["logic", "bad"], comment_removed: ["logic", "bad"],
+  admin_on: ["shield", "ok"], admin_off: ["shield", "gray"], restricted: ["logic", "bad"], unrestricted: ["f_shield", "ok"], unflagged: ["f_shield", "ok"],
+  points_adj: ["pts", "ok"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"], complaint_ok: ["flag20", "ok"], complaint_no: ["flag20", "gray"],
 };
-const AVATAR_KINDS = ["follow", "comment", "reply", "club_invite", "club_join", "club_request", "club_ok", "club_no"];
+const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "task_new", "task_done"];
 
 // Улаанбаатарын өдрөөр бүлэглэнэ: Шинэ (уншаагүй) · Өнөөдөр · Өчигдөр · Энэ долоо хоног · Өмнө
 function groupOf(n) {
@@ -51,7 +53,6 @@ function Item({ n }) {
             <button type="submit">Дагах</button>
           </form>
         )}
-        {n.kind === "reviewer_ok" && <Link href={`/n/${n.id}`} className="nf-act btn">Хяналт руу</Link>}
       </span>
       {!n.read_at && <i className="nf-dot" aria-label="Уншаагүй" />}
     </div>

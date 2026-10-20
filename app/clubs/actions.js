@@ -337,6 +337,8 @@ export async function leaveClub(fd) {
   if (fd.get("confirm") !== "1") redirect(`/club/${club}?join=leave`);
   await sql`DELETE FROM club_members WHERE user_id = ${user.id} AND club_id = ${club}`;
   await sql`INSERT INTO club_moves (user_id, from_club, from_name) VALUES (${user.id}, ${club}, ${mine.name})`;
+  const [c] = await sql`SELECT leader_id FROM clubs WHERE id = ${club}`;
+  if (c?.leader_id) await notify({ userId: c.leader_id, kind: "club_left", actorId: user.id, note: mine.name, clubId: club });
   revalidatePath("/", "layout");
   redirect(`/club/${club}`);
 }
@@ -346,9 +348,10 @@ export async function removeMember(fd) {
   const user = await guard();
   const club = Number(fd.get("club_id"));
   const target = Number(fd.get("user_id"));
-  const [c] = await sql`SELECT leader_id FROM clubs WHERE id = ${club}`;
+  const [c] = await sql`SELECT leader_id, name FROM clubs WHERE id = ${club}`;
   if (!c || c.leader_id !== user.id || target === user.id) redirect(`/club/${club}`);
-  await sql`DELETE FROM club_members WHERE user_id = ${target} AND club_id = ${club} AND role <> 'leader'`;
+  const gone = await sql`DELETE FROM club_members WHERE user_id = ${target} AND club_id = ${club} AND role <> 'leader' RETURNING 1`;
+  if (gone.length) await notify({ userId: target, kind: "club_removed", actorId: user.id, note: c.name, clubId: club });
   revalidatePath("/", "layout");
   redirect(`/club/${club}?tab=members`);
 }

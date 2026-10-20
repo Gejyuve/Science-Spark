@@ -31,6 +31,7 @@ export async function adminSetRole(formData) {
   await sql`UPDATE users SET role = ${role}, perms = '{}'
             WHERE id = ${t.id} AND role <> 'superadmin'`;
   await audit({ actorId: me.id, category: "role", action: `Эрх: ${ROLE_LABELS[t.role]} → ${ROLE_LABELS[role]}`, targetType: "user", targetId: t.id, targetLabel: label(t) });
+  await notify({ userId: t.id, kind: role === "admin" ? "admin_on" : "admin_off", actorId: me.id });
   revalidatePath("/admin", "layout");
   back(from, "Эрх шинэчлэгдлээ", true);
 }
@@ -49,6 +50,7 @@ export async function restrictUser(formData) {
   if (undo) await sql`UPDATE users SET restricted_at = NULL, restrict_note = NULL WHERE id = ${t.id}`;
   else await sql`UPDATE users SET restricted_at = now(), restrict_note = ${note} WHERE id = ${t.id}`;
   await audit({ actorId: me.id, category: "role", action: undo ? "Хязгаарлалт цуцалсан" : `Хязгаарласан (${note})`, targetType: "user", targetId: t.id, targetLabel: label(t) });
+  await notify({ userId: t.id, kind: undo ? "unrestricted" : "restricted", actorId: me.id, note: undo ? null : note });
   revalidatePath("/admin", "layout");
   back(from, undo ? "Хязгаарлалт цуцлагдлаа" : "Хэрэглэгч хязгаарлагдлаа", true);
 }
@@ -86,6 +88,7 @@ export async function cancelDeletion(formData) {
   if (!t) back("/admin/users", "Хэрэглэгч олдсонгүй");
   await sql`UPDATE users SET delete_pending_at = NULL, restricted_at = NULL, restrict_note = NULL WHERE id = ${t.id}`;
   await audit({ actorId: me.id, category: "role", action: "Устгах дарааллаас гаргасан", targetType: "user", targetId: t.id, targetLabel: label(t) });
+  await notify({ userId: t.id, kind: "unflagged", actorId: me.id });
   revalidatePath("/admin", "layout");
   back(from, "Профайлыг сэргээлээ", true);
 }
@@ -128,6 +131,7 @@ export async function adjustPoints(formData) {
   if (t.id === me.id) back(from, "Өөртөө оч өгөх, хасах боломжгүй");
   await sql`INSERT INTO points_ledger (user_id, delta, reason) VALUES (${t.id}, ${delta}, ${"admin:" + note})`;
   await audit({ actorId: me.id, category: "points", action: `${delta > 0 ? "+" : ""}${delta} оч (${note})`, targetType: "user", targetId: t.id, targetLabel: label(t) });
+  await notify({ userId: t.id, kind: "points_adj", actorId: me.id, note: `${delta > 0 ? "+" : ""}${delta} оч · ${note}` });
   revalidatePath("/admin", "layout");
   back(from, `${label(t)}: ${delta > 0 ? "+" : ""}${delta} оч`, true);
 }
@@ -149,9 +153,10 @@ export async function moderatePost(formData) {
     await notify({ userId: d[0].author_id, kind: "removed", actorId: me.id, postId: id, note });
   } else if (op === "restore") {
     const d = await sql`UPDATE posts SET status = 'published', reviewer_id = ${me.id}, reviewed_at = now(), review_note = NULL
-                        WHERE id = ${id} AND status = 'removed' RETURNING title, kind`;
+                        WHERE id = ${id} AND status = 'removed' RETURNING author_id, title, kind`;
     if (!d.length) back(from, "Зөвхөн нуусан контентыг сэргээнэ");
     await audit({ actorId: me.id, category: "content", action: `${d[0].kind} сэргээсэн`, targetType: "post", targetId: id, targetLabel: d[0].title });
+    await notify({ userId: d[0].author_id, kind: "restored", actorId: me.id, postId: id });
   } else if (op === "delete") {
     // Нуусан контентыг нэг мөсөн устгах — зөвхөн супер админ
     if (me.role !== "superadmin") back(from, "Нэг мөсөн устгах нь зөвхөн супер админд");

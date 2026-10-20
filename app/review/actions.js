@@ -6,7 +6,7 @@ import { validCategory } from "@/lib/tree";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, canApproveEvents, canApproveTasks } from "@/lib/auth";
 import { APPROVE_REWARD } from "@/lib/levels";
-import { notify } from "@/lib/notify";
+import { notify, notifyClubLeaders } from "@/lib/notify";
 import { audit } from "@/lib/admin";
 import { recordRevision } from "@/lib/revisions";
 import { firstReward } from "@/lib/celebrate";
@@ -83,6 +83,8 @@ export async function decidePost(formData) {
                 SELECT ${p.club_id}, ${TASK_APPROVE_REWARD}, ${"approved:post:" + id}
                 WHERE NOT EXISTS (SELECT 1 FROM club_points WHERE reason = ${"approved:post:" + id})`;
     }
+    // Шинэ даалгаврыг бусад клубийн удирдагчдад мэдэгдэнэ
+    if (isTask) await notifyClubLeaders({ kind: "task_new", actorId: p.author_id, postId: id, exceptClub: p.club_id });
     // Батлагдсан тайлан: биелүүлсэн клуб даалгаврын очийг (нэг даалгаварт нэг удаа),
     // даалгаврыг нэмсэн өөр клуб түүний AUTHOR_SHARE хувийг авна
     if (p.club_id && p.kind === REPORT_KIND && p.task_id) {
@@ -97,6 +99,8 @@ export async function decidePost(formData) {
           await sql`INSERT INTO club_points (club_id, delta, reason)
                     SELECT ${task.club_id}, ${share}, ${`share:report:${id}`}
                     WHERE NOT EXISTS (SELECT 1 FROM club_points WHERE reason = ${`share:report:${id}`})`;
+          const [tc] = await sql`SELECT leader_id FROM clubs WHERE id = ${task.club_id}`;
+          if (tc?.leader_id) await notify({ userId: tc.leader_id, kind: "task_done", actorId: p.author_id, postId: id, clubId: task.club_id });
         }
       }
     }
