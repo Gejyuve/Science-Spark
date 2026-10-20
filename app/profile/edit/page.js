@@ -27,6 +27,7 @@ export default async function EditProfilePage({ searchParams }) {
       <span className="au-blob a" aria-hidden="true" />
       <span className="au-blob b" aria-hidden="true" />
       {!isNew && <TopNav className="wr-nav" />}
+      {user.operator && <p className="ss-announce ss-botbar pf-botbar">Та бот хаягийн профайлыг бөглөж байна. Энэ мөрийг зөвхөн та харж байна.</p>}
       <ProfileForm
         user={{ id: user.id, email: user.email, surname: user.surname || "", first_name: user.first_name || "", avatar: user.avatar, avatar_src: user.avatar_src, avatar_pos: user.avatar_pos }}
         profile={profile}
@@ -34,7 +35,8 @@ export default async function EditProfilePage({ searchParams }) {
         isNew={isNew}
       />
       {/* Нууц үг солих: профайлын маягтаас тусдаа (ноорогт хадгалагдахгүй) */}
-      {!isNew && (
+      {/* Бот хаяг имэйл, нууц үггүй */}
+      {!isNew && user.email && (
         <form action={changePassword} className="pf-col pf-pwcol" id="password">
           <section className="pf-card">
             <h2>Нууц үг солих</h2>

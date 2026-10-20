@@ -3776,3 +3776,11 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
   .tm-doc p.tm-sub { padding-left: 24px; }
   .tm-doc p > span { min-width: 36px; }
 }
+
+/* Супер админ ботоор ажиллаж байх үеийн мөр (зөвхөн түүнд) */
+.ss-botbar { display: flex; align-items: center; gap: 10px; background: #efe9ff; color: #5b3fc4; }
+.ss-botbar button { border: 0; border-radius: 999px; padding: 6px 14px; background: #6d4fe0; color: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+:root[data-theme="dark"] .ss-botbar { background: #261d45; color: #c9bbff; }
+.bt-note { max-width: 640px; margin: 0; font-size: 13px; line-height: 1.5; }
+.bt-unread { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #e5484d; color: #fff; font-style: normal; font-size: 11px; }
+.pf-botbar { position: relative; z-index: 1; max-width: 880px; margin: 16px auto 0; }

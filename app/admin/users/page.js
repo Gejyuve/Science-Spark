@@ -22,7 +22,7 @@ export default async function Users({ searchParams }) {
   const pg = Math.max(1, Number(page) || 1);
   const like = `%${String(q).trim().toLowerCase()}%`;
   const rows = await sql`
-    SELECT u.id, u.email, u.initial, u.first_name, u.surname, u.role, u.account_type, u.restricted_at, u.delete_pending_at, u.created_at,
+    SELECT u.id, u.email, u.initial, u.first_name, u.surname, u.role, u.account_type, u.restricted_at, u.delete_pending_at, u.created_at, u.is_bot,
       (SELECT string_agg(note, ' · ' ORDER BY created_at) FROM user_warnings WHERE user_id = u.id) AS warnings,
       (SELECT COUNT(*) FROM user_warnings WHERE user_id = u.id)::int AS warns,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
@@ -73,11 +73,13 @@ export default async function Users({ searchParams }) {
                   <td>
                     <span className="adm-user">
                       <Avatar user={u} size={32} />
-                      <span><b>{who(u)}</b><small>{u.email}</small></span>
+                      {/* Имэйлийг зөвхөн супер админ харна; бот гэдгийг ч зөвхөн тэр мэднэ */}
+                      <span><b>{who(u)}</b>{sup && <small>{u.email}</small>}</span>
                     </span>
                   </td>
                   <td>
                     <Chip tone={ROLE_TONE[u.role]}>{ROLE_LABELS[u.role]}</Chip>
+                    {sup && u.is_bot && <Chip tone="dark">Бот</Chip>}
                     {u.delete_pending_at ? <Chip tone="bad">Устгах</Chip> : u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
                     {u.warns > 0 && <Chip tone="warn">{u.warns} сануулга</Chip>}
                     {t === "delete" && u.warnings && <small className="adm-note">{u.warnings}</small>}
@@ -99,7 +101,7 @@ export default async function Users({ searchParams }) {
                   </>)}
                   <td className="adm-right">
                     <span className="adm-acts">
-                      {sup && u.role === "user" && !u.delete_pending_at && (
+                      {sup && u.role === "user" && !u.delete_pending_at && !u.is_bot && (
                         <form action={adminSetRole}>
                           <input type="hidden" name="user_id" value={u.id} />
                           <input type="hidden" name="role" value="admin" />
