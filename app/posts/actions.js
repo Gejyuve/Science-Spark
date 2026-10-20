@@ -326,7 +326,8 @@ export async function awardBounty(formData) {
   const [c] = await sql`
     SELECT c.id, c.post_id, c.author_id, b.id AS bounty_id, b.amount, b.title
     FROM comments c JOIN bounties b ON b.post_id = c.post_id AND b.status = 'open' AND b.user_id = ${user.id}
-    WHERE c.id = ${commentId} AND c.parent_id IS NULL`;
+    JOIN users a ON a.id = c.author_id
+    WHERE c.id = ${commentId} AND c.parent_id IS NULL AND NOT a.is_bot`;
   if (!c) redirect("/");
   if (!c.author_id || c.author_id === user.id) redirect(`/post/${c.post_id}`);
   const ok = await payBounty({ id: c.bounty_id, amount: c.amount, title: c.title }, c.author_id, c.id);

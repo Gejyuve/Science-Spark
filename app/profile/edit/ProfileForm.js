@@ -129,13 +129,13 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
           </ImageInput>
           <div><b>Нүүр зураг</b><Pts k="photo" /><small className="cf-hint pf-size">Дөрвөлжин зураг · 480×480 px</small></div>
         </div>
-        <label className="pf-email">
+        {user.email && <label className="pf-email">
           <span className="pf-mailtile"><img src="/icons/mail.svg" width={20} height={20} alt="" /></span>
           <b>{user.email}</b>
           <span className="pf-grow" />
           <span className="pf-muted">Бусдад харуулах</span>
           <input type="checkbox" name="email_public" defaultChecked={!!p.email_public} className="pf-switch" />
-        </label>
+        </label>}
       </section>
 
       <section className="pf-card">

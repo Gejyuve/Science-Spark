@@ -6,6 +6,8 @@ import { DrawerHost, DrawerClose } from "./Drawer";
 import Composer from "./Composer";
 import { actingAs } from "@/lib/acting";
 import { switchAs } from "../clubs/actions";
+import { switchBot } from "../admin/bots/actions";
+import { listBots } from "@/lib/bots";
 import TopNav, { NavRow } from "./TopNav";
 import { logout } from "../auth/actions";
 import { markAllRead } from "../posts/actions";
@@ -118,22 +120,26 @@ async function railLists() {
 }
 
 // «Профайл солих»: дарахад өөрийн, удирддаг клуб, байгууллагын хаяг жижиг цонхонд гарна (баруун цэс)
-function AsSwitch({ user, acting }) {
+// Супер админд нэмэлтээр бот хаягууд (зөвхөн түүнд харагдана; ботоор ажиллаж байхад ч)
+function AsSwitch({ user, acting, bots }) {
   const { club, org, as, entity } = acting;
-  if (!club && !org) return null;
+  if (!club && !org && !bots) return null;
+  const op = user.operator;
   const rows = [
-    ["me", <Avatar user={user} size={36} />, displayName(user), "Хувь хүн"],
+    op ? ["self", <Avatar user={op} size={36} />, displayName(op), "Өөрийн хаяг"] : ["me", <Avatar user={user} size={36} />, displayName(user), "Хувь хүн"],
     club && ["club", <ClubAv c={club} size={36} />, club.name, "Клуб"],
     org && ["org", <ClubAv c={org} size={36} />, org.name, "Байгууллага"],
+    ...(bots || []).filter((b) => b.first_name).map((b) => [`bot${b.id}`, <Avatar user={b} size={36} />, displayName(b), b.unread > 0 ? `Бот · ${b.unread} шинэ мэдэгдэл` : "Бот"]),
   ].filter(Boolean);
-  const cur = as || "me";
+  const cur = op ? `bot${user.id}` : as || "me";
   return (
     <NotifMenu label="Профайл солих" popClass="as-pop" hover={false} closeOnSubmit
       trigger={<>{entity ? <ClubAv c={entity} size={18} /> : I("swap", 18)}<span>{entity ? <>Профайл солих<small className="ss-as-cur">{entity.name}</small></> : "Профайл солих"}</span>{I("arrow", 14)}</>}>
       <div className="nf-head"><b>Профайл солих</b></div>
       {rows.map(([k, av, name, kind]) => (
-        <form action={switchAs} key={k}>
-          <input type="hidden" name="to" value={k} />
+        <form action={k.startsWith("bot") || k === "self" ? switchBot : switchAs} key={k}>
+          <input type="hidden" name="to" value={k.startsWith("bot") ? k.slice(3) : k === "self" ? "" : k} />
+          {k === "self" && <input type="hidden" name="next" value="/" />}
           <button type="submit" className={"as-row" + (k === cur ? " on" : "")} disabled={k === cur} aria-current={k === cur}>
             {av}<span><b>{name}</b><small>{kind}</small></span>
             {k === cur && <em>✓</em>}
@@ -147,7 +153,7 @@ function AsSwitch({ user, acting }) {
 async function RightRail({ user, acting }) {
   const none = (v) => () => v;
   // Бие биеэсээ хамааралгүй асуулгуудыг зэрэг явуулна
-  const [lists, following, clubFollows, followers, unread, notifs, chat] = await Promise.all([
+  const [lists, following, clubFollows, followers, unread, notifs, chat, bots] = await Promise.all([
     railLists().catch(none({ top: [], clubs: [] })),
     followingSet(user),
     clubFollowSet(user),
@@ -159,6 +165,7 @@ async function RightRail({ user, acting }) {
           .then(async (myClub) => ({ myClub, chatNew: myClub ? await chatUnread(user.id, myClub.club_id) : 0 }))
           .catch(none({ myClub: null, chatNew: 0 }))
       : { myClub: null, chatNew: 0 },
+    isSuperAdmin(user?.operator || user) ? listBots().catch(none(null)) : null,
   ]);
   const { top, clubs } = lists;
   const { myClub, chatNew } = chat;
@@ -177,7 +184,7 @@ async function RightRail({ user, acting }) {
           </Link>
           <div className="ss-actions">
             <ProfileAction id={user.id} />
-            <AsSwitch user={user} acting={acting} />
+            <AsSwitch user={user} acting={acting} bots={bots} />
             <NotifMenu trigger={<>{I("bell", 18)}<span>Мэдэгдэл</span>{unread > 0 && <em className="ss-badge red">{unread}</em>}{I("arrow", 14)}</>}>
               <div className="nf-head">
                 <b>Мэдэгдэл</b>{unread > 0 && <em className="ss-badge red">{unread}</em>}
@@ -255,6 +262,14 @@ export default async function Shell({ user, active, children, header = true, com
           <Header user={user} compose={compose} composeError={composeError} active={active} acting={acting} />
         ) : (
           <header className="ss-header compact static"><NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} /></header>
+        )}
+        {user?.operator && (
+          <div className="ss-announce bot ss-botbar">
+            <Avatar user={user} size={24} />
+            <span>Та одоо <b>{displayName(user)}</b> ботоор ажиллаж байна. Үүнийг зөвхөн та харж байна.</span>
+            <span className="ss-grow" />
+            <form action={switchBot}><input type="hidden" name="next" value="/admin/bots" /><button type="submit">Өөртөө буцах</button></form>
+          </div>
         )}
         {site.announcement && <p className="ss-announce">{site.announcement}</p>}
         {site.maintenance && isStaff(user) && <p className="ss-announce warn">Засвар үйлчилгээний горим асаалттай: зөвхөн редакц сайтыг харж байна.</p>}

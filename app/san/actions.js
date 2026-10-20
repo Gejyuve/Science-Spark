@@ -31,7 +31,7 @@ async function makeRequest(user, formData) {
     if (!(amount >= DONATION_MIN && amount <= DONATION_MAX)) return { error: `Дүн ${fmtMnt(DONATION_MIN)}-с ${fmtMnt(DONATION_MAX)} хооронд байна` };
     if (kind === "tip") {
       writerId = Number(formData.get("writer_id"));
-      const [w] = Number.isInteger(writerId) ? await sql`SELECT id FROM users WHERE id = ${writerId} AND first_name <> ''` : [];
+      const [w] = Number.isInteger(writerId) ? await sql`SELECT id FROM users WHERE id = ${writerId} AND first_name <> '' AND NOT is_bot` : [];
       if (!w) return { error: "Бичээч олдсонгүй", to: "/san" };
       if (writerId === user.id) return { error: "Өөртөө хандив өгөх боломжгүй" };
       const p = Number(formData.get("post_id"));

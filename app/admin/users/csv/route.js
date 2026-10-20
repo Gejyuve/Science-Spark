@@ -27,10 +27,12 @@ export async function GET(req) {
            OR (${t} = 'restricted' AND u.restricted_at IS NOT NULL) OR (${t} = 'new' AND u.created_at > now() - interval '7 days'))
       AND (${like} = '%%' OR lower(u.email) LIKE ${like} OR lower(u.first_name) LIKE ${like} OR lower(COALESCE(u.surname,'')) LIKE ${like})
     ORDER BY u.id`;
-  const head = ["ID", "Мэйл", "Овог", "Нэр", "Төрөл", "Эрх", "Оч", "Нийтлэл", "Хязгаарласан", "Бүртгүүлсэн"];
+  // Имэйл зөвхөн супер админы татсан файлд
+  const sup = user.role === "superadmin";
+  const head = ["ID", ...(sup ? ["Мэйл"] : []), "Овог", "Нэр", "Төрөл", "Эрх", "Оч", "Нийтлэл", "Хязгаарласан", "Бүртгүүлсэн"];
   const lines = [head.map(cell).join(",")].concat(
     rows.map((r) =>
-      [r.id, r.email, r.surname, r.first_name, r.account_type, ROLE_LABELS[r.role], r.points, r.posts,
+      [r.id, ...(sup ? [r.email] : []), r.surname, r.first_name, r.account_type, ROLE_LABELS[r.role], r.points, r.posts,
        r.restricted_at ? "тийм" : "", new Date(r.created_at).toISOString().slice(0, 10)].map(cell).join(",")
     )
   );

@@ -27,7 +27,7 @@ export async function adminSetRole(formData) {
   const t = await target(formData.get("user_id"));
   const role = String(formData.get("role"));
   if (!t || !["user", "admin"].includes(role)) back(from, "Буруу хүсэлт");
-  if (t.id === me.id || t.role === "superadmin") back(from, "Энэ хэрэглэгчийн эрхийг өөрчлөх боломжгүй");
+  if (t.id === me.id || t.role === "superadmin" || !t.email) back(from, "Энэ хэрэглэгчийн эрхийг өөрчлөх боломжгүй");
   if (t.role === role) back(from, "Өөрчлөлт алга", true);
   await sql`UPDATE users SET role = ${role}, perms = '{}'
             WHERE id = ${t.id} AND role <> 'superadmin'`;
@@ -102,11 +102,12 @@ export async function deleteUser(formData) {
   if (me.role !== "superadmin") back(from, "Хэрэглэгч устгах нь зөвхөн супер админд");
   if (!t) back("/admin/users", "Хэрэглэгч олдсонгүй");
   if (t.id === me.id || t.role === "superadmin") back(from, "Энэ хэрэглэгчийг устгах боломжгүй");
-  if (String(formData.get("confirm") || "").trim().toLowerCase() !== t.email) back(from, "Баталгаажуулахын тулд имэйлийг яг бичнэ үү");
+  // Имэйлгүй (бот) хаягийг дугаараар нь баталгаажуулна
+  if (String(formData.get("confirm") || "").trim().toLowerCase() !== (t.email || String(t.id))) back(from, "Баталгаажуулахын тулд имэйлийг яг бичнэ үү");
   const [w] = await sql`SELECT string_agg(note, '; ' ORDER BY created_at) AS notes FROM user_warnings WHERE user_id = ${t.id}`;
   const reason = String(formData.get("note") || "").trim().slice(0, 300) || w?.notes || "Супер админ устгасан";
   await sql.transaction([
-    sql`INSERT INTO banned_emails (email, reason, banned_by) VALUES (${t.email}, ${reason}, ${me.id}) ON CONFLICT (email) DO NOTHING`,
+    sql`INSERT INTO banned_emails (email, reason, banned_by) SELECT ${t.email}::text, ${reason}, ${me.id} WHERE ${t.email}::text IS NOT NULL ON CONFLICT (email) DO NOTHING`,
     sql`DELETE FROM users WHERE id = ${t.id} AND role <> 'superadmin'`,
   ]);
   await audit({ actorId: me.id, category: "role", action: `Профайл устгасан, имэйл хаасан (${reason})`, targetType: "email", targetLabel: label(t) });

@@ -51,9 +51,10 @@ export default async function UserDetail({ params, searchParams }) {
             <Avatar user={u} size={56} />
             <div>
               <b>{u.surname ? `${u.surname} ` : ""}{u.first_name || "Нэргүй"}</b>
-              <small>{u.email}</small>
+              {sup && <small>{u.email}</small>}
               <span className="adm-chips">
                 <Chip tone="dark">{ROLE_LABELS[u.role]}</Chip>
+                {sup && u.is_bot && <Chip tone="dark">Бот</Chip>}
                 <Chip>{{ person: "Хувь хүн", org: "Байгууллага", club: "Клуб" }[u.account_type] || u.account_type}</Chip>
                 {u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
                 {u.delete_pending_at && <Chip tone="bad">Устгахаар хүлээгдэж буй</Chip>}
@@ -135,7 +136,7 @@ export default async function UserDetail({ params, searchParams }) {
                 <form action={deleteUser} className="adm-form">
                   <input type="hidden" name="user_id" value={u.id} />
                   <input name="note" maxLength={300} placeholder="Шалтгаан (хоосон бол сануулгууд)" />
-                  <input name="confirm" required placeholder={`Баталгаажуулах: ${u.email}`} />
+                  <input name="confirm" required placeholder={`Баталгаажуулах: ${u.email || u.id}`} />
                   <button className="adm-btn danger">Устгаж, имэйлийг хаах</button>
                 </form>
               </details>
