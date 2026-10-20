@@ -3721,3 +3721,4 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 :root[data-theme="dark"] .dd-menu { box-shadow: 0 16px 40px rgba(0, 0, 0, .5); }
 :root[data-theme="dark"] .dd-opt.dd-sel { color: #4fd6c6; }
 :root[data-theme="dark"] .dd-opt.dd-off { color: #5d6f7a; }
+.pf-hint a { color: #00a89b; font-weight: 600; }

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { ownImage, cleanPos } from "@/lib/images";
-import { checkName, nameCase, POINTS, OPTIONS, COUNTRIES, SOCIALS, countWords } from "@/lib/profile";
+import { checkName, nameCase, POINTS, OPTIONS, COUNTRIES, MN_CITIES, SOCIALS, countWords } from "@/lib/profile";
 import { celebrate } from "@/lib/celebrate";
 import { saveReferral } from "@/lib/referral";
 import { notify } from "@/lib/notify";
@@ -13,6 +13,8 @@ import { notify } from "@/lib/notify";
 const back = (msg) => redirect(`/profile/edit?error=${encodeURIComponent(msg)}`);
 const text = (fd, k, max = 120) => String(fd.get(k) || "").trim().slice(0, max) || null;
 const pick = (fd, k, list) => (list.includes(fd.get(k)) ? fd.get(k) : null);
+// Монгол улсад зөвхөн 21 аймаг, нийслэлээс; бусад улсад чөлөөтэй бичнэ
+const city = (fd, k, ck) => (fd.get(ck) === "Монгол" ? pick(fd, k, MN_CITIES) : text(fd, k));
 
 export async function saveProfile(formData) {
   const user = await getUser();
@@ -60,9 +62,9 @@ export async function saveProfile(formData) {
     birth_date: birth,
     about,
     birth_country: pick(formData, "birth_country", COUNTRIES) || text(formData, "birth_country"),
-    birth_city: text(formData, "birth_city"),
+    birth_city: city(formData, "birth_city", "birth_country"),
     live_country: pick(formData, "live_country", COUNTRIES) || text(formData, "live_country"),
-    live_city: text(formData, "live_city"),
+    live_city: city(formData, "live_city", "live_country"),
     education: pick(formData, "education", OPTIONS.education),
     school: text(formData, "school", 160),
     orcid,

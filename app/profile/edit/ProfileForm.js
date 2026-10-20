@@ -58,6 +58,16 @@ function Select({ name, options, value, placeholder, onChange }) {
   );
 }
 
+// Монгол улс сонгосон бол 21 аймаг, нийслэлээс сонгоно; бусад улсад хотоо өөрөө бичнэ
+function City({ name, country, value }) {
+  if (country === "Монгол") {
+    return <Select key="mn" name={name} options={MN_CITIES} value={MN_CITIES.includes(value) ? value : ""} placeholder="Аймаг, нийслэл сонгох" />;
+  }
+  return (
+    <div key="any" className="pf-input"><input name={name} maxLength={120} defaultValue={MN_CITIES.includes(value) ? "" : value || ""} placeholder={country ? "Хотоо бичнэ үү" : "Эхлээд улсаа сонгоно уу"} /><img src="/icons/pen16.svg" width={16} height={16} alt="" /></div>
+  );
+}
+
 function Inner({ user, profile, error, isNew, formRef, dr }) {
   const p = profile || {};
   const [earned, setEarned] = useState(() => {
@@ -73,6 +83,8 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
   const bd = p.birth_date ? new Date(p.birth_date) : null;
   const [ym, setYm] = useState({ y: bd ? bd.getUTCFullYear() : "", m: bd ? bd.getUTCMonth() + 1 : "" });
   const [terms, setTerms] = useState(false);
+  const [bc, setBc] = useState(p.birth_country || "");
+  const [lc, setLc] = useState(p.live_country || "");
   const preview = surname && first ? `${surname.trim()[0]?.toUpperCase() || ""}.${nameCase(first.trim(), user.account_type || "person")}` : "Х.Нэр";
   // Овог, нэрийн алдааг бичих зуур харуулж, алдаатай бол хадгалахыг хөтөч дээрээ зогсооно
   const surnameErr = surname.trim() ? checkName(surname, user.account_type || "person") : null;
@@ -185,26 +197,26 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
         <h2>Би хаана төрөө вэ?</h2>
         <p className="pf-sub">Хаанаас ирсэн, хаана амьдарч байгаагаа хуваалцаарай</p>
         <div className="pf-grid2">
-          <div><Label k="birth_country" on={earned.birth_country}>Төрсөн улс</Label><Select name="birth_country" options={COUNTRIES} value={p.birth_country} placeholder="Улс сонгох" /></div>
+          <div><Label k="birth_country" on={earned.birth_country}>Төрсөн улс</Label><Select name="birth_country" options={COUNTRIES} value={p.birth_country} placeholder="Улс сонгох" onChange={(e) => setBc(e.target.value)} /></div>
           <div><Label k="birth_city" on={earned.birth_city}>Төрсөн хот, аймаг</Label>
-            <div className="pf-input"><input name="birth_city" list="pf-cities" maxLength={120} defaultValue={p.birth_city || ""} placeholder="Хот сонгох эсвэл өөрөө бичих" /><img src="/icons/pen16.svg" width={16} height={16} alt="" /></div></div>
-          <div><Label k="live_country" on={earned.live_country}>Амьдарч буй улс</Label><Select name="live_country" options={COUNTRIES} value={p.live_country} placeholder="Улс сонгох" /></div>
+            <City name="birth_city" country={bc} value={p.birth_city} /></div>
+          <div><Label k="live_country" on={earned.live_country}>Амьдарч буй улс</Label><Select name="live_country" options={COUNTRIES} value={p.live_country} placeholder="Улс сонгох" onChange={(e) => setLc(e.target.value)} /></div>
           <div><Label k="live_city" on={earned.live_city}>Амьдарч буй хот, аймаг</Label>
-            <div className="pf-input"><input name="live_city" list="pf-cities" maxLength={120} defaultValue={p.live_city || ""} placeholder="Хот сонгох эсвэл өөрөө бичих" /><img src="/icons/pen16.svg" width={16} height={16} alt="" /></div></div>
+            <City name="live_city" country={lc} value={p.live_city} /></div>
         </div>
-        <datalist id="pf-cities">{MN_CITIES.map((c) => <option key={c} value={c} />)}</datalist>
       </section>
 
       <section className="pf-card">
         <h2>Би хаана юу сурсан бэ?</h2>
         <p className="pf-sub">Ижил сонирхолтой хүмүүстэй холбогдоход тусална</p>
-        <Label k="education" on={earned.education}>Одоогийн боловсролын түвшин</Label>
+        <Label k="education" on={earned.education}>Боловсролын түвшин</Label>
         <Select name="education" options={OPTIONS.education} value={p.education} placeholder="Түвшин сонгох" />
         <Label k="school" on={earned.school}>Сургуулийн нэр</Label>
         <div className="pf-input"><input name="school" list="pf-schools" maxLength={160} defaultValue={p.school || ""} placeholder="Сургуулиа хайх эсвэл өөрөө бичих" /><img src="/icons/pen16.svg" width={16} height={16} alt="" /></div>
         <datalist id="pf-schools">{SCHOOLS.map((c) => <option key={c} value={c} />)}</datalist>
         <Label k="orcid" on={earned.orcid}>ORCID iD</Label>
         <div className="pf-input"><input name="orcid" maxLength={19} defaultValue={p.orcid || ""} placeholder="0000-0000-0000-0000" pattern="\d{4}-\d{4}-\d{4}-\d{3}[\dX]" /></div>
+        <small className="cf-hint pf-hint">Судлаачийн олон улсын давтагдашгүй дугаар. Бүтээлүүдээ нэг дор холбоно. <a href="https://orcid.org/register" target="_blank" rel="noopener noreferrer">orcid.org</a>-оос үнэгүй авна.</small>
         <div className="pf-grid2">
           <div><Label k="profession" on={earned.profession}>Мэргэжил</Label><div className="pf-input"><input name="profession" maxLength={120} defaultValue={p.profession || ""} placeholder="Жишээ: Физикч" /></div></div>
           <div><Label k="job" on={earned.job}>Ажил</Label><div className="pf-input"><input name="job" maxLength={160} defaultValue={p.job || ""} placeholder="Ажлын газар, албан тушаал" /></div></div>
@@ -222,15 +234,15 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
       </section>
 
       <section className="pf-card">
-        <h2>Миний үзэл суртал</h2>
-        <p className="pf-sub">Бөглөсөн тохиолдолд бусад хүмүүст харагдана</p>
+        <h2>Миний харах өнцөг</h2>
+        <p className="pf-sub">Бөглөсөн тохиолдолд бусад хүмүүст харагдана. Хэлэхийг хүсэхгүй бол хоосон орхиж болно.</p>
         <Label k="origin_view" on={earned.origin_view}>Амьдралын үүслийн тухай үзэл</Label>
         <Select name="origin_view" options={OPTIONS.origin_view} value={p.origin_view} placeholder="Сонгоно уу" />
-        <Label k="religion" on={earned.religion}>Шашны урсгал</Label>
-        <Select name="religion" options={OPTIONS.religion} value={p.religion} placeholder="Сонгоно уу" />
         <Label k="belief" on={earned.belief}>Итгэл үнэмшил</Label>
         <Select name="belief" options={OPTIONS.belief} value={p.belief} placeholder="Сонгоно уу" />
-        <Label k="politics" on={earned.politics}>Улс төрийн суртал</Label>
+        <Label k="religion" on={earned.religion}>Шашин</Label>
+        <Select name="religion" options={OPTIONS.religion} value={p.religion} placeholder="Сонгоно уу" />
+        <Label k="politics" on={earned.politics}>Улс төрийн үзэл</Label>
         <Select name="politics" options={OPTIONS.politics} value={p.politics} placeholder="Сонгоно уу" />
       </section>
 
