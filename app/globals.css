@@ -1719,7 +1719,16 @@ a.ss-kind:hover { text-decoration: underline; }
 }
 
 /* ===== Толь (Figma 556:406, 557:409, 562:415, 567:708, 568:424) ===== */
-.tl-hero { position: relative; overflow: hidden; display: flex; align-items: center; gap: 24px; min-height: 170px; padding: 20px 36px 20px 36px; border-radius: 24px; background: linear-gradient(120deg, #09a596 0%, #1fbfae 55%, #5fe0d0 100%); color: #fff; box-shadow: 0 10px 24px rgba(0, 168, 155, .25); }
+.tl-hero { position: relative; overflow: hidden; display: flex; align-items: center; gap: 24px; min-height: 170px; padding: 20px 36px 20px 36px; border-radius: 24px; background: linear-gradient(120deg, #09a596 0%, #1fbfae 28%, #5fe0d0 50%, #1fbfae 72%, #09a596 100%); background-size: 220% 220%; color: #fff; box-shadow: 0 10px 24px rgba(0, 168, 155, .25); animation: tl-flow 14s ease-in-out infinite alternate; }
+/* Толь: ногоон өнгө нь хэвээр, зөөлөн хөдөлгөөнтэй (PageHero-той ижил) */
+@keyframes tl-flow { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+.tl-hero::before { content: ""; position: absolute; width: 240px; height: 240px; right: 26%; bottom: -150px; border-radius: 50%; background: rgba(255, 255, 255, .12); pointer-events: none; animation: ph-float 11s ease-in-out infinite; }
+.tl-hero .tl-star { animation: ph-twinkle 3.6s ease-in-out infinite; }
+.tl-hero .tl-star.b { animation-delay: -.9s; }
+.tl-hero .tl-star.c { animation-delay: -1.8s; }
+.tl-hero .tl-star.d { animation-delay: -2.7s; }
+.tl-hero .tl-star.a { animation: ph-sway 8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tl-hero, .tl-hero::before, .tl-hero .tl-star { animation: none; } }
 .tl-hero-main { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .tl-hero h1 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.2; color: #fff; }
 .tl-hero p { margin: 0 0 8px; font-size: 14px; opacity: .92; }
