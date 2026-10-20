@@ -2,14 +2,18 @@
 
 import ImageInput from "../../components/ImageInput";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { saveProfile } from "../actions";
-import { POINTS, POINTS_TOTAL, OPTIONS, COUNTRIES, MN_CITIES, SCHOOLS, SOCIALS, countWords, nameCase } from "@/lib/profile";
+import { POINTS, POINTS_TOTAL, OPTIONS, COUNTRIES, MN_CITIES, SCHOOLS, SOCIALS, countWords, nameCase, checkName } from "@/lib/profile";
+import { AGREEMENT } from "@/lib/agreement";
 import { useDraft, hhmm } from "@/lib/useDraft";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
-const YEARS = Array.from({ length: 2026 - 1930 + 1 }, (_, i) => 2026 - i);
+const THIS_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: THIS_YEAR - 1930 + 1 }, (_, i) => THIS_YEAR - i);
+// Сонгосон он, сард байх өдрийн тоо (2-р сарын 30 гэх мэт буруу огноо сонгогдохгүй)
+const daysIn = (y, m) => (m ? new Date(Date.UTC(Number(y) || 2000, Number(m), 0)).getUTCDate() : 31);
 
 function earnedFrom(form) {
   if (!form) return {};
@@ -42,10 +46,10 @@ function Label({ children, k, on, required }) {
   );
 }
 
-function Select({ name, options, value, placeholder }) {
+function Select({ name, options, value, placeholder, onChange }) {
   return (
     <div className="pf-select">
-      <select name={name} defaultValue={value || ""}>
+      <select name={name} defaultValue={value || ""} onChange={onChange}>
         <option value="">{placeholder}</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -67,8 +71,17 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
   const [about, setAbout] = useState(p.about || "");
   const total = Object.keys(earned).reduce((a, k) => a + (POINTS[k] || 0), 0);
   const bd = p.birth_date ? new Date(p.birth_date) : null;
+  const [ym, setYm] = useState({ y: bd ? bd.getUTCFullYear() : "", m: bd ? bd.getUTCMonth() + 1 : "" });
+  const [terms, setTerms] = useState(false);
   const preview = surname && first ? `${surname.trim()[0]?.toUpperCase() || ""}.${nameCase(first.trim(), user.account_type || "person")}` : "Х.Нэр";
-  const latin = /[A-Za-z]/.test(surname + first);
+  // Овог, нэрийн алдааг бичих зуур харуулж, алдаатай бол хадгалахыг хөтөч дээрээ зогсооно
+  const surnameErr = surname.trim() ? checkName(surname, user.account_type || "person") : null;
+  const firstErr = first.trim() ? checkName(first, user.account_type || "person") : null;
+  const surnameRef = useRef(null), firstRef = useRef(null);
+  useEffect(() => {
+    surnameRef.current?.setCustomValidity(surnameErr ? `Овог ${surnameErr}` : "");
+    firstRef.current?.setCustomValidity(firstErr ? `Нэр ${firstErr}` : "");
+  }, [surnameErr, firstErr]);
 
   return (
     <form ref={formRef} action={saveProfile} className="pf-col" onChange={() => setEarned(earnedFrom(formRef.current))} onSubmit={dr.drop}>
@@ -83,13 +96,14 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
           <p className="wr-restored"><span>↺ Өмнө бөглөж байсан ноорог тань сэргээгдлээ ({hhmm(dr.restoredAt)}).</span>
             <button type="button" onClick={dr.clear}>Ноорог устгах</button></p>
         )}
+        {isNew && <p className="pf-intro">Заавал бөглөх нь зөвхөн <b>овог, нэр</b>. Бусад мэдээллийг хүссэн үедээ нөхөж, талбар бүрээр оч цуглуулаарай.</p>}
         {error && <p className="error">{error}</p>}
         {dr.savedAt && <small className="cf-saved">✓ Ноорог энэ төхөөрөмж дээр хадгалагдсан · {hhmm(dr.savedAt)}</small>}
       </section>
 
       <section className="pf-card">
         <div className="pf-coverwrap">
-          <ImageInput name="cover" aspect={3} maxW={1920} variant="cover" adjust initial={p.cover_id || null} initialSrc={p.cover_src || null} initialPos={p.cover_pos || null}>
+          <ImageInput name="cover" aspect={3} maxW={1920} variant="cover" adjust size={false} initial={p.cover_id || null} initialSrc={p.cover_src || null} initialPos={p.cover_pos || null}>
             <img src="/icons/camera18.svg" width={18} height={18} alt="" />
             <b>Ковер зураг нэмэх</b>
             <small>Өргөн зураг · 1920×640 px (3:1) · JPG, PNG, WEBP</small>
@@ -97,7 +111,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
           <span className="pf-cover-pts"><Pts k="cover" on={!!p.cover_id} /></span>
         </div>
         <div className="pf-photo">
-          <ImageInput name="avatar" aspect={1} maxW={480} variant="avatar" adjust initial={user.avatar || null} initialSrc={user.avatar_src || null} initialPos={user.avatar_pos || null}
+          <ImageInput name="avatar" aspect={1} maxW={480} variant="avatar" adjust size={false} initial={user.avatar || null} initialSrc={user.avatar_src || null} initialPos={user.avatar_pos || null}
             badge={<span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>}>
             <img src="/icons/person40.svg" width={40} height={40} alt="" />
           </ImageInput>
@@ -118,21 +132,23 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
         <div className="pf-grid2">
           <div>
             <Label required>Овог</Label>
-            <div className="pf-input">
-              <input name="surname" required maxLength={20} value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Овгоо бичнэ үү" />
+            <div className={"pf-input" + (surnameErr ? " bad" : "")}>
+              <input ref={surnameRef} name="surname" required maxLength={20} value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Овгоо бичнэ үү" autoComplete="family-name" aria-invalid={!!surnameErr} />
               <span>{surname.length} / 20</span>
             </div>
           </div>
           <div>
             <Label required>Нэр</Label>
-            <div className="pf-input">
-              <input name="first_name" required maxLength={20} value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Нэрээ бичнэ үү" />
+            <div className={"pf-input" + (firstErr ? " bad" : "")}>
+              <input ref={firstRef} name="first_name" required maxLength={20} value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Нэрээ бичнэ үү" autoComplete="given-name" aria-invalid={!!firstErr} />
               <span>{first.length} / 20</span>
             </div>
           </div>
         </div>
-        <p className={"pf-rule" + (latin ? " bad" : "")}>
-          Зөвхөн кирилл үсгээр бичнэ (латин үсэг хориглоно). Нийтэд «<b>{preview}</b>» гэж харагдана.
+        <p className={"pf-rule" + (surnameErr || firstErr ? " bad" : "")}>
+          {surnameErr || firstErr
+            ? <>{surnameErr ? `Овог ${surnameErr}` : `Нэр ${firstErr}`}. Тоо, тэмдэг, зай оруулахгүй; давхар нэрийг зураасаар (Бат-Эрдэнэ) бичнэ.</>
+            : <>Зөвхөн кирилл үсгээр бичнэ (латин үсэг хориглоно). Нийтэд «<b>{preview}</b>» гэж харагдана.</>}
         </p>
 
         <Label k="gender" on={earned.gender}>Хүйс</Label>
@@ -147,15 +163,15 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
 
         <Label k="birth_date" on={earned.birth_date}>Төрсөн он, сар, өдөр</Label>
         <div className="pf-grid3">
-          <Select name="by" options={YEARS.map(String)} value={bd ? String(bd.getUTCFullYear()) : ""} placeholder="Он" />
+          <Select name="by" options={YEARS.map(String)} value={bd ? String(bd.getUTCFullYear()) : ""} placeholder="Он" onChange={(e) => setYm((v) => ({ ...v, y: e.target.value }))} />
           <div className="pf-select">
-            <select name="bm" defaultValue={bd ? String(bd.getUTCMonth() + 1) : ""}>
+            <select name="bm" defaultValue={bd ? String(bd.getUTCMonth() + 1) : ""} onChange={(e) => setYm((v) => ({ ...v, m: e.target.value }))}>
               <option value="">Сар</option>
               {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
             </select>
             <img src="/icons/chev16.svg" width={16} height={16} alt="" />
           </div>
-          <Select name="bd" options={Array.from({ length: 31 }, (_, i) => String(i + 1))} value={bd ? String(bd.getUTCDate()) : ""} placeholder="Өдөр" />
+          <Select name="bd" options={Array.from({ length: daysIn(ym.y, ym.m) }, (_, i) => String(i + 1))} value={bd ? String(bd.getUTCDate()) : ""} placeholder="Өдөр" />
         </div>
 
         <Label k="about" on={earned.about}>Миний тухай</Label>
@@ -224,7 +240,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
         ) : (
           <label className="pf-agree">
             <input type="checkbox" name="agree" required />
-            <span>Хэрэглэгчийн гэрээг зөвшөөрөх</span>
+            <span><button type="button" className="pf-terms-link" onClick={(e) => { e.preventDefault(); setTerms(true); }}>Хэрэглэгчийн гэрээ</button>-г зөвшөөрөх</span>
           </label>
         )}
         <span className="pf-grow" />
@@ -232,7 +248,29 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
           <img src="/icons/savespark.svg" width={16} height={16} alt="" />Хадгалах
         </button>
       </section>
+      {terms && <Agreement onClose={() => setTerms(false)} />}
     </form>
+  );
+}
+
+// Хэрэглэгчийн гэрээг бүртгэлээс гаралгүй уншина
+function Agreement({ onClose }) {
+  const dlg = useRef(null);
+  useEffect(() => { dlg.current?.showModal(); }, []);
+  return (
+    <dialog ref={dlg} className="lr-dlg pf-terms" onClose={onClose} onClick={(e) => e.target === dlg.current && dlg.current.close()}>
+      <div className="lr-box">
+        <div className="lr-head">
+          <span className="lr-ico"><img className="ic" src="/icons/f_shield.svg" width={22} height={22} alt="" /></span>
+          <div><b>Хэрэглэгчийн гэрээ</b><small>Science Spark-ийг хамтдаа аюулгүй, сонирхолтой газар болгоё.</small></div>
+          <button type="button" className="lr-x" aria-label="Хаах" onClick={() => dlg.current.close()}>×</button>
+        </div>
+        <ol className="pf-terms-list">
+          {AGREEMENT.map(([h, t]) => <li key={h}><b>{h}</b><span>{t}</span></li>)}
+        </ol>
+        <button type="button" className="pf-save pf-terms-ok" onClick={() => dlg.current.close()}>Ойлголоо</button>
+      </div>
+    </dialog>
   );
 }
 

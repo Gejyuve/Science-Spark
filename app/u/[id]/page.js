@@ -38,7 +38,7 @@ function Answer({ status, body, note, label }) {
 // Figma: Нийтийн профайл
 export default async function PublicProfile({ params, searchParams }) {
   const { id } = await params;
-  const { tab = "published", k: kindParam = "", ok, error } = await searchParams;
+  const { tab = "published", k: kindParam = "", ok, error, saved } = await searchParams;
   const uid = Number(id);
   if (!Number.isInteger(uid)) notFound();
   await ensureSchema();
@@ -172,6 +172,12 @@ export default async function PublicProfile({ params, searchParams }) {
 
   return (
     <Shell user={me} header="nav">
+      {isMe && saved !== undefined && (
+        <p className="pu-saved" role="status">
+          <span>✓ Профайл тань хадгалагдлаа{Number(saved) > 0 && <> · <b>+{Number(saved)} оч</b> нэмэгдлээ</>}</span>
+          <Link href="/profile/edit">Дахин засах</Link>
+        </p>
+      )}
       <section className="pu-card">
         <div className="pu-cover" style={pr.cover_id ? { backgroundImage: `url(/img/${pr.cover_id})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} />
         <div className="pu-top">

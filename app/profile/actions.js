@@ -8,6 +8,7 @@ import { ownImage, cleanPos } from "@/lib/images";
 import { checkName, nameCase, POINTS, OPTIONS, COUNTRIES, SOCIALS, countWords } from "@/lib/profile";
 import { celebrate } from "@/lib/celebrate";
 import { saveReferral } from "@/lib/referral";
+import { notify } from "@/lib/notify";
 
 const back = (msg) => redirect(`/profile/edit?error=${encodeURIComponent(msg)}`);
 const text = (fd, k, max = 120) => String(fd.get(k) || "").trim().slice(0, max) || null;
@@ -120,10 +121,14 @@ export async function saveProfile(formData) {
   // Шинэ профайл анх удаа үүсэхэд баярын цонх гарч, «Хаанаас сонссон бэ?» гэж асууна
   if (!prof?.agreed_at) {
     await celebrate(user, { kind: "Профайл", status: "published", href: `/u/${user.id}`, earned: gained ? [["Профайлаа бөглөсөн", gained]] : [] });
+    await notify({ userId: user.id, kind: "welcome", once: true });
+    revalidatePath("/");
+    redirect(`/u/${user.id}`);
   }
 
+  // Засварласан бол профайл дээр «Хадгалагдлаа» гэж (шинээр авсан очтой нь) харуулна
   revalidatePath("/");
-  redirect(`/u/${user.id}`);
+  redirect(`/u/${user.id}?saved=${gained}`);
 }
 
 // Баярын цонхноос: Science Spark-ийн тухай хэнээс сонссон (заавал биш). Эх сурвалж нь оч авна.

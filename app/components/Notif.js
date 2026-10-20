@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NOTIFY_TEXT, FROM_EDITORS } from "@/lib/notify";
+import { NOTIFY_TEXT, FROM_EDITORS, FROM_SITE } from "@/lib/notify";
 import { relTime } from "@/lib/format";
 import { Avatar } from "./Bits";
 import { toggleFollow } from "../posts/actions";
@@ -13,6 +13,7 @@ const ICON = {
   points_adj: ["pts", "ok"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"], complaint_ok: ["flag20", "ok"], complaint_no: ["flag20", "gray"],
   help_ok: ["help", "ok"], help_no: ["help", "gray"],
+  welcome: ["pts", "ok"], pw_changed: ["shield", "warn"],
 };
 const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "task_new", "task_done", "help_new"];
 
@@ -29,7 +30,7 @@ function groupOf(n) {
 
 function Item({ n }) {
   const editors = FROM_EDITORS.includes(n.kind) || !n.actor_id;
-  const who = n.kind === "tip" && !n.actor_id ? "Нэрээ нууцалсан уншигч" : editors ? "Редакц" : `${n.initial}.${n.first_name}`;
+  const who = n.kind === "tip" && !n.actor_id ? "Нэрээ нууцалсан уншигч" : FROM_SITE.includes(n.kind) ? "Science Spark" : editors ? "Редакц" : `${n.initial}.${n.first_name}`;
   const [ic, tone] = ICON[n.kind] || ["bell", "gray"];
   return (
     <div className={"nf-item" + (n.read_at ? "" : " unread")}>
@@ -43,7 +44,7 @@ function Item({ n }) {
       </span>
       <span className="nf-body">
         <span className="nf-text">
-          <b>{who}</b> {NOTIFY_TEXT[n.kind] || n.kind}
+          <b>{who}</b>{FROM_SITE.includes(n.kind) ? "" : " "}{NOTIFY_TEXT[n.kind] || n.kind}
           {n.title && <>: «{n.title}»</>}
         </span>
         {n.note && <span className="nf-note">“{n.note}”</span>}
