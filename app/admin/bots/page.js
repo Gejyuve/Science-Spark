@@ -17,7 +17,7 @@ export default async function Bots({ searchParams }) {
       <Head user={user} title="Ботууд" sub="Имэйлгүй, зөвхөн супер админ удирддаг хувь хүний хаягууд. Сайтад энгийн хэрэглэгч шиг харагдана." />
       <Flash ok={ok} error={error} />
       <div className="adm-bar">
-        <p className="adm-muted bt-note">Бот руу шилжихэд сайт даяар тэр хүнээр нийтэлж, сэтгэгдэл бичиж, оч өгнө. Дээд талын мөрөөс өөртөө буцна. Урамшуулал, асуултын шагнал, сарын шагналын сан бот руу очихгүй.</p>
+        <p className="adm-muted bt-note">Бот руу шилжихэд сайт даяар тэр хүнээр нийтэлж, сэтгэгдэл бичиж, оч өгнө. Дээд талын мөрөөс өөртөө буцна. Ботод ирсэн урамшуулал, асуултын шагнал ботын хэтэвчинд орно. Сарын шагналын санд бот оролцохгүй.</p>
         <span className="ss-grow" />
         <form action={createBot}><button className="adm-btn teal">+ Шинэ бот</button></form>
       </div>

@@ -62,7 +62,7 @@ function CommentNode({ c, kids, user, postId, canReply, depth, following, bounty
   const children = kids[c.id] || [];
   const won = !depth && bounty?.status === "awarded" && bounty.comment_id === c.id;
   // Асуугч шагналтай асуултынхаа бусдын үндсэн хариултаас нэгийг сонгоно
-  const canPick = !depth && bounty?.status === "open" && user && bounty.user_id === user.id && c.author_id !== user.id && !c.is_bot;
+  const canPick = !depth && bounty?.status === "open" && user && bounty.user_id === user.id && c.author_id !== user.id;
   return (
     <div className={"ar-comment" + (depth ? " reply" : "") + (won ? " won" : "")} id={`c${c.id}`}>
       {depth > 0 && <span className="ss-curve" aria-hidden="true" />}
@@ -360,7 +360,7 @@ export default async function PostPage({ params, searchParams }) {
   const user = await getUser();
 
   const posts = await sql`
-    SELECT p.*, u.initial, u.first_name, u.avatar_id AS avatar, u.is_bot AS author_bot,
+    SELECT p.*, u.initial, u.first_name, u.avatar_id AS avatar,
            (SELECT COUNT(*) FROM sparks WHERE post_id = p.id)::int AS sparks,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
            (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers,
@@ -421,7 +421,7 @@ export default async function PostPage({ params, searchParams }) {
   const canEdit = !!user && !isTerm && (isAuthor || isStaff(user)) && post.status !== "merged" && post.status !== "removed";
 
   const comments = await sql`
-    SELECT c.*, u.initial, u.first_name, u.avatar_id AS avatar, u.is_bot,
+    SELECT c.*, u.initial, u.first_name, u.avatar_id AS avatar,
            COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
            (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers,
            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id)::int AS likes,
@@ -669,8 +669,7 @@ export default async function PostPage({ params, searchParams }) {
               </span>
               {canEdit && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
-              {/* Бусдын мөнгө бот руу очихгүй */}
-              {published && !isQ && !club && !isAuthor && !post.author_bot && (
+              {published && !isQ && !club && !isAuthor && (
                 <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Урамшуулах</>}
                   writer={{ id: post.author_id, name: `${post.initial}.${post.first_name}` }} postId={post.id} {...supportModalProps(user)} />
               )}
