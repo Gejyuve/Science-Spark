@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 520" width="440" height="520">
+  <defs>
+    <linearGradient id="beamL" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#9ff0e6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#37c3b3" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="beamR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9ff0e6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#37c3b3" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="0.35" stop-color="#bff7ef" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#37c3b3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2fc4b4"/>
+      <stop offset="1" stop-color="#00877c"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e9fbf8"/>
+      <stop offset="1" stop-color="#b6e6df"/>
+    </linearGradient>
+    <clipPath id="body"><polygon points="188,178 252,178 280,440 160,440"/></clipPath>
+  </defs>
+  <!-- light beams -->
+  <polygon points="220,128 0,40 0,200" fill="url(#beamL)"/>
+  <polygon points="220,128 440,52 440,196" fill="url(#beamR)"/>
+  <circle cx="220" cy="128" r="90" fill="url(#glow)"/>
+  <!-- roof -->
+  <polygon points="220,62 186,96 254,96" fill="#00877c"/>
+  <circle cx="220" cy="58" r="6" fill="#37c3b3"/>
+  <rect x="180" y="96" width="80" height="8" rx="3" fill="#0a5e57"/>
+  <!-- lantern room -->
+  <rect x="192" y="104" width="56" height="48" rx="4" fill="#e9fffb"/>
+  <rect x="192" y="104" width="56" height="48" rx="4" fill="none" stroke="#0a5e57" stroke-width="5"/>
+  <line x1="220" y1="104" x2="220" y2="152" stroke="#0a5e57" stroke-width="4"/>
+  <!-- gallery -->
+  <rect x="172" y="152" width="96" height="10" rx="3" fill="#0a5e57"/>
+  <rect x="180" y="162" width="80" height="16" fill="#0d6f66"/>
+  <!-- tower with stripes -->
+  <polygon points="188,178 252,178 280,440 160,440" fill="url(#tower)"/>
+  <g clip-path="url(#body)">
+    <rect x="140" y="222" width="160" height="34" fill="url(#band)"/>
+    <rect x="140" y="310" width="160" height="34" fill="url(#band)"/>
+    <rect x="140" y="398" width="160" height="34" fill="url(#band)"/>
+  </g>
+  <!-- door + window -->
+  <path d="M208,440 V414 a12,12 0 0 1 24,0 V440 Z" fill="#0a5e57"/>
+  <rect x="212" y="270" width="16" height="24" rx="8" fill="#0a5e57"/>
+  <!-- rocks -->
+  <path d="M120,452 Q150,430 196,440 L248,438 Q296,428 324,452 Q330,470 300,474 L140,474 Q112,470 120,452 Z" fill="#1d3e3a"/>
+  <path d="M90,478 Q220,456 350,478 L350,486 L90,486 Z" fill="#163331"/>
+  <!-- sparkles -->
+  <path d="M362,262 l5,15 15,5 -15,5 -5,15 -5,-15 -15,-5 15,-5 z" fill="#37c3b3" opacity="0.8"/>
+  <path d="M74,300 l3,9 9,3 -9,3 -3,9 -3,-9 -9,-3 9,-3 z" fill="#5fd6c8" opacity="0.7"/>
+  <path d="M392,360 l2.5,7 7,2.5 -7,2.5 -2.5,7 -2.5,-7 -7,-2.5 7,-2.5 z" fill="#5fd6c8" opacity="0.6"/>
+</svg>
