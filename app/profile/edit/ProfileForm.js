@@ -25,6 +25,8 @@ function earnedFrom(form) {
   }
   if (has("by") && has("bm") && has("bd")) e.birth_date = true;
   if (SOCIALS.some((s) => has(`s_${s.key}`))) e.socials = true;
+  if (has("avatar")) e.photo = true;
+  if (has("cover")) e.cover = true;
   return e;
 }
 
@@ -74,6 +76,8 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
     const e = {};
     for (const k of Object.keys(POINTS)) if (p[k] && k !== "socials") e[k] = true;
     if (p.socials && Object.keys(p.socials).length) e.socials = true;
+    if (user.avatar) e.photo = true;
+    if (p.cover_id) e.cover = true;
     return e;
   });
   const [surname, setSurname] = useState(user.surname || "");
@@ -94,6 +98,11 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
     surnameRef.current?.setCustomValidity(surnameErr ? `Овог ${surnameErr}` : "");
     firstRef.current?.setCustomValidity(firstErr ? `Нэр ${firstErr}` : "");
   }, [surnameErr, firstErr]);
+  // Зургийн нууц талбар change үйлдэл үүсгэдэггүй тул оноог үе үе дахин тоолно
+  useEffect(() => {
+    const t = setInterval(() => setEarned(earnedFrom(formRef.current)), 800);
+    return () => clearInterval(t);
+  }, []);
 
   return (
     <form ref={formRef} action={saveProfile} className="pf-col" onChange={() => setEarned(earnedFrom(formRef.current))} onSubmit={dr.drop}>
@@ -120,14 +129,14 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
             <b>Ковер зураг нэмэх</b>
             <small>Өргөн зураг · 1920×640 px (3:1) · JPG, PNG, WEBP</small>
           </ImageInput>
-          <span className="pf-cover-pts"><Pts k="cover" on={!!p.cover_id} /></span>
+          <span className="pf-cover-pts"><Pts k="cover" on={earned.cover} /></span>
         </div>
         <div className="pf-photo">
           <ImageInput name="avatar" aspect={1} maxW={480} variant="avatar" adjust size={false} initial={user.avatar || null} initialSrc={user.avatar_src || null} initialPos={user.avatar_pos || null}
             badge={<span className="pf-cam"><img src="/icons/cam16.svg" width={16} height={16} alt="" /></span>}>
             <img src="/icons/person40.svg" width={40} height={40} alt="" />
           </ImageInput>
-          <div><b>Нүүр зураг</b><Pts k="photo" /><small className="cf-hint pf-size">Дөрвөлжин зураг · 480×480 px</small></div>
+          <div><b>Нүүр зураг</b><Pts k="photo" on={earned.photo} /><small className="cf-hint pf-size">Дөрвөлжин зураг · 480×480 px</small></div>
         </div>
         {user.email && <label className="pf-email">
           <span className="pf-mailtile"><img src="/icons/mail.svg" width={20} height={20} alt="" /></span>
