@@ -21,7 +21,7 @@ export default function LoginForm() {
     <AuthCard
       action={action}
       error={back === state ? null : state.error}
-      button={pending ? "Түр хүлээнэ үү…" : confirmStep ? "Асаая өө!" : "Нэвтрэх"}
+      button={pending ? "Түр хүлээнэ үү…" : confirmStep ? "Асаая өө!" : "Асаах"}
       footer={
         confirmStep ? (
           <p className="au-foot"><button type="button" className="au-link" onClick={() => { setBack(state); setConfirm(""); }}>Өөр имэйлээр нэвтрэх</button></p>
