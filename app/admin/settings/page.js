@@ -4,7 +4,9 @@ import { LEVELS } from "@/lib/levels";
 import { LIMIT_KEYS, LIMIT_LABEL } from "@/lib/limits";
 import { PREMIUM_PLANS, fmtMnt } from "@/lib/money";
 import { qpayOn } from "@/lib/qpay";
-import { updateSettings } from "./actions";
+import { realUser } from "@/lib/auth";
+import { resetPreview } from "@/lib/reset";
+import { updateSettings, resetSiteAction } from "./actions";
 import Head, { Flash } from "../_c/Head";
 
 // Супер админы тохиргоо: оч ба түвшин, санхүү, сайт
@@ -14,6 +16,8 @@ export default async function Settings({ searchParams }) {
   const s = await loadSettings();
   const d = defaults();
   const sup = user.role === "superadmin";
+  const me = realUser(user);
+  const pv = sup ? await resetPreview(me.id, true) : null;
   const num = (name, value, def, props = {}) => (
     <input type="number" name={name} defaultValue={value} required disabled={!sup} title={`Анхны утга: ${def}`} {...props} />
   );
@@ -92,6 +96,22 @@ export default async function Settings({ searchParams }) {
         </div>
         {sup && <button className="adm-btn dark" style={{ justifySelf: "start" }}>Тохиргоог хадгалах</button>}
       </form>
+
+      {pv && (
+        <form action={resetSiteAction} className="adm-card adm-set adm-reset">
+          <div className="adm-card-head"><b>Сайтыг шинээр эхлүүлэх</b></div>
+          <p className="small">
+            Таны хаягаас бусад бүх хэрэглэгч ({pv.users}), контент ({pv.posts}), сэтгэгдэл ({pv.comments}), клуб ба байгууллага ({pv.clubs}),
+            оч, мэдэгдэл, мөнгөний бүртгэл ({pv.money} мөр, үүнээс батлагдсан төлбөр {pv.paid}), аудит лог, зураг устана.
+            Таны профайл, ангилал (мод), энэ хуудасны тохиргоо үлдэнэ. <b>Буцаах боломжгүй.</b> Эхлээд Neon дээр нөөц хуулбар (branch) аваарай.
+          </p>
+          {pv.bots > 0 && <label className="adm-switch"><input type="checkbox" name="keepBots" defaultChecked />Бот хаягуудыг ({pv.bots}) хоосон болгож үлдээх</label>}
+          <label>Баталгаажуулахын тулд «УСТГА» гэж бичнэ үү
+            <input type="text" name="confirm" autoComplete="off" required pattern="УСТГА" placeholder="УСТГА" />
+          </label>
+          <button className="adm-btn danger-solid" style={{ justifySelf: "start" }}>Бүгдийг устгаж, шинээр эхлүүлэх</button>
+        </form>
+      )}
     </>
   );
 }

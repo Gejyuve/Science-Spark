@@ -6,6 +6,8 @@ import { requireSection, audit } from "@/lib/admin";
 import { loadSettings, saveSettings } from "@/lib/settings";
 import { LEVELS } from "@/lib/levels";
 import { ACT_REWARD, LIMIT_KEYS } from "@/lib/limits";
+import { realUser } from "@/lib/auth";
+import { resetSite } from "@/lib/reset";
 
 const back = (msg, ok) => redirect(`/admin/settings?${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
 const int = (f, k) => {
@@ -58,4 +60,16 @@ export async function updateSettings(f) {
   if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Тохиргоо өөрчилсөн: ${changed.join(", ")}` });
   revalidatePath("/", "layout");
   back(changed.length ? "Тохиргоо хадгалагдлаа" : "Өөрчлөлт алга", true);
+}
+
+// Супер админ: нээлтийн өмнө сайтыг шинээр эхлүүлнэ. «УСТГА» гэж бичсэн үед л ажиллана.
+export async function resetSiteAction(f) {
+  const me = realUser(await requireSection("settings"));
+  if (me.role !== "superadmin") back("Зөвхөн супер админ");
+  if (String(f.get("confirm") || "").trim() !== "УСТГА") back("Баталгаажуулахын тулд «УСТГА» гэж бичнэ үү");
+  const keepBots = f.get("keepBots") === "on";
+  const r = await resetSite(me.id, keepBots);
+  await audit({ actorId: me.id, category: "settings", action: `Сайтыг шинээр эхлүүлсэн: ${r.kept} хаяг үлдсэн, ${r.images} зураг устсан` });
+  revalidatePath("/", "layout");
+  back(`Сайт шинээр эхэллээ. ${r.kept} хаяг үлдэж, ${r.images} зураг устлаа.`, true);
 }
