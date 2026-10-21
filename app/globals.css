@@ -211,7 +211,10 @@ details.mod summary { cursor: pointer; }
 .ss-brand { flex: none; display: flex; align-items: center; gap: 10px; margin: -6px 24px 16px; text-decoration: none; color: var(--ink); }
 .ss-brand img { flex: none; margin: -6px; }
 .ss-brand-t { display: flex; flex-direction: column; min-width: 0; }
-.ss-brand-t b { font-size: 18px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.ss-wordmark { font-size: 19px; font-weight: 700; letter-spacing: -.03em; line-height: 1.25; white-space: nowrap; }
+.ss-wm-i { position: relative; }
+.ss-wm-i svg { position: absolute; left: 50%; top: .1em; width: .36em; height: .36em; transform: translateX(-50%); fill: #37c3b3; }
+.ss-wm-spark { background: linear-gradient(90deg, #17ab9e, #00968a); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .ss-brand-t small { font-size: 12.5px; font-weight: 500; color: var(--muted); line-height: 1.3; }
 .ss-search {
   flex: none; margin: 0 24px; height: 48px; border-radius: 48px; background: var(--surface-3);

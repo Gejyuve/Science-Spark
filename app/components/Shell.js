@@ -55,7 +55,7 @@ function Sidebar({ user, active }) {
       <Link href="/" className="ss-brand" aria-label="Science Spark — Нүүр">
         <img src="/icons/logo.svg" width={44} height={44} alt="" />
         <span className="ss-brand-t">
-          <b>Science Spark</b>
+          <b className="ss-wordmark">Sc<span className="ss-wm-i">ı<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10 5 15 10 20 10C15 10 10 15 10 20C10 15 5 10 0 10C5 10 10 5 10 0Z" /></svg></span>ence <span className="ss-wm-spark">Spark</span></b>
           <small>Igniting curiosity, together.</small>
         </span>
       </Link>
