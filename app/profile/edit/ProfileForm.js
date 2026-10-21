@@ -245,7 +245,7 @@ function Inner({ user, profile, error, isNew, formRef, dr }) {
       <section className="pf-card">
         <h2>Миний харах өнцөг</h2>
         <p className="pf-sub">Бөглөсөн тохиолдолд бусад хүмүүст харагдана. Хэлэхийг хүсэхгүй бол хоосон орхиж болно.</p>
-        <Label k="origin_view" on={earned.origin_view}>Ертөнц, амьдралын үүслийн тухай үзэл</Label>
+        <Label k="origin_view" on={earned.origin_view}>Амьдралын үүслийн тухай үзэл</Label>
         <Select name="origin_view" options={OPTIONS.origin_view} value={p.origin_view} placeholder="Сонгоно уу" />
         <Label k="belief" on={earned.belief}>Итгэл үнэмшил</Label>
         <Select name="belief" options={OPTIONS.belief} value={p.belief} placeholder="Сонгоно уу" />
