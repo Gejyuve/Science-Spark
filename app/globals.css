@@ -208,8 +208,13 @@ details.mod summary { cursor: pointer; }
   position: sticky; top: 24px; height: calc(100vh - 48px); display: flex; flex-direction: column;
   background: var(--surface); border-radius: 24px; box-shadow: var(--shadow); padding: 24px 0 24px;
 }
+.ss-brand { flex: none; display: flex; align-items: center; gap: 10px; margin: -6px 24px 16px; text-decoration: none; color: var(--ink); }
+.ss-brand img { flex: none; margin: -6px; }
+.ss-brand-t { display: flex; flex-direction: column; min-width: 0; }
+.ss-brand-t b { font-size: 18px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.ss-brand-t small { font-size: 12.5px; font-weight: 500; color: var(--muted); line-height: 1.3; }
 .ss-search {
-  margin: 0 24px; height: 48px; border-radius: 48px; background: var(--surface-3);
+  flex: none; margin: 0 24px; height: 48px; border-radius: 48px; background: var(--surface-3);
   display: flex; align-items: center; gap: 10px; padding: 0 16px;
 }
 .ss-search input { border: 0; background: transparent; outline: none; font-family: inherit; font-weight: 500; font-size: 15px; color: var(--ink); width: 100%; }
@@ -2748,6 +2753,8 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ss-dhead.right { padding: 0; margin-bottom: -6px; }
   .ss-dclose { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--surface); box-shadow: var(--card-shadow); color: var(--text); font-size: 24px; line-height: 1; cursor: pointer; }
   .ss-side .ss-search { margin: 0; background: var(--surface); }
+  .ss-side .ss-brand { margin: 0 4px 2px; }
+  .ss-side .ss-dlogo { display: none; }
   .ss-side .ss-nav { flex-direction: column; overflow: visible; padding: 10px; border-radius: 22px; background: var(--surface); }
   .ss-side .ss-nav-item { height: 46px; }
   .ss-side .ss-nav-item.on { background: var(--teal-bg); }

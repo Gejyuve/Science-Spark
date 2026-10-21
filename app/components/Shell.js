@@ -52,6 +52,13 @@ function Sidebar({ user, active }) {
   return (
     <aside className="ss-side">
       <div className="ss-dhead"><Link href="/" className="ss-dlogo"><img src="/icons/logo.svg" width={40} height={40} alt="Science Spark" /></Link><span className="ss-grow" /><ThemeToggle /><DrawerClose /></div>
+      <Link href="/" className="ss-brand" aria-label="Science Spark — Нүүр">
+        <img src="/icons/logo.svg" width={44} height={44} alt="" />
+        <span className="ss-brand-t">
+          <b>Science Spark</b>
+          <small>Igniting curiosity, together.</small>
+        </span>
+      </Link>
       <form action="/search" method="get" className="ss-search">
         {I("search", 18)}
         <input name="q" placeholder="Хайх" aria-label="Хайх" />
