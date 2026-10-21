@@ -29,21 +29,18 @@ const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
 );
 
-// Редакцийн товч зүүн цэсний доод хэсэгт (Тусламжийн дээр): редакцийн админд «Хянах», супер админд «Админ» (бүх эрх)
-async function StaffNav({ user, active }) {
+// Редакцийн товч баруун цэсний профайлын товчнуудын дунд: редакцийн админд «Хянах», супер админд «Админ» (бүх эрх)
+async function StaffAction({ user }) {
   if (!isStaff(user)) return null;
   const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}`
     .then((r) => r[0].n)
     .catch(() => 0);
   const badge = pending > 0 && <em className="ss-badge red">{pending > 99 ? "99+" : pending}</em>;
+  const sup = isSuperAdmin(user);
   return (
-    <nav className="ss-staff" aria-label="Редакц">
-      {isSuperAdmin(user) ? (
-        <Link href="/admin" className={"ss-help" + (active === "/admin" ? " on" : "")}>{I("crown", 16)}<span>Админ</span>{badge}</Link>
-      ) : (
-        <Link href="/admin/content" className={"ss-help" + (active === "/admin" ? " on" : "")}>{I("shield", 16)}<span>Хянах</span>{badge}</Link>
-      )}
-    </nav>
+    <Link href={sup ? "/admin" : "/admin/content"} className="ss-action">
+      {I(sup ? "crown" : "shield", 18)}<span>{sup ? "Админ" : "Хянах"}</span>{badge}{I("arrow", 14)}
+    </Link>
   );
 }
 
@@ -84,15 +81,7 @@ function Sidebar({ user, active }) {
         )}
       </nav>
       <div className="ss-grow" />
-      <div className="ss-foot">
-        <StaffNav user={user} active={active} />
-        <Link href="/help" className={"ss-help" + (active === "/help" ? " on" : "")}>
-          {I("help", 16)}
-          <span>Тусламж</span>
-        </Link>
-        <ThemeToggle />
-        <small className="ss-copy">© 2019-2026 Гэж Юу Вэ?</small>
-      </div>
+      <ThemeToggle />
     </aside>
   );
 }
@@ -212,6 +201,7 @@ async function RightRail({ user, acting }) {
                 {I("comment18", 18)}<span>Клубийн чат</span>{chatNew > 0 && <em className="ss-badge teal">{chatNew > 99 ? "99+" : chatNew}</em>}{I("arrow", 14)}
               </Link>
             )}
+            <StaffAction user={user.operator || user} />
             <Link href="/wallet" className="ss-action">
               {I("wallet", 18)}<span>Хэтэвч</span>
               {I("arrow", 14)}
@@ -245,6 +235,11 @@ async function RightRail({ user, acting }) {
         {clubs.map((t) => (
           <ClubPerson key={t.id} c={t} viewer={user} follows={clubFollows} />
         ))}
+      </div>
+
+      <div className="ss-rfoot">
+        <Link href="/help">Тусламж</Link>
+        <span>© 2019-2026 Гэж Юу Вэ?</span>
       </div>
     </aside>
   );
