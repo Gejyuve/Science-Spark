@@ -238,7 +238,7 @@ async function RightRail({ user, acting }) {
       </div>
 
       <div className="ss-rfoot">
-        <Link href="/help">Тусламж</Link>
+        <Link href="/help" className="ss-rhelp">{I("help", 14)}Тусламж</Link>
         <span>© 2019-2026 Гэж Юу Вэ?</span>
       </div>
     </aside>
