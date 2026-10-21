@@ -29,7 +29,7 @@ const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
 );
 
-// Редакцийн товч зүүн цэсний доод хэсэгт: редакцийн админд «Хянах», супер админд «Админ» (бүх эрх)
+// Редакцийн товч зүүн цэсний доод хэсэгт (Тусламжийн дээр): редакцийн админд «Хянах», супер админд «Админ» (бүх эрх)
 async function StaffNav({ user, active }) {
   if (!isStaff(user)) return null;
   const pending = await sql`SELECT COUNT(*)::int AS n FROM posts WHERE status = 'pending' AND author_id <> ${user.id}`
@@ -37,8 +37,7 @@ async function StaffNav({ user, active }) {
     .catch(() => 0);
   const badge = pending > 0 && <em className="ss-badge red">{pending > 99 ? "99+" : pending}</em>;
   return (
-    <nav className="ss-nav ss-staff" aria-label="Редакц">
-      <span className="ss-staff-t">Редакц</span>
+    <nav className="ss-staff" aria-label="Редакц">
       {isSuperAdmin(user) ? (
         <Link href="/admin" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("crown", 24)}<span>Админ</span>{badge}</Link>
       ) : (
@@ -49,6 +48,8 @@ async function StaffNav({ user, active }) {
 }
 
 function Sidebar({ user, active }) {
+  // Идэвхгүй («Тун удахгүй») хуудсууд зөвхөн супер админд харагдана
+  const soon = isSuperAdmin(user);
   return (
     <aside className="ss-side">
       <div className="ss-dhead"><Link href="/" className="ss-dlogo"><img src="/icons/logo.svg" width={40} height={40} alt="Science Spark" /></Link><span className="ss-grow" /><ThemeToggle /><DrawerClose /></div>
@@ -62,7 +63,7 @@ function Sidebar({ user, active }) {
         <input name="q" placeholder="Хайх" aria-label="Хайх" />
       </form>
       <nav className="ss-nav">
-        {NAV.map((n) =>
+        {NAV.filter((n) => n.href || soon).map((n) =>
           n.href ? (
             <Link key={n.label} href={n.href} className={"ss-nav-item" + (active === n.href ? " on" : "")}>
               {I(n.icon, 24)}
@@ -75,18 +76,23 @@ function Sidebar({ user, active }) {
             </span>
           )
         )}
-        <span className="ss-projects soon" title="Тун удахгүй">
-          <span className="emoji">🔥💯</span>
-          <span>Төслүүд</span>
-        </span>
-        <Link href="/help" className={"ss-nav-item" + (active === "/help" ? " on" : "")}>
-          {I("help", 22)}
+        {soon && (
+          <span className="ss-projects soon" title="Тун удахгүй">
+            <span className="emoji">🔥💯</span>
+            <span>Төслүүд</span>
+          </span>
+        )}
+      </nav>
+      <div className="ss-grow" />
+      <div className="ss-foot">
+        <StaffNav user={user} active={active} />
+        <Link href="/help" className={"ss-help" + (active === "/help" ? " on" : "")}>
+          {I("help", 16)}
           <span>Тусламж</span>
         </Link>
-      </nav>
-      <StaffNav user={user} active={active} />
-      <div className="ss-grow" />
-      <ThemeToggle />
+        <ThemeToggle />
+        <small className="ss-copy">© 2019-2026 Гэж Юу Вэ?</small>
+      </div>
     </aside>
   );
 }
