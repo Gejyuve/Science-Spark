@@ -17,10 +17,10 @@ const PERIODS = [["24h", "24 цаг", 24], ["7d", "7 хоног", 168], ["1m", "
 
 export default async function Home({ searchParams }) {
   const { tab, compose, error, f, t, b } = await searchParams;
-  // Цагийн шүүлтүүр: анхдагч 24 цаг
-  const period = PERIODS.find((x) => x[0] === t) || PERIODS[0];
+  // Цагийн шүүлтүүр: анхдагч 7 хоног
+  const period = PERIODS.find((x) => x[0] === t) || PERIODS[1];
   const hours = period[2];
-  const tq = period[0] === "24h" ? "" : `t=${period[0]}`;
+  const tq = period[0] === "7d" ? "" : `t=${period[0]}`;
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
   // «Хэн юу гэв?» доторх шүүлтүүр: open = хариулт хүлээж буй шагналтай асуулт, big = бүх шагналтай асуулт дүнгээр нь
   const bq = qa && ["open", "big"].includes(b) ? b : "";
@@ -28,7 +28,7 @@ export default async function Home({ searchParams }) {
   const art = f === "art"; // Нийтлэл
   const news = f === "news"; // Мэдээ
   const club = f === "club"; // Клуб: даалгавар, тайлан
-  const top = f === "top"; // Сүүлийн 24 цагт хамгийн их оч авсан
+  const top = f === "top"; // Сонгосон хугацаанд хамгийн их оч авсан
   const rand = f === "rand"; // Санамсаргүй: хэрэглэгч бүрт, дарах бүрт өөр дараалал
   const seed = crypto.randomUUID();
   const following = tab === "following";
@@ -159,7 +159,7 @@ export default async function Home({ searchParams }) {
           <TimeMenu
             label={period[1]}
             options={PERIODS.map(([v, name]) => {
-              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : ann ? "f=ann" : art ? "f=art" : news ? "f=news" : club ? "f=club" : "", v === "24h" ? "" : `t=${v}`].filter(Boolean).join("&");
+              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : ann ? "f=ann" : art ? "f=art" : news ? "f=news" : club ? "f=club" : "", v === "7d" ? "" : `t=${v}`].filter(Boolean).join("&");
               return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
             })}
           />
