@@ -28,10 +28,30 @@ import { TASK_KIND, REPORT_KIND, AUTHOR_SHARE } from "@/lib/tasks-shared";
 import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { listReports, leaderClub } from "@/lib/tasks";
 import { ReportCard } from "../../components/TaskCard";
+import { shareText, shareDescription } from "@/lib/og";
 import MiniMap from "../../components/MiniMap";
 import { geocodeLocation } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
+
+// Хуваалцах үеийн гарчиг, тайлбар, зураг: ковертой бол ковер, үгүй бол /og/[id] брэнд зураг
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const n = Number(id);
+  if (!Number.isInteger(n)) return {};
+  await ensureSchema();
+  const [p] = await sql`SELECT id, kind, title, subtitle, body, status, image_id, created_at FROM posts WHERE id = ${n}`.catch(() => []);
+  if (!p || !(p.status === "published" || (p.kind === TERM_KIND && p.status === "discussion"))) return {};
+  const title = shareText(p);
+  const description = shareDescription(p);
+  const image = p.image_id ? { url: `/img/${p.image_id}` } : { url: `/og/${p.id}`, width: 1200, height: 630 };
+  return {
+    title: `${title} · Science Spark`,
+    description,
+    openGraph: { siteName: "Science Spark", title, description, type: "article", locale: "mn_MN", url: `/post/${p.id}`, images: [{ ...image, alt: title }] },
+    twitter: { card: "summary_large_image", title, description, images: [image.url] },
+  };
+}
 
 // Эвент, зарлал, бодролын нэмэлт мэдээлэл
 function MetaBlock({ kind, m }) {
