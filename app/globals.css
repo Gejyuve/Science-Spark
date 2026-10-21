@@ -3298,6 +3298,8 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .adm-set textarea { min-height: 70px; resize: vertical; }
 .adm-set .adm-switch { flex-direction: row; align-items: center; gap: 10px; font-size: 14px; color: var(--ink); }
 .adm-set .adm-switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.adm-reset { margin-top: 18px; border: 1px solid #f3c4c7; }
+.adm-reset p { margin: 0; line-height: 1.5; color: var(--ink); }
 .adm-set-lv { display: grid; grid-template-columns: 120px repeat(2, minmax(0, 1fr)); gap: 8px; align-items: center; font-size: 13px; }
 .adm-set-lv b { font-weight: 600; color: var(--ink); }
 .adm-set-lv small { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
