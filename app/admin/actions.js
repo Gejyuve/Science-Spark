@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { notify } from "@/lib/notify";
-import { requireSection, audit, WARN_LIMIT } from "@/lib/admin";
+import { requireSection, audit, WARN_LIMIT, STATUS_LABELS } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
 import { HELP_LABEL } from "@/lib/help";
 
@@ -160,11 +160,18 @@ export async function moderatePost(formData) {
     await audit({ actorId: me.id, category: "content", action: `${d[0].kind} сэргээсэн`, targetType: "post", targetId: id, targetLabel: d[0].title });
     await notify({ userId: d[0].author_id, kind: "restored", actorId: me.id, postId: id });
   } else if (op === "delete") {
-    // Нуусан контентыг нэг мөсөн устгах — зөвхөн супер админ
+    // Аль ч төлөвтэй контентыг нэг мөсөн устгах — зөвхөн супер админ
     if (me.role !== "superadmin") back(from, "Нэг мөсөн устгах нь зөвхөн супер админд");
-    const d = await sql`DELETE FROM posts WHERE id = ${id} AND status = 'removed' RETURNING title, kind`;
-    if (!d.length) back(from, "Зөвхөн нуусан контентыг устгана");
-    await audit({ actorId: me.id, category: "content", action: `${d[0].kind} нэг мөсөн устгасан`, targetType: "post", targetId: id, targetLabel: d[0].title });
+    const d = await sql`DELETE FROM posts p USING users u WHERE p.id = ${id} AND u.id = p.author_id
+                        RETURNING p.title, p.body, p.kind, p.status, p.author_id, u.is_bot`;
+    if (!d.length) back(from, "Контент олдсонгүй");
+    const t = d[0];
+    const name = t.title || (t.body || "").slice(0, 80);
+    await audit({ actorId: me.id, category: "content", action: `${t.kind} нэг мөсөн устгасан (${STATUS_LABELS[t.status] || t.status}${note ? ", " + note : ""})`, targetType: "post", targetId: id, targetLabel: name });
+    // Нуусан контентын тухай зохиогч өмнө нь мэдсэн; бусад үед мэдэгдэнэ. Бот хаягийг супер админ өөрөө удирддаг.
+    if (t.status !== "removed" && !t.is_bot) {
+      await notify({ userId: t.author_id, kind: "deleted", actorId: me.id, note: `«${name}»${note ? " · " + note : ""}` });
+    }
   } else back(from, "Буруу хүсэлт");
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
