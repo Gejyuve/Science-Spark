@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import RichEditor from "./RichEditor";
 import WriteSteps from "./WriteSteps";
 import CatTools from "./CatTools";
 import ImageInput from "./ImageInput";
 import CategoryPicker from "./CategoryPicker";
-import WritingRules from "./WritingRules";
+import WritingRules, { RulesButton } from "./WritingRules";
 
 const KINDS = ["Нийтлэл", "Мэдээ"];
 const FIELDS = ["title", "subtitle", "kind", "category", "body", "sources", "image", "cover_source", "cover_url"];
 
 // Нийтлэл бичих маягт. Бичиж байсан бүх зүйлийг (текст, холбоос, зураг, эх сурвалж, төрөл, ангилал)
 // энэ хөтөч дээр автоматаар хадгалж, дараа нь буцаж ороход сэргээнэ.
-export default function WriteForm({ action, post = {}, tree, error, extra, heading, kinds = KINDS, locked = {}, submit = "Урьдчилж харах", draftKey, panel }) {
+export default function WriteForm({ action, post = {}, tree, error, extra, heading, kinds = KINDS, locked = {}, submit = "Урьдчилж харах", draftKey, panel, rules = true }) {
   const form = useRef(null);
   const key = draftKey || (post.id ? `ss-draft:edit:${post.id}` : "ss-draft:new");
   const base = {
@@ -25,6 +25,16 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
   const [ver, setVer] = useState(0);
   const [restored, setRestored] = useState(null);
   const [savedAt, setSavedAt] = useState(null);
+  // «Бичих дүрэм»-ийг зөвшөөрөөгүй бол илгээхгүй. Илгээх гэж оролдвол дүрмийг нээж, зөвшөөрмөгц илгээнэ.
+  const [agreed, setAgreed] = useState(!rules);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const sendAfter = useRef(false);
+  const closeRules = useCallback(() => { sendAfter.current = false; setRulesOpen(false); }, []);
+  const agree = () => {
+    setAgreed(true);
+    setRulesOpen(false);
+    if (sendAfter.current) { sendAfter.current = false; setTimeout(() => form.current?.requestSubmit(), 0); }
+  };
 
   // Хадгалсан ноорог байвал сэргээнэ
   useEffect(() => {
@@ -77,7 +87,10 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
     <div className="wr-layout">
     <aside className="wr-side left"><div id="wr-outline-slot" /></aside>
     <form ref={form} action={action} className="wr-col" key={ver}
-      onSubmit={() => { try { localStorage.removeItem(key); } catch (e) {} }}>
+      onSubmit={(e) => {
+        if (!agreed) { e.preventDefault(); sendAfter.current = true; setRulesOpen(true); return; }
+        try { localStorage.removeItem(key); } catch (e) {}
+      }}>
       {post.id && <input type="hidden" name="post_id" value={post.id} />}
 
       <section className="wr-card wr-head">
@@ -151,13 +164,14 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
       <section className="wr-card wr-foot">
         {extra}
         <span className="ss-grow" />
+        {rules && <RulesButton agreed={agreed} onOpen={() => setRulesOpen(true)} />}
         <button type="submit" className="wr-go">
           {submit}
           <img src="/icons/arrowr.svg" width={19} height={19} alt="" />
         </button>
       </section>
 
-      <WritingRules articleLevel={locked.Нийтлэл} newsLevel={locked.Мэдээ} />
+      <WritingRules articleLevel={locked.Нийтлэл} newsLevel={locked.Мэдээ} open={rulesOpen} onClose={closeRules} onAgree={agree} />
     </form>
     <aside className="wr-side right">
       {savedAt && <p className="wo-saved">✓ Ноорог хадгалагдсан · {t(savedAt)}</p>}

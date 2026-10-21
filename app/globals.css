@@ -3291,16 +3291,18 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ed-form .btn { align-self: flex-end; }
 .wr-foot .ed-note { flex: 1 1 320px; max-width: 460px; }
 
-/* Бичих самбарын доорх «Нийтлэл, мэдээ бичих дүрэм» */
-.wr-rules .wr-sec-head p a { color: #00a89b; font-weight: 600; white-space: nowrap; }
-.wr-rule { border-top: 1px solid var(--border); }
-.wr-rule summary { padding: 12px 2px; font-size: 15px; font-weight: 700; color: var(--ink); cursor: pointer; list-style-position: inside; }
-.wr-rule summary:hover { color: #00a89b; }
-.wr-rule p { margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: var(--ink); }
-.wr-rule p > span { display: inline-block; min-width: 40px; font-weight: 700; color: var(--muted); }
-.wr-rule p.sub { padding-left: 40px; }
-.wr-rule p.sub > span { min-width: 20px; font-weight: 500; }
-.wr-rule[open] { padding-bottom: 8px; }
+/* «Урьдчилж харах»-ын хажуух «Бичих дүрэм» товч ба гэрээ шиг нээгддэг дүрэм */
+.wr-rulesbtn { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 20px; margin-right: 12px; border-radius: 26px; border: 1.5px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.wr-rulesbtn:hover { border-color: #00a89b; }
+.wr-rulesbtn i { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--muted); font-style: normal; font-size: 13px; line-height: 1; color: #fff; }
+.wr-rulesbtn.on { border-color: #00a89b; color: #00897e; }
+.wr-rulesbtn.on i { border-color: #00a89b; background: #00a89b; }
+.wr-rules-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; overflow-y: auto; background: rgba(15, 42, 51, .5); }
+.wr-rules-doc { position: relative; width: 100%; margin: 0 auto; }
+.wr-rules-x { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 50%; background: #fff; color: #111; font-size: 20px; line-height: 1; cursor: pointer; }
+.wr-rules-acts { display: flex; justify-content: center; gap: 12px; margin-top: 24px; font-family: var(--font-inter), Inter, system-ui, sans-serif; }
+.wr-rules-acts .wr-cancel { background: #fff; color: #111; border-color: #d9d9d9; cursor: pointer; font-family: inherit; }
+@media (max-width: 760px) { .wr-foot { flex-wrap: wrap; } .wr-rulesbtn { margin-right: 0; } }
 .ar-chain { display: flex; flex-direction: column; gap: 10px; }
 .rv-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .rv-hist > li { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; border-bottom: 1px solid var(--border); }
