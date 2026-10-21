@@ -66,7 +66,7 @@ export default function ReferralAsk() {
   return (
     <div className="cel-ref">
       <b>Science Spark-ийн тухай хаанаас олж мэдсэн бэ?</b>
-      <small>Заавал биш. Танд замыг заасан хүн, байгууллага эсвэл клубыг сонговол тэдэнд <b>+{REWARD} оч</b> урамшуулал очно.</small>
+      <small>Танд нөлөөлсөн профайлд <b>+{REWARD} оч</b> урамшуулал редакцаас очно.</small>
       <div className="cel-ref-tabs" role="tablist">
         {TABS.map(([k, ic, label]) => (
           <button key={k} type="button" role="tab" aria-selected={kind === k} className={kind === k ? "on" : ""} onClick={() => tab(k)}>
