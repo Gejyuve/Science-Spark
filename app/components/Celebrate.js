@@ -35,7 +35,7 @@ const WHY = {
   Даалгавар: "Клубүүд туршиж, бүтээж, хамтдаа суралцах шинэ сорилт нэмэгдлээ. Редакц хянаад нийтэлнэ.",
   Тайлан: "Клубийнхаа хөдөлмөрийг бусдад үлгэр болгон хуваалцлаа. Редакц хянаад нийтэлнэ.",
   Хариулт: "Мэдлэгээ хуваалцаж, хэн нэгний асуултад гэрэл тусгалаа. Анхны хариултын урамшуулал танд олгогдлоо!",
-  Профайл: "Science Spark-ийн гэр бүлд тавтай морил! Монголын шинжлэх ухааныг хамтдаа асааж, мэдлэгээ дараагийн үедээ түгээцгээе.",
+  Профайл: "Science Spark гэр бүлд тавтай морил. Монголд шинжлэх ухааны очыг хамтдаа түгээж, мэдлэгээ дараагийн үедээ өвлүүлцгээе!",
 };
 const head = (d) => {
   const noun = KIND[d.k]?.noun || "Бүтээл";
@@ -63,6 +63,29 @@ function readCookie() {
   } catch (e) {
     return null;
   }
+}
+
+// Шинэ профайлын дүрс: харанхуй сансарт анивчих цэнхэр од
+const DOTS = [[18, 26, 0], [74, 20, .6], [82, 64, 1.2], [26, 74, .3], [50, 12, .9], [12, 52, 1.5], [66, 84, .45]];
+function StarBadge() {
+  return (
+    <span className="cel-badge cel-space" aria-hidden="true">
+      <span>
+        {DOTS.map(([x, y, dl], i) => <i key={i} style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${dl}s` }} />)}
+        <svg viewBox="0 0 48 48" className="cel-star">
+          <defs>
+            <radialGradient id="cel-star-g" cx="50%" cy="45%" r="60%">
+              <stop offset="0" stopColor="#ffffff" />
+              <stop offset=".18" stopColor="#d6f0ff" />
+              <stop offset=".5" stopColor="#5cb8ff" />
+              <stop offset="1" stopColor="#1f6fff" />
+            </radialGradient>
+          </defs>
+          <path d="M24 2 C26 17 31 22 46 24 C31 26 26 31 24 46 C22 31 17 26 2 24 C17 22 22 17 24 2 Z" fill="url(#cel-star-g)" />
+        </svg>
+      </span>
+    </span>
+  );
 }
 
 // Тоо 0-ээс өсөж гарна
@@ -125,7 +148,7 @@ export default function Celebrate() {
             {BITS.map((b, i) => <i key={i} style={{ "--c": b.c, "--x": `${b.x}%`, "--d": `${b.d}s`, "--s": `${b.s}px`, "--r": `${b.r}deg` }} />)}
           </span>
           <button type="button" className="tm-x cel-x" onClick={close} aria-label="Хаах">×</button>
-          <span className="cel-badge"><span>{kind.ic}</span></span>
+          {d.k === "Профайл" ? <StarBadge /> : <span className="cel-badge"><span>{kind.ic}</span></span>}
           <small className="cel-kicker">Баяр хүргэе!</small>
           <b id="cel-h">{head(d)}</b>
           {d.t && <em className="cel-title">«{d.t}»</em>}
@@ -154,8 +177,6 @@ export default function Celebrate() {
             </div>
           )}
 
-          {d.k === "Профайл" && <ReferralAsk />}
-
           <div className={"cel-lv" + (d.up ? " up" : "")}>
             <div className="cel-lv-row">
               <b style={{ color: d.lv.c }}>{d.up ? `🎉 Түвшин ахилаа: ${d.lv.name}!` : d.lv.n ? `Түвшин ${d.lv.n} · ${d.lv.name}` : "Шинэ гишүүн"}</b>
@@ -166,7 +187,7 @@ export default function Celebrate() {
               <span className="cel-bar-new" style={{ width: `${grow ? pctAfter : pctBefore}%`, backgroundColor: d.lv.n ? d.lv.c : undefined }} />
             </span>
             {d.up && d.lv.perk && <span className="cel-perk">🔓 Шинэ эрх нээгдлээ: <b>{d.lv.perk}</b></span>}
-            <small>{d.nx ? `${d.nx.name} түвшин хүртэл ${n(d.nx.min - d.p)} оч үлдлээ. Бүтээл бүр таныг ойртуулна ✦` : "Та хамгийн дээд түвшинд хүрсэн байна ✦"}</small>
+            <small>{d.nx ? `Дараагийн түвшин хүртэл ${n(d.nx.min - d.p)} оч үлдлээ. Үйлдэл бүхэн тань таныг улам тод асаана.` : "Та хамгийн дээд түвшинд хүрсэн байна ✦"}</small>
           </div>
 
           <div className="cel-foot">
@@ -176,6 +197,8 @@ export default function Celebrate() {
             )}
             <Link href="/och" className="cel-rules" onClick={close}>Оч олох дүрэм →</Link>
           </div>
+
+          {d.k === "Профайл" && <ReferralAsk />}
         </div>
       </div>
     </div>,

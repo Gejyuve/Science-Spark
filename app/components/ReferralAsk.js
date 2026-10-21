@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { answerReferral } from "../profile/actions";
 import { REFERRAL_REWARD as REWARD } from "@/lib/referral-shared";
 
-// Шинэ профайлын баярын цонхонд: Science Spark-ийн тухай хэнээс сонссон бэ? (заавал биш)
+// Шинэ профайлын баярын цонхны хамгийн доор: Science Spark-ийн тухай хаанаас олж мэдсэн бэ? (заавал биш)
 // Хүн, байгууллага, клубыг нэрээр нь хайж сонгоно. Сонгосон эх сурвалж урамшууллын оч авна.
 const TABS = [
   ["person", "👤", "Хувь хүн", "Хүний нэрээр хайх"],
@@ -65,7 +65,7 @@ export default function ReferralAsk() {
   const ph = TABS.find((t) => t[0] === kind)[3];
   return (
     <div className="cel-ref">
-      <b>Science Spark-ийн тухай хаанаас сонссон бэ?</b>
+      <b>Science Spark-ийн тухай хаанаас олж мэдсэн бэ?</b>
       <small>Заавал биш. Танд замыг заасан хүн, байгууллага эсвэл клубыг сонговол тэдэнд <b>+{REWARD} оч</b> урамшуулал очно.</small>
       <div className="cel-ref-tabs" role="tablist">
         {TABS.map(([k, ic, label]) => (

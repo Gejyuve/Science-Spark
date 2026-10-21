@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
+import { influenceCount } from "@/lib/referral";
 import { membershipOf, clubFollowSet, BOARD_MAX, ymd } from "@/lib/clubs";
 import Shell from "../../components/Shell";
 import MiniMap from "../../components/MiniMap";
+import { InfluenceBtn } from "../../components/Influence";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
 import { chatUnread } from "@/lib/chat";
@@ -61,6 +63,7 @@ export default async function ClubPage({ params, searchParams }) {
   const user = await getUser();
   const c = await load(id);
   if (!c) notFound();
+  const influence = await influenceCount("club", id);
   const members = await sql`
     SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar, m.role,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
@@ -115,6 +118,7 @@ export default async function ClubPage({ params, searchParams }) {
                 <b><img src="/icons/spark.svg" width={16} height={16} alt="" />{fmtK(c.points)}</b><small>оч</small>
                 <b><img className="ic" src="/icons/followers.svg" width={14} height={14} alt="" />{members.length}</b><small>гишүүн</small>
                 <b>{fmtK(c.followers)}</b><small>дагагч</small>
+                <InfluenceBtn href={`/club/${id}/influence`} n={influence} />
               </span>
             </div>
             <span className="ss-grow" />

@@ -7,8 +7,10 @@ import { toggleFollow } from "../../posts/actions";
 import { fileComplaint, answerWarning } from "../../profile/actions";
 import { paraDiff } from "@/lib/diff";
 import { defaultCover } from "@/lib/covers";
+import { influenceCount } from "@/lib/referral";
 import Shell from "../../components/Shell";
 import PostCard from "../../components/PostCard";
+import { InfluenceBtn } from "../../components/Influence";
 import { Avatar, fmtK, followingSet, NameBadges } from "../../components/Bits";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +52,7 @@ export default async function PublicProfile({ params, searchParams }) {
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
       (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS followers
     FROM users u WHERE u.id = ${uid}`;
+  if (rows.length) rows[0].influence = await influenceCount("person", uid);
   if (!rows.length) notFound();
   const u = rows[0];
   const isMe = !!me && me.id === u.id;
@@ -187,17 +190,9 @@ export default async function PublicProfile({ params, searchParams }) {
             {/* Овгийг бүтнээр нь зөвхөн тухайн хүний өөрийн хуудсанд харуулна */}
             <h1>{u.surname ? `${u.surname} ${u.first_name}` : `${u.initial}.${u.first_name}`}<NameBadges points={u.points} supporter={isPremium(u)} size={22} /></h1>
             <div className="pu-stats">
-              {isMe ? (
-                <>
-                  <Link href="/och#rules" className="pu-stat-link" title="Очны дүрэм"><img src="/icons/pts.svg" width={14} height={14} alt="" /><b>{fmtK(u.points)}</b> оч</Link>
-                  <Link href={`/u/${u.id}/followers`} className="pu-stat-link" title="Дагагчдын жагсаалт"><img src="/icons/followers.svg" width={12} height={12} alt="" /><b>{fmtK(u.followers)}</b> дагагч</Link>
-                </>
-              ) : (
-                <>
-                  <span><img src="/icons/pts.svg" width={14} height={14} alt="" /><b>{fmtK(u.points)}</b> оч</span>
-                  <span><img src="/icons/followers.svg" width={12} height={12} alt="" /><b>{fmtK(u.followers)}</b> дагагч</span>
-                </>
-              )}
+              <Link href={isMe ? "/och#rules" : "/och"} className="pu-stat-link" title="Очны учир"><img src="/icons/pts.svg" width={14} height={14} alt="" /><b>{fmtK(u.points)}</b> оч</Link>
+              <Link href={`/u/${u.id}/followers`} className="pu-stat-link" title="Дагагчдын жагсаалт"><img src="/icons/followers.svg" width={12} height={12} alt="" /><b>{fmtK(u.followers)}</b> дагагч</Link>
+              <InfluenceBtn href={`/u/${u.id}/influence`} n={u.influence} />
             </div>
           </div>
           <div className="pu-actions">
