@@ -1,1 +1,10 @@
-{ "permissions": { "allow": ["Bash(curl * https://sciencespark.mn/api/bot*)"] } }
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl * https://sciencespark.mn/api/bot)",
+      "Bash(curl * https://sciencespark.mn/api/bot *)",
+      "Write(//mnt/project-files/bots/**)",
+      "Edit(//mnt/project-files/bots/**)"
+    ]
+  }
+}
