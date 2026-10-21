@@ -279,7 +279,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
       {panel || (
         <Link href={loggedIn ? "/write" : "/login"} className="ss-composer">
           {me || <img src="/icons/person.svg" width={32} height={32} alt="" />}
-          <span>{loggedIn ? "Өнөөдөр ямар оч асаах гэж байна даа?" : "Нийтлэхийн тулд нэвтэрнэ үү"}</span>
+          <span>{loggedIn ? "Өнөөдөр ямар оч асаах гээ байна даа?" : "Нийтлэхийн тулд нэвтэрнэ үү"}</span>
         </Link>
       )}
       <div className="ss-tabs">
