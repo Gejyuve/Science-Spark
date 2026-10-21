@@ -1431,7 +1431,8 @@ a.ss-kind:hover { text-decoration: underline; }
 .ii-badge { position: absolute; right: -2px; bottom: 4px; z-index: 4; padding: 0; border: 0; background: none; cursor: pointer; }
 .ii-badge .pf-cam { position: static; }
 .pf-photo { align-items: flex-end; margin-bottom: 40px; }
-.pf-photo > div { margin-top: 0; margin-bottom: 14px; }
+/* Текст ковер зурагтай давхцахгүй: ковероос (-60px) доош эхэлнэ */
+.pf-photo > div:not(.ii) { align-self: flex-start; margin-top: 68px; margin-bottom: 0; }
 :root[data-theme="dark"] .ii-cover .ii-box { background: var(--teal-bg); border-color: #2a6a62; }
 :root[data-theme="dark"] .ii-avatar .ii-box { background: var(--surface-2); }
 /* Харуулах */
@@ -3717,6 +3718,7 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 .pf-photo:has(.ii-avatar .ii-note, .ii-avatar .ii-err) { margin-bottom: 84px; }
 @media (max-width: 760px) {
   .pf-photo { margin-top: -30px; }
+  .pf-photo > div:not(.ii) { margin-top: 38px; }
   .pf-coverwrap .ii-note, .pf-coverwrap .ii-err { bottom: 6px; right: 6px; font-size: 10.5px; padding: 3px 8px; }
 }
 
