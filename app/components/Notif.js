@@ -8,7 +8,7 @@ const ICON = {
   tip: ["gift", "ok"], prize: ["crown", "ok"], pay_ok: ["gift", "ok"], premium_ok: ["crown", "ok"], pay_no: ["wallet", "gray"], pay_in: ["wallet", "ok"],
   withdraw_ok: ["wallet", "ok"], withdraw_no: ["wallet", "gray"],
   approved: ["f_shield", "ok"], approved_edited: ["f_shield", "ok"], restored: ["f_shield", "ok"],
-  rejected: ["logic", "warn"], removed: ["logic", "bad"], comment_removed: ["logic", "bad"],
+  rejected: ["logic", "warn"], removed: ["logic", "bad"], deleted: ["logic", "bad"], comment_removed: ["logic", "bad"],
   admin_on: ["shield", "ok"], admin_off: ["shield", "gray"], restricted: ["logic", "bad"], unrestricted: ["f_shield", "ok"], unflagged: ["f_shield", "ok"],
   points_adj: ["pts", "ok"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"], complaint_ok: ["flag20", "ok"], complaint_no: ["flag20", "gray"],

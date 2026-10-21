@@ -107,14 +107,15 @@ export default async function Content({ searchParams }) {
                           <button className="adm-btn">Сэргээх</button>
                         </form>
                       )}
-                      {p.status === "removed" && user.role === "superadmin" && (
+                      {user.role === "superadmin" && (
                         <details className="adm-pop">
                           <summary className="adm-btn danger">Устгах</summary>
                           <form action={moderatePost}>
                             <input type="hidden" name="post_id" value={p.id} />
                             <input type="hidden" name="op" value="delete" />
                             <input type="hidden" name="from" value={from} />
-                            <span className="adm-muted small">Нэг мөсөн устгана, буцаах боломжгүй.</span>
+                            <input name="note" maxLength={500} placeholder="Шалтгаан (заавал биш, зохиогчид очно)" />
+                            <span className="adm-muted small">Нэг мөсөн устгана: сэтгэгдэл, оч, түүх нь хамт устана. Буцаах боломжгүй.</span>
                             <button className="adm-btn danger">Нэг мөсөн устгах</button>
                           </form>
                         </details>
