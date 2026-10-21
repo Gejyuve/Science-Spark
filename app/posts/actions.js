@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, isSuperAdmin, isAdmin, needsName, canWrite } from "@/lib/auth";
+import { getUser, isStaff, isAdmin, needsName, canWrite } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 import { validLocal, toMin, spanText, nowLocal } from "@/lib/events";
 import { audit } from "@/lib/admin";
@@ -356,19 +356,6 @@ export async function toggleFollow(formData) {
     if (ins.length) await notify({ userId: target, kind: "follow", actorId: user.id });
   }
   revalidatePath("/", "layout");
-}
-
-export async function setRole(formData) {
-  const user = await getUser();
-  if (!isSuperAdmin(user)) redirect("/");
-  const target = Number(formData.get("user_id"));
-  const role = String(formData.get("role"));
-  // Супер админ эрхийг зөвхөн SUPER_ADMIN_EMAILS-ээр олгоно, энд томилохгүй.
-  if (!Number.isInteger(target) || !["user", "admin"].includes(role)) return;
-  if (target === user.id) return; // өөрийн эрхийг өөрчлөхгүй
-  await ensureSchema();
-  await sql`UPDATE users SET role = ${role} WHERE id = ${target} AND role <> 'superadmin'`;
-  revalidatePath("/admin");
 }
 
 // Админ / супер админ: нийтлэгдсэн нийтлэлийг нийтээс хасна (устгахгүй, зохиогч засаад дахин илгээж болно).

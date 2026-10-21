@@ -487,7 +487,7 @@ export default async function PostPage({ params, searchParams }) {
             {isTerm && post.status === "discussion" ? (
               <span className="tl-strip orange"><img src="/icons/f_clock.svg" width={14} height={14} alt="" />Хэлэлцэж байна · {daysLeft(post.meta, post.created_at) ? `${daysLeft(post.meta, post.created_at)} хоног үлдсэн` : "хугацаа дууссан, зөвшөөрөгчийг хүлээж байна"}</span>
             ) : isTerm && published ? (
-              <span className="tl-strip">✓ Батлагдсан {fmtDate(post.meta?.approved_at || post.reviewed_at)}</span>
+              <span className="tl-strip">✓ Батлагдсан {fmtDate(post.meta?.approved_at || post.reviewed_at || post.created_at)}</span>
             ) : (
               <When d={post.created_at} size={16} className="ar-when" align="left" />
             )}
@@ -673,7 +673,7 @@ export default async function PostPage({ params, searchParams }) {
               {canEdit && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && !club && !isAuthor && (
-                <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" />Урамшуулах</>}
+                <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" /><span className="ar-gift-t">Урамшуулах</span></>}
                   writer={{ id: post.author_id, name: `${post.initial}.${post.first_name}` }} postId={post.id} {...supportModalProps(user)} />
               )}
               <span className="ar-right">
