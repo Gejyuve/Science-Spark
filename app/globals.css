@@ -499,9 +499,19 @@ details.mod summary { cursor: pointer; }
   .ar-strip { padding: 14px 18px 0; }
   .ar-title { font-size: 28px; line-height: 36px; }
   .ar-credits { flex-direction: column; gap: 14px; }
+  /* Багана болоход flex-basis 220px өндөр болж хоосон зай үүсгэдэг байсан */
+  .ar-credits > div { flex: none; }
   .ar-reactions { gap: 12px; }
 }
+/* Нарийн утсан дээр «Урамшуулах» зөвхөн бэлэгний дүрсээр, бусад товчийг 2-р мөрөнд түлхэхгүй */
+@media (max-width: 420px) {
+  .ar-content .ar-reactions { gap: 8px; }
+  .ar-gift { position: relative; padding: 7px 9px; }
+  .ar-gift .ar-gift-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
 .ar-content .muted a, .muted a { color: var(--teal); font-weight: 600; }
+/* Урт үг, холбоос (URL) картаас хальж утсан дээр хуудсыг хажуу тийш гүйлгэхгүй */
+.ss-card-body p, .ss-card-body h3, .ar-title, .ar-lead, .ar-text, .ar-comment p, .md-list li, .md-quote, .md-a { overflow-wrap: anywhere; }
 
 /* ===== Figma: Нийтлэл бичих ===== */
 .wr-page { position: relative; min-height: 100vh; padding: 16px 24px 60px; overflow: hidden; overflow: clip; background: var(--bg); }
@@ -953,7 +963,7 @@ details.mod summary { cursor: pointer; }
   .adm-grid2 { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
-  .adm { grid-template-columns: minmax(0, 1fr); }
+  .adm { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .adm-side { position: static; height: auto; padding: 14px 16px; gap: 10px; }
   .adm-nav { flex-direction: row; overflow-x: auto; margin: 0; padding-bottom: 4px; }
   .adm-item { flex: none; }
@@ -967,6 +977,8 @@ details.mod summary { cursor: pointer; }
   .adm-stat b { font-size: 22px; }
   .adm-pop form { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; }
   .adm-pop input { width: auto; flex: 1; }
+  /* Хүснэгтийн үйлдлийн товчнууд нэг мөрөнд, хүснэгт хажуу тийш гүйнэ */
+  .adm-table .adm-acts { flex-wrap: nowrap; }
 }
 .adm-profile + .adm-dl + .adm-acts { justify-content: space-between; width: 100%; }
 
