@@ -162,9 +162,9 @@ export default function WriteForm({ action, post = {}, tree, error, extra, headi
       {panel}
 
       <section className="wr-card wr-foot">
+        {rules && <RulesButton agreed={agreed} onOpen={() => setRulesOpen(true)} />}
         {extra}
         <span className="ss-grow" />
-        {rules && <RulesButton agreed={agreed} onOpen={() => setRulesOpen(true)} />}
         <button type="submit" className="wr-go">
           {submit}
           <img src="/icons/arrowr.svg" width={19} height={19} alt="" />
