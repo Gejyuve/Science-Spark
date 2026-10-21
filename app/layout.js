@@ -14,11 +14,11 @@ const inter = Inter({ subsets: ["latin", "cyrillic"], display: "swap", variable:
 export const metadata = {
   metadataBase: new URL(siteUrl()),
   title: "Science Spark",
-  description: "Шинжлэх ухааныг хамтдаа асаая",
+  description: "Сонирхлын очыг хамтдаа асаая!",
   openGraph: {
     siteName: "Science Spark",
     title: "Science Spark",
-    description: "Шинжлэх ухааныг хамтдаа асаая",
+    description: "Сонирхлын очыг хамтдаа асаая!",
     type: "website",
     locale: "mn_MN",
     images: [{ url: "/og", width: 1200, height: 630, alt: "Science Spark" }],
