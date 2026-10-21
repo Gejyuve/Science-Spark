@@ -6,6 +6,7 @@ import { fmtDate } from "@/lib/format";
 import { toggleFollow } from "../../posts/actions";
 import { fileComplaint, answerWarning } from "../../profile/actions";
 import { paraDiff } from "@/lib/diff";
+import { defaultCover } from "@/lib/covers";
 import Shell from "../../components/Shell";
 import PostCard from "../../components/PostCard";
 import { Avatar, fmtK, followingSet, NameBadges } from "../../components/Bits";
@@ -179,7 +180,7 @@ export default async function PublicProfile({ params, searchParams }) {
         </p>
       )}
       <section className="pu-card">
-        <div className="pu-cover" style={pr.cover_id ? { backgroundImage: `url(/img/${pr.cover_id})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} />
+        <div className="pu-cover" style={{ backgroundImage: `url(${pr.cover_id ? `/img/${pr.cover_id}` : defaultCover(u.id)})`, backgroundSize: "cover", backgroundPosition: "center" }} />
         <div className="pu-top">
           <span className="pu-avatar"><Avatar user={u} size={96} /></span>
           <div className="pu-name">
