@@ -15,7 +15,7 @@ function layout(tree, open) {
   const links = [];
   let leaf = 0;
   (function place(n, depth, parent) {
-    const node = { path: n.path, name: n.name, en: n.en, n: n.n, depth, has: n.kids.length > 0, open: open.has(n.path), x: depth * COL };
+    const node = { path: n.path, pp: parent ? parent.path : null, name: n.name, en: n.en, n: n.n, depth, has: n.kids.length > 0, open: open.has(n.path), x: depth * COL };
     nodes.push(node);
     if (parent) links.push({ from: parent, to: node });
     if (node.has && node.open) {
@@ -32,8 +32,19 @@ function layout(tree, open) {
   return { nodes, links, w, h };
 }
 
+const DUR = 480;
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const mix = (a, b, t) => a + (b - a) * t;
+const calm = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+// Байгаа хамгийн ойрын өвөг салааг олно (шинэ салаа түүнээс ургаж, хаагдсан нь түүн рүү шингэнэ)
+function anchor(node, map, byPath) {
+  let p = node.pp;
+  while (p != null && !map.has(p)) p = byPath.get(p)?.pp ?? null;
+  return map.get(p ?? "");
+}
+
 // Figma 86:17 · Шинжлэх ухааны мод: салаа дээр дарж задлах, нэр дээр дарж салбарын хуудас нээх
-export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"], focus = null, loggedIn = false }) {
+export default function TreeGraph({ tree, initialOpen = [""], focus = null, loggedIn = false }) {
   const router = useRouter();
   const box = useRef(null);
   const drag = useRef(null);
@@ -41,7 +52,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
   const [sel, setSel] = useState(focus);
   const [view, setView] = useState({ x: 40, y: 40, k: 1 });
   const [full, setFull] = useState(false);
-  const [hover, setHover] = useState(null); // англи нэрийн тайлбар
+  const [hoverPath, setHover] = useState(null); // англи нэрийн тайлбар
   // Бүтэн дэлгэц: Esc дарж гарна, хуудас гүйхгүй
   useEffect(() => {
     if (!full) return;
@@ -50,8 +61,65 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", esc); document.body.style.overflow = ""; };
   }, [full]);
-  const { nodes, links, w, h } = useMemo(() => layout(tree, open), [tree, open]);
+  const { nodes: goal, w, h } = useMemo(() => layout(tree, open), [tree, open]);
+  // Салаалах хөдөлгөөн: шинэ салаа эцгээсээ ургаж гарна, хаагдсан нь эцэг рүүгээ буцаж шингэнэ
+  const [nodes, setNodes] = useState(() => goal.map((n) => ({ ...n, o: 1 })));
+  const shown = useRef(nodes);
+  const known = useRef(new Map()); // path -> node (хаагдаж буй салааны өвгийг олоход)
+  const raf = useRef(0);
+  useEffect(() => {
+    for (const n of goal) known.current.set(n.path, n);
+    const from = new Map(shown.current.map((n) => [n.path, n]));
+    const to = new Map(goal.map((n) => [n.path, n]));
+    const same = shown.current.length === goal.length && goal.every((n) => { const a = from.get(n.path); return a && a.x === n.x && a.y === n.y && a.o === 1; });
+    if (same || calm()) { shown.current = goal.map((n) => ({ ...n, o: 1 })); setNodes(shown.current); return; }
+    const tracks = goal.map((n) => {
+      const a = from.get(n.path) || { ...(anchor(n, from, known.current) || n), o: 0 };
+      return { n, ax: a.x, ay: a.y, ao: a.o, bx: n.x, by: n.y, bo: 1 };
+    });
+    for (const n of shown.current) {
+      if (to.has(n.path)) continue;
+      const b = anchor(n, to, known.current) || n;
+      tracks.push({ n, ax: n.x, ay: n.y, ao: n.o, bx: b.x, by: b.y, bo: 0, gone: true });
+    }
+    // Эцгүүд нь хүүхдүүдээсээ өмнө зурагдана (хаагдаж буй салааг ч оруулаад)
+    tracks.sort((p, q) => p.n.depth - q.n.depth);
+    cancelAnimationFrame(raf.current);
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = ease(Math.min(1, (now - t0) / DUR));
+      const done = t >= 1;
+      shown.current = tracks
+        .filter((k) => !(done && k.gone))
+        .map((k) => ({ ...k.n, x: mix(k.ax, k.bx, t), y: mix(k.ay, k.by, t), o: mix(k.ao, k.bo, t), gone: k.gone }));
+      setNodes(shown.current);
+      if (!done) raf.current = requestAnimationFrame(step);
+    };
+    raf.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf.current);
+  }, [goal]);
+  const links = useMemo(() => {
+    const at = new Map(nodes.map((n) => [n.path, n]));
+    return nodes.filter((n) => n.pp != null && at.has(n.pp)).map((n) => ({ from: at.get(n.pp), to: n }));
+  }, [nodes]);
 
+  // Харагдах хэсгийг зөөлөн шилжүүлнэ (чирэх, гүйлгэхэд шууд)
+  const viewRaf = useRef(0);
+  const viewNow = useRef(view);
+  viewNow.current = view;
+  const glide = useCallback((next) => {
+    cancelAnimationFrame(viewRaf.current);
+    if (calm()) return setView(next);
+    const start = viewNow.current;
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = ease(Math.min(1, (now - t0) / DUR));
+      setView({ x: mix(start.x, next.x, t), y: mix(start.y, next.y, t), k: mix(start.k, next.k, t) });
+      if (t < 1) viewRaf.current = requestAnimationFrame(step);
+    };
+    viewRaf.current = requestAnimationFrame(step);
+  }, []);
+  const first = useRef(true);
   const fit = useCallback(() => {
     const el = box.current;
     if (!el) return;
@@ -59,12 +127,9 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
     // Хэт жижигрэхгүй: бичиг уншигдахуйц (0.75-аас доош биш), илүү хэсгийг чирж үзнэ
     const k = Math.min(1.1, Math.max(0.75, Math.min((cw - PAD) / (w + 40), (ch - PAD) / (h + 60))));
     const x = (w + 40) * k < cw ? (cw - (w - 140) * k) / 2 - 20 * k : 70;
-    setView({ k, x, y: (ch - h * k) / 2 });
-  }, [w, h]);
-  // Нарийн дэлгэцэнд эхэндээ цөөн салаа нээнэ
-  useEffect(() => {
-    if (box.current && box.current.clientWidth < 760 && !focus) setOpen(new Set(["", "nat"]));
-  }, [focus]);
+    const next = { k, x, y: (ch - h * k) / 2 };
+    if (first.current) { first.current = false; setView(next); } else glide(next);
+  }, [w, h, glide]);
   useEffect(() => { fit(); }, [fit, full]);
   useEffect(() => {
     const on = () => fit();
@@ -72,12 +137,12 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
     return () => window.removeEventListener("resize", on);
   }, [fit]);
 
-  const zoom = (f, cx, cy) => setView((v) => {
+  const zoom = (f, cx, cy) => { cancelAnimationFrame(viewRaf.current); setView((v) => {
     const el = box.current;
     const px = cx ?? el.clientWidth / 2, py = cy ?? el.clientHeight / 2;
     const k = Math.min(2.5, Math.max(0.3, v.k * f));
     return { k, x: px - ((px - v.x) * k) / v.k, y: py - ((py - v.y) * k) / v.k };
-  });
+  }); };
   const toggle = (n) => {
     setSel(n.path);
     if (!n.has) return;
@@ -86,6 +151,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
 
   const onDown = (e) => {
     if (e.button !== 0 || e.target.closest("[data-node], .tg-zoom, .tg-tools, button, a")) return;
+    cancelAnimationFrame(viewRaf.current);
     drag.current = { x: e.clientX, y: e.clientY, v: view };
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
@@ -109,6 +175,7 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
+  const hover = hoverPath == null ? null : nodes.find((n) => n.path === hoverPath && !n.gone);
   return (
     <section className={"tg-card" + (full ? " full" : "")}>
       <div ref={box} className={"tg-stage" + (drag.current ? " dragging" : "")} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
@@ -116,14 +183,14 @@ export default function TreeGraph({ tree, initialOpen = ["", "nat", "nat/phys"],
           <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
             {links.map(({ from, to }) => {
               const mx = (from.x + to.x) / 2;
-              return <path key={to.path} className="tg-link" d={`M${from.x},${from.y} C${mx},${from.y} ${mx},${to.y} ${to.x},${to.y}`} />;
+              return <path key={to.path} className="tg-link" style={to.o < 1 ? { opacity: 0.9 * to.o } : undefined} d={`M${from.x},${from.y} C${mx},${from.y} ${mx},${to.y} ${to.x},${to.y}`} />;
             })}
             {nodes.map((n) => {
               const hollow = n.open || !n.path;
               const on = sel === n.path;
               return (
-                <g key={n.path || "root"} className={"tg-node" + (on ? " on" : "")} style={{ transform: `translate(${n.x}px, ${n.y}px)` }} data-node
-                  onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover((h) => (h === n ? null : h))}>
+                <g key={n.path || "root"} className={"tg-node" + (on ? " on" : "")} style={{ transform: `translate(${n.x}px, ${n.y}px) scale(${0.5 + 0.5 * n.o})`, opacity: n.o, pointerEvents: n.gone ? "none" : undefined }} data-node
+                  onMouseEnter={() => setHover(n.path)} onMouseLeave={() => setHover((h) => (h === n.path ? null : h))}>
                   <text className="tg-label" y={-15} textAnchor="middle" onClick={() => router.push(n.path ? `/tree/${n.path}` : "/tree")}>
                     {n.name} ({fmt(n.n)})
                   </text>
