@@ -134,13 +134,13 @@ export default async function Home({ searchParams }) {
           <div className="ss-fscroll">
             {[
               ["all", "", "Бүгд", counts.all],
-              ["following", user ? "tab=following" : null, "Дагаж буй", user ? counts.following : null],
+              ["ann", "f=ann", "Гоё юм дуулгая", counts.ann],
               ["top", "f=top", "Хамгийн тод", counts.top],
               ["qa", "f=qa", "Хэн юу гэв?", counts.qa],
               ["art", "f=art", "Чанартай юм унш", counts.art],
               ["news", "f=news", "Мэдээгүй өнгөрөв өө!", counts.news],
-              ["ann", "f=ann", "Гоё юм дуулгая", counts.ann],
               ["club", "f=club", "Клуб", counts.club],
+              ["following", user ? "tab=following" : null, "Дагаж буй", user ? counts.following : null],
             ].map(([k, q, label, n]) => {
               const on = k === "all" ? !qa && !top && !rand && !ann && !art && !news && !club && !following : k === "following" ? following && !!user : k === "top" ? top : k === "ann" ? ann : k === "art" ? art : k === "news" ? news : k === "club" ? club : qa;
               const qs = q === null ? null : [q, tq].filter(Boolean).join("&");
