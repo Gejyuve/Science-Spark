@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { startSupport } from "../san/actions";
 import QpayBox from "./QpayBox";
+import Spark from "./Spark";
 
 const fmt = (n) => `${Math.round(Number(n || 0)).toLocaleString("en-US")}₮`;
 // Урамшуулал, хандив, цэнэглэлтийн дүн бүх цонхонд ижил: аяга кофе, ном, пуужин
@@ -154,7 +155,7 @@ export default function SupportModal({ kind, label, className = "", loggedIn, pr
               <small>{sum ? `Нийт ${fmt(sum)}` : ""}</small>
               <span className="ss-grow" />
               <button type="button" className="tm-btn ghost" onClick={close}>Болих</button>
-              <button type="submit" className="tm-btn sm-go" disabled={pending}>{pending ? "Түр хүлээнэ үү…" : isPrem ? <>Дэмжигч болох <img className="sm-bolt" src="/icons/bolt.svg" width={16} height={16} alt="" /></> : isTip ? "Урамшуулах 🎁" : isTop ? "Цэнэглэх 🏆" : "Хандив өгөх ✦"}</button>
+              <button type="submit" className="tm-btn sm-go" disabled={pending}>{pending ? <span className="spk-btn"><Spark mono size={16} />Түр хүлээнэ үү…</span> : isPrem ? <>Дэмжигч болох <img className="sm-bolt" src="/icons/bolt.svg" width={16} height={16} alt="" /></> : isTip ? "Урамшуулах 🎁" : isTop ? "Цэнэглэх 🏆" : "Хандив өгөх ✦"}</button>
             </div>
           </form>
         )}

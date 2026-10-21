@@ -4,6 +4,8 @@ import ValidityMn from "./components/ValidityMn";
 import Ping from "./components/Ping";
 import Celebrate from "./components/Celebrate";
 import SelectMenu from "./components/SelectMenu";
+import NavLoader from "./components/NavLoader";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"], display: "swap", variable: "--font-inter" });
 
@@ -32,6 +34,7 @@ export default function RootLayout({ children }) {
         <Ping />
         <Celebrate />
         <SelectMenu />
+        <Suspense fallback={null}><NavLoader /></Suspense>
         {children}
       </body>
     </html>

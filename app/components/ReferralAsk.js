@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { answerReferral } from "../profile/actions";
 import { REFERRAL_REWARD as REWARD } from "@/lib/referral-shared";
+import Spark from "./Spark";
 
 // Шинэ профайлын баярын цонхны хамгийн доор: Science Spark-ийн тухай хаанаас олж мэдсэн бэ? (заавал биш)
 // Хүн, байгууллага, клубыг нэрээр нь хайж сонгоно. Сонгосон эх сурвалж урамшууллын оч авна.
@@ -97,7 +98,7 @@ export default function ReferralAsk() {
       {error && <span className="cel-ref-err">{error}</span>}
       {pick && (
         <button type="button" className="cel-ref-go" onClick={send} disabled={busy}>
-          {busy ? "Илгээж байна…" : `✦ +${REWARD} оч илгээх`}
+          {busy ? <span className="spk-btn"><Spark mono size={16} />Илгээж байна…</span> : `✦ +${REWARD} оч илгээх`}
         </button>
       )}
     </div>

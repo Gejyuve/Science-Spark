@@ -20,6 +20,7 @@ export default function LoginForm() {
   return (
     <AuthCard
       action={action}
+      busy={pending}
       error={back === state ? null : state.error}
       button={pending ? "Түр хүлээнэ үү…" : confirmStep ? "Асаая өө!" : "Асаах"}
       footer={

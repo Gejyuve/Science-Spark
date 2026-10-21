@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Spark from "./Spark";
 
 const MAX_BYTES = 1_400_000;
 
@@ -234,7 +235,7 @@ export default function ImageInput({
           </>
         )}
         {canDrag && <span className="ii-hint">✥ Чирж байрлалыг тохируулна</span>}
-        {busy && <span className="ii-spin" aria-hidden="true" />}
+        {busy && <span className="ii-spin"><Spark size={variant === "avatar" || variant === "slot" ? 30 : 44} /></span>}
         {hasImg && !busy && (
           <span className="ii-acts" onPointerDown={(e) => e.stopPropagation()}>
             <button type="button" onClick={pick}>Солих</button>

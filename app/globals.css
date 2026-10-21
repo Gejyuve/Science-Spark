@@ -430,6 +430,7 @@ details.mod summary { cursor: pointer; }
   color: #fff; font-family: inherit; font-weight: 700; font-size: 16px;
 }
 .au-primary:hover { filter: brightness(.97); }
+.au-primary:disabled { cursor: progress; opacity: .85; }
 .au-foot { margin: -6px 0 0; font-size: 14px; color: var(--muted); }
 .au-foot a { color: var(--teal); font-weight: 600; }
 :root[data-theme="dark"] .au-quote p { color: var(--ink); }
@@ -1421,8 +1422,6 @@ a.ss-kind:hover { text-decoration: underline; }
 .ii-avatar .ii-note, .ii-avatar .ii-err { margin-top: 34px; max-width: 180px; }
 .pf-size { max-width: 340px; margin-top: 0; }
 .ii-spin { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .55); }
-.ii-spin::after { content: ""; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #37c3b3; border-top-color: transparent; animation: ii-rot .8s linear infinite; }
-@keyframes ii-rot { to { transform: rotate(360deg); } }
 /* Хэлбэр бүр */
 .ii-slot .ii-box { width: 130px; aspect-ratio: var(--ar, 1); }
 .ii-slot.wide .ii-box { width: 100%; aspect-ratio: var(--ar, 2.5); min-height: 110px; }
@@ -3058,13 +3057,10 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .qp-app:hover { background: #e3f6f3; }
 .qp-app img { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; }
 .qp-wait { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 600; color: #00a89b; text-align: center; }
-.qp-wait i { width: 10px; height: 10px; border-radius: 50%; background: #37c3b3; animation: qp-pulse 1.4s ease-in-out infinite; flex: none; }
 .qp-wait.ok { color: #16794a; font-size: 15px; }
-@keyframes qp-pulse { 50% { transform: scale(.5); opacity: .4; } }
 .qp-alt summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
 :root[data-theme="dark"] .qp-app:hover { background: #12302c; }
 @media (hover: none), (max-width: 760px) { .qp-apps { order: -1; } }
-@media (prefers-reduced-motion: reduce) { .qp-wait i { animation: none; } }
 .sm-modal .san-plans { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 760px) {
   .sm-modal .san-plan > span { padding: 10px 8px; }
@@ -3831,3 +3827,44 @@ button.ss-composer { width: 100%; border: 0; font: inherit; text-align: left; cu
 .bt-note { max-width: 640px; margin: 0; font-size: 13px; line-height: 1.5; }
 .bt-unread { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #e5484d; color: #fff; font-style: normal; font-size: 11px; }
 .pf-botbar { position: relative; z-index: 1; max-width: 880px; margin: 16px auto 0; }
+
+/* Оч хүлээлгийн хөдөлгөөн (Spark.js): логоны том од амьсгалж гэрэлтэн, жижиг оч ээлжлэн анивчина */
+.spk { display: inline-grid; place-items: center; width: var(--spk); height: var(--spk); flex: none; vertical-align: middle; }
+.spk svg { display: block; overflow: visible; filter: drop-shadow(0 0 calc(var(--spk) * .08) rgba(0, 168, 155, .45)); animation: spk-glow 1.6s ease-in-out infinite; }
+.spk.mono svg { filter: none; animation: none; }
+.spk-big { transform-origin: 36.565px 36.565px; animation: spk-breathe 1.6s cubic-bezier(.45, 0, .55, 1) infinite; }
+.spk-core { animation: spk-core 1.6s ease-in-out infinite; }
+.spk-tw { transform-box: fill-box; transform-origin: center; animation: spk-twinkle 1.6s ease-in-out infinite; }
+.spk-tw.b { animation-delay: -.8s; }
+@keyframes spk-breathe { 0%, 100% { transform: scale(.82) rotate(-8deg); } 50% { transform: scale(1.04) rotate(8deg); } }
+@keyframes spk-core { 0%, 100% { opacity: .25; } 50% { opacity: .75; } }
+@keyframes spk-twinkle { 0%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(90deg); } }
+@keyframes spk-glow { 0%, 100% { filter: drop-shadow(0 0 calc(var(--spk) * .04) rgba(0, 168, 155, .3)); } 50% { filter: drop-shadow(0 0 calc(var(--spk) * .16) rgba(55, 195, 179, .7)); } }
+:root[data-theme="dark"] .spk:not(.mono) svg { animation-name: spk-glow-dark; }
+@keyframes spk-glow-dark { 0%, 100% { filter: drop-shadow(0 0 calc(var(--spk) * .05) rgba(47, 196, 180, .4)); } 50% { filter: drop-shadow(0 0 calc(var(--spk) * .22) rgba(126, 232, 221, .85)); } }
+
+/* Голд нь томоор: хуудас/хэсэг ачаалах */
+.spk-load { display: grid; justify-items: center; align-content: center; gap: 14px; padding: 48px 16px; color: var(--muted); font-size: 13.5px; font-weight: 600; }
+.spk-load.full { min-height: 60vh; }
+.spk-text i { font-style: normal; animation: cel-dot 1.2s ease-in-out infinite; }
+.spk-text i:nth-child(2) { animation-delay: .2s; }
+.spk-text i:nth-child(3) { animation-delay: .4s; }
+
+/* Хуудас солигдох үед дээд хэсэгт гарах оч (NavLoader.js) */
+.spk-nav { position: fixed; top: 14px; left: 50%; z-index: 1000; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 8px 24px -6px rgba(0, 128, 117, .35);
+  opacity: 0; transform: translate(-50%, -12px) scale(.7); pointer-events: none; transition: opacity .2s ease, transform .3s cubic-bezier(.34, 1.56, .64, 1); }
+.spk-nav.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.spk-nav:not(.on) .spk svg, .spk-nav:not(.on) .spk svg * { animation: none; }
+body:has(.spk-load.full) .spk-nav { display: none; } /* loading.js аль хэдийн харуулж байна */
+
+/* Товчны дотор: бичгийн хажууд жижиг оч */
+.spk-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Хөдөлгөөнгүй: зөвхөн гэрэл аажмаар бүдгэрч тодорно */
+  .spk svg, .spk-big, .spk-tw, .spk-text i { animation: none !important; }
+  .spk-core { animation: spk-core 2.4s ease-in-out infinite; }
+  .spk-tw { opacity: .7; }
+  .spk-nav { transition: opacity .2s ease; transform: translate(-50%, 0); }
+}
