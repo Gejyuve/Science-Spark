@@ -28,6 +28,8 @@ import { TASK_KIND, REPORT_KIND, AUTHOR_SHARE } from "@/lib/tasks-shared";
 import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { listReports, leaderClub } from "@/lib/tasks";
 import { ReportCard } from "../../components/TaskCard";
+import MiniMap from "../../components/MiniMap";
+import { geocodeLocation } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
@@ -311,10 +313,12 @@ function TermBody({ post, m, paras, user, following, reviewer, votes }) {
 }
 
 // Эвентийн үндсэн хэсэг: тайлбар, хөтөлбөр, газрын зураг, бүртгүүлэх заавар
-function EventBody({ post, m, paras, published }) {
+async function EventBody({ post, m, paras, published }) {
   const url = `https://science-spark-sable.vercel.app/post/${post.id}`;
   const cal = published && googleCalUrl(post.title, m, post.body, url);
-  const showMap = m.format !== "Онлайн" && m.location && !/^https?:/i.test(m.location);
+  // Клубийн газрын зурагтай ижил загвар: хаягийг координат болгож MiniMap-д харуулна
+  const pt = m.format !== "Онлайн" && m.location ? await geocodeLocation(m.location) : null;
+  const gmap = pt ? `https://www.google.com/maps/search/?api=1&query=${pt.lat},${pt.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.location || "")}`;
   return (
     <div className="evd-body">
       <h3>Тайлбар</h3>
@@ -325,13 +329,12 @@ function EventBody({ post, m, paras, published }) {
           <img className="evd-program" src={`/img/${m.program}`} alt="Хөтөлбөр" />
         </>
       )}
-      {showMap && (
+      {pt && (
         <>
           <h3>Газрын зураг</h3>
           <div className="evd-map">
-            <iframe title="Газрын зураг" loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-              src={`https://www.google.com/maps?q=${encodeURIComponent(m.location)}&output=embed`} />
-            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.location)}`} target="_blank" rel="noopener noreferrer" className="evd-maplink">Google Maps дээр нээх ↗</a>
+            <MiniMap lat={pt.lat} lng={pt.lng} zoom={15} className="mm evd-mini" />
+            <a href={gmap} target="_blank" rel="noopener noreferrer" className="evd-maplink">Google Maps дээр нээх ↗</a>
           </div>
         </>
       )}
