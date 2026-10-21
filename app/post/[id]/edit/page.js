@@ -44,6 +44,7 @@ export default async function EditPage({ params, searchParams }) {
           action={updatePost}
           post={post}
           error={error}
+          rules={own}
           kinds={["Нийтлэл", "Мэдээ"].filter((k) => k === post.kind || canWrite(user, k))}
           locked={{ Нийтлэл: writeLevel("Нийтлэл"), Мэдээ: writeLevel("Мэдээ") }}
           submit={live ? "Засвар хадгалах" : undefined}

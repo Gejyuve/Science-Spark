@@ -88,6 +88,7 @@ export default async function MergeEditor({ params, searchParams }) {
       submit="Нэгтгэх"
       draftKey={`ss-draft:merge:${A.id}:${B.id}`}
       panel={panel}
+      rules={false}
       extra={<Link href={`/admin/content/merge?a=${A.id}`} className="wr-cancel">Цуцлах</Link>}
     />
   );
