@@ -7,6 +7,7 @@ import { notify } from "@/lib/notify";
 import { requireSection, audit, WARN_LIMIT, STATUS_LABELS } from "@/lib/admin";
 import { ROLE_LABELS } from "@/lib/auth";
 import { HELP_LABEL } from "@/lib/help";
+import { grantPostReward, undoPostReward } from "@/lib/limits";
 
 const safe = (f) => (/^\/admin(\/|\?|$)/.test(f) ? f : "/admin");
 const back = (path, msg, ok) => redirect(`${path}${path.includes("?") ? "&" : "?"}${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
@@ -151,12 +152,15 @@ export async function moderatePost(formData) {
     const d = await sql`UPDATE posts SET status = 'removed', reviewer_id = ${me.id}, reviewed_at = now(), review_note = ${note}
                         WHERE id = ${id} AND status = 'published' RETURNING author_id, title, kind`;
     if (!d.length) back(from, "Зөвхөн нийтлэгдсэн контентыг нууна");
+    await undoPostReward(id);
     await audit({ actorId: me.id, category: "content", action: `${d[0].kind} нуусан (${note})`, targetType: "post", targetId: id, targetLabel: d[0].title });
     await notify({ userId: d[0].author_id, kind: "removed", actorId: me.id, postId: id, note });
   } else if (op === "restore") {
     const d = await sql`UPDATE posts SET status = 'published', reviewer_id = ${me.id}, reviewed_at = now(), review_note = NULL
-                        WHERE id = ${id} AND status = 'removed' RETURNING author_id, title, kind`;
+                        WHERE id = ${id} AND status = 'removed' RETURNING id, author_id, club_id, title, kind`;
     if (!d.length) back(from, "Зөвхөн нуусан контентыг сэргээнэ");
+    // Нуухад хассан хуваалцсаны очийг буцааж олгоно
+    await grantPostReward(d[0], { capped: false });
     await audit({ actorId: me.id, category: "content", action: `${d[0].kind} сэргээсэн`, targetType: "post", targetId: id, targetLabel: d[0].title });
     await notify({ userId: d[0].author_id, kind: "restored", actorId: me.id, postId: id });
   } else if (op === "delete") {
@@ -166,6 +170,7 @@ export async function moderatePost(formData) {
                         RETURNING p.title, p.body, p.kind, p.status, p.author_id, u.is_bot`;
     if (!d.length) back(from, "Контент олдсонгүй");
     const t = d[0];
+    await undoPostReward(id);
     const name = t.title || (t.body || "").slice(0, 80);
     await audit({ actorId: me.id, category: "content", action: `${t.kind} нэг мөсөн устгасан (${STATUS_LABELS[t.status] || t.status}${note ? ", " + note : ""})`, targetType: "post", targetId: id, targetLabel: name });
     // Нуусан контентын тухай зохиогч өмнө нь мэдсэн; бусад үед мэдэгдэнэ. Бот хаягийг супер админ өөрөө удирддаг.

@@ -1319,8 +1319,9 @@ details.mod summary { cursor: pointer; }
 .och-rule b { font-size: 13.5px; color: var(--ink); }
 .och-rule small { font-size: 11px; color: var(--muted); }
 .och-rule em { font-style: normal; font-weight: 700; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--teal-bg); color: #00a89b; white-space: nowrap; }
-.och-rule.soon { opacity: .5; }
-.och-soon { margin: 10px 0 0; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.och-bolt { vertical-align: -1px; }
+.och-limit { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.och-link { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; text-decoration: underline; cursor: pointer; }
 .och-note { margin: 0; padding: 12px 16px; border-radius: 14px; font-size: 13px; line-height: 1.6; }
 .och-note ul { margin: 4px 0 0; padding-left: 18px; }
 .och-note.warn { background: #fff3e8; color: #c2400d; }

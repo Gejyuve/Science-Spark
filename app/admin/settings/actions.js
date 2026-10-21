@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireSection, audit } from "@/lib/admin";
 import { loadSettings, saveSettings } from "@/lib/settings";
 import { LEVELS } from "@/lib/levels";
+import { ACT_REWARD, LIMIT_KEYS } from "@/lib/limits";
 
 const back = (msg, ok) => redirect(`/admin/settings?${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
 const int = (f, k) => {
@@ -28,6 +29,8 @@ export async function updateSettings(f) {
     wordLevel: int(f, "wordLevel"),
     approveArticle: int(f, "approveArticle"),
     approveNews: int(f, "approveNews"),
+    actReward: Object.fromEntries(Object.keys(ACT_REWARD).map((k) => [k, int(f, `rw_${k}`)])),
+    dailyPost: Object.fromEntries(LIMIT_KEYS.map((k) => [k, [int(f, `lim_${k}0`), int(f, `lim_${k}1`)]])),
     poolShare: int(f, "poolShare"),
     tipFee: int(f, "tipFee"),
     qpayFee: Number(String(f.get("qpayFee") ?? "").replace(",", ".")),
@@ -42,6 +45,8 @@ export async function updateSettings(f) {
   if (!daily.every((v) => inRange(v, 0, 100))) back("Өдрийн оч 0–100 хооронд байна");
   if (![s.articleLevel, s.newsLevel, s.wordLevel].every((v) => inRange(v, 0, LEVELS.length - 1))) back(`Эрхийн түвшин 0–${LEVELS.length - 1} хооронд байна`);
   if (!inRange(s.approveArticle, 0, 1000) || !inRange(s.approveNews, 0, 1000)) back("Батлагдсаны урамшуулал 0–1000 оч");
+  if (!Object.values(s.actReward).every((v) => inRange(v, 0, 5000))) back("Хуваалцах үйлдлийн оч 0–5000 хооронд байна");
+  if (!Object.values(s.dailyPost).every(([a, b]) => inRange(a, 1, 1000) && inRange(b, a, 1000))) back("Өдрийн хязгаар 1–1000, дэмжигчийнх энгийнээс багагүй байна");
   if (!inRange(s.poolShare, 0, 100) || !inRange(s.tipFee, 0, 50)) back("Сангийн хувь 0–100%, шимтгэл 0–50% байна");
   if (!(Number.isFinite(s.qpayFee) && s.qpayFee >= 0 && s.qpayFee <= 10)) back("QPay-ийн шимтгэл 0–10% байна");
   s.qpayFee = Math.round(s.qpayFee * 10) / 10;
