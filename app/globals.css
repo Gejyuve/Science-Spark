@@ -3512,6 +3512,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cel-badge { position: relative; z-index: 1; display: grid; place-items: center; width: 92px; height: 92px; margin-bottom: 6px; border-radius: 50%;
   background: conic-gradient(from 0deg, #ffb547, #ff7aa8, #c13bff, #37c3b3, #9be15d, #ffb547); padding: 5px;
   box-shadow: 0 14px 30px -10px color-mix(in srgb, var(--k) 80%, transparent); animation: cel-bounce 2.6s ease-in-out .5s infinite; }
+.cel-lh { width: 58px; height: 68px; }
 .cel-badge span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: #fff; font-size: 42px; line-height: 1; }
 @keyframes cel-bounce { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-6px) rotate(-6deg); } 50% { transform: translateY(0) rotate(0); } 75% { transform: translateY(-3px) rotate(5deg); } }
 .cel-space { background: conic-gradient(from 0deg, #2f8bff, #7fd6ff, #6a5cff, #2f8bff); animation: cel-float 4s ease-in-out .5s infinite; }
@@ -3608,6 +3609,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .cel-body { padding: 16px 16px 18px; }
   .cel-badge { width: 80px; height: 80px; }
   .cel-badge span { font-size: 36px; }
+  .cel-lh { width: 50px; height: 58px; }
   .cel-ref-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 48px; font-size: 11.5px; }
 }
 /* Шинэ профайл: «Хаанаас сонссон бэ?» */

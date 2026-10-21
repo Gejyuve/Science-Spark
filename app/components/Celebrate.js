@@ -12,10 +12,10 @@ const n = (x) => Number(x || 0).toLocaleString("en-US");
 
 // Төрөл бүрийн дүрс, өнгө, гарчиг, урам өгөх үг
 const KIND = {
-  Нийтлэл: { ic: "📝", c: "#00a89b", noun: "Нийтлэл" },
-  Мэдээ: { ic: "📰", c: "#0a84ff", noun: "Мэдээ" },
-  Асуулт: { ic: "❓", c: "#9b3df0", noun: "Асуулт" },
-  Бодрол: { ic: "💡", c: "#ff9500", noun: "Бодрол" },
+  Нийтлэл: { lh: true, ic: "📝", c: "#00a89b", noun: "Нийтлэл" },
+  Мэдээ: { lh: true, ic: "📰", c: "#0a84ff", noun: "Мэдээ" },
+  Асуулт: { lh: true, ic: "❓", c: "#9b3df0", noun: "Асуулт" },
+  Бодрол: { lh: true, ic: "💡", c: "#ff9500", noun: "Бодрол" },
   Эвент: { ic: "🎪", c: "#e5243b", noun: "Эвент" },
   Зарлал: { ic: "📣", c: "#ff2d7a", noun: "Зарлал" },
   Үг: { ic: "📖", c: "#16c25a", noun: "Шинэ үг" },
@@ -88,6 +88,39 @@ function StarBadge() {
   );
 }
 
+// Нийтлэл, мэдээ, асуулт, бодролын дүрс: мэдлэгийн гэрлийг цацруулагч гэрэлт цамхаг (lib/og-assets/lighthouse.svg-ийн жижиг хувилбар)
+function Lighthouse() {
+  return (
+    <svg viewBox="90 46 260 432" className="cel-lh" aria-hidden="true">
+      <defs>
+        <linearGradient id="cel-lh-bl" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stopColor="#9ff0e6" stopOpacity=".7" /><stop offset="1" stopColor="#37c3b3" stopOpacity="0" /></linearGradient>
+        <linearGradient id="cel-lh-br" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#9ff0e6" stopOpacity=".7" /><stop offset="1" stopColor="#37c3b3" stopOpacity="0" /></linearGradient>
+        <radialGradient id="cel-lh-g" cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#fff" /><stop offset=".35" stopColor="#bff7ef" stopOpacity=".85" /><stop offset="1" stopColor="#37c3b3" stopOpacity="0" /></radialGradient>
+        <linearGradient id="cel-lh-t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#2fc4b4" /><stop offset="1" stopColor="#00877c" /></linearGradient>
+        <clipPath id="cel-lh-c"><polygon points="188,178 252,178 280,440 160,440" /></clipPath>
+      </defs>
+      <polygon points="220,128 40,60 40,196" fill="url(#cel-lh-bl)" />
+      <polygon points="220,128 400,66 400,190" fill="url(#cel-lh-br)" />
+      <circle cx="220" cy="128" r="84" fill="url(#cel-lh-g)" />
+      <polygon points="220,62 186,96 254,96" fill="#00877c" />
+      <circle cx="220" cy="58" r="6" fill="#37c3b3" />
+      <rect x="180" y="96" width="80" height="8" rx="3" fill="#0a5e57" />
+      <rect x="192" y="104" width="56" height="48" rx="4" fill="#fffbe0" stroke="#0a5e57" strokeWidth="5" />
+      <line x1="220" y1="104" x2="220" y2="152" stroke="#0a5e57" strokeWidth="4" />
+      <rect x="172" y="152" width="96" height="10" rx="3" fill="#0a5e57" />
+      <rect x="180" y="162" width="80" height="16" fill="#0d6f66" />
+      <polygon points="188,178 252,178 280,440 160,440" fill="url(#cel-lh-t)" />
+      <g clipPath="url(#cel-lh-c)" fill="#e9fbf8">
+        <rect x="140" y="222" width="160" height="34" />
+        <rect x="140" y="310" width="160" height="34" />
+        <rect x="140" y="398" width="160" height="34" />
+      </g>
+      <path d="M208,440 V414 a12,12 0 0 1 24,0 V440 Z" fill="#0a5e57" />
+      <path d="M120,452 Q150,430 196,440 L248,438 Q296,428 324,452 Q330,470 300,474 L140,474 Q112,470 120,452 Z" fill="#1d3e3a" />
+    </svg>
+  );
+}
+
 // Тоо 0-ээс өсөж гарна
 function CountUp({ to, ms = 900 }) {
   const [v, setV] = useState(0);
@@ -148,7 +181,7 @@ export default function Celebrate() {
             {BITS.map((b, i) => <i key={i} style={{ "--c": b.c, "--x": `${b.x}%`, "--d": `${b.d}s`, "--s": `${b.s}px`, "--r": `${b.r}deg` }} />)}
           </span>
           <button type="button" className="tm-x cel-x" onClick={close} aria-label="Хаах">×</button>
-          {d.k === "Профайл" ? <StarBadge /> : <span className="cel-badge"><span>{kind.ic}</span></span>}
+          {d.k === "Профайл" ? <StarBadge /> : <span className="cel-badge"><span>{kind.lh ? <Lighthouse /> : kind.ic}</span></span>}
           <small className="cel-kicker">Баяр хүргэе!</small>
           <b id="cel-h">{head(d)}</b>
           {d.t && <em className="cel-title">«{d.t}»</em>}
