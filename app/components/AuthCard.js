@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Spark from "./Spark";
 
 // Figma: Нэвтрэх / Асаах дэлгэцийн нийтлэг карт (бүдэг ногоон дугуйтай арын дэвсгэр)
-export default function AuthCard({ action, error, children, footer, button = "Асаая өө!", close = true }) {
+export default function AuthCard({ action, error, children, footer, button = "Асаая өө!", close = true, busy = false }) {
   return (
     <div className="au-wrap">
       <span className="au-blob a" aria-hidden="true" />
@@ -19,8 +20,8 @@ export default function AuthCard({ action, error, children, footer, button = "А
         </div>
         {error && <p className="error">{error}</p>}
         {children}
-        <button className="au-primary" type="submit">
-          <img src="/icons/flamew.svg" width={20} height={20} alt="" />
+        <button className="au-primary" type="submit" disabled={busy}>
+          {busy ? <Spark mono size={20} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />}
           {button}
         </button>
         {footer}

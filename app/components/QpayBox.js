@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Spark from "./Spark";
 
 // QPay-ийн QR, банкны апп-ын холбоосууд. Хэдэн секунд тутам төлөгдсөн эсэхийг асууж,
 // төлөгдмөгц onPaid дуудна (эсвэл хуудсыг шинэчилнэ).
@@ -52,7 +53,7 @@ export default function QpayBox({ code, qpay, onPaid }) {
           </div>
         </div>
       )}
-      <p className="qp-wait"><i aria-hidden="true" />Төлбөр орохыг хүлээж байна. Орсон даруйд автоматаар баталгаажна.</p>
+      <p className="qp-wait"><Spark size={22} />Төлбөр орохыг хүлээж байна. Орсон даруйд автоматаар баталгаажна.</p>
     </div>
   );
 }

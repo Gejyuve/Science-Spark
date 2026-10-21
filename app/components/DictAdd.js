@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { proposeTerm } from "../dict/actions";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
+import Spark from "./Spark";
 
 const DEF_MAX = 500;
 const msg = (text) => ({
@@ -106,7 +107,7 @@ export default function DictAdd({ label = "Үг нэмэх", className = "", log
               <small>Нэмсэн үг Толь хуудасны хэлэлцүүлэг рүү явна.</small>
               <span className="ss-grow" />
               <button type="button" className="tm-btn ghost" onClick={() => setOpen(false)}>Болих</button>
-              <button type="submit" className="tm-btn" disabled={pending}>{pending ? "Илгээж байна…" : "Хадгалах"}</button>
+              <button type="submit" className="tm-btn" disabled={pending}>{pending ? <span className="spk-btn"><Spark mono size={16} />Илгээж байна…</span> : "Хадгалах"}</button>
             </div>
           </form>
       </div>

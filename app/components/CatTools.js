@@ -6,6 +6,7 @@ import Link from "next/link";
 import Share from "./Share";
 import { proposeCategory, reportCategory } from "../tree/actions";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
+import Spark from "./Spark";
 
 const msg = (text) => ({
   onInvalid: (e) => e.target.setCustomValidity(text),
@@ -133,7 +134,7 @@ function AddCategory({ tree, onClose, start = "" }) {
             <small>Санал редакцын хяналтад очно.</small>
             <span className="ss-grow" />
             <button type="button" className="tm-btn ghost" onClick={onClose}>Болих</button>
-            <button type="submit" className="tm-btn" disabled={pending}>{pending ? "Илгээж байна…" : "Илгээх"}</button>
+            <button type="submit" className="tm-btn" disabled={pending}>{pending ? <span className="spk-btn"><Spark mono size={16} />Илгээж байна…</span> : "Илгээх"}</button>
           </div>
         </form>
       )}
@@ -203,7 +204,7 @@ function ReportCategory({ tree, onClose, start = "" }) {
           <div className="tm-foot">
             <span className="ss-grow" />
             <button type="button" className="tm-btn ghost" onClick={onClose}>Болих</button>
-            <button type="submit" className="tm-btn" disabled={pending}>{pending ? "Илгээж байна…" : "Илгээх"}</button>
+            <button type="submit" className="tm-btn" disabled={pending}>{pending ? <span className="spk-btn"><Spark mono size={16} />Илгээж байна…</span> : "Илгээх"}</button>
           </div>
         </form>
       )}

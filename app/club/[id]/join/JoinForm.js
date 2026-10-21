@@ -5,6 +5,7 @@ import Link from "next/link";
 import { requestJoin } from "../../../clubs/actions";
 import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 import { countWords } from "@/lib/profile";
+import Spark from "../../../components/Spark";
 
 export default function JoinForm({ clubId, blocked, rules }) {
   const [state, action, pending] = useActionState(requestJoin, null);
@@ -34,7 +35,7 @@ export default function JoinForm({ clubId, blocked, rules }) {
         <span>Клубийн дүрмийг уншиж танилцсан, зөвшөөрч байна</span>
       </label>
       {state?.error && <p className="error">{state.error}</p>}
-      <button type="submit" className="jn-go" disabled={blocked || pending || bad}>{blocked ? "Нэгдэх боломжгүй" : pending ? "Илгээж байна…" : "Клубт нэгдэх"}</button>
+      <button type="submit" className="jn-go" disabled={blocked || pending || bad}>{blocked ? "Нэгдэх боломжгүй" : pending ? <span className="spk-btn"><Spark mono size={16} />Илгээж байна…</span> : "Клубт нэгдэх"}</button>
     </form>
   );
 }

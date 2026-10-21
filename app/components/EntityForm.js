@@ -10,6 +10,7 @@ import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 import { CLUB_CATEGORIES, ORG_TYPES, BOARD_MAX, BOARD_MIN, CLUB_TYPES, TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { COUNTRIES, MN_CITIES, SOCIALS, countWords } from "@/lib/profile";
 import { useDraft, hhmm } from "@/lib/useDraft";
+import Spark from "./Spark";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
 const THIS_YEAR = new Date().getFullYear();
@@ -327,7 +328,7 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
         )}
         <span className="pf-grow" />
         <button type="submit" className="pf-save" disabled={pending}>
-          <img src="/icons/savespark.svg" width={16} height={16} alt="" />{pending ? "Хадгалж байна…" : entity ? "Хадгалах" : org ? "Бүртгүүлэх" : "Клуб бүртгүүлэх"}
+          {pending ? <Spark mono size={16} /> : <img src="/icons/savespark.svg" width={16} height={16} alt="" />}{pending ? "Хадгалж байна…" : entity ? "Хадгалах" : org ? "Бүртгүүлэх" : "Клуб бүртгүүлэх"}
         </button>
       </section>
     </form>

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES, outline } from "@/lib/md";
 import { uploadImageFile } from "./ImageInput";
 import DictAdd from "./DictAdd";
+import Spark from "./Spark";
 
 // Нийтлэлийн агуулгын засварлагч: хэрэгслийн мөр, урьдчилж харах, зураг, холбоос, ишлэл, эх сурвалж.
 // Агуулга нь энгийн тэмдэглэгээгээр (lib/md.js) хадгалагдана.
@@ -371,7 +372,7 @@ function ImageDialog({ onClose, onInsert }) {
         {err && <p className="tm-err">{err}</p>}
         <input ref={file} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden onChange={pick} />
         <button type="button" className={"re-drop" + (id ? " has" : "")} onClick={() => !busy && file.current?.click()}>
-          {id ? <img src={`/img/${id}`} alt="" /> : <span>{busy ? "Оруулж байна…" : "＋ Зураг сонгох"}<small>JPG, PNG, WEBP · автоматаар жижигрүүлнэ</small></span>}
+          {id ? <img src={`/img/${id}`} alt="" /> : <span>{busy ? <span className="spk-btn"><Spark size={22} />Оруулж байна…</span> : "＋ Зураг сонгох"}<small>JPG, PNG, WEBP · автоматаар жижигрүүлнэ</small></span>}
         </button>
         <div className="tm-grid">
           <label className="wide"><span>Зургийн тайлбар <em>заавал биш</em></span>
