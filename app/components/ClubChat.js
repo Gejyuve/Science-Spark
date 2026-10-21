@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { defaultAvatar } from "@/lib/covers";
 
 const COLORS = ["#37C3B3", "#5B8DEF", "#F59E0B", "#E5484D", "#8E6CEF", "#00A89B", "#EF6C9C"];
 const POLL = 4000;
@@ -10,6 +11,7 @@ const ROLE = { leader: "Удирдагч", board: "Зөвлөл" };
 
 function Av({ u, size = 32 }) {
   if (u?.avatar) return <img className="ss-avatar" src={`/img/${u.avatar}`} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
+  if (Number(u?.id) > 0) return <img className="ss-avatar" src={defaultAvatar(u.id)} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
   return (
     <span className="ss-avatar" aria-hidden="true" style={{ width: size, height: size, fontSize: Math.round(size * 0.42), background: COLORS[(Number(u?.id) || 0) % COLORS.length] }}>
       {(u?.first_name || "?")[0]}

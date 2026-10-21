@@ -4,6 +4,7 @@ import { relTime } from "@/lib/format";
 import { sql } from "@/lib/db";
 import { levelFor } from "@/lib/levels";
 import { toggleFollow } from "../posts/actions";
+import { defaultAvatar } from "@/lib/covers";
 
 // Жижиг дахин ашиглах хэсгүүд: аватар, оч/дагагчийн тоо
 const COLORS = ["#37C3B3", "#5B8DEF", "#F59E0B", "#E5484D", "#8E6CEF", "#00A89B", "#EF6C9C"];
@@ -20,6 +21,9 @@ export function Avatar({ user, size = 40 }) {
     return <img className="ss-avatar" src={`/img/${user.avatar}`} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
   }
   const id = Number(user?.id) || 0;
+  if (id > 0) {
+    return <img className="ss-avatar" src={defaultAvatar(id)} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
+  }
   const letter = (user?.first_name || "?")[0];
   return (
     <span

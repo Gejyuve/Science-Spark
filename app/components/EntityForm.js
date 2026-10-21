@@ -10,6 +10,7 @@ import { latinShare, LATIN_LIMIT, LATIN_MSG } from "@/lib/format";
 import { CLUB_CATEGORIES, ORG_TYPES, BOARD_MAX, BOARD_MIN, CLUB_TYPES, TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { COUNTRIES, MN_CITIES, SOCIALS, countWords } from "@/lib/profile";
 import { useDraft, hhmm } from "@/lib/useDraft";
+import { defaultAvatar } from "@/lib/covers";
 
 const MONTHS = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
 const THIS_YEAR = new Date().getFullYear();
@@ -104,6 +105,7 @@ function Board({ initial = [] }) {
 const COLORS = ["#37C3B3", "#5B8DEF", "#F59E0B", "#E5484D", "#8E6CEF", "#00A89B", "#EF6C9C"];
 function Av({ u, size = 36 }) {
   if (u.avatar) return <img className="ss-avatar" src={`/img/${u.avatar}`} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
+  if (Number(u.id) > 0) return <img className="ss-avatar" src={defaultAvatar(u.id)} width={size} height={size} alt="" style={{ width: size, height: size, objectFit: "cover" }} />;
   return <span className="ss-avatar" style={{ width: size, height: size, fontSize: Math.round(size * 0.42), background: COLORS[u.id % COLORS.length] }}>{(u.name || "?").split(".").pop()[0]}</span>;
 }
 
