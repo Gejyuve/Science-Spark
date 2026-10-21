@@ -195,7 +195,7 @@ export default function Celebrate() {
             {d.h && d.s !== "pending" && (
               <button type="button" className={"cel-share" + (copied ? " ok" : "")} onClick={share}>{copied ? "✓ Холбоос хуулагдлаа" : d.k === "Профайл" ? "🔗 Найзаа урих" : "🔗 Найздаа хуваалцах"}</button>
             )}
-            <Link href="/och" className="cel-rules" onClick={close}>Оч олох дүрэм →</Link>
+            {d.k !== "Профайл" && <Link href="/och" className="cel-rules" onClick={close}>Оч олох дүрэм →</Link>}
           </div>
 
           {d.k === "Профайл" && <ReferralAsk />}
