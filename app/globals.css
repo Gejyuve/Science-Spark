@@ -3302,7 +3302,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .wr-rules-x { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 50%; background: #fff; color: #111; font-size: 20px; line-height: 1; cursor: pointer; }
 .wr-rules-acts { display: flex; justify-content: center; gap: 12px; margin-top: 24px; font-family: var(--font-inter), Inter, system-ui, sans-serif; }
 .wr-rules-acts .wr-cancel { background: #fff; color: #111; border-color: #d9d9d9; cursor: pointer; font-family: inherit; }
-@media (max-width: 760px) { .wr-foot { flex-wrap: wrap; } .wr-rulesbtn { margin-right: 0; } }
+@media (max-width: 760px) { .wr-foot { flex-wrap: wrap; gap: 10px; } .wr-rulesbtn { margin-right: 0; } }
 .ar-chain { display: flex; flex-direction: column; gap: 10px; }
 .rv-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .rv-hist > li { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; border-bottom: 1px solid var(--border); }
