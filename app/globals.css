@@ -227,8 +227,11 @@ details.mod summary { cursor: pointer; }
 .ss-nav-item:hover { background: var(--surface-2); }
 .ss-nav-item.on { color: var(--accent); }
 .ss-nav-item .ss-badge { margin-left: auto; }
-.ss-staff { margin: 12px 12px 0; padding: 12px 0 0; border-top: 1px solid var(--line, rgba(127, 140, 150, .2)); }
-.ss-staff-t { padding: 0 12px 2px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ss-rfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 0 12px; font-size: 12px; color: var(--muted); }
+.ss-rfoot a { color: inherit; text-decoration: none; }
+.ss-rhelp { display: inline-flex; align-items: center; gap: 5px; }
+.ss-rhelp .ic { opacity: .7; }
+.ss-rfoot a:hover { color: var(--text); text-decoration: underline; }
 .ss-projects {
   display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; margin: 4px 4px;
   padding: 12px 18px 12px 14px; border-radius: 16px; border: 1px solid #ffcc9e;
@@ -2758,7 +2761,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
   .ss-side .ss-nav { flex-direction: column; overflow: visible; padding: 10px; border-radius: 22px; background: var(--surface); }
   .ss-side .ss-nav-item { height: 46px; }
   .ss-side .ss-nav-item.on { background: var(--teal-bg); }
-  .ss-side .ss-staff { margin: 0; padding: 10px; border-top: 0; }
   .ss-side .ss-projects { display: inline-flex; }
   .ss-side > .ss-grow, .ss-side > .theme-toggle { display: none; }
   .ss-dhead .theme-toggle { display: inline-flex; margin: 0; }
