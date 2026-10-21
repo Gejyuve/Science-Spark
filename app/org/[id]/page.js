@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
+import { influenceCount } from "@/lib/referral";
 import { clubFollowSet } from "@/lib/clubs";
 import { relTime } from "@/lib/format";
 import Shell from "../../components/Shell";
 import MiniMap from "../../components/MiniMap";
+import { InfluenceBtn } from "../../components/Influence";
 import { ClubAv } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
 import { toggleClubFollow } from "../../clubs/actions";
@@ -37,6 +39,7 @@ export default async function OrgPage({ params }) {
   const user = await getUser();
   const c = await load(id);
   if (!c) notFound();
+  const influence = await influenceCount("org", id);
   const [admin] = c.leader_id ? await sql`
     SELECT u.id, u.initial, u.first_name, u.avatar_id AS avatar,
       COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS points,
@@ -67,7 +70,7 @@ export default async function OrgPage({ params }) {
             <span className="cp-logo"><ClubAv c={{ id: c.id, name: c.name, logo: c.logo_id }} size={96} /></span>
             <div className="cp-title">
               <h1>{c.name}</h1>
-              <span className="cp-stat"><b>{fmtK(c.followers)}</b><small>дагагч</small></span>
+              <span className="cp-stat"><b>{fmtK(c.followers)}</b><small>дагагч</small><InfluenceBtn href={`/org/${id}/influence`} n={influence} /></span>
             </div>
             <span className="ss-grow" />
             <div className="cp-actions">

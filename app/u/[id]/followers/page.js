@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import Shell from "../../../components/Shell";
@@ -8,16 +8,17 @@ import { Person, followingSet } from "../../../components/Bits";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Дагагчид · Science Spark" };
 
-// Өөрийн дагагчдын жагсаалт (зөвхөн тухайн хүн өөрөө харна)
+// Дагагчид, дагаж буй хүмүүсийн жагсаалт (хэн ч харна)
 export default async function Followers({ params, searchParams }) {
   const { id } = await params;
   const { t } = await searchParams;
   const uid = Number(id);
   if (!Number.isInteger(uid)) notFound();
-  const me = await getUser();
-  if (!me) redirect("/login");
-  if (me.id !== uid) redirect(`/u/${uid}`);
   await ensureSchema();
+  const me = await getUser();
+  const [u] = await sql`SELECT id, initial, first_name FROM users WHERE id = ${uid}`;
+  if (!u) notFound();
+  const mine = me?.id === uid;
   const tab = t === "following" ? "following" : "followers";
   const rows = tab === "followers"
     ? await sql`
@@ -38,13 +39,16 @@ export default async function Followers({ params, searchParams }) {
   return (
     <Shell user={me} header="nav">
       <div className="ss-card fl-page">
+        {!mine && <Link href={`/u/${uid}`} className="infl-back">← {u.initial}.{u.first_name}</Link>}
         <h1>{tab === "followers" ? "Дагагчид" : "Дагаж буй"}</h1>
         <div className="ss-feedtabs fl-tabs">
           <Link href={`/u/${uid}/followers`} className={tab === "followers" ? "on" : ""}>Дагагчид {c.a}</Link>
           <Link href={`/u/${uid}/followers?t=following`} className={tab === "following" ? "on" : ""}>Дагаж буй {c.b}</Link>
         </div>
         {rows.length === 0 ? (
-          <p className="ss-empty">{tab === "followers" ? "Одоохондоо таныг дагасан хүн алга." : "Та одоохондоо хэнийг ч дагаагүй байна."}</p>
+          <p className="ss-empty">{mine
+            ? (tab === "followers" ? "Одоохондоо таныг дагасан хүн алга." : "Та одоохондоо хэнийг ч дагаагүй байна.")
+            : (tab === "followers" ? "Одоохондоо дагагч алга." : "Одоохондоо хэнийг ч дагаагүй байна.")}</p>
         ) : (
           <div className="fl-list">
             {rows.map((p) => <Person key={p.id} {...p} viewer={me} following={following} />)}
