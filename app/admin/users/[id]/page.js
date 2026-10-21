@@ -54,7 +54,7 @@ export default async function UserDetail({ params, searchParams }) {
               {sup && <small>{u.email}</small>}
               <span className="adm-chips">
                 <Chip tone="dark">{ROLE_LABELS[u.role]}</Chip>
-                {sup && u.is_bot && <Chip tone="dark">Бот</Chip>}
+                {u.is_bot && <Chip tone="dark">Бот</Chip>}
                 <Chip>{{ person: "Хувь хүн", org: "Байгууллага", club: "Клуб" }[u.account_type] || u.account_type}</Chip>
                 {u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
                 {u.delete_pending_at && <Chip tone="bad">Устгахаар хүлээгдэж буй</Chip>}

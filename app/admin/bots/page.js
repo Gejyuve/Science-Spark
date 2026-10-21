@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireSuper } from "@/lib/admin";
+import { requireSection } from "@/lib/admin";
 import { listBots } from "@/lib/bots";
 import { levelFor } from "@/lib/levels";
 import { fmtDate } from "@/lib/format";
@@ -7,19 +7,22 @@ import Head, { Chip, Flash, who } from "../_c/Head";
 import { Avatar } from "../../components/Bits";
 import { createBot, switchBot } from "./actions";
 
-// Зөвхөн супер админ: бот хаягууд. Ботоор ажиллахдаа сайтад тэр хүн болж нийтэлнэ, оч цуглуулна.
+// Бот хаягууд: редакцын админ жагсаалтыг харна; бот үүсгэх, ботоор ажиллах нь зөвхөн супер админд. Ботоор ажиллахдаа сайтад тэр хүн болж нийтэлнэ, оч цуглуулна.
 export default async function Bots({ searchParams }) {
-  const user = await requireSuper("bots");
+  const user = await requireSection("bots");
+  const sup = user.role === "superadmin";
   const { ok, error } = await searchParams;
   const bots = await listBots();
   return (
     <>
-      <Head user={user} title="Ботууд" sub="Имэйлгүй, зөвхөн супер админ удирддаг хувь хүний хаягууд. Сайтад энгийн хэрэглэгч шиг харагдана." />
+      <Head user={user} title="Ботууд" sub="Имэйлгүй, супер админ удирддаг хувь хүний хаягууд. Сайтад энгийн хэрэглэгч шиг харагдана." />
       <Flash ok={ok} error={error} />
       <div className="adm-bar">
-        <p className="adm-muted bt-note">Бот руу шилжихэд сайт даяар тэр хүнээр нийтэлж, сэтгэгдэл бичиж, оч өгнө. Дээд талын мөрөөс өөртөө буцна. Ботод ирсэн урамшуулал, асуултын шагнал ботын хэтэвчинд орно. Сарын шагналын санд бот оролцохгүй.<br />Автомат даалгавар: {process.env.BOT_API_KEY ? "холбогдсон. Ботын нэрээр бичсэн нийтлэл редакц руу илгээгдэж, танд мэдэгдэл ирнэ." : "холбогдоогүй (Vercel-д BOT_API_KEY нэмээгүй)."}</p>
+        {sup ? (<p className="adm-muted bt-note">Бот руу шилжихэд сайт даяар тэр хүнээр нийтэлж, сэтгэгдэл бичиж, оч өгнө. Дээд талын мөрөөс өөртөө буцна. Ботод ирсэн урамшуулал, асуултын шагнал ботын хэтэвчинд орно. Сарын шагналын санд бот оролцохгүй.<br />Автомат даалгавар: {process.env.BOT_API_KEY ? "холбогдсон. Ботын нэрээр бичсэн нийтлэл редакц руу илгээгдэж, танд мэдэгдэл ирнэ." : "холбогдоогүй (Vercel-д BOT_API_KEY нэмээгүй)."}</p>) : (
+          <p className="adm-muted bt-note">Эдгээр хаягийг редакц ажиллуулдаг. Ботын нийтлэлийг бусад нийтлэлийн адил хянана. Бот үүсгэх, ботоор ажиллах эрх зөвхөн супер админд.</p>
+        )}
         <span className="ss-grow" />
-        <form action={createBot}><button className="adm-btn teal">+ Шинэ бот</button></form>
+        {sup && <form action={createBot}><button className="adm-btn teal">+ Шинэ бот</button></form>}
       </div>
       <section className="adm-card flush">
         {bots.length === 0 ? (
@@ -45,11 +48,11 @@ export default async function Bots({ searchParams }) {
                   <td className="adm-right">
                     <span className="adm-acts">
                       {b.first_name && <Link href={`/u/${b.id}`} className="adm-btn">Профайл</Link>}
-                      <form action={switchBot}>
+                      {sup && <form action={switchBot}>
                         <input type="hidden" name="to" value={b.id} />
                         {!b.first_name && <input type="hidden" name="next" value="/profile/edit" />}
                         <button className="adm-btn teal">Ботоор ажиллах{b.unread > 0 && <em className="bt-unread">{b.unread}</em>}</button>
-                      </form>
+                      </form>}
                     </span>
                   </td>
                 </tr>

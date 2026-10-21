@@ -79,7 +79,7 @@ export default async function Users({ searchParams }) {
                   </td>
                   <td>
                     <Chip tone={ROLE_TONE[u.role]}>{ROLE_LABELS[u.role]}</Chip>
-                    {sup && u.is_bot && <Chip tone="dark">Бот</Chip>}
+                    {u.is_bot && <Chip tone="dark">Бот</Chip>}
                     {u.delete_pending_at ? <Chip tone="bad">Устгах</Chip> : u.restricted_at && <Chip tone="bad">Хязгаарласан</Chip>}
                     {u.warns > 0 && <Chip tone="warn">{u.warns} сануулга</Chip>}
                     {t === "delete" && u.warnings && <small className="adm-note">{u.warnings}</small>}
