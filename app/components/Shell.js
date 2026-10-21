@@ -39,9 +39,9 @@ async function StaffNav({ user, active }) {
   return (
     <nav className="ss-staff" aria-label="Редакц">
       {isSuperAdmin(user) ? (
-        <Link href="/admin" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("crown", 24)}<span>Админ</span>{badge}</Link>
+        <Link href="/admin" className={"ss-help" + (active === "/admin" ? " on" : "")}>{I("crown", 16)}<span>Админ</span>{badge}</Link>
       ) : (
-        <Link href="/admin/content" className={"ss-nav-item" + (active === "/admin" ? " on" : "")}>{I("shield", 24)}<span>Хянах</span>{badge}</Link>
+        <Link href="/admin/content" className={"ss-help" + (active === "/admin" ? " on" : "")}>{I("shield", 16)}<span>Хянах</span>{badge}</Link>
       )}
     </nav>
   );
