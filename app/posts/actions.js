@@ -17,6 +17,7 @@ import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, re
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
 import { leaderClub, leaderOrg, CLUB_KINDS } from "@/lib/tasks";
 import { recordRevision, addCredit } from "@/lib/revisions";
+import { ACT_KEY, ACT_REWARD, checkPostLimit, grantPostReward, undoPostReward, grantAnswerReward, undoAnswerReward } from "@/lib/limits";
 import { celebrate, firstReward, hadFirst, FIRST_KEYS, FIRST_REWARD } from "@/lib/celebrate";
 
 // Нийтлэл, мэдээний нэмэлт мэдээлэл: эх сурвалжууд, ковер зургийн эх сурвалж
@@ -69,6 +70,8 @@ export async function addComment(formData) {
   await ensureSchema();
   const ok = await sql`SELECT author_id, kind FROM posts WHERE id = ${postId} AND status IN ('published', 'discussion')`;
   if (!ok.length) return;
+  // Редакцын хяналтгүй орох тул өдрийн хязгаартай
+  await checkPostLimit(user, "comment");
   // Хариулт: эцэг сэтгэгдэл мөн нийтлэлд байх ёстой. 3-аас гүн бол 2-р түвшинд залгана.
   let parent = Number(formData.get("parent_id")) || null;
   let parentAuthor = null;
@@ -86,9 +89,12 @@ export async function addComment(formData) {
   if (parentAuthor) await notify({ userId: parentAuthor, kind: "reply", actorId: user.id, postId });
   if (ok[0].author_id !== parentAuthor) await notify({ userId: ok[0].author_id, kind: "comment", actorId: user.id, postId });
   // Бусдын асуултад өгсөн анхны хариултад нэг удаа урамшуулал, баярын цонх
+  // Бусдын асуултад хариулахад нэг асуултад нэг удаа оч
   if (ok[0].kind === "Асуулт" && !parent && ok[0].author_id !== user.id) {
-    const got = await firstReward(user.id, "answer");
-    if (got) await celebrate(user, { kind: "Хариулт", status: "published", href: `/post/${postId}`, earned: [[FIRST_KEYS.answer, got]], later: [["Хариултад тань өгөх оч бүр", SPARK_GET_OTHER]] });
+    const first = await firstReward(user.id, "answer");
+    const got = await grantAnswerReward(user.id, postId);
+    const earned = [first && [FIRST_KEYS.answer, first], got && ["Асуултад хариулсан", got]].filter(Boolean);
+    if (earned.length) await celebrate(user, { kind: "Хариулт", status: "published", href: `/post/${postId}`, earned, later: [["Хариултад тань өгөх оч бүр", SPARK_GET_OTHER]] });
   }
   revalidatePath(`/post/${postId}`);
   revalidatePath("/");
@@ -280,10 +286,11 @@ export async function deletePost(formData) {
     if (a.n > 0) redirect(`/post/${postId}?error=${encodeURIComponent("Хариулт ирсэн шагналтай асуултыг устгах боломжгүй. Хамгийн зөв хариултыг сонгож шагналаа олгоно уу.")}`);
   }
   // Шагнал байвал түгжээг тайлж хэтэвч рүү буцаагаад асуултыг устгана (нэг гүйлгээнд)
-  await sql.transaction([
+  const gone = await sql.transaction([
     refundStatement(postId, user.id),
-    sql`DELETE FROM posts WHERE id = ${postId} AND author_id = ${user.id}`,
+    sql`DELETE FROM posts WHERE id = ${postId} AND author_id = ${user.id} RETURNING id`,
   ]);
+  if (gone[1]?.length) await undoPostReward(postId);
   revalidatePath("/");
   revalidatePath("/wallet");
   redirect(b ? `/wallet?ok=${encodeURIComponent("Асуултыг устгаж, түгжсэн шагналын мөнгийг хэтэвчинд тань буцаалаа")}` : "/");
@@ -377,6 +384,7 @@ export async function removePost(formData) {
             reviewed_at = now(), review_note = ${note}
             WHERE id = ${postId} AND status = 'published' RETURNING author_id, title`;
   if (done.length) {
+    await undoPostReward(postId);
     await audit({ actorId: user.id, category: "content", action: `Контент нуусан (${note})`, targetType: "post", targetId: postId, targetLabel: done[0].title });
     await notify({ userId: done[0].author_id, kind: "removed", actorId: user.id, postId, note });
   }
@@ -396,6 +404,7 @@ export async function deleteComment(formData) {
     ? await sql`DELETE FROM comments WHERE id = ${id} RETURNING post_id, author_id, body`
     : await sql`DELETE FROM comments WHERE id = ${id} AND author_id = ${user.id} RETURNING post_id, author_id, body`;
   if (rows.length) {
+    await undoAnswerReward(rows[0].author_id, rows[0].post_id);
     // Редакц бусдын сэтгэгдлийг устгавал эзэнд нь мэдэгдэнэ
     const b = rows[0].body || "";
     await notify({ userId: rows[0].author_id, kind: "comment_removed", actorId: user.id, postId: rows[0].post_id, note: b.length > 80 ? b.slice(0, 80) + "…" : b });
@@ -427,6 +436,8 @@ export async function quickPost(formData) {
   const short = (s) => (s.length > 90 ? s.slice(0, 90).replace(/\s+\S*$/, "") + "…" : s);
 
   let title, body, meta = {}, bounty = 0;
+  // Шууд нийтлэгдэх асуулт, бодрол өдрийн хязгаартай (эвент, зарлалыг редакц хянадаг)
+  if (INSTANT_KINDS.includes(kind)) await checkPostLimit(user, ACT_KEY[kind]);
   if (kind === "Асуулт" || kind === "Бодрол") {
     body = t("body", 300);
     if (!body) fail("Агуулгаа бичнэ үү");
@@ -498,10 +509,13 @@ export async function quickPost(formData) {
     VALUES (${user.id}, ${clubId}, ${kind}, ${title}, ${body}, ${status}, ${JSON.stringify(meta)}::jsonb, ${imageId})
     RETURNING id`;
   revalidatePath("/");
+  // Асуулт, бодрол шууд оч авна, эвент, зарлал редакц батлахад. Клубийн нэрээр хуваалцсан бүтээлийн оч клубт очно.
+  const got = status === "published" ? await grantPostReward({ id: rows[0].id, author_id: user.id, club_id: clubId, kind }) : 0;
+  const label = { "Асуулт": "Асуулт асуусан", "Бодрол": "Бодрол хуваалцсан" }[kind];
   await celebrate(user, {
     kind, status, title: kind === "Асуулт" || kind === "Бодрол" ? "" : title, href: `/post/${rows[0].id}`,
-    // Клубийн нэрээр хуваалцсан бүтээлийн оч клубт очно
-    later: status === "published" && !clubId ? [["Уншигч бүрээс авах оч", SPARK_GET_OTHER]] : [],
+    earned: got && !clubId ? [[label, got]] : [],
+    later: clubId ? [] : status === "published" ? [["Уншигч бүрээс авах оч", SPARK_GET_OTHER]] : ACT_REWARD[ACT_KEY[kind]] ? [["Редакц батлахад", ACT_REWARD[ACT_KEY[kind]]]] : [],
   });
   if (bounty > 0) {
     const ok = await lockBounty(user.id, rows[0].id, title, bounty);

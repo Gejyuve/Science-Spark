@@ -1,6 +1,7 @@
 import { requireSection } from "@/lib/admin";
 import { loadSettings, defaults } from "@/lib/settings";
 import { LEVELS } from "@/lib/levels";
+import { LIMIT_KEYS, LIMIT_LABEL } from "@/lib/limits";
 import { PREMIUM_PLANS, fmtMnt } from "@/lib/money";
 import { qpayOn } from "@/lib/qpay";
 import { updateSettings } from "./actions";
@@ -41,7 +42,23 @@ export default async function Settings({ searchParams }) {
               <label>Шинэ үг зөвшөөрөх түвшин{num("wordLevel", s.wordLevel, d.wordLevel, { min: 0, max: 9 })}</label>
               <label>Батлагдсан нийтлэлд (оч){num("approveArticle", s.approveArticle, d.approveArticle, { min: 0, max: 1000 })}</label>
               <label>Батлагдсан мэдээнд (оч){num("approveNews", s.approveNews, d.approveNews, { min: 0, max: 1000 })}</label>
+              <label>Асуултад хариулахад (оч){num("rw_answer", s.actReward.answer, d.actReward.answer, { min: 0, max: 1000 })}</label>
+              <label>Асуулт асуухад (оч){num("rw_ask", s.actReward.ask, d.actReward.ask, { min: 0, max: 1000 })}</label>
+              <label>Бодрол хуваалцахад (оч){num("rw_thought", s.actReward.thought, d.actReward.thought, { min: 0, max: 1000 })}</label>
+              <label>Зарлал нийтлэгдэхэд (оч){num("rw_announce", s.actReward.announce, d.actReward.announce, { min: 0, max: 5000 })}</label>
+              <label>Эвент нийтлэгдэхэд (оч){num("rw_event", s.actReward.event, d.actReward.event, { min: 0, max: 5000 })}</label>
             </div>
+            <div className="adm-set-lv">
+              <small>Өдрийн хязгаар</small><small>Энгийн</small><small>Дэмжигч</small>
+              {LIMIT_KEYS.map((k) => (
+                <span key={k} style={{ display: "contents" }}>
+                  <b>{LIMIT_LABEL[k][0].toUpperCase() + LIMIT_LABEL[k].slice(1)}</b>
+                  {num(`lim_${k}0`, s.dailyPost[k][0], d.dailyPost[k][0], { min: 1, max: 1000 })}
+                  {num(`lim_${k}1`, s.dailyPost[k][1], d.dailyPost[k][1], { min: 1, max: 1000 })}
+                </span>
+              ))}
+            </div>
+            <p className="adm-muted small">Редакцын хяналтгүй шууд орох контентод өдөрт хэдийг хуваалцахыг заана. Хязгаарт хүрсэн хэрэглэгчийг Дэмжигч болох руу хөтөлнө. Асуулт, бодролын оч өдрийн эхний «Энгийн» тоонд л олгогдоно.</p>
           </section>
 
           <div className="adm-set">

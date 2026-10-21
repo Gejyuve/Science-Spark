@@ -10,6 +10,7 @@ import { notify, notifyClubLeaders } from "@/lib/notify";
 import { audit } from "@/lib/admin";
 import { recordRevision } from "@/lib/revisions";
 import { firstReward } from "@/lib/celebrate";
+import { grantPostReward } from "@/lib/limits";
 import { TASK_KIND, REPORT_KIND, TASK_APPROVE_REWARD, REWARD_MIN, REWARD_MAX, AUTHOR_SHARE } from "@/lib/tasks-shared";
 import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 
@@ -113,6 +114,9 @@ export async function decidePost(formData) {
                 WHERE NOT EXISTS (SELECT 1 FROM points_ledger WHERE reason = ${"approved:post:" + id})`;
     }
     if (p.kind === "Нийтлэл" && !p.club_id) await firstReward(p.author_id, "article");
+    // Хуваалцсан эвент, зарлал нийтлэгдэхэд оч (клубийн нэрээр бол клубт)
+    const got = await grantPostReward(p, { capped: false });
+    if (got) await notify({ userId: p.author_id, kind: "earned", postId: id, note: `+${got} оч${p.club_id ? " клубт тань" : ""}` });
   }
   revalidatePath("/");
   revalidatePath(`/post/${id}`);
