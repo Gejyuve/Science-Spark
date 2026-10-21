@@ -57,8 +57,8 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
           <Link href={`/post/${p.id}#comments`} className="ss-count">
             <img className="ic" src="/icons/comment.svg" width={25} height={24} alt="Сэтгэгдэл" />{p.comments}
           </Link>
-          <Link href={`/post/${p.id}${isQuestion ? "#comments" : ""}`} className="ss-pill">
-            {isQuestion ? "Хариулах" : ["Эвент", "Зарлал"].includes(p.kind) ? "Дэлгэрэнгүй" : "Унших"}
+          <Link href={`/post/${p.id}${isShort ? "#comments" : ""}`} className="ss-pill">
+            {isShort ? "Хариулах" : ["Эвент", "Зарлал"].includes(p.kind) ? "Дэлгэрэнгүй" : "Унших"}
           </Link>
           <span className="ss-grow" />
           {viewer ? (

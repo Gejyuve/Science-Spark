@@ -163,7 +163,7 @@ export default async function SearchPage({ searchParams }) {
           {head("qa")}
           <div className="sr-list">
             {show("qa").map((p) => (
-              <Link key={p.id} href={`/post/${p.id}${p.kind === "Асуулт" ? "#comments" : ""}`} className="sr-q">
+              <Link key={p.id} href={`/post/${p.id}${["Асуулт", "Бодрол"].includes(p.kind) ? "#comments" : ""}`} className="sr-q">
                 <span className="sr-qic" aria-hidden="true">{p.kind === "Асуулт" ? "?" : "!"}</span>
                 <span className="sr-qtext">
                   <b><Hl text={snippet(p.body, term, 120)} term={term} /></b>
