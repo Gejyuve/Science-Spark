@@ -2001,7 +2001,6 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .tg-stage:active { cursor: grabbing; }
 .tg-svg { display: block; }
 .tg-link { fill: none; stroke: #37c3b3; stroke-width: 1.6; opacity: .9; }
-.tg-node { transition: transform .35s ease; }
 .tg-node circle { cursor: pointer; stroke: #00a89b; stroke-width: 2.4; transition: r .15s; }
 .tg-node circle.full, .tg-node circle.leaf { fill: #00a89b; }
 .tg-node circle.hollow { fill: var(--surface); }
