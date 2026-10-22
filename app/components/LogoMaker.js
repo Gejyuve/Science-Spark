@@ -1,35 +1,23 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Spark from "./Spark";
-import { SYMBOLS, PALETTES, STYLES, LAYOUTS, TEXT_MAX, initials, logoSvg, textBox } from "@/lib/logo-maker";
+import { SYMBOLS, PALETTES, STYLES, LAYOUTS, TEXT_MAX, RING_MAX, RING_BOTTOM_MAX, initials, drawLogo } from "@/lib/logo-maker";
 
-const svgUrl = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-
-// Сайтын фонт (Inter) — canvas дээр үсгийг үүгээр зурна
+// Сайтын фонт (Inter) — canvas дээр текстийг үүгээр зурна
 const siteFont = () => (typeof window === "undefined" ? "sans-serif" : getComputedStyle(document.body).fontFamily || "sans-serif");
+
+async function fontsReady(o, font) {
+  const sample = `${o.text || ""}${o.ring || ""}${o.ringBottom || ""}` || "А";
+  try { await document.fonts.load(`800 40px ${font}`, sample); } catch (e) {}
+}
 
 // Логог 512×512 зураг болгож сайтад оруулна. Зургийн id буцаана.
 async function renderAndUpload(o) {
   const font = siteFont();
-  const img = new Image();
-  await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("Лого зурж чадсангүй")); img.src = svgUrl(logoSvg(o, { withText: false })); });
-  const cv = document.createElement("canvas");
-  cv.width = 512; cv.height = 512;
-  const ctx = cv.getContext("2d");
-  ctx.drawImage(img, 0, 0, 512, 512);
-  if (o.layout !== "icon" && o.text) {
-    const t = textBox(o);
-    const spec = `800 ${t.size}px ${font}`;
-    try { await document.fonts.load(spec, o.text); } catch (e) {}
-    ctx.font = spec;
-    if ("letterSpacing" in ctx) ctx.letterSpacing = "2px";
-    ctx.fillStyle = PALETTES[o.palette][2];
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(o.text, 256, t.y, 440);
-  }
+  await fontsReady(o, font);
+  const cv = await drawLogo(o, font);
   // WEBP жижиг; дэмждэггүй хөтөч PNG болгоно
   let blob = await new Promise((res) => cv.toBlob(res, "image/webp", 0.92));
   if (!blob || blob.type !== "image/webp") blob = await new Promise((res) => cv.toBlob(res, "image/png"));
@@ -43,20 +31,34 @@ async function renderAndUpload(o) {
   return String(j.id);
 }
 
-function Preview({ o, size, font }) {
-  const uid = "lm" + useId().replace(/[^a-zA-Z0-9]/g, "");
-  return <span className="lm-prev" style={{ width: size, height: size }} dangerouslySetInnerHTML={{ __html: logoSvg(o, { font, uid }) }} />;
+// Урьдчилан харах: хадгалах зурагтай яг ижил canvas зураг
+function usePreview(o, on) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    if (!on) return;
+    let off = false;
+    (async () => {
+      const font = siteFont();
+      await fontsReady(o, font);
+      try { const cv = await drawLogo(o, font); if (!off) setSrc(cv.toDataURL("image/png")); } catch (e) {}
+    })();
+    return () => { off = true; };
+  }, [o, on]);
+  return src;
 }
+
+const Preview = ({ src, size }) => (
+  <span className="lm-prev" style={{ width: size, height: size }}>{src && <img src={src} alt="" width={size} height={size} />}</span>
+);
 
 // Клубийн лого бүтээгч: дүрс, өнгө, загвар, үсэг сонгоод лого зураг болгоно
 export default function LogoMaker({ name = "", onDone, label = "Лого бүтээх" }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [font, setFont] = useState("sans-serif");
-  const [o, setO] = useState({ symbol: "atom", palette: 0, style: "grad", layout: "both", text: "" });
+  const [o, setO] = useState({ symbol: "atom", palette: 0, style: "grad", layout: "both", text: "", ring: "", ringBottom: "" });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  useEffect(() => { setMounted(true); setFont(siteFont()); }, []);
+  useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!open) return;
     const esc = (e) => e.key === "Escape" && !busy && setOpen(false);
@@ -65,6 +67,7 @@ export default function LogoMaker({ name = "", onDone, label = "Лого бүт�
     return () => { document.removeEventListener("keydown", esc); document.body.style.overflow = ""; };
   }, [open, busy]);
 
+  const src = usePreview(o, open);
   const start = () => { setO((x) => ({ ...x, text: x.text || initials(name) })); setErr(""); setOpen(true); };
   const set = (k, v) => setO((x) => ({ ...x, [k]: v }));
   const use = async () => {
@@ -87,11 +90,11 @@ export default function LogoMaker({ name = "", onDone, label = "Лого бүт�
         </div>
         <div className="lm-body">
           <div className="lm-stage">
-            <Preview o={o} size={180} font={font} />
+            <Preview src={src} size={180} />
             <div className="lm-minis" aria-hidden="true">
-              <Preview o={o} size={56} font={font} />
-              <Preview o={o} size={36} font={font} />
-              <Preview o={o} size={24} font={font} />
+              <Preview src={src} size={56} />
+              <Preview src={src} size={36} />
+              <Preview src={src} size={24} />
             </div>
           </div>
           <div className="lm-opts">
@@ -126,13 +129,21 @@ export default function LogoMaker({ name = "", onDone, label = "Лого бүт�
 
             {o.layout !== "icon" && (
               <>
-                <div className="lm-label">Үсэг <small>{TEXT_MAX} хүртэл тэмдэгт</small></div>
+                <div className="lm-label">Голын текст <small>{TEXT_MAX} хүртэл тэмдэгт</small></div>
                 <div className="pf-input lm-text">
-                  <input value={o.text} maxLength={TEXT_MAX} placeholder="Жишээ: СС"
-                    onChange={(e) => set("text", [...e.target.value.toLocaleUpperCase("mn")].slice(0, TEXT_MAX).join(""))} />
+                  <input value={o.text} maxLength={TEXT_MAX} placeholder="Жишээ: СС эсвэл Сансар"
+                    onChange={(e) => set("text", [...e.target.value].slice(0, TEXT_MAX).join(""))} />
+                  <span>{[...o.text].length} / {TEXT_MAX}</span>
                 </div>
               </>
             )}
+
+            <div className="lm-label">Тойрог текст <small>заавал биш</small></div>
+            <div className="lm-ring">
+              <div className="pf-input"><input value={o.ring} maxLength={RING_MAX} placeholder="Дээд нум: Сансрын судлаачид" onChange={(e) => set("ring", e.target.value)} /><span>{o.ring.length} / {RING_MAX}</span></div>
+              <div className="pf-input"><input value={o.ringBottom} maxLength={RING_BOTTOM_MAX} placeholder="Доод нум: 2026 эсвэл хот" onChange={(e) => set("ringBottom", e.target.value)} /><span>{o.ringBottom.length} / {RING_BOTTOM_MAX}</span></div>
+              {!o.ring && <button type="button" className="lm-chip" onClick={() => set("ring", name.slice(0, RING_MAX))} disabled={!name.trim()}>Нэрийг тавих</button>}
+            </div>
           </div>
         </div>
         {err && <p className="tm-err">{err}</p>}
