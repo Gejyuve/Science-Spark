@@ -9,6 +9,7 @@ import { clubFollowSet } from "@/lib/clubs";
 import TimeMenu from "./components/TimeMenu";
 import ScrollActive from "./components/ScrollActive";
 import { fmtMnt } from "@/lib/money";
+import { withTopComments } from "@/lib/top-comments";
 
 export const dynamic = "force-dynamic";
 
@@ -56,24 +57,12 @@ export default async function Home({ searchParams }) {
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id)::int AS comments,
         COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = u.id), 0)::int AS author_points,
         (SELECT COUNT(*) FROM follows WHERE followee_id = u.id)::int AS author_followers,
-        ta.id AS ta_id, ta.body AS ta_body, ta.author_id AS ta_author, ta.initial AS ta_initial, ta.first_name AS ta_first,
-        ta.points AS ta_points, ta.followers AS ta_followers, ta.avatar AS ta_avatar,
         EXISTS (SELECT 1 FROM saves WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS saved,
         EXISTS (SELECT 1 FROM sparks WHERE post_id = p.id AND user_id = ${user ? user.id : 0}) AS sparked,
         bq.amount AS bounty_amount, bq.status AS bounty_status
       FROM posts p JOIN users u ON u.id = p.author_id
       LEFT JOIN clubs cl ON cl.id = p.club_id
       LEFT JOIN bounties bq ON bq.post_id = p.id AND bq.status IN ('open', 'awarded')
-      -- Асуултын шилдэг хариулт: хамгийн их лайктай, тэнцвэл хамгийн сүүлд бичигдсэн
-      LEFT JOIN LATERAL (
-        SELECT c.id, c.body, c.author_id, cu.initial, cu.first_name, cu.avatar_id AS avatar,
-          COALESCE((SELECT SUM(delta) FROM points_ledger WHERE user_id = cu.id), 0)::int AS points,
-          (SELECT COUNT(*) FROM follows WHERE followee_id = cu.id)::int AS followers
-        FROM comments c JOIN users cu ON cu.id = c.author_id
-        WHERE c.post_id = p.id AND p.kind = 'Асуулт' AND c.parent_id IS NULL
-        ORDER BY (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) DESC, c.created_at DESC, c.id DESC
-        LIMIT 1
-      ) ta ON true
       LEFT JOIN win ON win.post_id = p.id
       WHERE p.status = 'published' AND p.kind <> 'Үг'
         AND (NOT ${qa}::boolean OR p.kind IN ('Асуулт', 'Бодрол'))
@@ -97,6 +86,7 @@ export default async function Home({ searchParams }) {
         CASE WHEN ${bq} = 'big' THEN bq.amount END DESC NULLS LAST,
         p.created_at DESC
       LIMIT 30`;
+    await withTopComments(posts);
     // Шүүлтүүр бүрийн сонгосон хугацааны контентын тоо
     const [c] = await sql`
       SELECT
