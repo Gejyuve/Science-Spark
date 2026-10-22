@@ -6,7 +6,6 @@ import { nowLocal, monthGrid, addMonths, WD_SHORT, fmtEventRange, endLocal, span
 import Shell from "../components/Shell";
 import PostCard from "../components/PostCard";
 import { followingSet } from "../components/Bits";
-import { withTopComments } from "@/lib/top-comments";
 import Cover, { TONE } from "../components/EventCover";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +48,6 @@ export default async function Events({ searchParams }) {
       WHERE p.kind = 'Эвент' AND p.status = 'published' AND COALESCE(p.meta->>'ends_at', p.meta->>'starts_at') >= ${now.day}
         AND (${type} = '' OR p.meta->>'type' = ${type})
       ORDER BY p.meta->>'starts_at' LIMIT 30`;
-    await withTopComments(upcoming);
   } catch (e) {}
   // Эвент бүрийн эхлэх, дуусах өдөр
   const evs = inMonth

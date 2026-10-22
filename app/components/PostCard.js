@@ -74,8 +74,8 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
           <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} align="right" />
         </div>
   );
-  // Карт доорх сэтгэгдэл: хамгийн их лайктай эсвэл эхний сэтгэгдэл. Асуултад хариултгүй бол урина
-  const topComment = p.ta_id ? (
+  // Асуулт, Бодрол картын доорх сэтгэгдэл: хамгийн их лайктай эсвэл эхний сэтгэгдэл. Асуултад хариултгүй бол урина
+  const topComment = isShort && p.ta_id ? (
     <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">
       <span className="ss-curve" aria-hidden="true" />
       <span className="ss-answer-who">
@@ -135,7 +135,6 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
           </Link>
         </div>
         {actions}
-        {topComment}
       </article>
     );
   }
