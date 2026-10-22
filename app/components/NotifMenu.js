@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Баруун талын "Мэдэгдэл" мөр: хулгана тавих эсвэл дарахад жагсаалт гарна (hover={false} бол зөвхөн дарахад)
+// Баруун талын "Мэдэгдэл" мөр: хулгана тавих эсвэл дарахад жагсаалт гарна (hover={false} бол зөвхөн дарахад; closeOnSubmit бол сонголт хийхэд хаагдана)
 export default function NotifMenu({ trigger, children, label = "Мэдэгдэл", popClass = "", hover = true, closeOnSubmit = false }) {
   const [open, setOpen] = useState(false);
   const box = useRef(null);
@@ -26,7 +26,8 @@ export default function NotifMenu({ trigger, children, label = "Мэдэгдэл
       <button type="button" className="ss-action nf-trigger" aria-expanded={open} onClick={() => { if (hover && open && !pinned.current) { pinned.current = true; return; } pinned.current = !open; setOpen(!open); }}>
         {trigger}
       </button>
-      {open && <div className={"nf-pop" + (popClass ? " " + popClass : "")} role="dialog" aria-label={label} onSubmit={closeOnSubmit ? () => setOpen(false) : undefined}>{children}</div>}
+      {open && <div className={"nf-pop" + (popClass ? " " + popClass : "")} role="dialog" aria-label={label} onSubmit={closeOnSubmit ? () => setOpen(false) : undefined}
+        onClick={closeOnSubmit ? (e) => { if (e.target.closest("a")) setOpen(false); } : undefined}>{children}</div>}
     </div>
   );
 }
