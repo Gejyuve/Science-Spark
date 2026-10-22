@@ -1197,7 +1197,7 @@ details.mod summary { cursor: pointer; }
 .ss-answer { position: relative; display: block; margin-top: 4px; padding: 6px 0 0 48px; text-decoration: none; color: inherit; }
 .ss-curve { position: absolute; left: 12px; top: 0; width: 26px; height: 28px; border-left: 2px solid #c8d5dd; border-bottom: 2px solid #c8d5dd; border-bottom-left-radius: 12px; }
 .ss-answer-who { display: flex; align-items: center; gap: 10px; }
-.ss-answer-who > span { display: flex; flex-direction: column; gap: 2px; }
+.ss-answer-who > span:not(.ss-avatar) { display: flex; flex-direction: column; gap: 2px; }
 .ss-answer-who b { font-size: 13px; font-weight: 500; color: var(--text); }
 .ss-answer p { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .ss-answer-cta { font-size: 14px; color: var(--text); }
