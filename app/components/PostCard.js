@@ -74,6 +74,28 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
           <Share path={`/post/${p.id}`} title={p.title} icon="ashare" size={24} align="right" />
         </div>
   );
+  // Асуулт, Бодрол картын доорх сэтгэгдэл: хамгийн их лайктай эсвэл эхний сэтгэгдэл. Асуултад хариултгүй бол урина
+  const topComment = isShort && p.ta_id ? (
+    <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">
+      <span className="ss-curve" aria-hidden="true" />
+      <span className="ss-answer-who">
+        <Avatar user={{ id: p.ta_author, first_name: p.ta_first, avatar: p.ta_avatar }} size={36} />
+        <span>
+          <b>{p.ta_initial}.{p.ta_first}</b>
+          <Stat points={p.ta_points} followers={p.ta_followers} link={false} />
+        </span>
+      </span>
+      <p>{p.ta_body}</p>
+    </Link>
+  ) : isQuestion && p.ta_id === null && (
+    <Link href={viewer ? `/post/${p.id}#comments` : "/login"} className="ss-answer empty">
+      <span className="ss-curve" aria-hidden="true" />
+      <span className="ss-answer-who">
+        <Avatar user={viewer || { id: 0, first_name: "?" }} size={36} />
+        <span className="ss-answer-cta">Анхны хариултыг та өг</span>
+      </span>
+    </Link>
+  );
   // Эвент (Figma 20:2), Зарлал (Figma 496:368): зүүнд мэдээлэл, баруунд дөрвөлжин зураг
   if (p.kind === "Эвент" || p.kind === "Зарлал") {
     const isEv = p.kind === "Эвент";
@@ -146,27 +168,7 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
         )}
       </Link>
       {actions}
-      {isQuestion && (p.ta_id ? (
-        <Link href={`/post/${p.id}#c${p.ta_id}`} className="ss-answer">
-          <span className="ss-curve" aria-hidden="true" />
-          <span className="ss-answer-who">
-            <Avatar user={{ id: p.ta_author, first_name: p.ta_first, avatar: p.ta_avatar }} size={36} />
-            <span>
-              <b>{p.ta_initial}.{p.ta_first}</b>
-              <Stat points={p.ta_points} followers={p.ta_followers} link={false} />
-            </span>
-          </span>
-          <p>{p.ta_body}</p>
-        </Link>
-      ) : p.ta_id === null && (
-        <Link href={viewer ? `/post/${p.id}#comments` : "/login"} className="ss-answer empty">
-          <span className="ss-curve" aria-hidden="true" />
-          <span className="ss-answer-who">
-            <Avatar user={viewer || { id: 0, first_name: "?" }} size={36} />
-            <span className="ss-answer-cta">Анхны хариултыг та өг</span>
-          </span>
-        </Link>
-      ))}
+      {topComment}
     </article>
   );
 }

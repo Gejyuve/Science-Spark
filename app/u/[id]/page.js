@@ -8,6 +8,7 @@ import { fileComplaint, answerWarning } from "../../profile/actions";
 import { paraDiff } from "@/lib/diff";
 import { defaultCover } from "@/lib/covers";
 import { influenceCount } from "@/lib/referral";
+import { withTopComments } from "@/lib/top-comments";
 import Shell from "../../components/Shell";
 import PostCard from "../../components/PostCard";
 import { InfluenceBtn } from "../../components/Influence";
@@ -123,6 +124,7 @@ export default async function PublicProfile({ params, searchParams }) {
   const kind = KIND_LIST.includes(kindParam) ? kindParam : "";
   const kindCounts = Object.fromEntries(KIND_LIST.map((x) => [x, base.filter((p) => p.kind === x).length]));
   const list = kind ? base.filter((p) => p.kind === kind) : base;
+  await withTopComments(list);
   const href = (t, kk) => {
     const q = new URLSearchParams();
     if (t && t !== "published") q.set("tab", t);
