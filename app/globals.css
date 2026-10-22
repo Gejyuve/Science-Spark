@@ -3918,3 +3918,6 @@ body:has(.spk-load.full) .spk-nav { display: none; } /* loading.js аль хэд
   .lm-syms { grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); }
   .lm-modal .tm-foot small { flex-basis: 100%; }
 }
+a.as-row { text-decoration: none; }
+.as-row.as-edit { border-top: 1px solid var(--border); margin-top: 4px; }
+.as-row.as-edit .ic { flex: none; margin: 0 10px; }

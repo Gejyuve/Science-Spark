@@ -150,6 +150,21 @@ function AsSwitch({ user, acting, bots }) {
   );
 }
 
+// «Профайл» товчны сонголт: өөрийн профайл + гишүүн/удирддаг клуб, байгууллага (давхардалгүй)
+function profileRows(user, acting, myClub) {
+  const rows = [{ href: `/u/${user.id}`, av: <Avatar user={user} size={36} />, name: displayName(user), kind: "Хувь хүн" }];
+  const seen = new Set();
+  const add = (c, kind) => {
+    if (!c || seen.has(Number(c.id))) return;
+    seen.add(Number(c.id));
+    rows.push({ href: `/${kind === "org" ? "org" : "club"}/${c.id}`, av: <ClubAv c={c} size={36} />, name: c.name, kind: kind === "org" ? "Байгууллага" : "Клуб" });
+  };
+  add(acting?.club, "club");
+  if (myClub) add({ id: myClub.club_id, name: myClub.name, logo: myClub.logo }, myClub.kind);
+  add(acting?.org, "org");
+  return rows;
+}
+
 async function RightRail({ user, acting }) {
   const none = (v) => () => v;
   // Бие биеэсээ хамааралгүй асуулгуудыг зэрэг явуулна
@@ -183,7 +198,7 @@ async function RightRail({ user, acting }) {
             </div>
           </Link>
           <div className="ss-actions">
-            <ProfileAction id={user.id} />
+            <ProfileAction id={user.id} rows={profileRows(user, acting, myClub)} />
             <AsSwitch user={user} acting={acting} bots={bots} />
             <NotifMenu trigger={<>{I("bell", 18)}<span>Мэдэгдэл</span>{unread > 0 && <em className="ss-badge red">{unread}</em>}{I("arrow", 14)}</>}>
               <div className="nf-head">
