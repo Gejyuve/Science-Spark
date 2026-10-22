@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { defaultCover } from "@/lib/covers";
 import { notFound } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
@@ -65,7 +66,7 @@ export default async function OrgPage({ params }) {
     <Shell user={user} header={false}>
       <div className="cp-page">
         <section className="cp-card">
-          <div className="cp-cover">{c.cover_id ? <img src={`/img/${c.cover_id}`} alt="" /> : <span className="cp-cover-ph" />}</div>
+          <div className="cp-cover"><img src={c.cover_id ? `/img/${c.cover_id}` : defaultCover(c.id)} alt="" /></div>
           <div className="cp-top">
             <span className="cp-logo"><ClubAv c={{ id: c.id, name: c.name, logo: c.logo_id }} size={96} /></span>
             <div className="cp-title">

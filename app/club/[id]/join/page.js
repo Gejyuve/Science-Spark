@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { defaultCover } from "@/lib/covers";
 import { notFound, redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, needsName } from "@/lib/auth";
@@ -52,7 +53,7 @@ export default async function Join({ params }) {
         <Link href={`/club/${id}`} className="jn-x" aria-label="Хаах">×</Link>
         <p className="jn-quote"><b><img src="/icons/flame.svg" width={16} height={16} alt="" /> Ганц мод гал болохгүй</b><small>- Ардын зүйр үг</small></p>
         <div className="jn-club">
-          <div className="jn-cover">{c.cover_id ? <img src={`/img/${c.cover_id}`} alt="" /> : null}</div>
+          <div className="jn-cover"><img src={c.cover_id ? `/img/${c.cover_id}` : defaultCover(c.id)} alt="" /></div>
           <span className="jn-logo"><ClubAv c={{ id: c.id, name: c.name, logo: c.logo_id }} size={44} /></span>
           <div className="jn-body">
             <b>{c.name}</b>
