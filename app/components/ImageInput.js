@@ -98,7 +98,7 @@ const parsePos = (s) => {
 // adjust=true: эх зургийг хадгалж, чирж байрлалыг нь тохируулна (профайлын зураг, ковер).
 export default function ImageInput({
   name, aspect = null, maxW = 1600, initial = null, initialSrc = null, initialPos = null,
-  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, requiredMsg = "Ковер зураг оруулна уу", size = true, children,
+  variant = "slot", title = "Зураг нэмэх", hint = "", adjust = false, badge = null, required = false, requiredMsg = "Ковер зураг оруулна уу", size = true, control = null, children,
 }) {
   const input = useRef(null);
   const box = useRef(null);
@@ -195,6 +195,8 @@ export default function ImageInput({
   }, [moved, pos, aspect, maxW]);
 
   const remove = () => { setNote(""); setId(""); setSrcId(""); setPreview(null); bmp.current = null; };
+  // Гаднаас (жишээ нь лого бүтээгчээс) бэлэн зургийн id өгөх
+  if (control) control.current = { set: (newId) => { remove(); setErr(""); setId(String(newId)); } };
   // Жижиг дөрвөлжин ба дугуй талбарт хэмжээг хажуугийн тайлбарт бичнэ
   const showSize = size && !/^(avatar|slot)$/.test(variant);
   const shown = preview || (id ? `/img/${id}` : null);

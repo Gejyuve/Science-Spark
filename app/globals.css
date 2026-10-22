@@ -3875,3 +3875,43 @@ body:has(.spk-load.full) .spk-nav { display: none; } /* loading.js аль хэд
   .spk-tw { opacity: .7; }
   .spk-nav { transition: opacity .2s ease; transform: translate(-50%, 0); }
 }
+
+/* Клубийн лого бүтээгч (LogoMaker) */
+.lm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; }
+.lm-row small { font-size: 12px; color: var(--muted); }
+.lm-open { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid #00a89b; background: var(--teal-bg); color: #00897e; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+:root[data-theme="dark"] .lm-open { color: var(--teal); }
+.lm-open:hover { background: #00a89b; color: #fff; }
+.lm-open:hover img { filter: brightness(0) invert(1); }
+.lm-modal { max-width: 720px; }
+.lm-body { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 22px; margin-bottom: 16px; }
+.lm-stage { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 10px; border-radius: 20px; background: var(--surface-2); align-self: start; position: sticky; top: 0; }
+.lm-prev { display: block; flex: none; border-radius: 50%; overflow: hidden; box-shadow: 0 6px 18px rgba(15, 42, 51, .16); }
+.lm-prev svg { display: block; width: 100%; height: 100%; }
+.lm-minis { display: flex; align-items: center; gap: 12px; }
+.lm-minis .lm-prev { box-shadow: 0 2px 6px rgba(15, 42, 51, .14); }
+.lm-opts { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lm-label { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.lm-label:first-child { margin-top: 0; }
+.lm-label small { margin-left: 6px; font-weight: 500; font-size: 11px; color: var(--muted); }
+.lm-syms { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; }
+.lm-sym { display: grid; place-items: center; aspect-ratio: 1; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; padding: 0; }
+.lm-sym:hover { border-color: #00a89b; }
+.lm-sym.on { border-color: #00a89b; background: #00a89b; color: #fff; }
+.lm-pals { display: flex; flex-wrap: wrap; gap: 8px; }
+.lm-pal { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border); font-size: 10px; line-height: 1; cursor: pointer; padding: 0; }
+.lm-pal.on { box-shadow: 0 0 0 2px #00a89b; }
+.lm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lm-chip { height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.lm-chip.on { border-color: #00a89b; background: #00a89b; color: #fff; }
+.lm-text { max-width: 180px; }
+.lm-text input { text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.lm-modal .tm-err { margin-bottom: 12px; }
+@media (max-width: 720px) {
+  .lm-body { grid-template-columns: 1fr; gap: 16px; }
+  .lm-stage { position: static; flex-direction: row; justify-content: center; padding: 14px 10px; }
+  .lm-stage > .lm-prev { width: 120px !important; height: 120px !important; }
+  .lm-minis { flex-direction: column; gap: 8px; }
+  .lm-syms { grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); }
+  .lm-modal .tm-foot small { flex-basis: 100%; }
+}
