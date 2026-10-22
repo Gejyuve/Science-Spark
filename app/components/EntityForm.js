@@ -166,10 +166,10 @@ function Inner({ leader, kind, entity, board, init, formRef, dr }) {
 
       <section className="pf-card">
         <div className="pf-coverwrap">
-          <ImageInput name="cover" aspect={3} maxW={1920} variant="cover" adjust initial={e.cover_id || null} initialSrc={e.cover_src || null} initialPos={e.cover_pos || null}>
+          <ImageInput name="cover" aspect={2.5} maxW={1920} variant="cover" adjust initial={e.cover_id || null} initialSrc={e.cover_src || null} initialPos={e.cover_pos || null}>
             <img src="/icons/camera18.svg" width={18} height={18} alt="" />
             <b>Ковер зураг нэмэх</b>
-            <small>Өргөн зураг · 1920×640 px (3:1) · JPG, PNG, WEBP</small>
+            <small>Өргөн зураг · 1920×768 px (5:2) · JPG, PNG, WEBP</small>
           </ImageInput>
         </div>
         <div className="pf-photo">

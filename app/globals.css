@@ -682,18 +682,18 @@ details.mod summary { cursor: pointer; }
 /* ===== Figma: Нийтийн профайл ===== */
 .pu-card { background: var(--surface); border-radius: 24px; box-shadow: var(--card-shadow); overflow: hidden; }
 .pu-cover {
-  height: 236px;
+  height: 300px;
   background: radial-gradient(ellipse at 55% 45%, #8fd6ff 0%, #3b6fb3 22%, #1d2b52 45%, #3a1d14 70%, #120c0a 100%);
 }
-.pu-top { display: flex; align-items: flex-start; gap: 18px; padding: 0 28px; margin-top: -56px; }
+.pu-top { display: flex; align-items: flex-start; gap: 18px; padding: 0 28px; margin-top: -36px; }
 .pu-avatar { border-radius: 50%; border: 5px solid var(--surface); box-shadow: 0 6px 18px rgba(51, 89, 102, 0.18); flex: none; display: grid; }
 .pu-avatar .ss-avatar { border: 0; }
-.pu-name { flex: 1; min-width: 0; padding-top: 64px; }
+.pu-name { flex: 1; min-width: 0; padding-top: 54px; }
 .pu-name h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--ink); }
 .pu-stats { display: flex; gap: 16px; margin-top: 4px; }
 .pu-stats span { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
 .pu-stats b { color: #00a89b; font-size: 15px; font-weight: 700; }
-.pu-actions { display: flex; align-items: center; gap: 10px; padding-top: 66px; flex-wrap: wrap; justify-content: flex-end; }
+.pu-actions { display: flex; align-items: center; gap: 10px; padding-top: 54px; flex-wrap: wrap; justify-content: flex-end; }
 .pu-actions > a:not(.pu-follow) { display: grid; }
 .pu-follow {
   display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 26px; border: 0; border-radius: 24px; cursor: pointer;
@@ -727,9 +727,9 @@ details.mod summary { cursor: pointer; }
   .pu-actions { padding-top: 0; width: 100%; justify-content: flex-start; }
 }
 @media (max-width: 760px) {
-  .pu-cover { height: 150px; }
-  .pu-top { padding: 0 16px; margin-top: -44px; }
-  .pu-name { padding-top: 48px; }
+  .pu-cover { height: 200px; }
+  .pu-top { padding: 0 16px; margin-top: -30px; }
+  .pu-name { padding-top: 44px; }
   .pu-name h1 { font-size: 20px; }
   .pu-body { padding: 20px 16px; }
   .pu-grid { grid-template-columns: 1fr; }
@@ -1440,10 +1440,10 @@ a.ss-kind:hover { text-decoration: underline; }
 .ii.drag .ii-box:active { cursor: grabbing; }
 .ii.drag:hover .ii-hint, .ii.drag:focus-within .ii-hint { opacity: 1; }
 .ii-img { user-select: none; -webkit-user-drag: none; pointer-events: none; }
-/* Профайл засах: ковер (3:1) ба нүүр зураг (тойрог) */
+/* Профайл засах: ковер (5:2) ба нүүр зураг (тойрог) */
 .pf-coverwrap { position: relative; }
 .pf-cover-pts { position: absolute; left: 12px; top: 12px; z-index: 3; }
-.ii-cover .ii-box { aspect-ratio: 3; border-radius: 20px; border-color: #9ad9cf; background: #f3fbfa; gap: 6px; }
+.ii-cover .ii-box { aspect-ratio: 2.5; border-radius: 20px; border-color: #9ad9cf; background: #f3fbfa; gap: 6px; }
 .ii-cover .ii-box b { color: #00a89b; font-size: 13.5px; }
 .ii-cover.has .ii-box { border: 0; }
 .ii-avatar { position: relative; flex: none; }
@@ -2541,9 +2541,9 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 
 .cp-page { padding-bottom: 40px; }
 .cp-card { padding: 0 0 28px; border-radius: 24px; background: var(--surface); box-shadow: var(--card-shadow); overflow: hidden; }
-.cp-cover { height: 210px; background: linear-gradient(135deg, #0e3a40, #072026 55%, #030c10); }
+.cp-cover { height: 300px; background: linear-gradient(135deg, #0e3a40, #072026 55%, #030c10); }
 .cp-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.cp-top { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 0 28px; margin-top: -48px; }
+.cp-top { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 0 28px; margin-top: -36px; }
 .cp-logo { position: relative; display: grid; place-items: center; width: 108px; height: 108px; border-radius: 50%; background: var(--surface); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
 .cp-title { padding-bottom: 6px; }
 .cp-title h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--ink); }
@@ -2588,7 +2588,8 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .cp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
 [data-theme="dark"] .cf-member, [data-theme="dark"] .cp-rules { background: rgba(255, 255, 255, .04); }
 @media (max-width: 700px) {
-  .cp-top { padding: 0 18px; } .cp-about, .cp-info, .cp-sec, .cp-map, .cp-rules, .cp-note { margin-left: 18px; margin-right: 18px; }
+  .cp-cover { height: 200px; }
+  .cp-top { padding: 0 18px; margin-top: -30px; } .cp-about, .cp-info, .cp-sec, .cp-map, .cp-rules, .cp-note { margin-left: 18px; margin-right: 18px; }
   .cp-info, .cp-grid { grid-template-columns: 1fr; }
   .cf-pick { flex-direction: column; } .cf-own { padding: 10px 14px; justify-content: center; }
 }
