@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUser, isPremium } from "@/lib/auth";
 import { sql, ensureSchema } from "@/lib/db";
-import { canSeeVideos, videoFeed, sparkBalance, fmtDuration, thumbsFor } from "@/lib/video";
-import { VIDEO_PUBLIC } from "@/lib/video-shared";
+import { canSeeVideos, videoFeed, sparkBalance, supportLeft, fmtDuration, thumbsFor } from "@/lib/video";
+import { VIDEO_PUBLIC, SUPPORT_VIDEOS } from "@/lib/video-shared";
 import Shell from "../components/Shell";
 import PageHero from "../components/PageHero";
 import PostCard from "../components/PostCard";
@@ -30,7 +30,8 @@ export default async function VideoPage({ searchParams }) {
     videoFeed(user, { playlist: pl?.id ?? null, limit: page * PAGE + 1 }),
     pl ? [] : sql`
       SELECT p.id, p.title, p.body, COUNT(v.id)::int AS n,
-             (ARRAY_AGG(v.uid ORDER BY v.created_at))[1] AS uid
+             (ARRAY_AGG(v.uid ORDER BY v.created_at))[1] AS uid,
+             (ARRAY_AGG(c.image_id ORDER BY v.created_at))[1] AS image_id
       FROM video_playlists p
       JOIN videos v ON v.playlist_id = p.id AND v.status = 'ready'
       JOIN posts c ON c.id = v.post_id AND (c.status = 'published' OR (${preview}::boolean AND c.status = 'unlisted'))
@@ -38,15 +39,16 @@ export default async function VideoPage({ searchParams }) {
     user ? sparkBalance(user) : 0,
     followingSet(user),
   ]);
-  const plThumbs = await thumbsFor(playlists.map((p) => ({ uid: p.uid, status: "ready" })));
+  const [plThumbs, left] = await Promise.all([thumbsFor(playlists.map((p) => ({ uid: p.uid, image_id: p.image_id, status: "ready" }))), supportLeft(user)]);
   const more = feed.length > page * PAGE;
   const shown = feed.slice(0, page * PAGE);
 
   return (
     <Shell user={user} active="/video" header={false}>
       <div className="vd-page">
-        <PageHero tone="video" title={pl ? pl.title : "Видео"} text={pl ? pl.body || "Эхнээс нь дарааллаар нь үзээрэй." : "Шинжлэх ухааны лекц, туршилт, ярилцлага. Дэмжигчид бүх видеог үзнэ, бусад нь очоор эсвэл төгрөгөөр нээнэ."}>
+        <PageHero tone="video" title={pl ? pl.title : "Видео"} text={pl ? pl.body || "Эхнээс нь дарааллаар нь үзээрэй." : `Шинжлэх ухааны лекц, туршилт, ярилцлага. Дэмжигч сар бүр хүссэн ${SUPPORT_VIDEOS} видеогоо нээнэ, бусад видеог очоор эсвэл төгрөгөөр нээнэ.`}>
           {user && !isPremium(user) && <Link href="/san" className="ph-btn solid">Дэмжигч болох</Link>}
+          {left !== null && <span className="ph-btn"><span className="e">⚡</span><b>Энэ сард нээх эрх</b><small>{left}/{SUPPORT_VIDEOS}</small></span>}
           {user && <span className="ph-btn"><span className="e">✦</span><b>Зарцуулах оч</b><small>{balance.toLocaleString("en-US")}</small></span>}
         </PageHero>
         {preview && <p className="vd-note">Видео хэсэг одоогоор зөвхөн супер админд харагдаж байна. <Link href="/admin/videos">Админ &gt; Видео</Link>-оос нийтэд нээнэ.</p>}

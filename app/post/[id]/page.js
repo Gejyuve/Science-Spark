@@ -31,7 +31,7 @@ import { ReportCard } from "../../components/TaskCard";
 import { shareText, shareDescription } from "@/lib/og";
 import MiniMap from "../../components/MiniMap";
 import { geocodeLocation } from "@/lib/geo";
-import { withVideos, videoFeed, sparkBalance, playToken, iframeSrc, fmtDuration } from "@/lib/video";
+import { withVideos, videoFeed, sparkBalance, supportLeft, playToken, iframeSrc, fmtDuration } from "@/lib/video";
 import { VIDEO_KIND } from "@/lib/video-shared";
 import VideoGate from "../../video/VideoGate";
 import PostCard from "../../components/PostCard";
@@ -426,13 +426,14 @@ export default async function PostPage({ params, searchParams }) {
   const video = isVideo ? (await withVideos([post], user))[0].video : null;
   const videoSrc = video?.access && video.status === "ready" ? await playToken(video.uid).then((t) => iframeSrc(t, video.seconds || 0)).catch(() => null) : null;
   const locked = isVideo && !video?.access;
-  const [sparksLeft, walletLeft, moreVideos] = isVideo
+  const [sparksLeft, walletLeft, supportLeftN, moreVideos] = isVideo
     ? await Promise.all([
         user && locked ? sparkBalance(user) : 0,
         user && locked ? walletBalance(user.id).then(Number) : 0,
+        locked ? supportLeft(user) : null,
         videoFeed(user, { exclude: [post.id], limit: 10, fresh: true }).catch(() => []),
       ])
-    : [0, 0, []];
+    : [0, 0, null, []];
   const isEvent = post.kind === "Эвент";
   const isAnn = post.kind === "Зарлал";
   const isTerm = post.kind === TERM_KIND;
@@ -537,7 +538,7 @@ export default async function PostPage({ params, searchParams }) {
             <div className="vd-player ar-video" id="watch">
               {video.status === "ready" ? (
                 <VideoGate v={{ id: video.id, access: video.access, price: video.price, price_mnt: video.price_mnt, seconds: video.seconds || 0, duration: video.duration || 0, durationText: fmtDuration(video.duration) }}
-                  src={videoSrc} thumb={video.thumb} title={post.title} loggedIn={!!user} sparks={sparksLeft} wallet={walletLeft} autoplay={!!ok && video.access} />
+                  src={videoSrc} thumb={video.thumb} title={post.title} loggedIn={!!user} sparks={sparksLeft} wallet={walletLeft} supportLeft={supportLeftN} autoplay={!!ok && video.access} />
               ) : (
                 <div className="vd-wait"><span aria-hidden="true">🎬</span><p>Видео бэлэн болоогүй байна.</p></div>
               )}

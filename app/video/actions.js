@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { canSeeVideos, hasAccess, sparkBalance, payVideo } from "@/lib/video";
+import { canSeeVideos, hasAccess, sparkBalance, supportLeft, payVideo } from "@/lib/video";
 import { walletBalance, fmtMnt } from "@/lib/money";
 import { currentPeriod } from "@/lib/spark";
 
@@ -15,14 +15,19 @@ export async function unlockVideo(formData) {
   if (!canSeeVideos(user)) redirect("/");
   await ensureSchema();
   const id = Number(formData.get("vid"));
-  const method = formData.get("method") === "mnt" ? "mnt" : "spark";
+  const m = formData.get("method");
+  const method = m === "mnt" || m === "support" ? m : "spark";
   const [v] = await sql`SELECT id, title, price, price_mnt, status, post_id FROM videos WHERE id = ${id} AND status = 'ready'`;
   if (!v?.post_id) redirect("/video");
   const back = (key, msg) => redirect(`/post/${v.post_id}?${key}=${encodeURIComponent(msg)}#watch`);
   const [had] = await sql`SELECT 1 FROM video_unlocks WHERE user_id = ${user.id} AND video_id = ${id}`;
   if (hasAccess(user, v, had)) back("ok", "Та энэ видеог үзэх эрхтэй. Сайхан үзээрэй!");
   if (user.restricted_at) back("error", "Таны эрх хязгаарлагдсан байна");
-  if (method === "mnt") {
+  if (method === "support") {
+    const left = await supportLeft(user);
+    if (left === null) back("error", "Дэмжигч болоход сар бүр видео нээх эрх нээгдэнэ");
+    if (left < 1) back("error", "Энэ сарын видео нээх эрх дууссан байна. Очоор эсвэл төгрөгөөр нээж болно");
+  } else if (method === "mnt") {
     if (!v.price_mnt) back("error", "Энэ видеог төгрөгөөр нээх боломжгүй");
     const bal = Number(await walletBalance(user.id));
     if (bal < v.price_mnt) back("error", `Хэтэвчинд ${fmtMnt(v.price_mnt)} хэрэгтэй, танд ${fmtMnt(bal)} байна. Хэтэвчээ цэнэглээд дахин оролдоорой`);
@@ -34,5 +39,6 @@ export async function unlockVideo(formData) {
   const ok = await payVideo(user.id, v, method, currentPeriod());
   if (!ok) back("error", "Нээж чадсангүй. Үлдэгдлээ шалгаад дахин оролдоно уу");
   revalidatePath(`/post/${v.post_id}`);
+  if (method === "support") back("ok", "Дэмжигчийн эрхээр видеог нээлээ. Сайхан үзээрэй!");
   back("ok", method === "mnt" ? `${fmtMnt(v.price_mnt)}-өөр видеог нээлээ. Сайт, шинжлэх ухааныг дэмжсэнд баярлалаа!` : `${v.price} очоор видеог нээлээ. Сайхан үзээрэй!`);
 }

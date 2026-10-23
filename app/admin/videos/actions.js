@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { requireSection, audit } from "@/lib/admin";
 import { loadSettings, saveSettings } from "@/lib/settings";
-import { streamOn, createUpload, deleteStream, syncVideoPosts } from "@/lib/video";
-import { DEFAULT_PRICE, DEFAULT_PRICE_MNT, VIDEO_KIND } from "@/lib/video-shared";
+import { streamOn, createUpload, deleteStream, syncVideoPosts, MAX_VIDEO_BYTES } from "@/lib/video";
+import { VIDEO_KIND } from "@/lib/video-shared";
 import { validCategory } from "@/lib/tree";
 
 // Видео хэсгийг зөвхөн супер админ удирдана (Админ > Видео)
@@ -21,6 +21,14 @@ const back = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "
 const price = (v) => Math.min(100000, Math.max(0, Math.round(Number(v)) || 0));
 const mnt = (v) => Math.min(1000000, Math.max(0, Math.round(Number(v) / 100) * 100 || 0));
 const category = (v) => (validCategory(String(v || "")) ? String(v) : null);
+// Хоёр үнийг супер админ заавал өөрөө бичнэ (0 = тэр аргаар нээх сонголтгүй)
+const missing = (v) => v == null || String(v).trim() === "";
+async function thumbImage(v) {
+  const id = Number(v);
+  if (!(id > 0)) return null;
+  const [img] = await sql`SELECT id FROM images WHERE id = ${id}`;
+  return img ? img.id : null;
+}
 
 // Нийтлэх профайл: супер админ өөрөө эсвэл түүний удирддаг бот
 async function author(me, v) {
@@ -41,21 +49,23 @@ export async function startUpload(f) {
   const me = await requireSuper();
   const title = clean(f.title, 140);
   if (title.length < 2) return { error: "Видеоны гарчгийг бичнэ үү" };
+  if (missing(f.price) || missing(f.price_mnt)) return { error: "Очоор болон төгрөгөөр нээх үнийг бичнэ үү (сонголтгүй бол 0)" };
+  const size = Number(f.size);
+  if (!(size > 0) || size > MAX_VIDEO_BYTES) return { error: "Файлын хэмжээ буруу байна" };
   if (!streamOn()) return { error: "Cloudflare Stream холбогдоогүй байна (Vercel-д CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_STREAM_TOKEN тохируулна)" };
   let up;
   try {
-    up = await createUpload(title);
+    up = await createUpload(title, size);
   } catch (e) {
     return { error: "Cloudflare-тай холбогдож чадсангүй. Дахин оролдоно уу" };
   }
   const by = await author(me, f.author);
-  const [p] = await sql`INSERT INTO posts (author_id, kind, title, subtitle, body, category, status, reviewed_at)
-                        VALUES (${by}, ${VIDEO_KIND}, ${title}, ${clean(f.subtitle, 200) || null}, ${clean(f.body, 5000)}, ${category(f.category)}, 'unlisted', now())
+  const [p] = await sql`INSERT INTO posts (author_id, kind, title, subtitle, body, category, image_id, status, reviewed_at)
+                        VALUES (${by}, ${VIDEO_KIND}, ${title}, ${clean(f.subtitle, 200) || null}, ${clean(f.body, 5000)}, ${category(f.category)}, ${await thumbImage(f.image)}, 'unlisted', now())
                         RETURNING id`;
   const [v] = await sql`INSERT INTO videos (uid, title, body, created_by, playlist_id, price, price_mnt, featured, post_id)
                         VALUES (${up.uid}, ${title}, ${clean(f.body, 5000) || null}, ${me.id}, ${playlist(f.playlist)},
-                                ${f.price === "" || f.price == null ? DEFAULT_PRICE : price(f.price)},
-                                ${f.price_mnt === "" || f.price_mnt == null ? DEFAULT_PRICE_MNT : mnt(f.price_mnt)},
+                                ${price(f.price)}, ${mnt(f.price_mnt)},
                                 ${f.featured === "on" || f.featured === true}, ${p.id})
                         RETURNING id`;
   return { id: v.id, uploadURL: up.uploadURL };
@@ -81,13 +91,14 @@ export async function saveVideo(formData) {
   const title = clean(formData.get("title"), 140);
   if (title.length < 2) back(`/admin/videos/${id}`, "error", "Гарчиг 2-оос дээш тэмдэгт байна");
   const body = clean(formData.get("body"), 5000);
+  if (missing(formData.get("price")) || missing(formData.get("price_mnt"))) back(`/admin/videos/${id}`, "error", "Очоор болон төгрөгөөр нээх үнийг бичнэ үү (сонголтгүй бол 0)");
   const [v] = await sql`UPDATE videos SET title = ${title}, body = ${body || null},
               playlist_id = ${playlist(formData.get("playlist"))}, price = ${price(formData.get("price"))}, price_mnt = ${mnt(formData.get("price_mnt"))},
               featured = ${formData.get("featured") === "on"}, updated_at = now()
             WHERE id = ${id} RETURNING post_id`;
   if (v?.post_id) {
     await sql`UPDATE posts SET title = ${title}, subtitle = ${clean(formData.get("subtitle"), 200) || null}, body = ${body},
-                category = ${category(formData.get("category"))}, author_id = ${await author(me, formData.get("author"))}
+                category = ${category(formData.get("category"))}, image_id = ${await thumbImage(formData.get("image"))}, author_id = ${await author(me, formData.get("author"))}
               WHERE id = ${v.post_id}`;
   }
   refresh();

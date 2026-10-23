@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Player from "./Player";
+import { SUPPORT_VIDEOS } from "@/lib/video-shared";
 import { unlockVideo } from "./actions";
 
 // Видеоны дээд хэсэг: эхлээд зураг + «Тоглуулах» товч. Эрхтэй бол шууд тоглоно,
 // эрхгүй бол очоор, төгрөгөөр нээх эсвэл Дэмжигч болох сонголт гарна.
-export default function VideoGate({ v, src, thumb, title, loggedIn, sparks, wallet, autoplay = false }) {
+export default function VideoGate({ v, src, thumb, title, loggedIn, sparks, wallet, supportLeft = null, autoplay = false }) {
   const [play, setPlay] = useState(false);
   const [ask, setAsk] = useState(false);
   useEffect(() => {
@@ -42,6 +43,16 @@ export default function VideoGate({ v, src, thumb, title, loggedIn, sparks, wall
               <Link href="/login" className="vg-opt main"><span>Нэвтрэх</span><small>Нэвтэрч ороод очоор эсвэл төгрөгөөр нээнэ</small></Link>
             ) : (
               <>
+                {supportLeft !== null && (
+                  <form action={unlockVideo}>
+                    <input type="hidden" name="vid" value={v.id} />
+                    <input type="hidden" name="method" value="support" />
+                    <button className="vg-opt gold" disabled={supportLeft < 1}>
+                      <span>⚡ Дэмжигчийн эрхээр нээх</span>
+                      <small>{supportLeft > 0 ? `Энэ сард ${SUPPORT_VIDEOS}-аас ${supportLeft} эрх үлдсэн` : "Энэ сарын эрх дууссан. Дараа сарын 1-нд шинэчлэгдэнэ"}</small>
+                    </button>
+                  </form>
+                )}
                 {v.price > 0 && (
                   <form action={unlockVideo}>
                     <input type="hidden" name="vid" value={v.id} />
@@ -67,7 +78,7 @@ export default function VideoGate({ v, src, thumb, title, loggedIn, sparks, wall
                     <small>Хэтэвчинд {wallet.toLocaleString("en-US")}₮ байна. Цэнэглээд нээнэ</small>
                   </Link>
                 ))}
-                <Link href="/san" className="vg-opt gold"><span>⚡ Дэмжигч болох</span><small>Бүх видеог хязгааргүй үзнэ</small></Link>
+                {supportLeft === null && <Link href="/san" className="vg-opt gold"><span>⚡ Дэмжигч болох</span><small>Сар бүр хүссэн {SUPPORT_VIDEOS} видеогоо нэмэлт төлбөргүй нээнэ</small></Link>}
               </>
             )}
           </div>

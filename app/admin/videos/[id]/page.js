@@ -21,7 +21,7 @@ export default async function EditVideo({ params, searchParams }) {
   const vid = Number(id);
   if (!Number.isInteger(vid)) notFound();
   const [v] = await refreshPending(await sql`
-    SELECT v.*, p.subtitle, p.category, p.author_id, p.body AS post_body, p.views AS page_views, p.status AS post_status
+    SELECT v.*, p.subtitle, p.category, p.author_id, p.image_id, p.body AS post_body, p.views AS page_views, p.status AS post_status
     FROM videos v LEFT JOIN posts p ON p.id = v.post_id WHERE v.id = ${vid}`);
   if (!v) notFound();
   const playlists = await sql`SELECT id, title FROM video_playlists ORDER BY position, id`;
