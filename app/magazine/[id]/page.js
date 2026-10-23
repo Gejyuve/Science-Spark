@@ -62,8 +62,12 @@ export default async function IssuePage({ params, searchParams }) {
           <IssueMock issue={issue} eager size="big" />
           <div className="mz-info">
             <Link href="/magazine" className="mz-crumb">Сэтгүүл</Link>
-            <h1>№{issue.number} · {issue.title}</h1>
-            <p className="mz-meta">{[day(issue.issued_on), issue.pages > 0 && `${issue.pages} хуудас`, live && (issue.price_mnt ? `Онлайн: ${fmtMnt(issue.price_mnt)}` : "Үнэгүй"), issue.print_price > 0 && `Биет хувь: ${fmtMnt(issue.print_price)}`].filter(Boolean).join(" · ")}</p>
+            <h1>Дугаар {issue.number} · {issue.title}</h1>
+            <ul className="mz-meta">
+              {issue.issued_on && <li><span>Хэвлэгдсэн огноо:</span> {day(issue.issued_on)}</li>}
+              {issue.pages > 0 && <li><span>Хуудасны тоо:</span> {issue.pages}</li>}
+              {issue.copyright && <li><span>Зохиогчийн эрх:</span> {issue.copyright}</li>}
+            </ul>
             {issue.body && <p className="mz-body">{issue.body}</p>}
             {sp.error && <p className="adm-flash bad">{sp.error}</p>}
             {sp.ok && <p className="adm-flash ok">{sp.ok}</p>}
@@ -72,7 +76,7 @@ export default async function IssuePage({ params, searchParams }) {
               {live && access && issue.pages > 0 && <a href="#read" className="mz-btn">{issue.unlocked && issue.last_page > 1 ? `${issue.last_page}-р хуудаснаас үргэлжлүүлэх` : "Унших"}</a>}
               {live && !access && <a href="#read" className="mz-btn ghost">Эхний {free} хуудсыг үнэгүй унших</a>}
               {live && issue.print_price > 0 && <Link href={`/magazine/${issue.id}/order`} className="mz-btn ghost">🚚 Биет хувь захиалах</Link>}
-              {!live && <Link href="/magazine/request" className="mz-btn">Нийтлэл, зар байршуулах</Link>}
+              <Link href="/magazine/request" className={"mz-btn" + (live ? " ghost" : "")}>Сэтгүүлд оролцох</Link>
             </span>
             {buy && <div className="mz-buy">{buy}</div>}
           </div>

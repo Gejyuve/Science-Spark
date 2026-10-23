@@ -31,6 +31,7 @@ async function issueFields(formData, id = null) {
     number: Math.round(Number(formData.get("number"))),
     title: clean(formData.get("title"), 140),
     body: clean(formData.get("body"), 2000) || null,
+    copyright: clean(formData.get("copyright"), 120) || null,
     issuedOn: /^\d{4}-\d{2}-\d{2}$/.test(String(formData.get("issued_on") || "")) ? formData.get("issued_on") : null,
     price: mnt(formData.get("price_mnt")),
     preview: Math.min(50, Math.max(0, Math.round(Number(formData.get("preview_pages")) || 0))),
@@ -49,8 +50,8 @@ export async function createIssue(formData) {
   const me = await requireSuper();
   const f = await issueFields(formData);
   if (f.error) return f;
-  const [n] = await sql`INSERT INTO magazine_issues (number, title, body, issued_on, price_mnt, preview_pages, print_price, delivery_fee, created_by)
-                        VALUES (${f.number}, ${f.title}, ${f.body}, ${f.issuedOn}, ${f.price}, ${f.preview}, ${f.print}, ${f.fee}, ${me.id}) RETURNING id`;
+  const [n] = await sql`INSERT INTO magazine_issues (number, title, body, copyright, issued_on, price_mnt, preview_pages, print_price, delivery_fee, created_by)
+                        VALUES (${f.number}, ${f.title}, ${f.body}, ${f.copyright}, ${f.issuedOn}, ${f.price}, ${f.preview}, ${f.print}, ${f.fee}, ${me.id}) RETURNING id`;
   await audit({ actorId: me.id, category: "content", action: "Сэтгүүлийн дугаар нэмсэн", targetType: "magazine", targetId: n.id, targetLabel: `№${f.number} ${f.title}` });
   refresh();
   return { id: n.id };
@@ -63,7 +64,7 @@ export async function saveIssue(formData) {
   const path = `/admin/magazine/${id}`;
   const f = await issueFields(formData, id);
   if (f.error) back(path, "error", f.error);
-  const [u] = await sql`UPDATE magazine_issues SET number = ${f.number}, title = ${f.title}, body = ${f.body}, issued_on = ${f.issuedOn},
+  const [u] = await sql`UPDATE magazine_issues SET number = ${f.number}, title = ${f.title}, body = ${f.body}, copyright = ${f.copyright}, issued_on = ${f.issuedOn},
                           price_mnt = ${f.price}, preview_pages = ${f.preview}, print_price = ${f.print}, delivery_fee = ${f.fee}, updated_at = now()
                         WHERE id = ${id} RETURNING id`;
   if (!u) back("/admin/magazine", "error", "Дугаар олдсонгүй");

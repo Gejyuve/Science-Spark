@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUser } from "@/lib/auth";
+import { walletBalance } from "@/lib/money";
 import { ensureSchema } from "@/lib/db";
 import { canSeeMagazine, listIssues, hasIssueAccess } from "@/lib/magazine";
 import { MAGAZINE_PUBLIC } from "@/lib/magazine-shared";
@@ -21,6 +22,7 @@ export default async function MagazinePage() {
       print_price: i.print_price, preview_pages: i.preview_pages, unlocked: !!i.unlocked, own: hasIssueAccess(user, i, i.unlocked),
     }))
     .reverse();
+  const wallet = user ? Number(await walletBalance(user.id)) : 0;
 
   return (
     <Shell user={user} active="/magazine" header={false}>
@@ -28,7 +30,7 @@ export default async function MagazinePage() {
         {!MAGAZINE_PUBLIC && <p className="vd-note">Сэтгүүл хэсэг одоогоор зөвхөн супер админд харагдаж байна. <Link href="/admin/magazine">Админ &gt; Сэтгүүл</Link>-ээс нийтэд нээнэ.</p>}
         {issues.length === 0
           ? <p className="ss-card vd-empty">Одоогоор дугаар алга. Удахгүй нэмэгдэнэ.</p>
-          : <Showcase issues={issues} />}
+          : <Showcase issues={issues} loggedIn={!!user} wallet={wallet} />}
       </div>
     </Shell>
   );

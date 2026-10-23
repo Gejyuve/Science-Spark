@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
+import Spark from "../components/Spark";
+import { unlockIssue } from "./actions";
 import { frontSrc, backSrc, thick, useSpineColor } from "./Mock";
 
 
@@ -34,10 +37,56 @@ function Book({ issue }) {
 
 // Сэтгүүлийн үзэсгэлэн: дугаарууд агаарт хөвнө. Голын дугаарыг чирж (хулгана, хуруу) бүх талаас нь эргүүлж харна,
 // хажуугийн дугаар дээр дарахад голд гарч ирнэ.
-export default function Showcase({ issues }) {
+const mnt = (n) => `${Math.round(n).toLocaleString("en-US")}₮`;
+
+function PayButton({ price }) {
+  const { pending } = useFormStatus();
+  return <button className="mz-btn spk-btn" disabled={pending}>{pending && <Spark mono size={16} />}{pending ? "Төлж байна…" : `${mnt(price)} төлж унших`}</button>;
+}
+
+// «Онлайнаар унших» дээр дарахад: дугаарыг хэтэвчнээс төлж нээх цонх
+function BuyPopup({ issue, loggedIn, wallet, onClose }) {
+  useEffect(() => {
+    const key = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", key);
+    return () => document.removeEventListener("keydown", key);
+  }, [onClose]);
+  const enough = wallet >= issue.price_mnt;
+  const free = Math.max(1, issue.preview_pages || 0);
+  return (
+    <div className="mzs-modal" role="dialog" aria-modal="true" aria-label="Онлайнаар унших" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="mzs-pop">
+        <button type="button" className="mzs-x" onClick={onClose} aria-label="Хаах">×</button>
+        <small>Дугаар {issue.number}</small>
+        <b>{issue.title}</b>
+        <p className="mzs-price">{mnt(issue.price_mnt)}</p>
+        <p>Нэг удаа төлөөд бүтэн дугаарыг хүссэн үедээ онлайнаар уншина. Шинжлэх ухааны сэтгүүлийг дэмжсэнд баярлалаа!</p>
+        {!loggedIn ? (
+          <Link href="/login" className="mz-btn">Нэвтэрч ороод унших</Link>
+        ) : enough ? (
+          <form action={unlockIssue}>
+            <input type="hidden" name="iid" value={issue.id} />
+            <PayButton price={issue.price_mnt} />
+            <small className="mzs-wallet">Хэтэвчнээс төлнө · үлдэгдэл {mnt(wallet)}</small>
+          </form>
+        ) : (
+          <>
+            <Link href="/wallet?topup=1" className="mz-btn">Хэтэвч цэнэглэх</Link>
+            <small className="mzs-wallet">Хэтэвчинд {mnt(wallet)} байна, {mnt(issue.price_mnt - wallet)} дутуу. QPay-ээр цэнэглэнэ</small>
+          </>
+        )}
+        <Link href={`/magazine/${issue.id}#read`} className="mzs-free">Эхний {free} хуудсыг үнэгүй үзэх</Link>
+      </div>
+    </div>
+  );
+}
+
+export default function Showcase({ issues, loggedIn = false, wallet = 0 }) {
   const [sel, setSel] = useState(Math.max(0, issues.findLastIndex((i) => i.status === "published")));
   const [rot, setRot] = useState({ x: -6, y: 22 });
   const [drag, setDrag] = useState(false);
+  const [buy, setBuy] = useState(null);
+  const closeBuy = useCallback(() => setBuy(null), []);
   // Эргүүлсэн бүтэн тойргийг дугаар бүрээр хадгална: голоос гарах, буцаж орохдоо олон эргэхгүй
   const turns = useRef({});
   const st = useRef({ on: false, x: 0, y: 0, vx: 0, vy: 0, t: 0, raf: 0, moved: false });
@@ -151,22 +200,18 @@ export default function Showcase({ issues }) {
         {cur.status !== "published" && <span className="mzs-badge">{cur.status === "draft" ? "Бэлтгэж байна · зөвхөн танд" : "Удахгүй гарна"}</span>}
         <h1>Дугаар {cur.number} · {cur.title}</h1>
         <span className="mzs-acts">
-          {live ? (
-            <>
-              <Link href={`/magazine/${cur.id}#read`} className="mz-btn">Онлайнаар унших</Link>
-              {cur.print_price > 0 && <Link href={`/magazine/${cur.id}/order`} className="mz-btn ghost">Хүргүүлж авах</Link>}
-            </>
-          ) : (
-            <>
-              <Link href="/magazine/request" className="mz-btn">Энэ дугаарт нийтлэл, зар байршуулах</Link>
-              {cur.pages > 0 && <Link href={`/magazine/${cur.id}`} className="mz-btn ghost">Урьдчилж харах</Link>}
-            </>
-          )}
+          {live && (cur.own
+            ? <Link href={`/magazine/${cur.id}#read`} className="mz-btn">Онлайнаар унших</Link>
+            : <button type="button" className="mz-btn" onClick={() => setBuy(cur)}>Онлайнаар унших</button>)}
+          {live && cur.print_price > 0 && <Link href={`/magazine/${cur.id}/order`} className="mz-btn ghost">Хүргүүлж авах</Link>}
+          {!live && <Link href="/magazine/request" className="mz-btn">Энэ дугаарт нийтлэл, зар байршуулах</Link>}
+          {!live && cur.pages > 0 && <Link href={`/magazine/${cur.id}`} className="mz-btn ghost">Урьдчилж харах</Link>}
         </span>
         <span className="mzs-links">
           <Link href="/magazine/request">Сэтгүүлд оролцох</Link>
         </span>
       </div>
+      {buy && <BuyPopup issue={buy} loggedIn={loggedIn} wallet={wallet} onClose={closeBuy} />}
     </section>
   );
 }
