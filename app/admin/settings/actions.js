@@ -57,6 +57,7 @@ export async function updateSettings(f) {
 
   // Видео хэсгийг Админ > Видео хуудаснаас нээнэ, энд хадгалсан утгыг нь хэвээр үлдээнэ
   s.videoPublic = !!prev.videoPublic;
+  s.magazinePublic = !!prev.magazinePublic;
   await saveSettings(s);
   const changed = Object.keys(s).filter((k) => JSON.stringify(s[k]) !== JSON.stringify(prev[k]));
   if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Тохиргоо өөрчилсөн: ${changed.join(", ")}` });

@@ -25,6 +25,7 @@ import { chatUnread } from "@/lib/chat";
 import { NAV } from "./navItems";
 import { loadSettings } from "@/lib/settings";
 import { VIDEO_PUBLIC } from "@/lib/video-shared";
+import { MAGAZINE_PUBLIC } from "@/lib/magazine-shared";
 
 const I = (name, size = 22, alt = "") => (
   <img className={/^(flame|chev|logo)$/.test(name) ? "" : "ic"} src={`/icons/${name}.svg`} width={size} height={size} alt={alt} />
@@ -61,7 +62,7 @@ function Sidebar({ user, active }) {
         <input name="q" placeholder="Хайх" aria-label="Хайх" />
       </form>
       <nav className="ss-nav">
-        {NAV.filter((n) => (n.href && (!n.superOnly || VIDEO_PUBLIC)) || soon).map((n) =>
+        {NAV.filter((n) => (n.href && (!n.superOnly || (n.superOnly === "video" ? VIDEO_PUBLIC : MAGAZINE_PUBLIC))) || soon).map((n) =>
           n.href ? (
             <Link key={n.label} href={n.href} className={"ss-nav-item" + (active === n.href ? " on" : "")}>
               {I(n.icon, 24)}
