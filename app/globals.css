@@ -2033,6 +2033,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .ph-task { --g1: #1d4ed8; --g2: #0ea5e9; --g3: #8ff0ff; --glow: rgba(14, 165, 233, .28); }
 .ph-report { --g1: #a21caf; --g2: #db2777; --g3: #fdb4c8; --glow: rgba(219, 39, 119, .26); }
 .ph-help { --g1: #ea580c; --g2: #f59e0b; --g3: #ffe08a; --glow: rgba(234, 88, 12, .26); }
+.ph-video { --g1: #b91c1c; --g2: #e11d48; --g3: #fda4af; --glow: rgba(225, 29, 72, .26); }
 :root[data-theme="dark"] .ph { --glow: transparent; filter: saturate(.88) brightness(.86); }
 .ph-blob { position: absolute; z-index: -1; border-radius: 50%; background: rgba(255, 255, 255, .14); pointer-events: none; }
 .ph-blob.a { width: 260px; height: 260px; right: -70px; bottom: -120px; }
@@ -3923,3 +3924,61 @@ body:has(.spk-load.full) .spk-nav { display: none; } /* loading.js аль хэд
 a.as-row { text-decoration: none; }
 .as-row.as-edit { border-top: 1px solid var(--border); margin-top: 4px; }
 .as-row.as-edit .ic { flex: none; margin: 0 10px; }
+
+/* Видео хуудас (одоогоор зөвхөн супер админд) */
+.vd-page { display: flex; flex-direction: column; gap: 18px; padding-bottom: 40px; }
+.vd-page h2 { margin: 0 0 4px; font-size: 18px; color: var(--ink); }
+.vd-up, .vd-info, .vd-manage { display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; }
+.vd-drop { position: relative; display: flex; align-items: center; gap: 14px; padding: 18px; border: 2px dashed var(--border); border-radius: 16px; cursor: pointer; transition: border-color .15s, background .15s; }
+.vd-drop:hover, .vd-drop.has { border-color: #00a89b; background: var(--surface-2); }
+.vd-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.vd-drop-ico { font-size: 30px; }
+.vd-drop b { display: block; color: var(--ink); font-size: 15px; overflow-wrap: anywhere; }
+.vd-drop small, .vd-hint, .vd-sub { color: var(--muted); font-size: 13px; }
+.vd-hint { margin: 0; }
+.vd-in { width: 100%; box-sizing: border-box; padding: 11px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14.5px; resize: vertical; }
+.vd-in:focus { outline: none; border-color: #00a89b; }
+.vd-up .tm-btn, .vd-edit .tm-btn { align-self: flex-start; }
+.vd-err { margin: 0; color: #dc2626; font-size: 14px; }
+.vd-err.card, .vd-ok { padding: 14px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.vd-ok { margin: 0; color: #2f9e57; font-size: 14px; }
+.vd-bar { position: relative; height: 28px; border-radius: 10px; background: var(--surface-2); overflow: hidden; }
+.vd-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #00a89b, #13b8a6); transition: width .2s; }
+.vd-bar span { position: relative; display: grid; place-items: center; height: 100%; color: var(--ink); font-size: 12.5px; font-weight: 700; }
+.vd-tabs { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+.vd-tabs a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: none; }
+.vd-tabs a.on { background: #00a89b; border-color: #00a89b; color: #fff; }
+.vd-tabs em { font-style: normal; font-size: 12px; opacity: .8; }
+.vd-empty { margin: 0; padding: 26px; color: var(--muted); text-align: center; }
+.vd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.vd-item { display: flex; flex-direction: column; gap: 10px; color: inherit; text-decoration: none; }
+.vd-thumb { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #0f172a; font-size: 34px; font-style: normal; }
+.vd-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s; }
+a.vd-item:hover .vd-thumb img { transform: scale(1.04); }
+.vd-thumb small { position: absolute; right: 8px; bottom: 8px; padding: 2px 7px; border-radius: 6px; background: rgba(0, 0, 0, .75); color: #fff; font-size: 12px; font-weight: 700; }
+.vd-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.vd-meta b { color: var(--ink); font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.vd-meta small { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; }
+.vd-st { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-style: normal; font-weight: 700; }
+.vd-st.wait { background: rgba(245, 158, 11, .16); color: #b45309; }
+.vd-st.bad { background: rgba(220, 38, 38, .14); color: #dc2626; }
+.vd-st.gray { background: var(--surface-2); color: var(--muted); }
+.vd-player { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: #000; }
+.vd-player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.vd-wait { display: grid; place-items: center; align-content: center; gap: 8px; height: 100%; padding: 20px; color: #e2e8f0; text-align: center; font-size: 15px; }
+.vd-wait span { font-size: 40px; }
+.vd-info h1 { margin: 0; font-size: 22px; color: var(--ink); overflow-wrap: anywhere; }
+.vd-sub { margin: 0; }
+.vd-body { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.vd-edit { display: flex; flex-direction: column; gap: 10px; }
+.vd-acts { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+.vd-del summary.tm-btn { list-style: none; cursor: pointer; color: #dc2626; }
+.vd-del summary::-webkit-details-marker { display: none; }
+.vd-del form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding: 14px; border-radius: 12px; border: 1px solid rgba(220, 38, 38, .35); }
+.vd-del p { margin: 0; color: var(--ink); font-size: 14px; }
+.vd-danger { align-self: flex-start; background: #dc2626; }
+@media (max-width: 720px) {
+  .vd-up, .vd-info, .vd-manage { padding: 18px 16px; }
+  .vd-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .vd-player { border-radius: 12px; }
+}

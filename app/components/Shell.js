@@ -60,7 +60,7 @@ function Sidebar({ user, active }) {
         <input name="q" placeholder="Хайх" aria-label="Хайх" />
       </form>
       <nav className="ss-nav">
-        {NAV.filter((n) => n.href || soon).map((n) =>
+        {NAV.filter((n) => (n.href && !n.superOnly) || soon).map((n) =>
           n.href ? (
             <Link key={n.label} href={n.href} className={"ss-nav-item" + (active === n.href ? " on" : "")}>
               {I(n.icon, 24)}

@@ -13,6 +13,7 @@ const ICON = {
   points_adj: ["pts", "ok"], earned: ["pts", "ok"], limit: ["pts", "warn"],
   logic_ok: ["flag20", "ok"], logic_no: ["flag20", "gray"], complaint_ok: ["flag20", "ok"], complaint_no: ["flag20", "gray"],
   help_ok: ["help", "ok"], help_no: ["help", "gray"],
+  video_ready: ["video", "ok"], video_error: ["video", "bad"],
   welcome: ["pts", "ok"], pw_changed: ["shield", "warn"],
 };
 const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "club_lead_offer", "club_lead_ok", "club_lead_no", "task_new", "task_done", "help_new"];
