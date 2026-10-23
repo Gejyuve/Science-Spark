@@ -53,7 +53,7 @@ function Sidebar({ user, active }) {
       <Link href="/" className="ss-brand" aria-label="Science Spark — Нүүр">
         <img className="ss-brand-logo light" src="/icons/lockup-light.png" width={600} height={110} alt="Science Spark" />
         <img className="ss-brand-logo dark" src="/icons/lockup-dark.png" width={600} height={110} alt="" />
-        <small>Igniting curiosity, together.</small>
+        <small>Ignited by <i className="ss-gejyuve" role="img" aria-label="gejyuve" /></small>
       </Link>
       <form action="/search" method="get" className="ss-search">
         {I("search", 18)}
