@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { frontSrc, backSrc, thick, useSpineColor } from "./Mock";
 
-const mnt = (n) => `${Math.round(n).toLocaleString("en-US")}₮`;
 
 // Нэг дугаарын 3D бие: нүүр, ар тал, нуруу, хуудасны ирмэг, дээд, доод ирмэг
 function Book({ issue }) {
@@ -35,7 +34,7 @@ function Book({ issue }) {
 
 // Сэтгүүлийн үзэсгэлэн: дугаарууд агаарт хөвнө. Голын дугаарыг чирж (хулгана, хуруу) бүх талаас нь эргүүлж харна,
 // хажуугийн дугаар дээр дарахад голд гарч ирнэ.
-export default function Showcase({ issues, loggedIn }) {
+export default function Showcase({ issues }) {
   const [sel, setSel] = useState(Math.max(0, issues.findLastIndex((i) => i.status === "published")));
   const [rot, setRot] = useState({ x: -6, y: 22 });
   const [drag, setDrag] = useState(false);
@@ -146,13 +145,12 @@ export default function Showcase({ issues, loggedIn }) {
             <button type="button" className="mzs-arrow r" onPointerDown={(e) => e.stopPropagation()} onClick={() => pick(sel + 1)} aria-label="Дараагийн дугаар">›</button>
           </>
         )}
-        <span className="mzs-hint" aria-hidden="true">↻ Чирж эргүүлээрэй</span>
+        <span className="mzs-hint" aria-hidden="true">↻ Эргүүлж тойруулах</span>
       </div>
 
       <div className="mzs-info" key={cur.id}>
         {cur.status !== "published" && <span className="mzs-badge">{cur.status === "draft" ? "Бэлтгэж байна · зөвхөн танд" : "Удахгүй гарна"}</span>}
-        <h1>№{cur.number} · {cur.title}</h1>
-        <p>{[cur.pages > 0 && `${cur.pages} хуудас`, live && (cur.own ? (cur.unlocked ? "✓ Таны уншдаг дугаар" : "Бүтнээр нь унших боломжтой") : cur.price_mnt ? `Онлайн ${mnt(cur.price_mnt)}` : "Үнэгүй"), live && cur.print_price > 0 && `Биет хувь ${mnt(cur.print_price)}`].filter(Boolean).join(" · ")}</p>
+        <h1>Дугаар {cur.number} · {cur.title}</h1>
         <span className="mzs-acts">
           {live ? (
             <>
@@ -167,14 +165,8 @@ export default function Showcase({ issues, loggedIn }) {
           )}
         </span>
         <span className="mzs-links">
-          <Link href="/magazine/request">Нийтлэл, зар байршуулах</Link>
-          {loggedIn && <Link href="/magazine/mine">Миний сэтгүүл</Link>}
+          <Link href="/magazine/request">Сэтгүүлд оролцох</Link>
         </span>
-        {issues.length > 1 && (
-          <span className="mzs-dots">
-            {issues.map((it, i) => <button key={it.id} type="button" className={i === sel ? "on" : ""} onClick={() => pick(i)} aria-label={`№${it.number}`} />)}
-          </span>
-        )}
       </div>
     </section>
   );

@@ -28,7 +28,7 @@ export default async function MagazinePage() {
         {!MAGAZINE_PUBLIC && <p className="vd-note">Сэтгүүл хэсэг одоогоор зөвхөн супер админд харагдаж байна. <Link href="/admin/magazine">Админ &gt; Сэтгүүл</Link>-ээс нийтэд нээнэ.</p>}
         {issues.length === 0
           ? <p className="ss-card vd-empty">Одоогоор дугаар алга. Удахгүй нэмэгдэнэ.</p>
-          : <Showcase issues={issues} loggedIn={!!user} />}
+          : <Showcase issues={issues} />}
       </div>
     </Shell>
   );
