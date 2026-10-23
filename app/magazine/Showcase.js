@@ -39,6 +39,8 @@ export default function Showcase({ issues, loggedIn }) {
   const [sel, setSel] = useState(Math.max(0, issues.findLastIndex((i) => i.status === "published")));
   const [rot, setRot] = useState({ x: -6, y: 22 });
   const [drag, setDrag] = useState(false);
+  // Эргүүлсэн бүтэн тойргийг дугаар бүрээр хадгална: голоос гарах, буцаж орохдоо олон эргэхгүй
+  const turns = useRef({});
   const st = useRef({ on: false, x: 0, y: 0, vx: 0, vy: 0, t: 0, raf: 0, moved: false });
   const box = useRef(null);
   const cur = issues[sel];
@@ -47,9 +49,14 @@ export default function Showcase({ issues, loggedIn }) {
   // Сонгосон дугаараа солиход нүүрээр нь эргүүлнэ
   const pick = useCallback((i) => {
     stop();
-    setSel(((i % issues.length) + issues.length) % issues.length);
-    setRot({ x: -6, y: 22 });
-  }, [issues.length]);
+    const n = issues.length;
+    const next = ((i % n) + n) % n;
+    if (next === sel) return;
+    const t = turns.current;
+    t[issues[sel].id] = 360 * Math.round((rot.y - (next > sel ? -32 : 32)) / 360);
+    setSel(next);
+    setRot({ x: -6, y: 22 + (t[issues[next].id] || 0) });
+  }, [issues, sel, rot.y]);
 
   useEffect(() => {
     const key = (e) => {
@@ -98,26 +105,40 @@ export default function Showcase({ issues, loggedIn }) {
   };
 
   if (!cur) return null;
-  const others = issues.map((it, i) => ({ it, i, d: i - sel })).filter((o) => o.d !== 0 && Math.abs(o.d) <= 2);
+  const n = issues.length;
+  // Голоос хэдэн байр зайтай вэ (3-аас олон бол тойрог)
+  const dist = (i) => {
+    let d = i - sel;
+    if (n >= 3) { d = ((d % n) + n) % n; if (d > n / 2) d -= n; }
+    return d;
+  };
   const live = cur.status === "published";
 
   return (
     <section className="mzs" aria-label="Сэтгүүлийн дугаарууд">
       <div className="mzs-sky" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></div>
       <div ref={box} className={"mzs-stage" + (drag ? " drag" : "")} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onContextMenu={(e) => e.preventDefault()}>
-        {others.map(({ it, i, d }) => (
-          <button key={it.id} type="button" className={"mzs-side " + (d < 0 ? "l" : "r") + (Math.abs(d) > 1 ? " far" : "")}
-            style={{ "--d": d }} onPointerDown={(e) => e.stopPropagation()} onClick={() => pick(i)} aria-label={`№${it.number} дугаарыг харах`}>
-            <span className="mzs-float" style={{ animationDelay: `${-Math.abs(d) * 1.7}s` }}>
-              <span className="mzs-obj" style={{ transform: `rotateY(${d < 0 ? 32 : -32}deg)` }}><Book issue={it} /></span>
-            </span>
-          </button>
-        ))}
-        <div className="mzs-main">
-          <span className="mzs-float">
-            <span className={"mzs-obj" + (drag ? "" : " ease")} style={{ transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg)` }}><Book issue={cur} /></span>
-          </span>
-        </div>
+        {issues.map((it, i) => {
+          const d = dist(i);
+          if (Math.abs(d) > 3) return null;
+          const main = d === 0;
+          const side = d < 0 ? 32 : -32;
+          const spin = turns.current[it.id] || 0;
+          const tf = main ? `rotateX(${rot.x}deg) rotateY(${rot.y}deg)` : `rotateX(0deg) rotateY(${spin + side}deg)`;
+          // Нэг л элемент байрлалаа сольж гулсана (дугаар солиход шинээр зурагдахгүй)
+          return (
+            <div key={it.id} className={"mzs-slot" + (main ? " main" : Math.abs(d) === 1 ? " near" : Math.abs(d) === 2 ? " far" : " out")}
+              style={{ "--d": d }} {...(main ? {} : {
+                role: "button", tabIndex: Math.abs(d) <= 2 ? 0 : -1, "aria-label": `№${it.number} дугаарыг харах`,
+                onPointerDown: (e) => e.stopPropagation(), onClick: () => pick(i),
+                onKeyDown: (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), pick(i)),
+              })}>
+              <span className="mzs-float" style={{ animationDelay: `${-Math.abs(d) * 1.7}s` }}>
+                <span className={"mzs-obj" + (main && drag ? "" : " ease")} style={{ transform: tf }}><Book issue={it} /></span>
+              </span>
+            </div>
+          );
+        })}
         <span className="mzs-floor" aria-hidden="true" />
         {issues.length > 1 && (
           <>
@@ -128,7 +149,7 @@ export default function Showcase({ issues, loggedIn }) {
         <span className="mzs-hint" aria-hidden="true">↻ Чирж эргүүлээрэй</span>
       </div>
 
-      <div className="mzs-info">
+      <div className="mzs-info" key={cur.id}>
         {cur.status !== "published" && <span className="mzs-badge">{cur.status === "draft" ? "Бэлтгэж байна · зөвхөн танд" : "Удахгүй гарна"}</span>}
         <h1>№{cur.number} · {cur.title}</h1>
         <p>{[cur.pages > 0 && `${cur.pages} хуудас`, live && (cur.own ? (cur.unlocked ? "✓ Таны уншдаг дугаар" : "Бүтнээр нь унших боломжтой") : cur.price_mnt ? `Онлайн ${mnt(cur.price_mnt)}` : "Үнэгүй"), live && cur.print_price > 0 && `Биет хувь ${mnt(cur.print_price)}`].filter(Boolean).join(" · ")}</p>
