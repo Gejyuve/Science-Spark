@@ -199,19 +199,16 @@ export default function Showcase({ issues, loggedIn = false, wallet = 0 }) {
       <div className="mzs-info" key={cur.id}>
         {cur.status !== "published" && <span className="mzs-badge">{cur.status === "draft" ? "Бэлтгэж байна · зөвхөн танд" : "Удахгүй гарна"}</span>}
         <h1>Дугаар {cur.number} · {cur.title}</h1>
-        <ul className="mzs-meta">
-          {cur.issued_on && <li><span>Хэвлэгдсэн огноо:</span> {cur.issued_on}</li>}
-          {cur.pages > 0 && <li><span>Хуудасны тоо:</span> {cur.pages}</li>}
-          {cur.copyright && <li><span>Зохиогчийн эрх:</span> {cur.copyright}</li>}
-        </ul>
         <span className="mzs-acts">
           {live && (cur.own
             ? <Link href={`/magazine/${cur.id}#read`} className="mz-btn">Онлайнаар унших</Link>
             : <button type="button" className="mz-btn" onClick={() => setBuy(cur)}>Онлайнаар унших</button>)}
           {live && cur.print_price > 0 && <Link href={`/magazine/${cur.id}/order`} className="mz-btn ghost">Хүргүүлж авах</Link>}
+          {!live && <Link href="/magazine/request" className="mz-btn">Энэ дугаарт нийтлэл, зар байршуулах</Link>}
           {!live && cur.pages > 0 && <Link href={`/magazine/${cur.id}`} className="mz-btn ghost">Урьдчилж харах</Link>}
-          {/* Дарахад юу гарахыг дараа шийднэ; одоохондоо нийтлэл, зар байршуулах хүсэлтийн хуудас руу */}
-          <Link href="/magazine/request" className={"mz-btn" + (live ? " ghost" : "")}>Сэтгүүлд оролцох</Link>
+        </span>
+        <span className="mzs-links">
+          <Link href="/magazine/request">Сэтгүүлд оролцох</Link>
         </span>
       </div>
       {buy && <BuyPopup issue={buy} loggedIn={loggedIn} wallet={wallet} onClose={closeBuy} />}

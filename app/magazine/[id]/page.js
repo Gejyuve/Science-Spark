@@ -75,7 +75,7 @@ export default async function IssuePage({ params, searchParams }) {
             <span className="mz-acts">
               {live && access && issue.pages > 0 && <a href="#read" className="mz-btn">{issue.unlocked && issue.last_page > 1 ? `${issue.last_page}-р хуудаснаас үргэлжлүүлэх` : "Унших"}</a>}
               {live && !access && <a href="#read" className="mz-btn ghost">Эхний {free} хуудсыг үнэгүй унших</a>}
-              {live && issue.print_price > 0 && <Link href={`/magazine/${issue.id}/order`} className="mz-btn ghost">Хүргүүлж авах</Link>}
+              {live && issue.print_price > 0 && <Link href={`/magazine/${issue.id}/order`} className="mz-btn ghost">🚚 Биет хувь захиалах</Link>}
               <Link href="/magazine/request" className={"mz-btn" + (live ? " ghost" : "")}>Сэтгүүлд оролцох</Link>
             </span>
             {buy && <div className="mz-buy">{buy}</div>}

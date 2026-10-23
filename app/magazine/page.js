@@ -20,7 +20,6 @@ export default async function MagazinePage() {
     .map((i) => ({
       id: i.id, number: i.number, title: i.title, status: i.status, pages: i.pages, price_mnt: i.price_mnt,
       print_price: i.print_price, preview_pages: i.preview_pages, unlocked: !!i.unlocked, own: hasIssueAccess(user, i, i.unlocked),
-      issued_on: i.issued_on ? new Date(i.issued_on).toLocaleDateString("sv-SE").replaceAll("-", ".") : null, copyright: i.copyright || null,
     }))
     .reverse();
   const wallet = user ? Number(await walletBalance(user.id)) : 0;
