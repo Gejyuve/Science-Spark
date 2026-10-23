@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import crypto from "node:crypto";
 import { sql, ensureSchema } from "@/lib/db";
-import { getUser, isStaff, isAdmin } from "@/lib/auth";
+import { getUser, isStaff, isAdmin, isSuperAdmin } from "@/lib/auth";
 import { creditChain } from "@/lib/revisions";
 import { fmtDate, KIND_HREF, untilText } from "@/lib/format";
 import { addComment, sparkPost, removePost, deleteComment, likeComment, toggleSave, awardBounty, addBounty, deletePost } from "../../posts/actions";
@@ -31,6 +31,10 @@ import { ReportCard } from "../../components/TaskCard";
 import { shareText, shareDescription } from "@/lib/og";
 import MiniMap from "../../components/MiniMap";
 import { geocodeLocation } from "@/lib/geo";
+import { withVideos, videoFeed, sparkBalance, supportLeft, playToken, iframeSrc, fmtDuration } from "@/lib/video";
+import { VIDEO_KIND } from "@/lib/video-shared";
+import VideoGate from "../../video/VideoGate";
+import PostCard from "../../components/PostCard";
 
 export const dynamic = "force-dynamic";
 
@@ -417,6 +421,19 @@ export default async function PostPage({ params, searchParams }) {
     } catch (e) {}
   }
   const isQ = post.kind === "Асуулт";
+  // Видео: дээд талд тоглуулагч, эрхгүй хүнд сэтгэгдэл бүдгэрч харагдана, доор нь бусад видео үргэлжилнэ
+  const isVideo = post.kind === VIDEO_KIND;
+  const video = isVideo ? (await withVideos([post], user))[0].video : null;
+  const videoSrc = video?.access && video.status === "ready" ? await playToken(video.uid).then((t) => iframeSrc(t, video.seconds || 0)).catch(() => null) : null;
+  const locked = isVideo && !video?.access;
+  const [sparksLeft, walletLeft, supportLeftN, moreVideos] = isVideo
+    ? await Promise.all([
+        user && locked ? sparkBalance(user) : 0,
+        user && locked ? walletBalance(user.id).then(Number) : 0,
+        locked ? supportLeft(user) : null,
+        videoFeed(user, { exclude: [post.id], limit: 10, fresh: true }).catch(() => []),
+      ])
+    : [0, 0, null, []];
   const isEvent = post.kind === "Эвент";
   const isAnn = post.kind === "Зарлал";
   const isTerm = post.kind === TERM_KIND;
@@ -441,7 +458,7 @@ export default async function PostPage({ params, searchParams }) {
   // Бичээч, хянагчид бичсэн, хянасан дарааллаараа (нэгтгэсэн контентод хэд хэдэн байж болно)
   const chain = published ? await creditChain(post) : [];
   const [{ revs }] = await sql`SELECT COUNT(*)::int AS revs FROM post_revisions WHERE post_id = ${post.id} AND role <> 'original'`;
-  const canEdit = !!user && !isTerm && (isAuthor || isStaff(user)) && post.status !== "merged" && post.status !== "removed";
+  const canEdit = !!user && !isTerm && post.kind !== VIDEO_KIND && (isAuthor || isStaff(user)) && post.status !== "merged" && post.status !== "removed";
 
   const comments = await sql`
     SELECT c.*, u.initial, u.first_name, u.avatar_id AS avatar,
@@ -517,6 +534,16 @@ export default async function PostPage({ params, searchParams }) {
             </span>
           </div>
 
+          {video && (
+            <div className="vd-player ar-video" id="watch">
+              {video.status === "ready" ? (
+                <VideoGate v={{ id: video.id, access: video.access, price: video.price, price_mnt: video.price_mnt, seconds: video.seconds || 0, duration: video.duration || 0, durationText: fmtDuration(video.duration) }}
+                  src={videoSrc} thumb={video.thumb} title={post.title} loggedIn={!!user} sparks={sparksLeft} wallet={walletLeft} supportLeft={supportLeftN} autoplay={!!ok && video.access} />
+              ) : (
+                <div className="vd-wait"><span aria-hidden="true">🎬</span><p>Видео бэлэн болоогүй байна.</p></div>
+              )}
+            </div>
+          )}
           {post.image_id && rich && (
             <figure className="ar-coverfig">
               <img className="ar-cover" src={`/img/${post.image_id}`} alt="" />
@@ -653,13 +680,13 @@ export default async function PostPage({ params, searchParams }) {
               {/* Даалгаврыг клубийн нэрээр харуулна, жинхэнэ бичсэн хүнийг зөвхөн редакц харна */}
               {!club && chain.length > 0 ? chain.map((c) => (
                 <div key={c.role + c.id}>
-                  <span className="ar-label">{c.role === "author" ? (isAnn ? "Зарласан:" : "Бичсэн:") : "Хянасан:"}</span>
+                  <span className="ar-label">{c.role === "author" ? (isAnn ? "Зарласан:" : isVideo ? "Нийтэлсэн:" : "Бичсэн:") : "Хянасан:"}</span>
                   <Person id={c.id} initial={c.initial} first_name={c.first_name} avatar={c.avatar} points={c.points} followers={c.followers} viewer={user} following={following} />
                 </div>
               )) : (<>
               {(!club || isStaff(user)) && (
                 <div>
-                  <span className="ar-label">{isAnn ? "Зарласан:" : club ? "Бичсэн (редакцад харагдана):" : "Бичсэн:"}</span>
+                  <span className="ar-label">{isAnn ? "Зарласан:" : isVideo ? "Нийтэлсэн:" : club ? "Бичсэн (редакцад харагдана):" : "Бичсэн:"}</span>
                   <Person id={post.author_id} initial={post.initial} first_name={post.first_name} avatar={post.avatar} points={post.author_points} followers={post.author_followers} viewer={user} following={following} />
                 </div>
               )}
@@ -691,6 +718,7 @@ export default async function PostPage({ params, searchParams }) {
                 <a href="#comments" className="ar-react"><img className="ic" src="/icons/comment20.svg" width={20} height={20} alt="Сэтгэгдэл" />{comments.length}</a>
               </span>
               {canEdit && <Link href={`/post/${post.id}/edit`} className="ar-flag">Засах</Link>}
+              {video && isSuperAdmin(user?.operator || user) && <Link href={`/admin/videos/${video.id}`} className="ar-flag">Засах</Link>}
               <span className="ss-grow" />
               {published && !isQ && !club && !isAuthor && (
                 <SupportModal kind="tip" className="ar-gift" label={<><img src="/icons/gift.svg" width={15} height={15} alt="" /><span className="ar-gift-t">Урамшуулах</span></>}
@@ -722,7 +750,14 @@ export default async function PostPage({ params, searchParams }) {
                 <small>Орчуулга, тайлбар, ижил утгатай үгийг хамтдаа сайжруулах орон зай.</small>
               </div>
             )}
-            {open && (user ? (
+            {locked && (
+              <div className="vd-cmlock">
+                <b>🔒 Видеог нээсэн хүмүүсийн яриа</b>
+                <span>Видеог нээмэгц {comments.length ? `${comments.length} сэтгэгдлийг уншиж, ` : ""}өөрөө сэтгэгдэл бичих боломжтой.</span>
+                <a href="#watch" className="ss-pill">Видеог нээх</a>
+              </div>
+            )}
+            {locked ? null : open && (user ? (
               <form action={addComment} className="ar-compose">
                 <input type="hidden" name="post_id" value={post.id} />
                 <Avatar user={user} size={40} />
@@ -733,7 +768,14 @@ export default async function PostPage({ params, searchParams }) {
               <p className="muted">Сэтгэгдэл бичихийн тулд <Link href="/login">нэвтэрнэ үү</Link>.</p>
             ))}
 
-            {roots.map((c, i) => (
+            {locked ? (
+              // Эрхгүй хүнд сэтгэгдлийн агуулгыг илгээхгүй: зөвхөн бүдгэрүүлсэн дүрс
+              <div className="vd-cmblur" aria-hidden="true">
+                {roots.slice(0, 4).map((c) => (
+                  <div key={c.id} className="vd-cmfake"><Avatar user={{ id: c.author_id, first_name: c.first_name, avatar: c.avatar }} size={36} /><span><b>{c.initial}.{c.first_name}</b><i style={{ width: `${40 + ((c.id * 37) % 55)}%` }} /><i style={{ width: `${30 + ((c.id * 53) % 50)}%` }} /></span></div>
+                ))}
+              </div>
+            ) : roots.map((c, i) => (
               <div key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
                 <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={open} depth={0} following={following} bounty={bounty} />
@@ -752,6 +794,12 @@ export default async function PostPage({ params, searchParams }) {
             )}
           </div>
         </article>
+        {moreVideos.length > 0 && (
+          <section className="vd-more-feed">
+            <h2 className="vd-h">Цааш үзэх</h2>
+            {moreVideos.map((p) => <PostCard key={p.id} p={p} viewer={user} following={following} />)}
+          </section>
+        )}
       </div>
     </Shell>
   );

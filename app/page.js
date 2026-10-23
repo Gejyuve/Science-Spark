@@ -10,6 +10,7 @@ import TimeMenu from "./components/TimeMenu";
 import ScrollActive from "./components/ScrollActive";
 import { fmtMnt } from "@/lib/money";
 import { withTopComments } from "@/lib/top-comments";
+import { withVideos, mixVideos } from "@/lib/video";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,9 @@ export default async function Home({ searchParams }) {
         p.created_at DESC
       LIMIT 30`;
     await withTopComments(posts);
+    await withVideos(posts, user);
+    // «Бүгд» урсгалд хэрэглэгчийн үзээгүй видеог 5 карт тутамд санал болгоно
+    if (!qa && !top && !ann && !art && !news && !club && !following && !rand) posts = await mixVideos(posts, user).catch(() => posts);
     // Шүүлтүүр бүрийн сонгосон хугацааны контентын тоо
     const [c] = await sql`
       SELECT
@@ -183,7 +187,7 @@ export default async function Home({ searchParams }) {
         </div>
       )}
       {posts.map((p) => (
-        <PostCard key={p.id} p={p} viewer={user} following={followSet} clubFollows={clubFollows} />
+        <PostCard key={(p.suggested ? "s" : "") + p.id} p={p} viewer={user} following={followSet} clubFollows={clubFollows} />
       ))}
     </Shell>
   );

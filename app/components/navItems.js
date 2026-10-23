@@ -5,8 +5,10 @@ export const NAV = [
   { icon: "event", label: "Эвент", href: "/events" },
   { icon: "club", label: "Клуб", href: "/clubs" },
   { icon: "prize", label: "Шагнал", href: "/san" },
+  // superOnly: Админ > Видео-оос нийтэд нээтэл зөвхөн супер админд харагдана
+  { icon: "video", label: "Видео", href: "/video", superOnly: true },
   { icon: "game", label: "Тоглоом" },
   { icon: "market", label: "Маркет" },
 ];
 
-export const LIVE_NAV = NAV.filter((n) => n.href);
+export const LIVE_NAV = NAV.filter((n) => n.href && !n.superOnly);
