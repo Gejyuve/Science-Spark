@@ -4,7 +4,9 @@ import { sql } from "@/lib/db";
 import { requireSection } from "@/lib/admin";
 import { loadSettings } from "@/lib/settings";
 import { streamOn, thumbsFor, refreshPending, fmtDuration, MAX_VIDEO_BYTES } from "@/lib/video";
-import { DEFAULT_PRICE } from "@/lib/video-shared";
+import { DEFAULT_PRICE, DEFAULT_PRICE_MNT } from "@/lib/video-shared";
+import { plainTree } from "@/lib/tree";
+import { videoAuthors } from "./authors";
 import { fmtDate } from "@/lib/format";
 import Head, { Chip, Flash } from "../_c/Head";
 import Uploader from "./Uploader";
@@ -52,7 +54,7 @@ export default async function AdminVideos({ searchParams }) {
       </section>
 
       {!on && <p className="adm-flash bad">Cloudflare Stream холбогдоогүй байна. Vercel-ийн Environment Variables хэсэгт <code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_STREAM_TOKEN</code> хоёрыг нэмээд дахин deploy хийнэ үү.</p>}
-      {on && !tab && <Uploader maxBytes={MAX_VIDEO_BYTES} playlists={playlists} defaultPrice={DEFAULT_PRICE} />}
+      {on && !tab && <Uploader maxBytes={MAX_VIDEO_BYTES} playlists={playlists} tree={plainTree()} authors={await videoAuthors(user)} defaults={{ price: DEFAULT_PRICE, price_mnt: DEFAULT_PRICE_MNT }} />}
 
       <nav className="vd-tabs" aria-label="Видео">
         {TABS.map(([k, label]) => <Link key={k} href={k ? `/admin/videos?tab=${k}` : "/admin/videos"} className={tab === k ? "on" : ""}>{label}</Link>)}
@@ -96,7 +98,7 @@ export default async function AdminVideos({ searchParams }) {
                       </span>
                     </td>
                     <td>{v.playlist || "—"}</td>
-                    <td>{v.price ? `${v.price} оч` : "Үнэгүй"}</td>
+                    <td>{!v.price && !v.price_mnt ? "Үнэгүй" : [v.price && `${v.price} оч`, v.price_mnt && `${v.price_mnt.toLocaleString("en-US")}₮`].filter(Boolean).join(" · ")}</td>
                     <td>{v.views}</td>
                     <td><Chip tone={STATE[v.status]?.[1]}>{STATE[v.status]?.[0] || v.status}</Chip>{v.featured && <Chip tone="warn">Онцлох</Chip>}</td>
                     <td className="adm-right">

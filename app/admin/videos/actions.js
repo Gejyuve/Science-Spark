@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { requireSection, audit } from "@/lib/admin";
 import { loadSettings, saveSettings } from "@/lib/settings";
-import { streamOn, createUpload, deleteStream } from "@/lib/video";
-import { DEFAULT_PRICE } from "@/lib/video-shared";
+import { streamOn, createUpload, deleteStream, syncVideoPosts } from "@/lib/video";
+import { DEFAULT_PRICE, DEFAULT_PRICE_MNT, VIDEO_KIND } from "@/lib/video-shared";
+import { validCategory } from "@/lib/tree";
 
 // Видео хэсгийг зөвхөн супер админ удирдана (Админ > Видео)
 async function requireSuper() {
@@ -18,33 +19,53 @@ async function requireSuper() {
 const clean = (v, n) => String(v || "").trim().slice(0, n);
 const back = (path, key, msg) => redirect(`${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(msg)}`);
 const price = (v) => Math.min(100000, Math.max(0, Math.round(Number(v)) || 0));
+const mnt = (v) => Math.min(1000000, Math.max(0, Math.round(Number(v) / 100) * 100 || 0));
+const category = (v) => (validCategory(String(v || "")) ? String(v) : null);
+
+// Нийтлэх профайл: супер админ өөрөө эсвэл түүний удирддаг бот
+async function author(me, v) {
+  const id = Number(v);
+  if (!id || id === me.id) return me.id;
+  const [b] = await sql`SELECT id FROM users WHERE id = ${id} AND is_bot`;
+  return b ? b.id : me.id;
+}
 const playlist = (v) => (Number(v) > 0 ? Number(v) : null);
 const refresh = () => {
   revalidatePath("/admin/videos", "layout");
   revalidatePath("/video", "layout");
 };
 
-// Хөтчөөс дуудна: мөр үүсгээд, файлыг шууд Cloudflare руу илгээх холбоос буцаана
-export async function startUpload({ title, body, playlistId, cost, featured }) {
+// Хөтчөөс дуудна: видео + түүний контентыг (posts, «Видео») үүсгээд файлыг шууд Cloudflare руу илгээх холбоос буцаана.
+// Контент видео бэлэн болж, хэсэг нийтэд нээлттэй үед л нийтлэгдэнэ (syncVideoPosts).
+export async function startUpload(f) {
   const me = await requireSuper();
-  title = clean(title, 140);
+  const title = clean(f.title, 140);
   if (title.length < 2) return { error: "Видеоны гарчгийг бичнэ үү" };
   if (!streamOn()) return { error: "Cloudflare Stream холбогдоогүй байна (Vercel-д CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_STREAM_TOKEN тохируулна)" };
+  let up;
   try {
-    const { uid, uploadURL } = await createUpload(title);
-    const [v] = await sql`INSERT INTO videos (uid, title, body, created_by, playlist_id, price, featured)
-                          VALUES (${uid}, ${title}, ${clean(body, 2000) || null}, ${me.id}, ${playlist(playlistId)}, ${cost === "" || cost == null ? DEFAULT_PRICE : price(cost)}, ${!!featured})
-                          RETURNING id`;
-    return { id: v.id, uploadURL };
+    up = await createUpload(title);
   } catch (e) {
     return { error: "Cloudflare-тай холбогдож чадсангүй. Дахин оролдоно уу" };
   }
+  const by = await author(me, f.author);
+  const [p] = await sql`INSERT INTO posts (author_id, kind, title, subtitle, body, category, status, reviewed_at)
+                        VALUES (${by}, ${VIDEO_KIND}, ${title}, ${clean(f.subtitle, 200) || null}, ${clean(f.body, 5000)}, ${category(f.category)}, 'unlisted', now())
+                        RETURNING id`;
+  const [v] = await sql`INSERT INTO videos (uid, title, body, created_by, playlist_id, price, price_mnt, featured, post_id)
+                        VALUES (${up.uid}, ${title}, ${clean(f.body, 5000) || null}, ${me.id}, ${playlist(f.playlist)},
+                                ${f.price === "" || f.price == null ? DEFAULT_PRICE : price(f.price)},
+                                ${f.price_mnt === "" || f.price_mnt == null ? DEFAULT_PRICE_MNT : mnt(f.price_mnt)},
+                                ${f.featured === "on" || f.featured === true}, ${p.id})
+                        RETURNING id`;
+  return { id: v.id, uploadURL: up.uploadURL };
 }
 
 // Оруулалт тасарсан бол хоосон мөр, Cloudflare дээрх хоосон байрыг цэвэрлэнэ
 export async function cancelUpload(id) {
   await requireSuper();
-  const [v] = await sql`DELETE FROM videos WHERE id = ${Number(id)} AND status = 'processing' RETURNING uid`;
+  const [v] = await sql`DELETE FROM videos WHERE id = ${Number(id)} AND status = 'processing' RETURNING uid, post_id`;
+  if (v?.post_id) await sql`DELETE FROM posts WHERE id = ${v.post_id} AND kind = ${VIDEO_KIND}`;
   if (v?.uid) await deleteStream(v.uid).catch(() => {});
   refresh();
 }
@@ -55,14 +76,20 @@ export async function uploadDone() {
 }
 
 export async function saveVideo(formData) {
-  await requireSuper();
+  const me = await requireSuper();
   const id = Number(formData.get("vid"));
   const title = clean(formData.get("title"), 140);
   if (title.length < 2) back(`/admin/videos/${id}`, "error", "Гарчиг 2-оос дээш тэмдэгт байна");
-  await sql`UPDATE videos SET title = ${title}, body = ${clean(formData.get("body"), 2000) || null},
-              playlist_id = ${playlist(formData.get("playlist"))}, price = ${price(formData.get("price"))},
+  const body = clean(formData.get("body"), 5000);
+  const [v] = await sql`UPDATE videos SET title = ${title}, body = ${body || null},
+              playlist_id = ${playlist(formData.get("playlist"))}, price = ${price(formData.get("price"))}, price_mnt = ${mnt(formData.get("price_mnt"))},
               featured = ${formData.get("featured") === "on"}, updated_at = now()
-            WHERE id = ${id}`;
+            WHERE id = ${id} RETURNING post_id`;
+  if (v?.post_id) {
+    await sql`UPDATE posts SET title = ${title}, subtitle = ${clean(formData.get("subtitle"), 200) || null}, body = ${body},
+                category = ${category(formData.get("category"))}, author_id = ${await author(me, formData.get("author"))}
+              WHERE id = ${v.post_id}`;
+  }
   refresh();
   back(`/admin/videos/${id}`, "ok", "Хадгаллаа");
 }
@@ -82,6 +109,7 @@ export async function archiveVideo(formData) {
   const on = formData.get("on") === "1";
   await sql`UPDATE videos SET status = ${on ? "archived" : "ready"}, featured = CASE WHEN ${on} THEN false ELSE featured END, updated_at = now()
             WHERE id = ${id} AND status IN ('ready', 'archived')`;
+  await syncVideoPosts(id);
   refresh();
   back(`/admin/videos/${id}`, "ok", on ? "Архивлалаа. Сайтад харагдахгүй" : "Архиваас гаргалаа");
 }
@@ -90,7 +118,7 @@ export async function archiveVideo(formData) {
 export async function deleteVideo(formData) {
   const me = await requireSuper();
   const id = Number(formData.get("vid"));
-  const [v] = await sql`SELECT uid, title FROM videos WHERE id = ${id}`;
+  const [v] = await sql`SELECT uid, title, post_id FROM videos WHERE id = ${id}`;
   if (!v) redirect("/admin/videos");
   try {
     if (v.uid) await deleteStream(v.uid);
@@ -98,6 +126,8 @@ export async function deleteVideo(formData) {
     back(`/admin/videos/${id}`, "error", "Cloudflare-аас устгаж чадсангүй. Дахин оролдоно уу");
   }
   await sql`DELETE FROM videos WHERE id = ${id}`;
+  // Видеоны контент (сэтгэгдэл, оч) хамт устна
+  if (v.post_id) await sql`DELETE FROM posts WHERE id = ${v.post_id} AND kind = ${VIDEO_KIND}`;
   await audit({ actorId: me.id, category: "content", action: "Видео устгасан", targetType: "video", targetId: id, targetLabel: v.title });
   refresh();
   back("/admin/videos", "ok", "Видеог нэг мөсөн устгалаа");
@@ -130,6 +160,7 @@ export async function setVideoPublic(formData) {
   const on = formData.get("on") === "1";
   const s = await loadSettings();
   await saveSettings({ ...s, videoPublic: on });
+  await syncVideoPosts();
   await audit({ actorId: me.id, category: "settings", action: on ? "Видео хэсгийг нийтэд нээсэн" : "Видео хэсгийг нийтээс хаасан" });
   revalidatePath("/", "layout");
   back("/admin/videos", "ok", on ? "Видео хэсэг бүх хэрэглэгчид нээгдлээ" : "Видео хэсгийг хаалаа. Одоо зөвхөн танд харагдана");

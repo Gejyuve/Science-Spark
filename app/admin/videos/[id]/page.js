@@ -7,6 +7,9 @@ import { fmtDate } from "@/lib/format";
 import Head, { Chip, Flash } from "../../_c/Head";
 import Refresh from "../Refresh";
 import { saveVideo, archiveVideo, deleteVideo } from "../actions";
+import { VideoFields } from "../Uploader";
+import { videoAuthors } from "../authors";
+import { plainTree } from "@/lib/tree";
 
 const STATE = { processing: ["Боловсруулж байна", "warn"], ready: ["Нийтлэгдсэн", "ok"], error: ["Алдаа гарсан", "bad"], archived: ["Архивласан", "gray"] };
 
@@ -17,16 +20,19 @@ export default async function EditVideo({ params, searchParams }) {
   const [{ id }, { ok, error }] = await Promise.all([params, searchParams]);
   const vid = Number(id);
   if (!Number.isInteger(vid)) notFound();
-  const [v] = await refreshPending(await sql`SELECT * FROM videos WHERE id = ${vid}`);
+  const [v] = await refreshPending(await sql`
+    SELECT v.*, p.subtitle, p.category, p.author_id, p.body AS post_body, p.views AS page_views, p.status AS post_status
+    FROM videos v LEFT JOIN posts p ON p.id = v.post_id WHERE v.id = ${vid}`);
   if (!v) notFound();
   const playlists = await sql`SELECT id, title FROM video_playlists ORDER BY position, id`;
-  const [{ unlocks, spent }] = await sql`SELECT COUNT(*)::int AS unlocks, COALESCE(SUM(cost), 0)::int AS spent FROM video_unlocks WHERE video_id = ${vid}`;
+  const [{ unlocks, spent, paid }] = await sql`SELECT COUNT(*)::int AS unlocks, COALESCE(SUM(cost), 0)::int AS spent, COALESCE(SUM(paid_mnt), 0)::int AS paid FROM video_unlocks WHERE video_id = ${vid}`;
+  const authors = await videoAuthors(user);
   const token = v.status === "ready" || v.status === "archived" ? await playToken(v.uid).catch(() => null) : null;
   const st = STATE[v.status];
 
   return (
     <>
-      <Head user={user} title={v.title} sub={<>Оруулсан {fmtDate(v.created_at)}{v.duration > 0 && <> · {fmtDuration(v.duration)}</>} · {v.views} үзэгч · {unlocks} хүн очоор нээсэн ({spent} оч)</>} />
+      <Head user={user} title={v.title} sub={<>Оруулсан {fmtDate(v.created_at)}{v.duration > 0 && <> · {fmtDuration(v.duration)}</>} · {v.page_views || 0} хүн нээсэн · {v.views} хүн тоглуулсан · {unlocks} хүн нээсэн ({spent} оч, {paid.toLocaleString("en-US")}₮)</>} />
       <Flash ok={ok} error={error} />
       <Refresh on={v.status === "processing"} />
       <div className="vd-admin-grid">
@@ -38,21 +44,10 @@ export default async function EditVideo({ params, searchParams }) {
           )}
         </div>
         <section className="adm-card vd-form">
-          <div className="adm-card-head"><b>Мэдээлэл</b><Chip tone={st?.[1]}>{st?.[0]}</Chip>{v.status === "ready" && <Link href={`/video/${v.id}`} className="adm-btn">Сайт дээр харах</Link>}</div>
+          <div className="adm-card-head"><b>Мэдээлэл</b><Chip tone={st?.[1]}>{st?.[0]}</Chip>{v.post_id && v.status === "ready" && <Link href={`/post/${v.post_id}`} className="adm-btn">Сайт дээр харах</Link>}</div>
           <form action={saveVideo} className="vd-edit">
             <input type="hidden" name="vid" value={v.id} />
-            <label><span>Гарчиг</span><input name="title" defaultValue={v.title} maxLength={140} required /></label>
-            <label><span>Тайлбар</span><textarea name="body" defaultValue={v.body || ""} maxLength={2000} rows={5} className="vd-in" /></label>
-            <div className="vd-opts">
-              <label><span>Playlist</span>
-                <select name="playlist" defaultValue={v.playlist_id || ""}>
-                  <option value="">Playlist-гүй</option>
-                  {playlists.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-                </select>
-              </label>
-              <label><span>Нээх үнэ (оч, 0 = үнэгүй)</span><input name="price" type="number" min={0} max={100000} defaultValue={v.price} /></label>
-              <label className="adm-check"><input type="checkbox" name="featured" defaultChecked={v.featured} /> Онцлох видео</label>
-            </div>
+            <VideoFields v={{ ...v, body: v.post_body ?? v.body }} tree={plainTree()} authors={authors} playlists={playlists} />
             <button className="adm-btn teal big">Хадгалах</button>
           </form>
         </section>

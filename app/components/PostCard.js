@@ -10,6 +10,7 @@ import { Avatar, Stat, When, Person } from "./Bits";
 import { ClubPerson } from "./ClubBits";
 import Share from "./Share";
 import { toggleSave, sparkPost } from "../posts/actions";
+import { fmtDuration } from "@/lib/video-format";
 
 // Нүүрний урсгал дахь нийтлэлийн карт (Figma: Нүүр · Асуулт/Нийтлэл карт)
 export default function PostCard({ p, viewer, following, clubFollows }) {
@@ -58,7 +59,7 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
             <img className="ic" src="/icons/comment.svg" width={25} height={24} alt="Сэтгэгдэл" />{p.comments}
           </Link>
           <Link href={`/post/${p.id}${isShort ? "#comments" : ""}`} className="ss-pill">
-            {isShort ? "Хариулах" : ["Эвент", "Зарлал"].includes(p.kind) ? "Дэлгэрэнгүй" : "Унших"}
+            {isShort ? "Хариулах" : ["Эвент", "Зарлал"].includes(p.kind) ? "Дэлгэрэнгүй" : p.kind === "Видео" ? (p.video?.seconds > 0 ? "Үргэлжлүүлэх" : "Үзэх") : "Унших"}
           </Link>
           <span className="ss-grow" />
           {viewer ? (
@@ -134,6 +135,39 @@ export default function PostCard({ p, viewer, following, clubFollows }) {
             {p.image_id ? <img src={`/img/${p.image_id}`} alt="" loading="lazy" /> : <EventCover type={m.type || (isEv ? null : "Зарлал")} starts={isEv ? m.starts_at : null} />}
           </Link>
         </div>
+        {actions}
+      </article>
+    );
+  }
+  // Видео: нийтлэлийн карттай ижил, том зураг (тоглуулах товчгүй), үзэлт баруун дээд талд
+  if (p.kind === "Видео") {
+    const v = p.video || {};
+    const pct = v.seconds > 0 && v.duration > 0 ? Math.min(100, Math.round((v.seconds / v.duration) * 100)) : 0;
+    const text = (p.body || p.subtitle || "").replace(/\s+/g, " ").trim();
+    return (
+      <article className="ss-card pc vc">
+        <Link href={`/post/${p.id}`} className="pc-link" aria-hidden="true" tabIndex={-1} />
+        <div className="ss-card-top">
+          <span className="evc-crumb">
+            <Link href="/video" className="ss-kind">Видео</Link>
+            {p.category && nodeOf(p.category) && <><i>·</i><Link href={`/tree/${p.category}`} className="pc-cat">{nodeOf(p.category).name}</Link></>}
+            {p.suggested && <span className="vc-sug">Танд санал болгож байна</span>}
+          </span>
+          <span className="vc-top">
+            <span className="ss-date tip" data-tip={`Энэ видеог ${p.views || 0} хүн нээж үзсэн`}><img className="ic" src="/icons/eye.svg" width={14} height={14} alt="" />{(p.views || 0).toLocaleString("en-US")}</span>
+            <When d={p.created_at} />
+          </span>
+        </div>
+        <Person id={p.author_id} initial={p.initial} first_name={p.first_name} avatar={p.avatar} points={p.author_points} followers={p.author_followers} viewer={viewer} following={following} />
+        <Link href={`/post/${p.id}`} className="ss-card-body">
+          <h2>{p.title}</h2>
+          {text && <p className="vc-text">{text}</p>}
+          <span className="vc-thumb">
+            {v.thumb ? <img src={v.thumb} alt="" loading="lazy" /> : <i aria-hidden="true">🎬</i>}
+            {v.duration > 0 && <small>{fmtDuration(v.duration)}</small>}
+            {pct > 0 && <i className="vc-prog" style={{ width: `${pct}%` }} aria-label={`${pct}% үзсэн`} />}
+          </span>
+        </Link>
         {actions}
       </article>
     );
