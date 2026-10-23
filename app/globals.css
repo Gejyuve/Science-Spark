@@ -213,7 +213,7 @@ details.mod summary { cursor: pointer; }
 .ss-brand-logo.dark, :root[data-theme="dark"] .ss-brand-logo.light { display: none; }
 :root[data-theme="dark"] .ss-brand-logo.dark { display: block; }
 /* «Ignited by gejyuve» built from the Gejyuve logo letters; mask so it follows the theme colour */
-.ss-slogan { display: block; width: 122px; height: 15.3px; margin-left: 2px; background: var(--ink); -webkit-mask: url(/icons/slogan.svg) left center / contain no-repeat; mask: url(/icons/slogan.svg) left center / contain no-repeat; }
+.ss-slogan { display: block; width: 122px; height: 15.3px; margin-left: 2px; background: var(--muted); -webkit-mask: url(/icons/slogan.svg) left center / contain no-repeat; mask: url(/icons/slogan.svg) left center / contain no-repeat; }
 .ss-search {
   flex: none; margin: 0 24px; height: 48px; border-radius: 48px; background: var(--surface-3);
   display: flex; align-items: center; gap: 10px; padding: 0 16px;
