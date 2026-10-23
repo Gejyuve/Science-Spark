@@ -5,7 +5,7 @@ export const NAV = [
   { icon: "event", label: "Эвент", href: "/events" },
   { icon: "club", label: "Клуб", href: "/clubs" },
   { icon: "prize", label: "Шагнал", href: "/san" },
-  // superOnly: бэлэн болтол зөвхөн супер админд харагдана
+  // superOnly: Админ > Видео-оос нийтэд нээтэл зөвхөн супер админд харагдана
   { icon: "video", label: "Видео", href: "/video", superOnly: true },
   { icon: "game", label: "Тоглоом" },
   { icon: "market", label: "Маркет" },

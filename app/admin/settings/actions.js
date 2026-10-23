@@ -55,6 +55,8 @@ export async function updateSettings(f) {
   if (!inRange(s.withdrawMin, 1000, 10000000)) back("Татах доод дүн 1,000–10,000,000₮");
   if (!s.plans.every((v) => inRange(v, 100, 10000000))) back("Дэмжигчийн үнэ 100₮-аас дээш байна");
 
+  // Видео хэсгийг Админ > Видео хуудаснаас нээнэ, энд хадгалсан утгыг нь хэвээр үлдээнэ
+  s.videoPublic = !!prev.videoPublic;
   await saveSettings(s);
   const changed = Object.keys(s).filter((k) => JSON.stringify(s[k]) !== JSON.stringify(prev[k]));
   if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Тохиргоо өөрчилсөн: ${changed.join(", ")}` });
