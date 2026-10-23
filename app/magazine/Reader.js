@@ -8,15 +8,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export default function Reader({ issueId, pages, free, access, start = 1, ratio = 0.707, mark = "", locked = null, saveProgress = false }) {
   const last = access ? pages : Math.min(free, pages);
   const [page, setPage] = useState(Math.min(Math.max(1, start), pages));
-  const [spread, setSpread] = useState(false);
+  const [spread, setSpread] = useState(true);
   const [wide, setWide] = useState(false);
   const [full, setFull] = useState(false);
   const box = useRef(null);
   const touch = useRef(null);
 
-  // Том дэлгэцэнд хос хуудсаар (1-р хуудас нүүр тул ганцаараа, дараа нь 2–3, 4–5 …)
+  // Компьютер дээр хос хуудсаар (утсан дээр нэг хуудсаар) (1-р хуудас нүүр тул ганцаараа, дараа нь 2–3, 4–5 …)
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1100px)");
+    const mq = window.matchMedia("(min-width: 900px)");
     const on = () => setWide(mq.matches);
     on();
     mq.addEventListener("change", on);
@@ -110,13 +110,14 @@ export default function Reader({ issueId, pages, free, access, start = 1, ratio 
         <button type="button" className="mz-side l" onClick={prev} disabled={left <= 1} aria-label="Өмнөх хуудас" />
         {shown.map((p) => (
           <div key={p} className="mz-sheet" style={{ aspectRatio: String(ratio), "--r": ratio }}>
-            {p <= last ? (
+            {p <= last || p === pages ? (
               <>
                 <img src={`/api/magazine/page?i=${issueId}&p=${p}`} alt={`${p}-р хуудас`} draggable={false} />
                 {mark && <span className="mz-mark" aria-hidden="true">{Array.from({ length: 6 }, (_, k) => <i key={k}>{mark}</i>)}</span>}
               </>
             ) : (
-              <div className="mz-lock">{locked}</div>
+              // Хос хуудас хоёулаа түгжээтэй бол худалдаж авах хэсгийг нэг л удаа харуулна
+              <div className="mz-lock">{p === shown.find((q) => q > last && q !== pages) && locked}</div>
             )}
           </div>
         ))}

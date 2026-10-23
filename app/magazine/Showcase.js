@@ -2,25 +2,30 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { frontSrc, backSrc, thick, useSpineColor } from "./Mock";
 
 const mnt = (n) => `${Math.round(n).toLocaleString("en-US")}₮`;
-const cover = (i) => (i.pages > 0 ? `/api/magazine/page?i=${i.id}&p=1` : null);
 
 // Нэг дугаарын 3D бие: нүүр, ар тал, нуруу, хуудасны ирмэг, дээд, доод ирмэг
 function Book({ issue }) {
-  const src = cover(issue);
-  const t = Math.min(22, Math.max(8, Math.round((issue.pages || 40) * 0.2)));
+  const src = frontSrc(issue);
+  const back = backSrc(issue);
+  const spine = useSpineColor(src);
   return (
-    <span className="mzs-book" style={{ "--t": `${t}px`, ...(src ? { "--img": `url("${src}")` } : {}) }}>
+    <span className="mzs-book" style={{ "--t": `${thick(issue, 0.1, 4, 11)}px`, ...(spine ? { "--spine": spine } : {}) }}>
       <span className="mzs-f front">
         {src ? <img src={src} alt={`№${issue.number} дугаарын нүүр`} draggable={false} /> : <i>№{issue.number}</i>}
       </span>
-      <span className="mzs-f back" aria-hidden="true">
-        <b>Science Spark</b>
-        <small>№{issue.number} · {issue.title}</small>
-        <em>Сонирхлын очыг хамтдаа асаая!</em>
-      </span>
-      <span className="mzs-f spine" aria-hidden="true"><b>SCIENCE SPARK · №{issue.number}</b></span>
+      {back ? (
+        <span className="mzs-f back img" aria-hidden="true"><img src={back} alt="" draggable={false} /></span>
+      ) : (
+        <span className="mzs-f back" aria-hidden="true">
+          <b>Science Spark</b>
+          <small>№{issue.number} · {issue.title}</small>
+          <em>Сонирхлын очыг хамтдаа асаая!</em>
+        </span>
+      )}
+      <span className="mzs-f spine" aria-hidden="true" />
       <span className="mzs-f edge" aria-hidden="true" />
       <span className="mzs-f top" aria-hidden="true" />
       <span className="mzs-f bottom" aria-hidden="true" />

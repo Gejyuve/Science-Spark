@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const no = (msg, status) => new Response(msg, { status, headers: { "Cache-Control": "no-store" } });
 
-// Сэтгүүлийн нэг хуудасны зураг. Эхний үнэгүй хуудсуудаас бусдыг зөвхөн худалдаж авсан хүн (эсвэл редакц) үзнэ.
+// Сэтгүүлийн нэг хуудасны зураг. Эхний үнэгүй хуудсууд, арын хавтас (сүүлийн хуудас)-аас бусдыг зөвхөн худалдаж авсан хүн (эсвэл редакц) үзнэ.
 // Зургийг шинэ цонхонд шууд нээж хадгалахаас сэргийлж, зөвхөн хуудсан доторх <img>-ээр ачаалахыг зөвшөөрнө.
 export async function GET(req) {
   const u = new URL(req.url);
@@ -23,7 +23,7 @@ export async function GET(req) {
     LEFT JOIN magazine_unlocks un ON un.issue_id = i.id AND un.user_id = ${user?.id || 0}
     WHERE i.id = ${issueId} AND i.status = ANY(${isSuperAdmin(user?.operator || user) ? ["published", "soon", "draft", "archived"] : visibleStatuses(user)})`;
   if (!issue || page > Math.max(issue.pages, 1)) return no("Олдсонгүй", 404);
-  const open = page <= freePages(issue) || hasIssueAccess(user, issue, issue.unlocked);
+  const open = page <= freePages(issue) || page === issue.pages || hasIssueAccess(user, issue, issue.unlocked);
   if (!open) return no("Энэ хуудсыг унших эрх алга", 403);
   const r = await readPage(issueId, page).catch((e) => (console.error("magazine page read failed", issueId, page, e), null));
   if (!r) return no("Хуудас ачаалж чадсангүй", 404);
