@@ -4093,7 +4093,8 @@ a.as-row { text-decoration: none; }
 .mz-info { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .mz-info h1 { margin: 0; color: var(--ink); font-size: 24px; line-height: 1.25; }
 .mz-crumb { align-self: flex-start; color: #7c3aed; font-size: 13px; font-weight: 700; text-decoration: none; }
-.mz-meta { margin: 0; color: var(--muted); font-size: 13.5px; }
+.mz-meta { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; color: var(--text, inherit); font-size: 13.5px; }
+.mz-meta span { color: var(--muted); }
 .mz-body { margin: 0; color: var(--text); font-size: 14.5px; line-height: 1.6; white-space: pre-line; }
 .mz-buy { max-width: 420px; margin-top: 4px; }
 .mz-buy form { margin: 0; }
@@ -4284,6 +4285,24 @@ a.as-row { text-decoration: none; }
 .mzs-badge { padding: 3px 10px; border-radius: 999px; background: rgba(196, 181, 253, .18); color: #c4b5fd; font-size: 12px; font-weight: 700; }
 .mzs-acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
 .mzs .mz-btn.ghost { background: rgba(255, 255, 255, .1); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); }
+.mzs-meta { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0; list-style: none; color: rgba(226, 232, 240, .82); font-size: 14px; }
+.mzs-meta span { color: rgba(226, 232, 240, .55); }
+.mzs button.mz-btn { border: 0; font-family: inherit; cursor: pointer; }
+.mzs-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(5, 8, 20, .62); backdrop-filter: blur(4px); animation: mzs-fade .2s ease both; }
+@keyframes mzs-fade { from { opacity: 0; } to { opacity: 1; } }
+.mzs-pop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(380px, 100%); padding: 28px 24px 22px; border-radius: 20px; background: radial-gradient(120% 90% at 50% 0%, #2a2466, #141a33 70%); color: #e2e8f0; text-align: center; box-shadow: 0 24px 60px rgba(0, 0, 0, .5); animation: mzs-pop .28s cubic-bezier(.2, .8, .3, 1.2) both; }
+@keyframes mzs-pop { from { opacity: 0; transform: translateY(12px) scale(.95); } to { opacity: 1; transform: none; } }
+.mzs-pop > small { color: #5eead4; font-weight: 700; font-size: 12px; letter-spacing: .04em; }
+.mzs-pop > b { color: #fff; font-size: 20px; line-height: 1.25; }
+.mzs-pop p { margin: 0; color: rgba(226, 232, 240, .78); font-size: 14px; line-height: 1.5; }
+.mzs-pop .mzs-price { color: #fff; font-size: 32px; font-weight: 800; }
+.mzs-pop form { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 6px 0 0; }
+.mzs-pop > .mz-btn { margin-top: 6px; }
+.mzs-wallet { color: rgba(226, 232, 240, .6); font-size: 12px; }
+.mzs-free { margin-top: 6px; color: #5eead4; font-size: 13px; font-weight: 600; text-decoration: none; }
+.mzs-free:hover { text-decoration: underline; }
+.mzs-x { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+.mzs-x:hover { background: rgba(255, 255, 255, .18); }
 .mzs-links { display: flex; gap: 18px; margin-top: 6px; font-size: 13px; }
 .mzs-links a { color: #5eead4; text-decoration: none; font-weight: 600; }
 .mzs-links a:hover { text-decoration: underline; }

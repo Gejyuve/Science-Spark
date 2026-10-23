@@ -7,6 +7,7 @@ export function IssueFields({ i = {} }) {
         <label><span>Гарсан огноо</span><input name="issued_on" type="date" defaultValue={i.issued_on ? new Date(i.issued_on).toLocaleDateString("sv-SE") : ""} /></label>
       </div>
       <label className="vd-f"><span>Гарчиг</span><input name="title" defaultValue={i.title || ""} maxLength={140} required placeholder="Жишээ: Сансрын эрин" /></label>
+      <label className="vd-f"><span>Зохиогчийн эрх</span><input name="copyright" defaultValue={i.copyright || ""} maxLength={120} placeholder="Жишээ: Unread media" /></label>
       <label className="vd-f"><span>Тайлбар</span><textarea name="body" defaultValue={i.body || ""} maxLength={2000} rows={3} className="vd-in" placeholder="Энэ дугаарт юу багтсан бэ? (заавал биш)" /></label>
       <div className="vd-opts">
         <label><span>Онлайн унших үнэ (₮)</span><input name="price_mnt" type="number" min={0} max={10000000} step={100} defaultValue={i.price_mnt ?? 10000} required /></label>
