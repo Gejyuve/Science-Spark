@@ -1,5 +1,5 @@
 // Хуудасны өнгөлөг толгой: Мод, Нийтлэл, Мэдээ, Даалгавар нэг загвартай, өнгө нь хуудас бүрт өөр.
-// tone: tree | article | news | task | report | help | video
+// tone: tree | article | news | task | report | help | video | magazine
 
 const ART = {
   // Мод: их бие, мөчир, навчис
@@ -56,6 +56,15 @@ const ART = {
     </>
   ),
   // Видео: хальс, тоглуулах товч
+  // Сэтгүүл: давхарласан хоёр дугаар
+  magazine: (
+    <>
+      <rect x="64" y="40" width="88" height="120" rx="8" transform="rotate(8 108 100)" />
+      <rect x="44" y="44" width="88" height="120" rx="8" />
+      <path d="M60 66h56M60 150h34" />
+      <rect x="60" y="82" width="56" height="50" rx="4" className="ph-fill" />
+    </>
+  ),
   video: (
     <>
       <rect x="30" y="50" width="140" height="100" rx="16" />
@@ -65,7 +74,7 @@ const ART = {
   ),
 };
 
-const EMOJI = { tree: "🌳", article: "📖", news: "📡", task: "🧪", report: "📝", help: "🛟", video: "🎬" };
+const EMOJI = { tree: "🌳", article: "📖", news: "📡", task: "🧪", report: "📝", help: "🛟", video: "🎬", magazine: "📔" };
 
 export default function PageHero({ tone, title, text, children }) {
   return (

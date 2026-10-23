@@ -14,6 +14,6 @@ export async function GET(req, { params }) {
   if (!Number.isInteger(n)) return Response.redirect(home, 303);
   await ensureSchema();
   const [row] = await sql`UPDATE notifications SET read_at = COALESCE(read_at, now())
-                          WHERE id = ${n} AND user_id = ${user.id} RETURNING kind, post_id, actor_id, club_id, video_id`;
+                          WHERE id = ${n} AND user_id = ${user.id} RETURNING kind, post_id, actor_id, club_id, video_id, mag_id`;
   return Response.redirect(new URL(row ? notifTarget({ ...row, user_id: user.id }) : "/notifications", req.url), 303);
 }
