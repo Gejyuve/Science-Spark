@@ -57,6 +57,45 @@ async function upload(issueId, n, r) {
 }
 
 // PDF-ийг хөтөч дээр хуудас бүрээр нь зураг болгож оруулна. PDF файл өөрөө сервер рүү явахгүй.
+// onTotal(n): хуудасны тоо мэдэгдэхэд, onPage(): нэг хуудас орох бүрт. Оруулсан хуудасны тоог буцаана.
+export async function uploadPdf(issueId, file, maxPages, onTotal, onPage) {
+  const lib = await loadPdfjs();
+  const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const n = pdf.numPages;
+  if (n > maxPages) throw new Error(`PDF ${n} хуудастай байна. Дээд тал нь ${maxPages}`);
+  onTotal(n);
+  // Дараагийн хуудсыг зурж байхад өмнөхийг нь илгээнэ
+  let pending = null;
+  for (let p = 1; p <= n; p++) {
+    const r = await renderPage(pdf, p);
+    if (pending) await pending;
+    pending = upload(issueId, p, r).then(onPage);
+  }
+  await pending;
+  await pdf.destroy();
+  const res = await finishPages(issueId, n);
+  if (res?.error) throw new Error(res.error);
+  return n;
+}
+
+export function PdfDrop({ file, has, busy, onFile }) {
+  return (
+    <label className={"vd-drop" + (file ? " has" : "")}>
+      <input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={(e) => onFile(e.target.files?.[0] || null)} />
+      <span className="vd-drop-ico" aria-hidden="true">📄</span>
+      <span>
+        <b>{file ? file.name : has ? "Шинэ PDF-ээр солих" : "PDF файл сонгох"}</b>
+        <small>{file ? `${(file.size / 1048576).toFixed(1)} MB` : "Хуудас бүр тод зураг болж орно. PDF файл өөрөө сайт дээр хадгалагдахгүй"}</small>
+      </span>
+    </label>
+  );
+}
+
+export function PdfProgress({ done, total }) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return <div className="vd-bar"><i style={{ width: `${pct}%` }} /><span>{total ? `${done}/${total} хуудас · ${pct}%` : "PDF уншиж байна…"}</span></div>;
+}
+
 export default function PdfUploader({ issueId, maxPages, has }) {
   const router = useRouter();
   const [file, setFile] = useState(null);
@@ -70,22 +109,7 @@ export default function PdfUploader({ issueId, maxPages, has }) {
     if (!file || busy) return;
     setBusy(true); setErr(""); setOk(""); setDone(0);
     try {
-      const lib = await loadPdfjs();
-      const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
-      const n = pdf.numPages;
-      if (n > maxPages) throw new Error(`PDF ${n} хуудастай байна. Дээд тал нь ${maxPages}`);
-      setTotal(n);
-      // Дараагийн хуудсыг зурж байхад өмнөхийг нь илгээнэ
-      let pending = null;
-      for (let p = 1; p <= n; p++) {
-        const r = await renderPage(pdf, p);
-        if (pending) await pending;
-        pending = upload(issueId, p, r).then(() => setDone((d) => d + 1));
-      }
-      await pending;
-      await pdf.destroy();
-      const res = await finishPages(issueId, n);
-      if (res?.error) throw new Error(res.error);
+      const n = await uploadPdf(issueId, file, maxPages, setTotal, () => setDone((d) => d + 1));
       setOk(`${n} хуудас орлоо`);
       setFile(null);
       router.refresh();
@@ -95,18 +119,10 @@ export default function PdfUploader({ issueId, maxPages, has }) {
     setBusy(false);
   }
 
-  const pct = total ? Math.round((done / total) * 100) : 0;
   return (
     <div className="vd-up">
-      <label className={"vd-drop" + (file ? " has" : "")}>
-        <input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={(e) => { setFile(e.target.files?.[0] || null); setErr(""); setOk(""); }} />
-        <span className="vd-drop-ico" aria-hidden="true">📄</span>
-        <span>
-          <b>{file ? file.name : has ? "Шинэ PDF-ээр солих" : "PDF файл сонгох"}</b>
-          <small>{file ? `${(file.size / 1048576).toFixed(1)} MB` : "Хуудас бүр тод зураг болж орно. PDF файл өөрөө сайт дээр хадгалагдахгүй"}</small>
-        </span>
-      </label>
-      {busy && <div className="vd-bar"><i style={{ width: `${pct}%` }} /><span>{total ? `${done}/${total} хуудас · ${pct}%` : "PDF уншиж байна…"}</span></div>}
+      <PdfDrop file={file} has={has} busy={busy} onFile={(f) => { setFile(f); setErr(""); setOk(""); }} />
+      {busy && <PdfProgress done={done} total={total} />}
       {err && <p className="vd-err">{err}</p>}
       {ok && <p className="adm-flash ok">{ok}</p>}
       {file && <button type="button" className="adm-btn teal spk-btn" onClick={start} disabled={busy}>{busy && <Spark mono size={16} />}{busy ? "Оруулж байна… хуудсаа хаахгүй байна уу" : has ? "Хуудсуудыг солих" : "Хуудсуудыг оруулах"}</button>}

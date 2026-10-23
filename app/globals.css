@@ -4264,3 +4264,6 @@ a.as-row { text-decoration: none; }
   .mzs-hint { bottom: 16px; }
   .mzs-info h1 { font-size: 20px; }
 }
+.mz-new > summary { cursor: pointer; list-style: none; }
+.mz-new > summary::-webkit-details-marker { display: none; }
+.mz-new[open] > summary { margin-bottom: 12px; }
