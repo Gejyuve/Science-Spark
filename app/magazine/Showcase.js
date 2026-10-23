@@ -145,7 +145,6 @@ export default function Showcase({ issues }) {
             <button type="button" className="mzs-arrow r" onPointerDown={(e) => e.stopPropagation()} onClick={() => pick(sel + 1)} aria-label="Дараагийн дугаар">›</button>
           </>
         )}
-        <span className="mzs-hint" aria-hidden="true">↻ Эргүүлж тойруулах</span>
       </div>
 
       <div className="mzs-info" key={cur.id}>
@@ -154,8 +153,8 @@ export default function Showcase({ issues }) {
         <span className="mzs-acts">
           {live ? (
             <>
-              <Link href={`/magazine/${cur.id}#read`} className="mz-btn">{cur.own ? "Унших" : `Эхний ${Math.max(1, cur.preview_pages || 0)} хуудсыг үнэгүй унших`}</Link>
-              {cur.print_price > 0 && <Link href={`/magazine/${cur.id}/order`} className="mz-btn ghost">🚚 Биет хувь захиалах</Link>}
+              <Link href={`/magazine/${cur.id}#read`} className="mz-btn">Онлайнаар унших</Link>
+              {cur.print_price > 0 && <Link href={`/magazine/${cur.id}/order`} className="mz-btn ghost">Хүргүүлж авах</Link>}
             </>
           ) : (
             <>
