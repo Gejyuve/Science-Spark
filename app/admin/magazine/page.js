@@ -8,8 +8,8 @@ import { ISSUE_STATUS, ORDER_STATUS, REQUEST_STATUS, REQUEST_KIND } from "@/lib/
 import { fmtMnt } from "@/lib/money";
 import Head, { Chip, Flash, Stat, who } from "../_c/Head";
 import { phoneFmt } from "../../magazine/Bits";
-import { setMagazinePublic, orderAction, requestAction, saveIssue } from "./actions";
-import { IssueFields } from "./IssueFields";
+import { setMagazinePublic, orderAction, requestAction } from "./actions";
+import NewIssue from "./NewIssue";
 
 const n = (x) => Number(x || 0).toLocaleString("en-US");
 const when = (d) => new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).slice(0, 16).replaceAll("-", ".");
@@ -74,9 +74,13 @@ async function Issues() {
         <Stat label="Биет хувь" value={`${n(s.copies)} ширхэг`} note={`${fmtMnt(s.print)} (хүргэлттэй)`} />
         <Stat label="Байршуулах хүсэлт" value={n(s.requests)} />
       </div>
+      <details className="adm-card mz-new" open={rows.length === 0}>
+        <summary className="adm-card-head"><b>+ Шинэ дугаар нэмэх (PDF оруулах)</b></summary>
+        <NewIssue next={next} />
+      </details>
       <section className="adm-card flush">
         {rows.length === 0 ? (
-          <p className="adm-empty">Одоогоор дугаар алга. Доороос анхны дугаараа нэмээрэй.</p>
+          <p className="adm-empty">Одоогоор дугаар алга. Дээрээс анхны дугаараа PDF-тэй нь нэмээрэй.</p>
         ) : (
           <table className="adm-table">
             <thead><tr><th>Дугаар</th><th>Хуудас</th><th>Онлайн үнэ</th><th>Уншигч</th><th>Биет хувь</th><th>Төлөв</th><th></th></tr></thead>
@@ -89,19 +93,12 @@ async function Issues() {
                   <td>{n(i.buyers)} · {fmtMnt(i.online)}</td>
                   <td>{i.print_price ? `${n(i.copies)} ш · ${fmtMnt(i.print_price)}` : "Зарахгүй"}</td>
                   <td><Chip tone={ISSUE_STATUS[i.status]?.[1]}>{ISSUE_STATUS[i.status]?.[0] || i.status}</Chip></td>
-                  <td className="adm-right"><Link href={`/admin/magazine/${i.id}`} className="adm-btn teal">Засах</Link></td>
+                  <td className="adm-right"><Link href={`/admin/magazine/${i.id}`} className="adm-btn teal">{i.pages ? "Засах" : "📄 PDF оруулах"}</Link></td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-      </section>
-      <section className="adm-card">
-        <div className="adm-card-head"><b>Шинэ дугаар нэмэх</b></div>
-        <form action={saveIssue} className="vd-form">
-          <IssueFields i={{ number: next }} />
-          <button className="adm-btn teal">+ Дугаар нэмэх</button>
-        </form>
       </section>
     </>
   );

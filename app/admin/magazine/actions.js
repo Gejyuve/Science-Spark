@@ -25,37 +25,51 @@ const refresh = () => {
   revalidatePath("/magazine", "layout");
 };
 
-// Шинэ дугаар үүсгэх, эсвэл засах. Үнийг супер админ өөрөө бичнэ (анхны утга нь 10,000₮).
+// Маягтын утгуудыг шалгана. Алдаатай бол { error } буцаана.
+async function issueFields(formData, id = null) {
+  const f = {
+    number: Math.round(Number(formData.get("number"))),
+    title: clean(formData.get("title"), 140),
+    body: clean(formData.get("body"), 2000) || null,
+    issuedOn: /^\d{4}-\d{2}-\d{2}$/.test(String(formData.get("issued_on") || "")) ? formData.get("issued_on") : null,
+    price: mnt(formData.get("price_mnt")),
+    preview: Math.min(50, Math.max(0, Math.round(Number(formData.get("preview_pages")) || 0))),
+    print: mnt(formData.get("print_price")),
+    fee: mnt(formData.get("delivery_fee")),
+  };
+  if (!(f.number >= 1 && f.number <= 10000)) return { error: "Дугаарын тоог бичнэ үү" };
+  if (f.title.length < 2) return { error: "Дугаарын гарчгийг бичнэ үү" };
+  const [dup] = await sql`SELECT id FROM magazine_issues WHERE number = ${f.number} AND id IS DISTINCT FROM ${id}::int`;
+  if (dup) return { error: `№${f.number} дугаар аль хэдийн бий` };
+  return f;
+}
+
+// Шинэ дугаар үүсгэнэ (хөтөч дараа нь PDF-ийг шууд оруулна). Үнийг супер админ өөрөө бичнэ (анхны утга нь 10,000₮).
+export async function createIssue(formData) {
+  const me = await requireSuper();
+  const f = await issueFields(formData);
+  if (f.error) return f;
+  const [n] = await sql`INSERT INTO magazine_issues (number, title, body, issued_on, price_mnt, preview_pages, print_price, delivery_fee, created_by)
+                        VALUES (${f.number}, ${f.title}, ${f.body}, ${f.issuedOn}, ${f.price}, ${f.preview}, ${f.print}, ${f.fee}, ${me.id}) RETURNING id`;
+  await audit({ actorId: me.id, category: "content", action: "Сэтгүүлийн дугаар нэмсэн", targetType: "magazine", targetId: n.id, targetLabel: `№${f.number} ${f.title}` });
+  refresh();
+  return { id: n.id };
+}
+
+// Дугаарын мэдээлэл, үнийг засна
 export async function saveIssue(formData) {
   const me = await requireSuper();
-  const id = Number(formData.get("iid")) || null;
-  const path = id ? `/admin/magazine/${id}` : "/admin/magazine";
-  const number = Math.round(Number(formData.get("number")));
-  const title = clean(formData.get("title"), 140);
-  const body = clean(formData.get("body"), 2000);
-  const issuedOn = /^\d{4}-\d{2}-\d{2}$/.test(String(formData.get("issued_on") || "")) ? formData.get("issued_on") : null;
-  const price = mnt(formData.get("price_mnt"));
-  const preview = Math.min(50, Math.max(0, Math.round(Number(formData.get("preview_pages")) || 0)));
-  const print = mnt(formData.get("print_price"));
-  const fee = mnt(formData.get("delivery_fee"));
-  if (!(number >= 1 && number <= 10000)) back(path, "error", "Дугаарын тоог бичнэ үү");
-  if (title.length < 2) back(path, "error", "Дугаарын гарчгийг бичнэ үү");
-  const [dup] = await sql`SELECT id FROM magazine_issues WHERE number = ${number} AND id IS DISTINCT FROM ${id}::int`;
-  if (dup) back(path, "error", `№${number} дугаар аль хэдийн бий`);
-  if (id) {
-    const [u] = await sql`UPDATE magazine_issues SET number = ${number}, title = ${title}, body = ${body || null}, issued_on = ${issuedOn},
-                            price_mnt = ${price}, preview_pages = ${preview}, print_price = ${print}, delivery_fee = ${fee}, updated_at = now()
-                          WHERE id = ${id} RETURNING id`;
-    if (!u) back("/admin/magazine", "error", "Дугаар олдсонгүй");
-    await audit({ actorId: me.id, category: "content", action: "Сэтгүүлийн дугаар засварласан", targetType: "magazine", targetId: id, targetLabel: `№${number} ${title}` });
-    refresh();
-    back(path, "ok", "Хадгаллаа");
-  }
-  const [n] = await sql`INSERT INTO magazine_issues (number, title, body, issued_on, price_mnt, preview_pages, print_price, delivery_fee, created_by)
-                        VALUES (${number}, ${title}, ${body || null}, ${issuedOn}, ${price}, ${preview}, ${print}, ${fee}, ${me.id}) RETURNING id`;
-  await audit({ actorId: me.id, category: "content", action: "Сэтгүүлийн дугаар нэмсэн", targetType: "magazine", targetId: n.id, targetLabel: `№${number} ${title}` });
+  const id = Number(formData.get("iid")) || 0;
+  const path = `/admin/magazine/${id}`;
+  const f = await issueFields(formData, id);
+  if (f.error) back(path, "error", f.error);
+  const [u] = await sql`UPDATE magazine_issues SET number = ${f.number}, title = ${f.title}, body = ${f.body}, issued_on = ${f.issuedOn},
+                          price_mnt = ${f.price}, preview_pages = ${f.preview}, print_price = ${f.print}, delivery_fee = ${f.fee}, updated_at = now()
+                        WHERE id = ${id} RETURNING id`;
+  if (!u) back("/admin/magazine", "error", "Дугаар олдсонгүй");
+  await audit({ actorId: me.id, category: "content", action: "Сэтгүүлийн дугаар засварласан", targetType: "magazine", targetId: id, targetLabel: `№${f.number} ${f.title}` });
   refresh();
-  back(`/admin/magazine/${n.id}`, "ok", "Дугаар нэмэгдлээ. Одоо PDF файлаа оруулна уу");
+  back(path, "ok", "Хадгаллаа");
 }
 
 // Хөтөч бүх хуудсыг илгээж дуусахад дуудна: хуудасны тоог хадгалж, илүү үлдсэн хуучин хуудсыг устгана
