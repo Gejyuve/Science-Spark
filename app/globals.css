@@ -4110,14 +4110,39 @@ a.as-row { text-decoration: none; }
 .mz-jump { display: flex; align-items: center; gap: 10px; flex: 0 1 320px; min-width: 0; }
 .mz-jump input { flex: 1; min-width: 60px; accent-color: #00a89b; }
 .mz-jump span { font-size: 13px; font-weight: 700; white-space: nowrap; }
-.mz-stage { position: relative; display: flex; justify-content: center; gap: 4px; }
+.mz-stage { position: relative; overflow: hidden; touch-action: pan-y; }
+.mz-stage.zoomed { cursor: grab; touch-action: none; }
+.mz-stage.panning { cursor: grabbing; }
+.mz-zoom { perspective: 2400px; transform-origin: 0 0; transition: transform .25s cubic-bezier(.2, .7, .2, 1); will-change: transform; }
+.mz-stage.panning .mz-zoom { transition: none; }
+.mz-pages { display: flex; justify-content: center; gap: 4px; }
+.mz-zoom.two .mz-pages { gap: 0; }
+/* Нүүр, сүүлийн хуудас руу (эсвэл тэндээс) шилжихэд зөөлөн гулсана */
+.mz-pages.in-f { animation: mz-in-f .52s cubic-bezier(.2, .75, .25, 1) both; }
+.mz-pages.in-b { animation: mz-in-b .52s cubic-bezier(.2, .75, .25, 1) both; }
+@keyframes mz-in-f { from { opacity: 0; transform: translateX(48px) rotateY(-10deg) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes mz-in-b { from { opacity: 0; transform: translateX(-48px) rotateY(10deg) scale(.96); } to { opacity: 1; transform: none; } }
+/* Цаас эргэх: урд нь хуучин хуудас, ар нь шинэ хуудас */
+.mz-sheet.flipping { z-index: 3; overflow: visible; perspective: 2400px; }
+.mz-flip { position: absolute; inset: 0; z-index: 4; transform-style: preserve-3d; pointer-events: none; animation-duration: .7s; animation-timing-function: cubic-bezier(.45, .05, .25, 1); animation-fill-mode: both; }
+.mz-flip.fw, .mz-flip.sf { transform-origin: 0 50%; animation-name: mz-flip-f; }
+.mz-flip.bw { transform-origin: 100% 50%; animation-name: mz-flip-b; }
+.mz-flip.sb { transform-origin: 0 50%; animation-name: mz-flip-in; }
+@keyframes mz-flip-f { from { transform: rotateY(0); } to { transform: rotateY(-180deg); } }
+@keyframes mz-flip-b { from { transform: rotateY(0); } to { transform: rotateY(180deg); } }
+@keyframes mz-flip-in { from { transform: rotateY(-180deg); } to { transform: rotateY(0); } }
+.mz-pf { position: absolute; inset: 0; overflow: hidden; background: #fff; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.mz-pf.b { transform: rotateY(180deg); }
+.mz-pf > img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.mz-pf::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .18), transparent 30%, transparent 70%, rgba(0, 0, 0, .12)); animation: mz-shade .7s ease-in-out both; pointer-events: none; }
+@keyframes mz-shade { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mz-zoom { transition: none; } }
 .mz-sheet { position: relative; width: min(100%, 820px, calc((100vh - 130px) * var(--r, .707))); overflow: hidden; border-radius: 4px; background: #fff; box-shadow: 0 8px 30px rgba(0, 0, 0, .4); }
-.mz-stage.two { gap: 0; }
-.mz-stage.two .mz-sheet:first-of-type { border-radius: 4px 0 0 4px; }
-.mz-stage.two .mz-sheet:last-of-type { border-radius: 0 4px 4px 0; }
-.mz-stage.two .mz-sheet { width: min(50%, 620px, calc((100vh - 130px) * var(--r, .707))); }
+.mz-zoom.two .mz-sheet:first-of-type { border-radius: 4px 0 0 4px; }
+.mz-zoom.two .mz-sheet:last-of-type { border-radius: 0 4px 4px 0; }
+.mz-zoom.two .mz-sheet { width: min(50%, 620px, calc((100vh - 130px) * var(--r, .707))); }
 .mz-reader.full .mz-sheet { width: auto; height: calc(100vh - 80px); max-width: 100%; }
-.mz-reader.full .mz-stage.two .mz-sheet { max-width: 50%; }
+.mz-reader.full .mz-zoom.two .mz-sheet { max-width: 50%; }
 .mz-sheet > img { display: block; width: 100%; height: 100%; object-fit: contain; -webkit-user-drag: none; pointer-events: none; }
 .mz-mark { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-around; align-items: center; pointer-events: none; overflow: hidden; }
 .mz-mark i { color: rgba(15, 23, 42, .07); font-size: clamp(12px, 2.4vw, 22px); font-weight: 800; font-style: normal; white-space: nowrap; transform: rotate(-28deg); }
