@@ -7,7 +7,7 @@ import { MAX_ORDER_QTY, UB_DISTRICTS } from "@/lib/magazine-shared";
 import { MN_CITIES } from "@/lib/profile";
 import { walletBalance, fmtMnt } from "@/lib/money";
 import Shell from "../../../components/Shell";
-import { IssueCover } from "../../Bits";
+import { IssueMock } from "../../Bits";
 import OrderForm from "./OrderForm";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export default async function OrderPage({ params, searchParams }) {
     <Shell user={user} active="/magazine" header={false}>
       <div className="mz-page">
         <section className="ss-card mz-head small">
-          <IssueCover issue={issue} />
+          <IssueMock issue={issue} />
           <div className="mz-info">
             <Link href={`/magazine/${issue.id}`} className="mz-crumb">№{issue.number} дугаар</Link>
             <h1>Биет хувь захиалах</h1>

@@ -7,7 +7,7 @@ import { ORDER_STATUS, REQUEST_STATUS, REQUEST_KIND } from "@/lib/magazine-share
 import { fmtMnt } from "@/lib/money";
 import Shell from "../../components/Shell";
 import PageHero from "../../components/PageHero";
-import { IssueCover, phoneFmt } from "../Bits";
+import { IssueMock, phoneFmt } from "../Bits";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Миний сэтгүүл · Science Spark" };
@@ -45,7 +45,7 @@ export default async function MyMagazine({ searchParams }) {
             <div className="mz-grid">
               {issues.map((i) => (
                 <Link key={i.id} href={`/magazine/${i.id}#read`} className="mz-tile">
-                  <IssueCover issue={i} />
+                  <IssueMock issue={i} />
                   <b>№{i.number} · {i.title}</b>
                   <small>{i.last_page > 1 ? `${i.last_page}/${i.pages} хуудас уншсан` : "Уншиж эхлээгүй"}</small>
                 </Link>

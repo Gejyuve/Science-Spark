@@ -6,7 +6,7 @@ import { canSeeMagazine, getIssue, hasIssueAccess, freePages } from "@/lib/magaz
 import { walletBalance, fmtMnt } from "@/lib/money";
 import Shell from "../../components/Shell";
 import Reader from "../Reader";
-import { IssueCover } from "../Bits";
+import { IssueMock } from "../Bits";
 import { unlockIssue } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,7 @@ export default async function IssuePage({ params, searchParams }) {
     <Shell user={user} active="/magazine" header={false}>
       <div className="mz-page">
         <section className="ss-card mz-head">
-          <IssueCover issue={issue} eager />
+          <IssueMock issue={issue} eager size="big" />
           <div className="mz-info">
             <Link href="/magazine" className="mz-crumb">Сэтгүүл</Link>
             <h1>№{issue.number} · {issue.title}</h1>

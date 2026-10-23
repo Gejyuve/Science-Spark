@@ -7,7 +7,7 @@ import { MAGAZINE_PUBLIC } from "@/lib/magazine-shared";
 import { fmtMnt } from "@/lib/money";
 import Shell from "../components/Shell";
 import PageHero from "../components/PageHero";
-import { IssueCover } from "./Bits";
+import { IssueMock } from "./Bits";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Сэтгүүл · Science Spark" };
@@ -56,7 +56,7 @@ export default async function MagazinePage() {
                 const own = hasIssueAccess(user, i, i.unlocked);
                 return (
                   <Link key={i.id} href={`/magazine/${i.id}`} className="mz-tile">
-                    <IssueCover issue={i} />
+                    <IssueMock issue={i} />
                     <b>№{i.number} · {i.title}</b>
                     <small>{own ? (i.unlocked ? "✓ Таны уншдаг дугаар" : "Бүтнээр нь унших боломжтой") : `${fmtMnt(i.price_mnt)} · ${i.pages} хуудас`}</small>
                   </Link>
