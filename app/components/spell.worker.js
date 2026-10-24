@@ -1,6 +1,5 @@
 // Монгол зөв бичгийн толь (Hunspell mn_MN, zuv.bichig.dev) хөтөч дотор ажиллана; текст сервер рүү явахгүй.
 import { loadModule } from "hunspell-asm";
-import { SITE_WORDS } from "@/lib/spell";
 
 async function load(url) {
   const r = await fetch(url);
@@ -16,9 +15,7 @@ async function load(url) {
 
 async function init() {
   const [f, aff, dic] = await Promise.all([loadModule(), load("/spell/mn_MN.aff.gz"), load("/spell/mn_MN.dic.gz")]);
-  const h = f.create(f.mountBuffer(aff, "mn.aff"), f.mountBuffer(dic, "mn.dic"));
-  for (const [w, like] of SITE_WORDS) h.addWordWithAffix(w, like);
-  return h;
+  return f.create(f.mountBuffer(aff, "mn.aff"), f.mountBuffer(dic, "mn.dic"));
 }
 
 let ready = null;

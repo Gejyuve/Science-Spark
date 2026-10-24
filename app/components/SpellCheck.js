@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { tokens, ruleIssue, needsDict } from "@/lib/spell";
+import { tokens, needsDict } from "@/lib/spell";
+import DictAdd from "./DictAdd";
 import Spark from "./Spark";
 
-// Бичих самбарын зөв бичгийн шалгагч: textarea-гийн дээр тунгалаг давхарга тавьж
-// сэжигтэй үгийн доор долгионтой зураас татна. Үг дээр дарахад засах санал гарна.
+// Бичих самбарын зөв бичгийн шалгагч. «Зөв бичиг шалгах» товч дарахад л толийг ачаална.
+// Толинд байхгүй үгийн доор зураас татаж, самбарын доор зөв хувилбаруудыг санал болгоно.
 
 let worker = null, seq = 0;
 const waits = new Map();
@@ -25,60 +26,64 @@ function ask(msg) {
   return new Promise((res, rej) => { waits.set(id, { res, rej }); worker.postMessage({ ...msg, id }); });
 }
 
-const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
-};
+const MAX_ROWS = 30;
 
-const KIND = { spell: "Толинд байхгүй үг", rule: "Сайтын дүрэм", mix: "Латин үсэг орсон" };
-
-export default function SpellCheck({ ta, text, hidden, replace }) {
-  const [on, setOn] = useState(true);
-  const [mine, setMine] = useState(() => new Set());
+export default function SpellCheck({ on, onClose, ta, text, hidden, replace, loggedIn }) {
   const [skip, setSkip] = useState(() => new Set());
-  const [status, setStatus] = useState("idle"); // idle | loading | ready | error
+  const [status, setStatus] = useState("loading"); // loading | ready | error
   const [ver, setVer] = useState(0);
   const cache = useRef(new Map()); // үг → толинд байгаа эсэх
   const box = useRef(null);
-  const [pop, setPop] = useState(null); // { i, top, left, list }
 
-  useEffect(() => {
-    setOn(!store.get("ss-spell-off", false));
-    setMine(new Set(store.get("ss-spell-mine", [])));
-  }, []);
   useEffect(() => { if (ta.current) ta.current.spellcheck = !on; }, [on, ta]);
 
-  const toks = useMemo(() => tokens(text), [text]);
+  const toks = useMemo(() => (on ? tokens(text) : []), [text, on]);
 
-  // Шинэ үгсийг бичиж дуусахыг хүлээгээд толиор шалгана
+  // Анх нээхэд шууд, дараа нь бичиж дуусахыг хүлээгээд шинэ үгсийг шалгана
+  const first = useRef(true);
+  useEffect(() => { if (!on) first.current = true; }, [on]);
   useEffect(() => {
     if (!on) return;
     const t = setTimeout(() => {
-      const fresh = [...new Set(toks.filter((x) => needsDict(x.word) && !ruleIssue(x.word) && !cache.current.has(x.word)).map((x) => x.word))];
-      if (!fresh.length) { setStatus((s) => (s === "idle" ? "ready" : s)); return; }
-      setStatus((s) => (s === "ready" ? s : "loading"));
+      const fresh = [...new Set(toks.filter((x) => needsDict(x.word) && !cache.current.has(x.word)).map((x) => x.word))];
+      if (!fresh.length) { setStatus((s) => (s === "error" ? s : "ready")); return; }
       ask({ type: "check", words: fresh }).then(({ bad }) => {
         const b = new Set(bad);
         for (const w of fresh) cache.current.set(w, !b.has(w));
         setStatus("ready");
         setVer((v) => v + 1);
       }).catch(() => setStatus("error"));
-    }, 500);
+    }, first.current ? 0 : 500);
+    first.current = false;
     return () => clearTimeout(t);
   }, [toks, on]);
 
-  const issues = useMemo(() => {
-    if (!on) return [];
-    const out = [];
-    for (const t of toks) {
-      if (skip.has(t.word)) continue;
-      const r = ruleIssue(t.word);
-      if (r) out.push({ ...t, ...r });
-      else if (needsDict(t.word) && cache.current.get(t.word) === false && !mine.has(t.word.toLowerCase())) out.push({ ...t, kind: "spell" });
-    }
-    return out;
+  const issues = useMemo(
+    () => toks.filter((t) => !skip.has(t.word) && needsDict(t.word) && cache.current.get(t.word) === false),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toks, on, skip, mine, ver]);
+    [toks, skip, ver]
+  );
+  // Ижил үгийг нэг мөрөнд: { word, n }
+  const rows = useMemo(() => {
+    const m = new Map();
+    for (const x of issues) m.set(x.word, (m.get(x.word) || 0) + 1);
+    return [...m].map(([word, n]) => ({ word, n }));
+  }, [issues]);
+
+  // Харагдаж буй үгсийн санал (нэг нэгээр нь, толь завгүй болохгүйн тулд)
+  const [, bump] = useState(0);
+  useEffect(() => {
+    let stop = false;
+    (async () => {
+      for (const r of rows.slice(0, MAX_ROWS)) {
+        if (stop) return;
+        if (suggests.has(r.word)) continue;
+        try { suggests.set(r.word, (await ask({ type: "suggest", word: r.word })).list); } catch { suggests.set(r.word, []); }
+        if (!stop) bump((x) => x + 1);
+      }
+    })();
+    return () => { stop = true; };
+  }, [rows]);
 
   // Давхаргыг textarea-тай яг ижил байрлал, үсэг, мөр хоорондын зайтай болгоно
   const sync = () => {
@@ -102,116 +107,90 @@ export default function SpellCheck({ ta, text, hidden, replace }) {
     if (!el || !on) return;
     const ro = new ResizeObserver(sync);
     ro.observe(el);
-    const onScroll = () => { if (box.current) box.current.scrollTop = el.scrollTop; setPop(null); };
+    const onScroll = () => { if (box.current) box.current.scrollTop = el.scrollTop; };
     el.addEventListener("scroll", onScroll);
     return () => { ro.disconnect(); el.removeEventListener("scroll", onScroll); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, hidden]);
 
-  const open = (i) => {
-    const o = box.current, m = o?.querySelector(`[data-i="${i}"]`);
-    if (!m) return;
-    const r = m.getBoundingClientRect(), p = o.parentElement.getBoundingClientRect();
-    const it = issues[i];
-    const list = it.kind === "spell" ? suggests.get(it.word) ?? null : it.fix ? [it.fix] : [];
-    setPop({ i, word: it.word, top: r.bottom - p.top + 6, left: Math.max(0, Math.min(r.left - p.left, p.width - 280)), list });
-    if (list === null) ask({ type: "suggest", word: it.word }).then(({ list }) => {
-      suggests.set(it.word, list);
-      setPop((x) => (x && x.word === it.word ? { ...x, list } : x));
-    }).catch(() => setPop((x) => (x && x.word === it.word ? { ...x, list: [] } : x)));
-  };
-
-  // Сэжигтэй үг дээр дарахад санал гаргана
-  useEffect(() => {
-    const el = ta.current;
-    if (!el || !on) return;
-    const up = () => {
-      if (el.selectionStart !== el.selectionEnd) return setPop(null);
-      const c = el.selectionStart;
-      const i = issues.findIndex((x) => x.from <= c && c <= x.to);
-      i < 0 ? setPop(null) : open(i);
-    };
-    el.addEventListener("mouseup", up);
-    return () => el.removeEventListener("mouseup", up);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issues, on]);
-  useEffect(() => setPop(null), [text, hidden]);
-  useEffect(() => {
-    if (!pop) return;
-    const esc = (e) => e.key === "Escape" && setPop(null);
-    const out = (e) => !e.target.closest?.(".sp-pop") && e.target !== ta.current && setPop(null);
-    document.addEventListener("keydown", esc);
-    document.addEventListener("mousedown", out);
-    return () => { document.removeEventListener("keydown", esc); document.removeEventListener("mousedown", out); };
-  }, [pop, ta]);
-
-  // Курсорын дараах эхний сэжигтэй үг рүү очно
-  const next = () => {
+  // Тухайн үгийг текстэд сонгож харуулна
+  const show = (word) => {
     const el = ta.current, o = box.current;
-    if (!el || !o || !issues.length) return;
-    let i = issues.findIndex((x) => x.from > el.selectionEnd);
-    if (i < 0) i = 0;
-    const it = issues[i];
+    if (!el) return;
+    let i = issues.findIndex((x) => x.word === word && x.from >= el.selectionEnd);
+    if (i < 0) i = issues.findIndex((x) => x.word === word);
+    if (i < 0) return;
     el.focus();
-    el.setSelectionRange(it.from, it.to);
-    const m = o.querySelector(`[data-i="${i}"]`);
+    el.setSelectionRange(issues[i].from, issues[i].to);
+    const m = o?.querySelectorAll(".sp-m")[i];
     if (m) el.scrollTop = Math.max(0, m.offsetTop - 80);
-    o.scrollTop = el.scrollTop;
-    requestAnimationFrame(() => open(i));
+  };
+  // Тухайн үгийг текст дэх бүх газарт нь засна (арагшаа, байрлал хөдлөхгүйн тулд)
+  const fix = (word, to) => {
+    issues.filter((x) => x.word === word).reverse().forEach((x) => replace(x.from, x.to, to));
   };
 
-  const fix = (s) => { const it = issues[pop.i]; setPop(null); replace(it.from, it.to, s); };
-  const ignore = () => { const w = issues[pop.i].word; setPop(null); setSkip((x) => new Set(x).add(w)); };
-  const learn = () => {
-    const w = issues[pop.i].word.toLowerCase();
-    setPop(null);
-    setMine((x) => { const n = new Set(x).add(w); store.set("ss-spell-mine", [...n].slice(-2000)); return n; });
-  };
-  const toggle = () => { store.set("ss-spell-off", on); setOn(!on); setPop(null); };
-
+  if (!on || hidden) return null;
   const marks = [];
   let at = 0;
   issues.forEach((x, i) => {
-    marks.push(text.slice(at, x.from), <mark key={i} data-i={i} className={"sp-m " + x.kind}>{text.slice(x.from, x.to)}</mark>);
+    marks.push(text.slice(at, x.from), <mark key={i} className="sp-m">{text.slice(x.from, x.to)}</mark>);
     at = x.to;
   });
   marks.push(text.slice(at) + "\n ");
 
-  const it = pop && issues[pop.i];
   return (
     <>
-      {on && !hidden && <div ref={box} className="sp-layer" aria-hidden="true">{marks}</div>}
-      {it && !hidden && (
-        <div className="sp-pop" style={{ top: pop.top, left: pop.left }} onMouseDown={(e) => e.preventDefault()} role="dialog" aria-label="Зөв бичгийн санал">
-          <small className={"sp-kind " + it.kind}>{KIND[it.kind]}</small>
-          {it.note && <p>{it.note}</p>}
-          {it.kind === "spell" && <p>«{it.word}» гэсэн үг толинд алга. Дараах хувилбаруудаас сонгож болно:</p>}
-          <div className="sp-sug">
-            {pop.list === null ? <span className="spk-btn"><Spark mono size={14} />Хайж байна…</span>
-              : pop.list.length ? pop.list.map((s) => <button type="button" key={s} onClick={() => fix(s)}>{s}</button>)
-              : <span>Санал олдсонгүй</span>}
-          </div>
-          <div className="sp-act">
-            <button type="button" onClick={ignore}>Алгасах</button>
-            {it.kind === "spell" && <button type="button" onClick={learn}>Миний толинд нэмэх</button>}
-          </div>
-        </div>
-      )}
-      {!hidden && (
-        <div className="sp-bar">
-          {!on ? <span>Зөв бичгийн шалгалт унтраастай.</span>
-            : status === "error" ? <span className="bad">Монгол толийг ачаалж чадсангүй. Хуудсаа дахин ачаална уу.</span>
-            : status !== "ready" ? <span className="spk-btn"><Spark mono size={14} />Монгол толь ачаалж байна…</span>
-            : issues.length ? <>
-                <span><i className="sp-dot" />Шалгах үг: <b>{issues.length}</b></span>
-                <button type="button" onClick={next}>Дараагийнх →</button>
-              </>
-            : <span className="ok">✓ Зөв бичгийн алдаа олдсонгүй</span>}
+      <div ref={box} className="sp-layer" aria-hidden="true">{marks}</div>
+      <section className="sp-panel" aria-label="Зөв бичгийн шалгалт">
+        <div className="sp-head">
+          <b>Зөв бичгийн шалгалт</b>
+          {status === "ready" && <small>{rows.length ? `Толинд олдоогүй ${rows.length} үг` : "✓ Алдаа олдсонгүй"}</small>}
           <span className="ss-grow" />
-          {on && <small className="sp-legend"><i className="sp-dot" />толинд алга <i className="sp-dot rule" />сайтын дүрэм</small>}
-          <button type="button" onClick={toggle}>{on ? "Унтраах" : "Зөв бичиг шалгах"}</button>
+          <button type="button" className="sp-x" onClick={onClose} aria-label="Хаах">×</button>
         </div>
-      )}
+
+        {status === "loading" && (
+          <div className="sp-about">
+            <p className="spk-btn"><Spark mono size={16} />Монгол хэлний зөв бичгийн толийг ачаалж байна… <small>(≈1.8 MB, зөвхөн эхний удаа)</small></p>
+            <p>
+              Энэ толийг <a href="https://zuv.bichig.dev" target="_blank" rel="noopener noreferrer">zuv.bichig.dev</a> төслийн
+              хүрээнд Д. Батмөнх бүтээсэн. Академич Ц. Дамдинсүрэн нарын «Монгол үсгийн дүрмийн толь»-д тулгуурласан бөгөөд
+              60 мянга орчим үг, тэдгээрийн 2 тэрбум гаруй хувилбарыг агуулдаг. Үнэгүй, нээлттэй толь.
+            </p>
+            <p>Шалгалт таны хөтөч дотор явагдах тул бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
+          </div>
+        )}
+        {status === "error" && <p className="sp-err">Толийг ачаалж чадсангүй. Хуудсаа дахин ачаалаад оролдоно уу.</p>}
+
+        {status === "ready" && rows.length > 0 && (
+          <ul className="sp-rows">
+            {rows.slice(0, MAX_ROWS).map(({ word, n }) => {
+              const list = suggests.get(word);
+              return (
+                <li key={word}>
+                  <button type="button" className="sp-word" onClick={() => show(word)} title="Текстээс харах">{word}{n > 1 && <small> ×{n}</small>}</button>
+                  <span className="sp-arrow">→</span>
+                  <span className="sp-sug">
+                    {list === undefined ? <Spark mono size={14} />
+                      : list.length ? list.map((s) => <button type="button" key={s} onClick={() => fix(word, s)}>{s}</button>)
+                      : <><em>санал олдсонгүй</em><DictAdd className="sp-dict-sm" label="Тольд нэмэх" word={word} loggedIn={loggedIn} /></>}
+                  </span>
+                  <button type="button" className="sp-skip" onClick={() => setSkip((x) => new Set(x).add(word))}>Алгасах</button>
+                </li>
+              );
+            })}
+            {rows.length > MAX_ROWS && <li className="sp-more">…бас {rows.length - MAX_ROWS} үг. Эхнийхийг засахад дараагийнх гарч ирнэ.</li>}
+          </ul>
+        )}
+
+        {status === "ready" && (
+          <div className="sp-foot">
+            <p>Шинэ нэр томьёо, хүний болон газрын нэр толинд байхгүй байж болно. Ийм үгийн тайлбарыг манай <b>Тольд</b> нэмж, бусад уншигчдад тусалаарай.</p>
+            <DictAdd className="sp-dict" label="Тольд үг нэмэх" loggedIn={loggedIn} icon={<img src="/icons/book18.svg" width={16} height={16} alt="" />} />
+          </div>
+        )}
+      </section>
     </>
   );
 }

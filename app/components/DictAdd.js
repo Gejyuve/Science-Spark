@@ -34,7 +34,7 @@ export function TermCard({ v }) {
   );
 }
 
-export default function DictAdd({ label = "Үг нэмэх", className = "", loggedIn = true, icon = false }) {
+export default function DictAdd({ label = "Үг нэмэх", className = "", loggedIn = true, icon = false, word = "" }) {
   const [open, setOpen] = useState(false);
   const [v, setV] = useState({ title: "", en: "", ru: "", la: "", body: "", synonyms: "", source: "" });
   const [state, action, pending] = useActionState(proposeTerm, null);
@@ -117,7 +117,7 @@ export default function DictAdd({ label = "Үг нэмэх", className = "", log
   if (!loggedIn) return <Link href="/login" className={className}>{icon}{label}</Link>;
   return (
     <>
-      <button type="button" className={className} onClick={() => setOpen(true)}>{icon}{label}</button>
+      <button type="button" className={className} onClick={() => { if (word) setV((x) => ({ ...x, title: word })); setOpen(true); }}>{icon}{label}</button>
       {mounted && modal && createPortal(modal, document.body)}
     </>
   );
