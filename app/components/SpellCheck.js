@@ -6,7 +6,7 @@ import DictAdd from "./DictAdd";
 import Spark from "./Spark";
 
 // Бичих самбарын зөв бичгийн шалгагч. «Зөв бичиг шалгах» товч дарахад л толийг ачаална.
-// Толинд байхгүй үгийн доор зураас татаж, самбарын доор зөв хувилбаруудыг санал болгоно.
+// Толинд байхгүй үгийн доор зураас татна; тэр үг дээр дарахад зөв хувилбарууд гарч ирнэ.
 
 let worker = null, seq = 0;
 const waits = new Map();
@@ -25,8 +25,6 @@ function ask(msg) {
   const id = ++seq;
   return new Promise((res, rej) => { waits.set(id, { res, rej }); worker.postMessage({ ...msg, id }); });
 }
-
-const MAX_ROWS = 30;
 
 export default function SpellCheck({ on, onClose, ta, text, hidden, replace, loggedIn }) {
   const [skip, setSkip] = useState(() => new Set());
@@ -63,28 +61,7 @@ export default function SpellCheck({ on, onClose, ta, text, hidden, replace, log
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [toks, skip, ver]
   );
-  // Ижил үгийг нэг мөрөнд: { word, n }
-  const rows = useMemo(() => {
-    const m = new Map();
-    for (const x of issues) m.set(x.word, (m.get(x.word) || 0) + 1);
-    return [...m].map(([word, n]) => ({ word, n }));
-  }, [issues]);
-
-  // Харагдаж буй үгсийн санал (нэг нэгээр нь, толь завгүй болохгүйн тулд)
-  const [, bump] = useState(0);
-  useEffect(() => {
-    let stop = false;
-    (async () => {
-      for (const r of rows.slice(0, MAX_ROWS)) {
-        if (stop) return;
-        if (suggests.has(r.word)) continue;
-        try { suggests.set(r.word, (await ask({ type: "suggest", word: r.word })).list); } catch { suggests.set(r.word, []); }
-        if (!stop) bump((x) => x + 1);
-      }
-    })();
-    return () => { stop = true; };
-  }, [rows]);
-
+  const [pop, setPop] = useState(null); // { i, word, top, left, list }
   // Давхаргыг textarea-тай яг ижил байрлал, үсэг, мөр хоорондын зайтай болгоно
   const sync = () => {
     const el = ta.current, o = box.current;
@@ -107,28 +84,52 @@ export default function SpellCheck({ on, onClose, ta, text, hidden, replace, log
     if (!el || !on) return;
     const ro = new ResizeObserver(sync);
     ro.observe(el);
-    const onScroll = () => { if (box.current) box.current.scrollTop = el.scrollTop; };
+    const onScroll = () => { if (box.current) box.current.scrollTop = el.scrollTop; setPop(null); };
     el.addEventListener("scroll", onScroll);
     return () => { ro.disconnect(); el.removeEventListener("scroll", onScroll); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, hidden]);
 
-  // Тухайн үгийг текстэд сонгож харуулна
-  const show = (word) => {
-    const el = ta.current, o = box.current;
-    if (!el) return;
-    let i = issues.findIndex((x) => x.word === word && x.from >= el.selectionEnd);
-    if (i < 0) i = issues.findIndex((x) => x.word === word);
-    if (i < 0) return;
-    el.focus();
-    el.setSelectionRange(issues[i].from, issues[i].to);
-    const m = o?.querySelectorAll(".sp-m")[i];
-    if (m) el.scrollTop = Math.max(0, m.offsetTop - 80);
+  const open = (i) => {
+    const o = box.current, m = o?.querySelectorAll(".sp-m")[i];
+    if (!m) return;
+    const r = m.getBoundingClientRect(), p = o.parentElement.getBoundingClientRect();
+    const word = issues[i].word;
+    const list = suggests.get(word) ?? null;
+    setPop({ i, word, top: r.bottom - p.top + 6, left: Math.max(0, Math.min(r.left - p.left, p.width - 300)), list });
+    if (list === null) ask({ type: "suggest", word }).then(({ list }) => {
+      suggests.set(word, list);
+      setPop((x) => (x && x.word === word ? { ...x, list } : x));
+    }).catch(() => setPop((x) => (x && x.word === word ? { ...x, list: [] } : x)));
   };
-  // Тухайн үгийг текст дэх бүх газарт нь засна (арагшаа, байрлал хөдлөхгүйн тулд)
-  const fix = (word, to) => {
-    issues.filter((x) => x.word === word).reverse().forEach((x) => replace(x.from, x.to, to));
-  };
+
+  // Зураастай үг дээр дарахад хувилбаруудыг гаргана
+  useEffect(() => {
+    const el = ta.current;
+    if (!el || !on) return;
+    const up = () => {
+      if (el.selectionStart !== el.selectionEnd) return setPop(null);
+      const c = el.selectionStart;
+      const i = issues.findIndex((x) => x.from <= c && c <= x.to);
+      i < 0 ? setPop(null) : open(i);
+    };
+    el.addEventListener("mouseup", up);
+    return () => el.removeEventListener("mouseup", up);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [issues, on]);
+  useEffect(() => setPop(null), [text, hidden, on]);
+  useEffect(() => {
+    if (!pop) return;
+    const esc = (e) => e.key === "Escape" && !document.querySelector(".tm-overlay") && setPop(null);
+    // «Тольд нэмэх» цонх нээлттэй үед санал хаагдахгүй
+    const out = (e) => !e.target.closest?.(".sp-pop, .tm-overlay") && e.target !== ta.current && setPop(null);
+    document.addEventListener("keydown", esc);
+    document.addEventListener("mousedown", out);
+    return () => { document.removeEventListener("keydown", esc); document.removeEventListener("mousedown", out); };
+  }, [pop, ta]);
+
+  const fix = (s) => { const it = issues[pop.i]; setPop(null); replace(it.from, it.to, s); };
+  const ignore = () => { const w = pop.word; setPop(null); setSkip((x) => new Set(x).add(w)); };
 
   if (!on || hidden) return null;
   const marks = [];
@@ -142,55 +143,41 @@ export default function SpellCheck({ on, onClose, ta, text, hidden, replace, log
   return (
     <>
       <div ref={box} className="sp-layer" aria-hidden="true">{marks}</div>
-      <section className="sp-panel" aria-label="Зөв бичгийн шалгалт">
-        <div className="sp-head">
-          <b>Зөв бичгийн шалгалт</b>
-          {status === "ready" && <small>{rows.length ? `Толинд олдоогүй ${rows.length} үг` : "✓ Алдаа олдсонгүй"}</small>}
-          <span className="ss-grow" />
-          <button type="button" className="sp-x" onClick={onClose} aria-label="Хаах">×</button>
+      {pop && (
+        <div className="sp-pop" style={{ top: pop.top, left: pop.left }} onMouseDown={(e) => e.target.closest(".tm-overlay") || e.preventDefault()} role="dialog" aria-label="Зөв бичгийн санал">
+          <div className="sp-sug">
+            {pop.list === null ? <span className="spk-btn"><Spark mono size={14} />Хайж байна…</span>
+              : pop.list.length ? pop.list.map((s) => <button type="button" key={s} onClick={() => fix(s)}>{s}</button>)
+              : <span>«{pop.word}» толинд алга, санал олдсонгүй.</span>}
+          </div>
+          <p>Шинэ нэр томьёо бол манай Тольд тайлбарыг нь нэмээрэй.</p>
+          <div className="sp-act">
+            <button type="button" onClick={ignore}>Алгасах</button>
+            <DictAdd className="sp-act-dict" label="Тольд нэмэх" word={pop.word} loggedIn={loggedIn} />
+          </div>
         </div>
-
-        {status === "loading" && (
-          <div className="sp-about">
-            <p className="spk-btn"><Spark mono size={16} />Монгол хэлний зөв бичгийн толийг ачаалж байна… <small>(≈1.8 MB, зөвхөн эхний удаа)</small></p>
-            <p>
-              Энэ толийг <a href="https://zuv.bichig.dev" target="_blank" rel="noopener noreferrer">zuv.bichig.dev</a> төслийн
-              хүрээнд Д. Батмөнх бүтээсэн. Академич Ц. Дамдинсүрэн нарын «Монгол үсгийн дүрмийн толь»-д тулгуурласан бөгөөд
-              60 мянга орчим үг, тэдгээрийн 2 тэрбум гаруй хувилбарыг агуулдаг. Үнэгүй, нээлттэй толь.
-            </p>
-            <p>Шалгалт таны хөтөч дотор явагдах тул бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
-          </div>
-        )}
-        {status === "error" && <p className="sp-err">Толийг ачаалж чадсангүй. Хуудсаа дахин ачаалаад оролдоно уу.</p>}
-
-        {status === "ready" && rows.length > 0 && (
-          <ul className="sp-rows">
-            {rows.slice(0, MAX_ROWS).map(({ word, n }) => {
-              const list = suggests.get(word);
-              return (
-                <li key={word}>
-                  <button type="button" className="sp-word" onClick={() => show(word)} title="Текстээс харах">{word}{n > 1 && <small> ×{n}</small>}</button>
-                  <span className="sp-arrow">→</span>
-                  <span className="sp-sug">
-                    {list === undefined ? <Spark mono size={14} />
-                      : list.length ? list.map((s) => <button type="button" key={s} onClick={() => fix(word, s)}>{s}</button>)
-                      : <><em>санал олдсонгүй</em><DictAdd className="sp-dict-sm" label="Тольд нэмэх" word={word} loggedIn={loggedIn} /></>}
-                  </span>
-                  <button type="button" className="sp-skip" onClick={() => setSkip((x) => new Set(x).add(word))}>Алгасах</button>
-                </li>
-              );
-            })}
-            {rows.length > MAX_ROWS && <li className="sp-more">…бас {rows.length - MAX_ROWS} үг. Эхнийхийг засахад дараагийнх гарч ирнэ.</li>}
-          </ul>
-        )}
-
-        {status === "ready" && (
-          <div className="sp-foot">
-            <p>Шинэ нэр томьёо, хүний болон газрын нэр толинд байхгүй байж болно. Ийм үгийн тайлбарыг манай <b>Тольд</b> нэмж, бусад уншигчдад тусалаарай.</p>
-            <DictAdd className="sp-dict" label="Тольд үг нэмэх" loggedIn={loggedIn} icon={<img src="/icons/book18.svg" width={16} height={16} alt="" />} />
-          </div>
-        )}
-      </section>
+      )}
+      {status !== "ready" ? (
+        <section className="sp-panel" aria-label="Зөв бичгийн шалгалт">
+          {status === "error" ? <p className="sp-err">Толийг ачаалж чадсангүй. Хуудсаа дахин ачаалаад оролдоно уу.</p> : (
+            <div className="sp-about">
+              <p className="spk-btn"><Spark mono size={16} />Монгол хэлний зөв бичгийн толийг ачаалж байна… <small>(≈1.8 MB, зөвхөн эхний удаа)</small></p>
+              <p>
+                Энэ толийг <a href="https://zuv.bichig.dev" target="_blank" rel="noopener noreferrer">zuv.bichig.dev</a> төслийн
+                хүрээнд Д. Батмөнх бүтээсэн. Академич Ц. Дамдинсүрэн нарын «Монгол үсгийн дүрмийн толь»-д тулгуурласан бөгөөд
+                60 мянга орчим үг, тэдгээрийн 2 тэрбум гаруй хувилбарыг агуулдаг. Үнэгүй, нээлттэй толь.
+              </p>
+              <p>Шалгалт таны хөтөч дотор явагдах тул бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
+            </div>
+          )}
+        </section>
+      ) : (
+        <p className="sp-line">
+          {issues.length ? <>Зураастай <b>{issues.length}</b> үг байна. Үг дээр дарахад зөв хувилбарууд гарч ирнэ.</> : <span className="ok">✓ Зөв бичгийн алдаа олдсонгүй</span>}
+          <span className="ss-grow" />
+          <button type="button" onClick={onClose}>Шалгалтыг хаах</button>
+        </p>
+      )}
     </>
   );
 }

@@ -2336,31 +2336,23 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .sp-layer { position: absolute; pointer-events: none; overflow: hidden; box-sizing: border-box; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; color: transparent; }
 .sp-m { background: none; color: transparent; text-decoration: underline wavy #e5484d; text-decoration-skip-ink: none; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
 .sp-panel { margin-top: 10px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); font-size: 13.5px; }
-.sp-head { display: flex; align-items: center; gap: 10px; }
-.sp-head small { color: var(--muted); }
-.sp-x { width: 26px; height: 26px; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 18px; cursor: pointer; }
-.sp-x:hover { background: var(--surface-2); color: var(--ink); }
-.sp-about { margin-top: 8px; color: var(--muted); line-height: 1.55; }
+.sp-about { color: var(--muted); line-height: 1.55; }
 .sp-about p { margin: 6px 0 0; }
+.sp-about p:first-child { margin: 0; }
 .sp-about p.spk-btn { justify-content: flex-start; color: var(--ink); font-weight: 600; }
 .sp-about a { color: #00897e; font-weight: 600; }
-.sp-err { margin: 8px 0 0; color: #c2400d; }
-.sp-rows { list-style: none; margin: 10px 0 0; padding: 0; }
-.sp-rows li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 7px 0; border-top: 1px solid var(--border); }
-.sp-word { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; text-decoration: underline wavy #e5484d; text-underline-offset: 4px; }
-.sp-word small { color: var(--muted); font-weight: 400; }
-.sp-arrow { color: var(--muted); }
-.sp-sug { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 1; color: var(--muted); }
-.sp-sug button { padding: 3px 9px; border-radius: 8px; border: 1px solid #00a89b; background: none; color: #00897e; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.sp-err { margin: 0; color: #c2400d; }
+.sp-line { display: flex; align-items: center; gap: 10px; margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+.sp-line b { color: var(--ink); }
+.sp-line .ok { color: #00897e; }
+.sp-line button, .sp-act button { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; cursor: pointer; }
+.sp-line button:hover, .sp-act button:hover { color: #00897e; text-decoration: underline; }
+.sp-pop { position: absolute; z-index: 6; width: 300px; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 10px 28px rgba(20, 40, 50, .18); font-size: 13px; }
+.sp-pop > p { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.sp-sug { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--muted); }
+.sp-sug button { padding: 4px 10px; border-radius: 8px; border: 1px solid #00a89b; background: none; color: #00897e; font: inherit; font-weight: 600; cursor: pointer; }
 .sp-sug button:hover { background: #00a89b; color: #fff; }
-.sp-sug button.sp-dict-sm { border-style: dashed; }
-.sp-skip { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; cursor: pointer; }
-.sp-skip:hover { color: var(--ink); text-decoration: underline; }
-.sp-more { color: var(--muted); font-size: 12.5px; }
-.sp-foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12.5px; line-height: 1.5; }
-.sp-foot p { margin: 0; flex: 1; }
-.sp-dict { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 7px 12px; border-radius: 10px; border: 1px dashed #00a89b; background: none; color: #00897e; font: inherit; font-weight: 600; cursor: pointer; }
-.sp-dict:hover { background: rgba(0, 168, 155, .08); }
+.sp-act { display: flex; gap: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 .re-outline { position: sticky; top: 70px; display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow: auto; padding: 12px 10px 12px 14px; border-left: 3px solid #b9e6df; }
 .re-outline b { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .re-outline small { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
