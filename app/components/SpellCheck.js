@@ -158,19 +158,10 @@ export default function SpellCheck({ on, onClose, ta, text, hidden, replace, log
         </div>
       )}
       {status !== "ready" ? (
-        <section className="sp-panel" aria-label="Зөв бичгийн шалгалт">
-          {status === "error" ? <p className="sp-err">Толийг ачаалж чадсангүй. Хуудсаа дахин ачаалаад оролдоно уу.</p> : (
-            <div className="sp-about">
-              <p className="spk-btn"><Spark mono size={16} />Монгол хэлний зөв бичгийн толийг ачаалж байна… <small>(≈1.8 MB, зөвхөн эхний удаа)</small></p>
-              <p>
-                Энэ толийг <a href="https://zuv.bichig.dev" target="_blank" rel="noopener noreferrer">zuv.bichig.dev</a> төслийн
-                хүрээнд Д. Батмөнх бүтээсэн. Академич Ц. Дамдинсүрэн нарын «Монгол үсгийн дүрмийн толь»-д тулгуурласан бөгөөд
-                60 мянга орчим үг, тэдгээрийн 2 тэрбум гаруй хувилбарыг агуулдаг. Үнэгүй, нээлттэй толь.
-              </p>
-              <p>Шалгалт таны хөтөч дотор явагдах тул бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
-            </div>
-          )}
-        </section>
+        <p className="sp-line">
+          {status === "error" ? <span className="sp-err">Толийг ачаалж чадсангүй. Хуудсаа дахин ачаалаад оролдоно уу.</span>
+            : <span className="spk-btn"><Spark mono size={14} />Монгол хэлний толийг ачаалж байна… (≈1.8 MB, зөвхөн эхний удаа)</span>}
+        </p>
       ) : (
         <p className="sp-line">
           {issues.length ? <>Зураастай <b>{issues.length}</b> үг байна. Үг дээр дарахад зөв хувилбарууд гарч ирнэ.</> : <span className="ok">✓ Зөв бичгийн алдаа олдсонгүй</span>}
@@ -179,5 +170,21 @@ export default function SpellCheck({ on, onClose, ta, text, hidden, replace, log
         </p>
       )}
     </>
+  );
+}
+
+// «Зөв бичиг шалгах» товч: хулгана аваачихад толийн тухай мэдээлэл гарна
+export function SpellButton({ on, onClick }) {
+  return (
+    <span className="re-spell-wrap">
+      <button type="button" className={"re-spell" + (on ? " on" : "")} aria-pressed={on} aria-describedby="re-spell-tip" onClick={onClick}>✓ Зөв бичиг шалгах</button>
+      <span className="re-spell-tip" id="re-spell-tip" role="tooltip">
+        <b>Монгол хэлний зөв бичгийн толь</b>
+        Энэ толийг <a href="https://zuv.bichig.dev" target="_blank" rel="noopener noreferrer">zuv.bichig.dev</a> төслийн хүрээнд
+        Д. Батмөнх бүтээсэн. Академич Ц. Дамдинсүрэн нарын «Монгол үсгийн дүрмийн толь»-д тулгуурласан бөгөөд 60 мянга орчим үг,
+        тэдгээрийн 2 тэрбум гаруй хувилбарыг агуулдаг. Үнэгүй, нээлттэй толь.
+        <small>Шалгалт таны хөтөч дотор явагдах тул бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</small>
+      </span>
+    </span>
   );
 }

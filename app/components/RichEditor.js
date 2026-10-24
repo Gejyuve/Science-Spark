@@ -6,7 +6,7 @@ import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES,
 import { uploadImageFile } from "./ImageInput";
 import DictAdd from "./DictAdd";
 import Spark from "./Spark";
-import SpellCheck from "./SpellCheck";
+import SpellCheck, { SpellButton } from "./SpellCheck";
 
 // Нийтлэлийн агуулгын засварлагч: хэрэгслийн мөр, урьдчилж харах, зураг, холбоос, ишлэл, эх сурвалж.
 // Агуулга нь энгийн тэмдэглэгээгээр (lib/md.js) хадгалагдана.
@@ -190,8 +190,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
             <Tool title="Зураг оруулах" onClick={() => setDlg("img")}>{I.img}</Tool>
             <Tool title="Эх сурвалжийн ишлэл [1] оруулах" onClick={() => (sources.length ? setDlg("cite") : setDlg("src"))}>{I.cite}</Tool>
             <i className="re-sep" />
-            <button type="button" className={"re-spell" + (spell ? " on" : "")} aria-pressed={spell} onClick={() => setSpell((x) => !x)}
-              title="Монгол хэлний зөв бичгийн толиор шалгах (zuv.bichig.dev)">✓ Зөв бичиг шалгах</button>
+            <SpellButton on={spell} onClick={() => setSpell((x) => !x)} />
           </div>
         )}
         <span className={"wr-count" + (text.trim() && rule.error ? " bad" : text.trim() ? " ok" : "")}>
