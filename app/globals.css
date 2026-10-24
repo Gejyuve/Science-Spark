@@ -2328,6 +2328,29 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 /* Бүтэц: засварлагч */
 .re-main { display: block; }
 .re-main.pv { display: block; }
+/* Зөв бичгийн шалгагч (SpellCheck.js): textarea-гийн дээрх тунгалаг давхарга + санал */
+.re-main { position: relative; }
+.sp-layer { position: absolute; pointer-events: none; overflow: hidden; box-sizing: border-box; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; color: transparent; }
+.sp-m { background: none; color: transparent; text-decoration: underline wavy #e5484d; text-decoration-skip-ink: none; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+.sp-m.rule, .sp-m.mix { text-decoration-color: #f08c00; }
+.sp-pop { position: absolute; z-index: 6; width: 280px; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 10px 28px rgba(20, 40, 50, .18); font-size: 13px; }
+.sp-pop p { margin: 6px 0 0; color: var(--muted); line-height: 1.45; }
+.sp-kind { display: inline-block; font-size: 11px; font-weight: 700; color: #d23c41; }
+.sp-kind.rule, .sp-kind.mix { color: #d97706; }
+.sp-sug { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; color: var(--muted); }
+.sp-sug button { padding: 5px 10px; border-radius: 8px; border: 1px solid #00a89b; background: none; color: #00897e; font: inherit; font-weight: 600; cursor: pointer; }
+.sp-sug button:hover { background: #00a89b; color: #fff; }
+.sp-act { display: flex; gap: 12px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.sp-act button, .sp-bar button { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+.sp-act button:hover, .sp-bar button:hover { color: #00897e; text-decoration: underline; }
+.sp-bar { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.sp-bar b { color: var(--ink); }
+.sp-bar .ok { color: #00897e; }
+.sp-bar .bad { color: #c2400d; }
+.sp-bar > button:first-of-type:not(:last-child) { color: #00897e; font-weight: 600; }
+.sp-dot { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; background: #e5484d; vertical-align: 0; }
+.sp-dot.rule { margin-left: 10px; background: #f08c00; }
+.sp-legend { font-size: 11.5px; }
 .re-outline { position: sticky; top: 70px; display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow: auto; padding: 12px 10px 12px 14px; border-left: 3px solid #b9e6df; }
 .re-outline b { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .re-outline small { font-size: 11.5px; color: var(--muted); line-height: 1.5; }

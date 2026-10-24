@@ -6,6 +6,7 @@ import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES,
 import { uploadImageFile } from "./ImageInput";
 import DictAdd from "./DictAdd";
 import Spark from "./Spark";
+import SpellCheck from "./SpellCheck";
 
 // Нийтлэлийн агуулгын засварлагч: хэрэгслийн мөр, урьдчилж харах, зураг, холбоос, ишлэл, эх сурвалж.
 // Агуулга нь энгийн тэмдэглэгээгээр (lib/md.js) хадгалагдана.
@@ -210,6 +211,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
           className="re-area"
           hidden={tab !== "write"}
         />
+        <SpellCheck ta={ta} text={text} hidden={tab !== "write"} replace={replace} />
       </div>
       {text.trim() && rule.error && <p className="re-rule">{rule.error}</p>}
       {tab === "preview" && (
