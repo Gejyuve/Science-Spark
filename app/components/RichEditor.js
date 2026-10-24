@@ -6,6 +6,7 @@ import { render, SOURCE_TYPES, SOURCE_LANGS, formatSource, bodyRule, WORD_RULES,
 import { uploadImageFile } from "./ImageInput";
 import DictAdd from "./DictAdd";
 import Spark from "./Spark";
+import SpellCheck, { SpellButton } from "./SpellCheck";
 
 // Нийтлэлийн агуулгын засварлагч: хэрэгслийн мөр, урьдчилж харах, зураг, холбоос, ишлэл, эх сурвалж.
 // Агуулга нь энгийн тэмдэглэгээгээр (lib/md.js) хадгалагдана.
@@ -59,6 +60,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
   const [dlg, setDlg] = useState(null); // "link" | "img" | "src" | {edit: i}
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const [spell, setSpell] = useState(false);
   // Төрлөөс хамаарах үгийн тоо, латин үсгийн дүрэм
   const [kind, setKind] = useState("Нийтлэл");
   useEffect(() => {
@@ -187,6 +189,8 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
             <i className="re-sep" />
             <Tool title="Зураг оруулах" onClick={() => setDlg("img")}>{I.img}</Tool>
             <Tool title="Эх сурвалжийн ишлэл [1] оруулах" onClick={() => (sources.length ? setDlg("cite") : setDlg("src"))}>{I.cite}</Tool>
+            <i className="re-sep" />
+            <SpellButton on={spell} onClick={() => setSpell((x) => !x)} />
           </div>
         )}
         <span className={"wr-count" + (text.trim() && rule.error ? " bad" : text.trim() ? " ok" : "")}>
@@ -210,6 +214,7 @@ export default function RichEditor({ defaultValue = "", defaultSources = [], log
           className="re-area"
           hidden={tab !== "write"}
         />
+        <SpellCheck on={spell} onClose={() => setSpell(false)} ta={ta} text={text} hidden={tab !== "write"} replace={replace} loggedIn={loggedIn} />
       </div>
       {text.trim() && rule.error && <p className="re-rule">{rule.error}</p>}
       {tab === "preview" && (
