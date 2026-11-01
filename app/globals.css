@@ -4370,3 +4370,9 @@ a.as-row { text-decoration: none; }
 .cp-qrow .st.no { background: #fff4e5; color: #b26a00; }
 :root[data-theme="dark"] .cp-qrow .st.no { background: #3a2a12; color: #f0b45c; }
 .cp-queue h3 em { margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #fdecec; color: #e5484d; font-size: 12px; font-style: normal; font-weight: 600; vertical-align: middle; }
+/* Засах хуудас: редакцын шууд засвар, эвент/зарлалын сонголт, зураг */
+.ed-live { margin: 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, var(--teal, #14b8a6) 12%, transparent); border: 1px solid color-mix(in srgb, var(--teal, #14b8a6) 35%, transparent); color: var(--ink); font-size: 14px; }
+.ed-form select { padding: 11px 13px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 15px; font-weight: 400; }
+.ed-imgs { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+.ed-img { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; min-width: 0; }
+@media (max-width: 720px) { .ed-imgs { grid-template-columns: 1fr; } }

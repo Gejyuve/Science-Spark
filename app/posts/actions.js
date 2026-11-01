@@ -169,7 +169,9 @@ export async function updatePost(formData) {
   // Редакц бичээчийн ковер зургийг хэвээр үлдээж болно
   const imageId = (await ownImage(user.id, formData.get("image"))) ?? (Number(formData.get("image")) === cur.image_id ? cur.image_id : null);
   const meta = JSON.stringify(articleMeta(formData));
-  if (staffEdit) {
+  // Админ, супер админ өөрийн нийтлэгдсэн нийтлэлээ засахад ч хяналтад буцахгүй, шууд хэрэгжинэ
+  const selfDirect = cur.author_id === user.id && isStaff(user) && cur.status === "published";
+  if (staffEdit || selfDirect) {
     // Редакцын засвар: нийтлэгдсэн хэвээр, түүхэнд үлдэнэ.
     await sql`UPDATE posts SET kind = ${kind}, title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, category = ${category},
               meta = COALESCE(meta, '{}'::jsonb) || ${meta}::jsonb WHERE id = ${postId}`;
@@ -247,7 +249,22 @@ export async function editContent(formData) {
     }
   }
   if (["Бодрол", "Эвент", "Зарлал"].includes(cur.kind) && latinShare(body) > LATIN_LIMIT) fail(LATIN_MSG);
-  await sql`UPDATE posts SET title = ${title}, subtitle = ${subtitle}, body = ${body}, meta = ${JSON.stringify(m)}::jsonb WHERE id = ${postId}`;
+  // Эвент, зарлалын төрөл, хэлбэр, ковер зураг, хөтөлбөрийн зураг (талбар ирсэн үед л солино)
+  let imageId = cur.image_id;
+  if (cur.kind === "Эвент" || cur.kind === "Зарлал") {
+    const types = cur.kind === "Эвент" ? EVENT_TYPES : ANNOUNCE_TYPES;
+    if (types.includes(formData.get("type"))) m.type = formData.get("type");
+    if (cur.kind === "Эвент" && EVENT_FORMATS.includes(formData.get("format"))) m.format = formData.get("format");
+    const keep = (raw, old) => (old && Number(raw) === Number(old) ? old : null);
+    if (formData.has("image")) {
+      imageId = (await ownImage(user.id, formData.get("image"))) ?? keep(formData.get("image"), cur.image_id);
+      if (!imageId) fail("Ковер зураг оруулна уу");
+    }
+    if (cur.kind === "Эвент" && formData.has("program")) {
+      m.program = (await ownImage(user.id, formData.get("program"))) ?? keep(formData.get("program"), m.program);
+    }
+  }
+  await sql`UPDATE posts SET title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, meta = ${JSON.stringify(m)}::jsonb WHERE id = ${postId}`;
   await afterEdit(cur, user, staffEdit, { title, subtitle, body, note });
   // Клубийн удирдагч буцаасан даалгаврыг гишүүн засвал дахин удирдагчийн зөвшөөрөлд очно
   if (!staffEdit && cur.kind === TASK_KIND && cur.status === LEADER_NO) {

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { googleCalUrl, fmtEventRange, spanText, validLocal } from "@/lib/events";
 import { notFound, redirect } from "next/navigation";
@@ -800,10 +801,11 @@ export default async function PostPage({ params, searchParams }) {
                 ))}
               </div>
             ) : roots.map((c, i) => (
-              <div key={c.id}>
+              // Fragment: divider + comment stay direct children of .ar-content so its gap spaces both sides of the line
+              <Fragment key={c.id}>
                 {i > 0 && <div className="ar-divider" />}
                 <CommentNode c={c} kids={kids} user={user} postId={post.id} canReply={open} depth={0} following={following} bounty={bounty} />
-              </div>
+              </Fragment>
             ))}
 
             {published && isAdmin(user) && !isAuthor && (
