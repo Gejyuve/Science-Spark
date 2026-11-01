@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
-import { leaderClub, taskTypes } from "@/lib/tasks";
+import { memberClub, taskTypes } from "@/lib/tasks";
 import { createTask } from "../actions";
 import TaskForm from "../../components/TaskForm";
 import TopNav from "../../components/TopNav";
@@ -16,7 +16,7 @@ export default async function NewTask({ searchParams }) {
   if (!user) redirect("/login");
   const { error } = await searchParams;
   await ensureSchema();
-  const club = await leaderClub(user.id);
+  const club = await memberClub(user.id);
   return (
     <div className="wr-page">
       <span className="au-blob a" aria-hidden="true" />
@@ -35,11 +35,11 @@ export default async function NewTask({ searchParams }) {
       ) : (
         <section className="wr-lock">
           <img src="/icons/logo.svg" width={64} height={64} alt="" />
-          <h1>Даалгаврыг клубийн удирдагч нэмнэ</h1>
-          <p>Даалгавар бол клубүүдын бие биетэйгээ хуваалцдаг туршилт, эвент, воркшопын санаа. Клубийн удирдагч клубийнхээ нэрээр нэмж, бусад клуб ашиглах тусам клубт оч нэмэгдэнэ.</p>
+          <h1>Даалгаврыг клубийн гишүүд нэмнэ</h1>
+          <p>Даалгавар бол клубүүдийн бие биетэйгээ хуваалцдаг туршилт, эвент, воркшопын санаа. Клубийн гишүүн бүр клубийнхээ нэрээр нэмж, удирдагч зөвшөөрсний дараа редакц руу илгээгдэнэ. Бусад клуб ашиглах тусам клубт оч нэмэгдэнэ.</p>
           <div className="wr-lock-acts">
             <Link href="/tasks" className="wr-go">Даалгаврууд үзэх</Link>
-            <Link href="/clubs/new" className="wr-lock-link">Клуб бүртгүүлэх</Link>
+            <Link href="/clubs" className="wr-lock-link">Клубт нэгдэх</Link>
           </div>
         </section>
       )}

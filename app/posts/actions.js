@@ -15,7 +15,7 @@ import { cleanSources, bodyRule } from "@/lib/md";
 import { walletBalance, fmtMnt } from "@/lib/money";
 import { BOUNTY_MIN, BOUNTY_MAX, REFUND_AFTER_ANSWERS, lockBounty, payBounty, refundStatement } from "@/lib/bounty";
 import { KINDS, QUICK_KINDS, INSTANT_KINDS, EVENT_TYPES, EVENT_FORMATS, latinShare, LATIN_LIMIT, LATIN_MSG, EVENT_BODY_MIN, ANNOUNCE_TYPES } from "@/lib/format";
-import { leaderClub, leaderOrg, CLUB_KINDS } from "@/lib/tasks";
+import { leaderClub, leaderOrg, CLUB_KINDS, TASK_KIND, LEADER_WAIT, LEADER_NO } from "@/lib/tasks";
 import { recordRevision, addCredit } from "@/lib/revisions";
 import { ACT_KEY, ACT_REWARD, checkPostLimit, grantPostReward, undoPostReward, grantAnswerReward, undoAnswerReward } from "@/lib/limits";
 import { celebrate, firstReward, hadFirst, FIRST_KEYS, FIRST_REWARD } from "@/lib/celebrate";
@@ -266,6 +266,13 @@ export async function editContent(formData) {
   }
   await sql`UPDATE posts SET title = ${title}, subtitle = ${subtitle}, body = ${body}, image_id = ${imageId}, meta = ${JSON.stringify(m)}::jsonb WHERE id = ${postId}`;
   await afterEdit(cur, user, staffEdit, { title, subtitle, body, note });
+  // Клубийн удирдагч буцаасан даалгаврыг гишүүн засвал дахин удирдагчийн зөвшөөрөлд очно
+  if (!staffEdit && cur.kind === TASK_KIND && cur.status === LEADER_NO) {
+    const [back] = await sql`UPDATE posts p SET status = ${LEADER_WAIT}, review_note = NULL FROM clubs c
+                             WHERE p.id = ${postId} AND p.status = ${LEADER_NO} AND c.id = p.club_id RETURNING c.leader_id, c.id`;
+    if (back?.leader_id) await notify({ userId: back.leader_id, kind: "task_club", actorId: user.id, postId, clubId: back.id });
+    redirect(`/post/${postId}?ok=${encodeURIComponent("Засвар хадгалагдаж, клубийн удирдагч руу дахин илгээгдлээ")}`);
+  }
   redirect(`/post/${postId}?ok=${encodeURIComponent("Засвар хадгалагдлаа")}`);
 }
 

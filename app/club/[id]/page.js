@@ -11,7 +11,7 @@ import { InfluenceBtn } from "../../components/Influence";
 import { ClubAv, ClubFollow } from "../../components/ClubBits";
 import { Avatar, Stat, FollowBtn, followingSet, fmtK } from "../../components/Bits";
 import { chatUnread } from "@/lib/chat";
-import { listTasks, listReports } from "@/lib/tasks";
+import { listTasks, listReports, clubTaskQueue, LEADER_WAIT, LEADER_NO } from "@/lib/tasks";
 import TaskCard, { ReportCard } from "../../components/TaskCard";
 import ScrollActive from "../../components/ScrollActive";
 import { leaveClub, declineInvite, acceptInvite, toggleClubFollow, decideRequests, removeMember, cancelRequest, offerLead, cancelLeadOffer, acceptLead, declineLead } from "../../clubs/actions";
@@ -88,7 +88,8 @@ export default async function ClubPage({ params, searchParams }) {
       (SELECT MAX(at) FROM club_moves mv WHERE mv.user_id = u.id) AS moved_at
     FROM club_requests r JOIN users u ON u.id = r.user_id WHERE r.club_id = ${id} ORDER BY r.created_at` : [];
   const tab = isLeader && sp.tab === "requests" ? "requests" : sp.tab === "tasks" ? "tasks" : sp.tab === "reports" ? "reports" : "members";
-  const [tasks, reports] = await Promise.all([listTasks({ clubId: id, limit: 60 }), listReports({ clubId: id, limit: 60 })]);
+  const [tasks, reports, queue] = await Promise.all([listTasks({ clubId: id, limit: 60 }), listReports({ clubId: id, limit: 60 }), isLeader ? clubTaskQueue(id) : isMember ? clubTaskQueue(id, user.id) : []]);
+  const queueWait = isLeader ? queue.filter((q) => q.status === LEADER_WAIT).length : 0;
   const unreadChat = isMember ? await chatUnread(user.id, id) : 0;
   const following = await followingSet(user);
   const follows = await clubFollowSet(user);
@@ -234,7 +235,7 @@ export default async function ClubPage({ params, searchParams }) {
           <Link href={`/club/${id}/chat`}>
             <img className="ic" src="/icons/comment18.svg" width={14} height={14} alt="" />Чат{unreadChat > 0 && <em className="hot">{unreadChat > 99 ? "99+" : unreadChat}</em>}
           </Link>
-          <Link href={`/club/${id}?tab=tasks`} className={tab === "tasks" ? "on" : ""} scroll={false}>Даалгавар <em>{tasks.length}</em></Link>
+          <Link href={`/club/${id}?tab=tasks`} className={tab === "tasks" ? "on" : ""} scroll={false}>Даалгавар <em className={queueWait ? "hot" : ""} title={queueWait ? `${queueWait} даалгавар таны зөвшөөрлийг хүлээж байна` : undefined}>{tasks.length}</em></Link>
           <Link href={`/club/${id}?tab=reports`} className={tab === "reports" ? "on" : ""} scroll={false}>Тайлан <em>{reports.length}</em></Link>
           {isLeader && <Link href={`/club/${id}?tab=requests`} className={tab === "requests" ? "on" : ""} scroll={false}>Хүсэлт <em className={requests.length ? "hot" : ""}>{requests.length}</em></Link>}
         </nav>
@@ -242,9 +243,21 @@ export default async function ClubPage({ params, searchParams }) {
 
         {tab === "tasks" ? (
           <section className="cp-card cp-list">
-            {isLeader && <div className="cp-req-head"><h2>Клубийн даалгаврууд</h2><Link href="/tasks/new" className="cp-btn sm">+ Даалгавар нэмэх</Link></div>}
+            {isMember && <div className="cp-req-head"><h2>Клубийн даалгаврууд</h2><Link href="/tasks/new" className="cp-btn sm">+ Даалгавар нэмэх</Link></div>}
+            {queue.length > 0 && (
+              <div className="cp-queue">
+                <h3>{isLeader ? "Нийтлэгдээгүй даалгаврууд" : "Таны нэмсэн даалгаврууд"} {queueWait > 0 && <em className="hot">{queueWait} зөвшөөрөл хүлээж байна</em>}</h3>
+                {queue.map((q) => (
+                  <Link key={q.id} href={`/post/${q.id}`} className="cp-qrow">
+                    <Avatar user={{ id: q.author_id, avatar: q.avatar, first_name: q.first_name }} size={32} />
+                    <span className="t">{q.title}<small>{q.initial ? `${q.initial}.${q.first_name}` : q.first_name}</small></span>
+                    <span className={"st" + (q.status === LEADER_NO ? " no" : "")}>{q.status === "pending" ? "Редакцад" : q.status === LEADER_NO ? "Засвар хийх" : isLeader ? "Шийдэх" : "Удирдагчид"}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
             {tasks.length ? <div className="tk-grid">{tasks.map((t) => <TaskCard key={t.id} t={t} />)}</div>
-              : <p className="muted">{isLeader ? "Клубийнхаа хийж үзсэн туршилт, эвент, воркшопыг даалгавар болгон хуваалцаарай." : "Энэ клуб одоохондоо даалгавар нэмээгүй байна."}</p>}
+              : <p className="muted">{isMember ? "Клубийнхаа хийж үзсэн туршилт, эвент, воркшопыг даалгавар болгон хуваалцаарай." : "Энэ клуб одоохондоо даалгавар нэмээгүй байна."}</p>}
           </section>
         ) : tab === "reports" ? (
           <section className="cp-card cp-list">

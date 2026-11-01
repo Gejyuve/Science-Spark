@@ -8,7 +8,7 @@ import { ClubPerson, ClubAv } from "../components/ClubBits";
 import TaskCard, { ReportCard } from "../components/TaskCard";
 import Composer from "../components/Composer";
 import { Avatar } from "../components/Bits";
-import { listTasks, taskCount, leaderClub, listReports, reportCount } from "@/lib/tasks";
+import { listTasks, taskCount, leaderClub, memberClub, listReports, reportCount } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Клуб · Science Spark" };
@@ -19,11 +19,11 @@ const PER = 10;
 export default async function Clubs({ searchParams }) {
   const sp = await searchParams;
   const period = PERIODS[sp.t] ? sp.t : "all";
-  let user = null, board = [], tasks = [], tasksN = 0, myClub = null, reports = [], reportsN = 0;
+  let user = null, board = [], tasks = [], tasksN = 0, myClub = null, inClub = null, reports = [], reportsN = 0;
   try {
     user = await getUser();
     await ensureSchema();
-    [board, tasks, tasksN, myClub, reports, reportsN] = await Promise.all([clubBoard(period), listTasks({ limit: 4 }), taskCount(), leaderClub(user?.id), listReports({ limit: 4 }), reportCount()]);
+    [board, tasks, tasksN, myClub, inClub, reports, reportsN] = await Promise.all([clubBoard(period), listTasks({ limit: 4 }), taskCount(), leaderClub(user?.id), memberClub(user?.id), listReports({ limit: 4 }), reportCount()]);
   } catch (e) {}
   const follows = await clubFollowSet(user);
 
@@ -104,7 +104,7 @@ export default async function Clubs({ searchParams }) {
                 <b>Одоохондоо даалгавар алга</b>
                 <p>Клубийн удирдагч анхны туршилт, эвент, воркшопын санаагаа хуваалцаад бусад клубүүдийг урамшуулаарай.</p>
               </div>
-              {myClub && <Link href="/tasks/new" className="cl-band-add">+ Даалгавар нэмэх</Link>}
+              {inClub && <Link href="/tasks/new" className="cl-band-add">+ Даалгавар нэмэх</Link>}
             </div>
           )}
         </section>

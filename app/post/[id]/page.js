@@ -25,9 +25,10 @@ import { render, outline } from "@/lib/md";
 import { Sources } from "../../components/RichEditor";
 import { ClubPerson } from "../../components/ClubBits";
 import { clubFollowSet } from "@/lib/clubs";
-import { TASK_KIND, REPORT_KIND, AUTHOR_SHARE } from "@/lib/tasks-shared";
+import { TASK_KIND, REPORT_KIND, AUTHOR_SHARE, LEADER_WAIT, LEADER_NO } from "@/lib/tasks-shared";
 import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { listReports, leaderClub } from "@/lib/tasks";
+import { leaderDecideTask } from "../../tasks/actions";
 import { ReportCard } from "../../components/TaskCard";
 import { shareText, shareDescription } from "@/lib/og";
 import MiniMap from "../../components/MiniMap";
@@ -441,7 +442,11 @@ export default async function PostPage({ params, searchParams }) {
   const published = post.status === "published";
   // Хэлэлцэж буй үг нийтэд нээлттэй: санал, сэтгэгдэл, хадгалах, хуваалцах боломжтой
   const open = published || (isTerm && post.status === "discussion");
-  if (!open && !isAuthor && !isStaff(user)) notFound();
+  // Гишүүний нэмсэн даалгаврыг клубийн удирдагч харж, зөвшөөрөх эсвэл буцаана
+  const leaderStage = isTask && (post.status === LEADER_WAIT || post.status === LEADER_NO);
+  const isClubLeader = isTask && !open && !!user && !!post.club_id
+    && (await sql`SELECT 1 FROM clubs WHERE id = ${post.club_id} AND leader_id = ${user.id}`).length > 0;
+  if (!open && !isAuthor && !isStaff(user) && !isClubLeader) notFound();
   const votes = isTerm
     ? (await sql`SELECT COUNT(*) FILTER (WHERE vote = 1)::int AS up, COUNT(*) FILTER (WHERE vote = -1)::int AS down,
                         MAX(CASE WHEN user_id = ${user ? user.id : 0} THEN vote END)::int AS my_vote
@@ -592,7 +597,26 @@ export default async function PostPage({ params, searchParams }) {
             {post.status === "draft" && (
               <p className="notice">Ноорог. {isAuthor ? <Link href={`/post/${post.id}/preview`}>Урьдчилж хараад редакц руу илгээх →</Link> : "Бичээч хараахан илгээгээгүй."}</p>
             )}
-            {!open && post.status !== "draft" && (
+            {leaderStage && (
+              <div className={"lt-box" + (post.status === LEADER_NO ? " no" : "")}>
+                {post.status === LEADER_WAIT ? (
+                  <p><b>Клубийн удирдагчийн зөвшөөрөл хүлээж байна.</b> Удирдагч зөвшөөрвөл редакц руу илгээгдэж, редакц батлахад «Даалгавар» хуудсанд нийтлэгдэнэ.</p>
+                ) : (
+                  <p><b>Клубийн удирдагч засвар хийхээр буцаасан:</b> {post.review_note || ""}{isAuthor && <> <Link href={`/post/${post.id}/edit`}>Засах →</Link></>}</p>
+                )}
+                {isClubLeader && post.status === LEADER_WAIT && (
+                  <form action={leaderDecideTask} className="lt-form">
+                    <input type="hidden" name="post_id" value={post.id} />
+                    <textarea name="note" rows={2} maxLength={500} placeholder="Буцаах бол юуг засах хэрэгтэйг бичнэ үү" />
+                    <div className="lt-acts">
+                      <button type="submit" name="decision" value="ok" className="btn">Зөвшөөрч редакц руу илгээх</button>
+                      <button type="submit" name="decision" value="no" className="btn ghost">Засвар хийхээр буцаах</button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+            {!open && post.status !== "draft" && !leaderStage && (
               <p className={post.status === "pending" ? "notice" : "error"}>
                 {post.status === "rejected"
                   ? `Редакц засвар хийхээр буцаасан: ${post.review_note || ""}`

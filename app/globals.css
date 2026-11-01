@@ -4348,6 +4348,28 @@ a.as-row { text-decoration: none; }
 .mz-new > summary::-webkit-details-marker { display: none; }
 .mz-new[open] > summary { margin-bottom: 12px; }
 
+/* Гишүүний нэмсэн даалгавар: клубийн удирдагчийн зөвшөөрөл */
+.lt-box { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--teal-bg); color: var(--ink); font-size: 14px; display: grid; gap: 10px; }
+.lt-box p { margin: 0; line-height: 1.5; }
+.lt-box b { color: var(--teal); }
+.lt-box.no { background: #fff4e5; }
+.lt-box.no b { color: #b26a00; }
+:root[data-theme="dark"] .lt-box.no { background: #3a2a12; }
+:root[data-theme="dark"] .lt-box.no b { color: #f0b45c; }
+.lt-box a { color: var(--teal); font-weight: 600; }
+.lt-form { display: grid; gap: 8px; }
+.lt-form textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; resize: vertical; }
+.lt-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.cp-queue { display: grid; gap: 8px; margin: 0 0 16px; }
+.cp-queue h3 { margin: 0; font-size: 15px; }
+.cp-qrow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--ink); text-decoration: none; }
+.cp-qrow:hover { border-color: var(--teal); }
+.cp-qrow .t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cp-qrow .t small { display: block; color: var(--muted); font-size: 12px; }
+.cp-qrow .st { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--teal-bg); color: var(--teal); white-space: nowrap; }
+.cp-qrow .st.no { background: #fff4e5; color: #b26a00; }
+:root[data-theme="dark"] .cp-qrow .st.no { background: #3a2a12; color: #f0b45c; }
+.cp-queue h3 em { margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #fdecec; color: #e5484d; font-size: 12px; font-style: normal; font-weight: 600; vertical-align: middle; }
 /* Засах хуудас: редакцын шууд засвар, эвент/зарлалын сонголт, зураг */
 .ed-live { margin: 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, var(--teal, #14b8a6) 12%, transparent); border: 1px solid color-mix(in srgb, var(--teal, #14b8a6) 35%, transparent); color: var(--ink); font-size: 14px; }
 .ed-form select { padding: 11px 13px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 15px; font-weight: 400; }
