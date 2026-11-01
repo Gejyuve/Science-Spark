@@ -3,10 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { getUser, canWrite, isStaff } from "@/lib/auth";
 import { writeLevel } from "@/lib/levels";
-import { KINDS } from "@/lib/format";
+import { KINDS, EVENT_TYPES, EVENT_FORMATS, ANNOUNCE_TYPES } from "@/lib/format";
 import { updatePost, deletePost, editContent } from "../../../posts/actions";
 import PostForm from "../../../components/PostForm";
 import Shell from "../../../components/Shell";
+import ImageInput from "../../../components/ImageInput";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Засах · Science Spark" };
@@ -28,8 +29,13 @@ export default async function EditPage({ params, searchParams }) {
   if (post.status === "merged") redirect(`/post/${post.meta?.merged_into || ""}`);
   // Хүлээгдэж буй контентыг редакц засварлах самбараас засна
   if (staff && post.status === "pending") redirect(`/review/${post.id}`);
-  // Редакцын засвар шууд хэрэгжинэ. Бичээчийн нийтлэл, мэдээний засвар дахин хяналтад орно.
-  const live = staff || (post.status === "published" && !KINDS.includes(post.kind));
+  // Редакцын (админ, супер админ) засвар бичээч рүү буцахгүй, шууд хэрэгжинэ (өөрийнх нь нийтлэгдсэн контент ч мөн).
+  // Энгийн бичээчийн нийтлэл, мэдээний засвар дахин хяналтад орно.
+  const direct = staff || (isStaff(user) && post.status === "published");
+  const live = direct || (post.status === "published" && !KINDS.includes(post.kind));
+  const directNote = direct && post.status === "published" && (
+    <p className="ed-live">Редакцын засвар тул бичээч рүү буцахгүй, хадгалмагц сайтад шууд шинэчлэгдэнэ.{staff ? " Бичээчид мэдэгдэл очно." : ""}</p>
+  );
   const noteField = live && (
     <label className="ed-note">
       <span>Юу зассан бэ? (засварын түүхэнд нийтэд харагдана)</span>
@@ -44,11 +50,11 @@ export default async function EditPage({ params, searchParams }) {
           action={updatePost}
           post={post}
           error={error}
-          rules={own}
+          rules={own && !direct}
           kinds={["Нийтлэл", "Мэдээ"].filter((k) => k === post.kind || canWrite(user, k))}
           locked={{ Нийтлэл: writeLevel("Нийтлэл"), Мэдээ: writeLevel("Мэдээ") }}
           submit={live ? "Засвар хадгалах" : undefined}
-          heading={staff ? "Редакц: нийтлэл засварлах" : post.status === "published" ? "Нийтлэлээ засварлах (дахин хяналтад орно)" : "Нийтлэлээ засварлах"}
+          heading={staff ? "Редакц: нийтлэл засварлах" : direct ? "Нийтлэлээ засварлах (шууд хэрэгжинэ)" : post.status === "published" ? "Нийтлэлээ засварлах (дахин хяналтад орно)" : "Нийтлэлээ засварлах"}
           extra={<>{noteField || (post.status === "published" && <label className="ed-note"><span>Юу зассан бэ? (засварын түүхэнд харагдана)</span><input name="edit_note" maxLength={300} /></label>)}<Link href={`/post/${post.id}`} className="wr-cancel">Цуцлах</Link></>}
         />
         {own && (
@@ -63,6 +69,15 @@ export default async function EditPage({ params, searchParams }) {
 
   const m = post.meta || {};
   const short = post.kind === "Асуулт" || post.kind === "Бодрол";
+  const ev = post.kind === "Эвент", ann = post.kind === "Зарлал";
+  const pick = (name, label, v, list) => (
+    <label key={name}><span>{label}</span>
+      <select name={name} defaultValue={list.includes(v) ? v : ""} required>
+        <option value="" disabled>Сонгох</option>
+        {list.map((x) => <option key={x}>{x}</option>)}
+      </select>
+    </label>
+  );
   const f = (name, label, v, props = {}) => (
     <label key={name}><span>{label}</span><input name={name} defaultValue={v ?? ""} {...props} /></label>
   );
@@ -70,6 +85,7 @@ export default async function EditPage({ params, searchParams }) {
     <Shell user={user} header="nav">
       <div className="ed-page">
         <h1>{staff ? `Редакц: ${post.kind} засварлах` : `${post.kind} засварлах`}</h1>
+        {directNote}
         {error && <p className="error">{error}</p>}
         <form action={editContent} className="ed-form">
           <input type="hidden" name="post_id" value={post.id} />
@@ -79,7 +95,9 @@ export default async function EditPage({ params, searchParams }) {
             <textarea name="body" required rows={short ? 4 : 10} maxLength={short ? 300 : post.kind === "Эвент" ? 1000 : post.kind === "Зарлал" ? 500 : 40000} defaultValue={post.body} />
           </label>
           {post.kind === "Бодрол" && f("source", "Эх сурвалж (холбоос)", m.source, { maxLength: 300 })}
-          {post.kind === "Эвент" && (<div className="ed-grid">
+          {ev && (<div className="ed-grid">
+            {pick("type", "Төрөл", m.type, EVENT_TYPES)}
+            {pick("format", "Хэлбэр", m.format, EVENT_FORMATS)}
             {f("starts_at", "Эхлэх", m.starts_at, { type: "datetime-local", required: true })}
             {f("ends_at", "Дуусах", m.ends_at, { type: "datetime-local", required: true })}
             {f("location", "Байршил", m.location, { maxLength: 200 })}
@@ -88,12 +106,25 @@ export default async function EditPage({ params, searchParams }) {
             {f("link", "Холбоос", m.link, { maxLength: 300 })}
             {f("register", "Бүртгэлийн заавар", m.register, { maxLength: 500 })}
           </div>)}
-          {post.kind === "Зарлал" && (<div className="ed-grid">
+          {ann && (<div className="ed-grid">
+            {pick("type", "Төрөл", m.type, ANNOUNCE_TYPES)}
             {f("valid_until", "Хүчинтэй хугацаа", m.valid_until, { type: "date", required: true })}
             {f("contact", "Холбоо барих", m.contact, { maxLength: 120, required: true })}
             {f("location", "Байршил", m.location, { maxLength: 200 })}
             {f("link", "Холбоос", m.link, { maxLength: 300 })}
           </div>)}
+          {(ev || ann) && (
+            <div className="ed-imgs">
+              <div className="ed-img"><span>Ковер зураг (1:1)</span>
+                <ImageInput name="image" aspect={1} maxW={1080} variant="slot" title="Зураг нэмэх" hint="1:1" initial={post.image_id || null} required />
+              </div>
+              {ev && (
+                <div className="ed-img"><span>Хөтөлбөрийн зураг (заавал биш)</span>
+                  <ImageInput name="program" maxW={1600} variant="slot wide" title="Хөтөлбөрийн зураг нэмэх" initial={m.program || null} />
+                </div>
+              )}
+            </div>
+          )}
           {noteField || (
             <label className="ed-note"><span>Юу зассан бэ? (засварын түүхэнд нийтэд харагдана)</span><input name="edit_note" maxLength={300} /></label>
           )}
