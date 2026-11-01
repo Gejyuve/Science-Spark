@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { sql, ensureSchema } from "@/lib/db";
 import { audit } from "@/lib/admin";
-import { hashPassword, verifyPassword, createSession, destroySession, getUser, resetToken, checkResetToken } from "@/lib/auth";
+import { hashPassword, verifyPassword, createSession, destroySession, getUser, resetToken, checkResetToken, verifyToken, createUser } from "@/lib/auth";
 import { sendMail, mailReady, siteUrl } from "@/lib/mail";
 import { loadSettings } from "@/lib/settings";
 import { notify } from "@/lib/notify";
@@ -39,19 +39,62 @@ export async function enter(prev, formData) {
   if (!(await loadSettings()).registrationOpen) return fail("Энэ имэйл бүртгэлгүй байна. Шинэ бүртгэл түр хаалттай байна");
   const banned = await sql`SELECT 1 FROM banned_emails WHERE email = ${email}`;
   if (banned.length) return fail("Энэ имэйлээр бүртгүүлэх боломжгүй");
+
+  // И-мэйл илгээх тохиргоогүй (зөвхөн локал туршилт) бол баталгаажуулалтгүйгээр шууд бүртгэнэ.
+  if (!mailReady()) {
+    if (password.length < 8) return fail("Энэ имэйл бүртгэлгүй байна. Шинээр асаахад нууц үг хамгийн багадаа 8 тэмдэгт байна");
+    if (confirm === null) return { step: "confirm", error: null, email };
+    if (String(confirm) !== password) return fail("Нууц үг таарахгүй байна. Дахин бичнэ үү", "confirm");
+    const id = await createUser(email, hashPassword(password));
+    if (!id) return fail("Энэ имэйл дөнгөж сая бүртгэгдлээ. Нэвтэрч орно уу");
+    await createSession(id);
+    redirect("/profile/edit");
+  }
+
+  // Өмнө нь бүртгүүлээд и-мэйлээ баталгаажуулаагүй: нууц үг таарвал холбоосыг дахин илгээнэ.
+  const [pending] = await sql`SELECT password_hash FROM pending_signups WHERE email = ${email}`;
+  if (pending && verifyPassword(password, pending.password_hash)) return sendVerify(email, pending.password_hash);
+
   if (password.length < 8) return fail("Энэ имэйл бүртгэлгүй байна. Шинээр асаахад нууц үг хамгийн багадаа 8 тэмдэгт байна");
   if (confirm === null) return { step: "confirm", error: null, email };
   if (String(confirm) !== password) return fail("Нууц үг таарахгүй байна. Дахин бичнэ үү", "confirm");
 
-  // Овог, нэрийг бүртгүүлсний дараах профайл үүсгэх хуудсанд (/profile/edit) асууна.
-  const created = await sql`
-    INSERT INTO users (email, password_hash, initial, first_name)
-    VALUES (${email}, ${hashPassword(password)}, '', '')
-    ON CONFLICT (email) DO NOTHING
-    RETURNING id`;
-  if (!created.length) return fail("Энэ имэйл дөнгөж сая бүртгэгдлээ. Нэвтэрч орно уу");
-  await createSession(created[0].id);
-  redirect("/profile/edit");
+  // Бүртгэлийг и-мэйл баталгаажтал хүлээлгэнэ. Өөр нууц үгээр дахин бүртгүүлбэл хуучин хүсэлтийг солино
+  // (хуучин холбоос хүчингүй болно), тиймээс бусдын имэйлийг «эзэлж» авах боломжгүй.
+  const hash = hashPassword(password);
+  await sql`DELETE FROM pending_signups WHERE created_at < now() - interval '2 days'`;
+  await sql`INSERT INTO pending_signups (email, password_hash) VALUES (${email}, ${hash})
+            ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, created_at = now()`;
+  return sendVerify(email, hash);
+}
+
+// Баталгаажуулах холбоос илгээгээд «И-мэйлээ шалгана уу» алхмыг харуулна.
+async function sendVerify(email, passwordHash) {
+  const step = (error, sent = false) => ({ step: "verify", error, email, sent });
+  // Нэг хаяг руу 15 минутад 3-аас олон захидал илгээхгүй.
+  const key = `verify:${email}`;
+  const recent = await sql`SELECT COUNT(*)::int AS n FROM login_attempts
+                           WHERE email = ${key} AND created_at > now() - interval '15 minutes'`;
+  if (recent[0].n >= 3) return step("Олон удаа илгээлээ. Ирсэн захидлаа шалгах эсвэл 15 минутын дараа дахин оролдоно уу");
+  await sql`INSERT INTO login_attempts (email) VALUES (${key})`;
+  const link = `${siteUrl()}/verify?t=${verifyToken(email, passwordHash)}`;
+  try {
+    await sendMail({
+      to: email,
+      subject: "Science Spark: и-мэйлээ баталгаажуулна уу",
+      text: `Сайн байна уу!\n\nScience Spark-д бүртгүүлсэн танд баярлалаа. Бүртгэлээ идэвхжүүлэхийн тулд доорх холбоосоор орно уу (24 цагийн турш хүчинтэй):\n${link}\n\nХэрэв та бүртгүүлээгүй бол энэ захидлыг үл тоомсорлоно уу.\n\nScience Spark`,
+      html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1d2a33">
+<p>Сайн байна уу!</p>
+<p>Science Spark-д бүртгүүлсэн танд баярлалаа. Бүртгэлээ идэвхжүүлэхийн тулд доорх товч дээр дарна уу. Холбоос <b>24 цагийн</b> турш хүчинтэй.</p>
+<p><a href="${link}" style="display:inline-block;padding:12px 22px;border-radius:24px;background:#2fbfae;color:#fff;text-decoration:none;font-weight:bold">И-мэйлээ баталгаажуулах</a></p>
+<p style="color:#708c9e;font-size:13px">Хэрэв та бүртгүүлээгүй бол энэ захидлыг үл тоомсорлоно уу. Таны хаягаар бүртгэл үүсэхгүй.</p>
+<p>Science Spark ✦</p></div>`,
+    });
+  } catch (e) {
+    console.error("verify mail", e);
+    return step("И-мэйл илгээж чадсангүй. Хэсэг хугацааны дараа «Дахин илгээх» товчийг дарна уу");
+  }
+  return step(null, true);
 }
 
 // Нууц үг сэргээх линк и-мейлээр илгээнэ. Бүртгэлтэй эсэхээс үл хамааран ижил хариу өгнө.
@@ -85,7 +128,10 @@ export async function forgotPassword(formData) {
     } catch (e) {
       console.error("reset mail", e);
       done(`error=${encodeURIComponent("И-мейл илгээж чадсангүй. Хэсэг хугацааны дараа дахин оролдоно уу")}`);
-    }
+    }  } else {
+    // Бүртгүүлээд и-мэйлээ баталгаажуулаагүй бол нууц үг сэргээхийн оронд баталгаажуулах холбоосыг дахин илгээнэ.
+    const [pending] = await sql`SELECT password_hash FROM pending_signups WHERE email = ${email}`;
+    if (pending) await sendVerify(email, pending.password_hash);
   }
   done(`sent=${encodeURIComponent(email)}`);
 }
