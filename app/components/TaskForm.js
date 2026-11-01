@@ -109,10 +109,10 @@ export default function TaskForm({ action, club, avatar, types, error }) {
         </section>
 
         <section className="wr-card wr-foot">
-          <span className="cp-review"><img src="/icons/f_shield.svg" width={18} height={18} alt="" />Редакц шалгаж баталсны дараа нийтлэгдэнэ</span>
+          <span className="cp-review"><img src="/icons/f_shield.svg" width={18} height={18} alt="" />{club.is_leader === false ? "Клубийн удирдагч зөвшөөрч, редакц баталсны дараа нийтлэгдэнэ" : "Редакц шалгаж баталсны дараа нийтлэгдэнэ"}</span>
           <span className="ss-grow" />
           <button type="submit" className="wr-go">
-            Редакц руу илгээх
+            {club.is_leader === false ? "Удирдагч руу илгээх" : "Редакц руу илгээх"}
             <img src="/icons/arrowr.svg" width={19} height={19} alt="" />
           </button>
         </section>

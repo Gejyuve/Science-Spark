@@ -7,10 +7,11 @@ import { getUser, needsName } from "@/lib/auth";
 import { ownImage } from "@/lib/images";
 import { cleanSources, bodyRule } from "@/lib/md";
 import { latinShare, LATIN_LIMIT } from "@/lib/format";
-import { TASK_KIND, REPORT_KIND, TYPE_MAX, TYPE_LEN, leaderClub } from "@/lib/tasks";
+import { TASK_KIND, REPORT_KIND, TYPE_MAX, TYPE_LEN, LEADER_WAIT, LEADER_NO, leaderClub, memberClub } from "@/lib/tasks";
 import { TASK_CLUB_TYPE } from "@/lib/clubs-shared";
 import { TASK_APPROVE_REWARD } from "@/lib/tasks-shared";
 import { celebrate } from "@/lib/celebrate";
+import { notify } from "@/lib/notify";
 
 const back = (msg) => redirect(`/tasks/new?error=${encodeURIComponent(msg)}`);
 const t = (fd, k, n) => String(fd.get(k) || "").trim().replace(/\s+/g, " ").slice(0, n);
@@ -28,15 +29,17 @@ function cleanTypes(fd) {
   return out.slice(0, TYPE_MAX);
 }
 
-// Клубийн удирдагч клубийнхээ нэрээр даалгавар нэмнэ. Редакц батласны дараа нийтлэгдэнэ.
+// Клубийн гишүүн бүр клубийнхээ нэрээр даалгавар нэмнэ. Удирдагчийн нэмсэн даалгавар шууд редакц руу,
+// гишүүнийх эхлээд клубийн удирдагч руу очно; удирдагч зөвшөөрвөл редакц руу илгээгдэнэ.
 export async function createTask(fd) {
   const user = await getUser();
   if (!user) redirect("/login");
   if (user.restricted_at) back("Таны эрх хязгаарлагдсан байна");
   if (needsName(user)) redirect("/profile/edit");
   await ensureSchema();
-  const club = await leaderClub(user.id);
-  if (!club) back("Даалгаврыг зөвхөн клубийн удирдагч клубийнхээ нэрээр нэмнэ");
+  const club = await memberClub(user.id);
+  if (!club) back("Даалгаврыг клубийн гишүүд клубийнхээ нэрээр нэмнэ");
+  const toLeader = !club.is_leader && !!club.leader_id;
   const title = t(fd, "title", 200);
   const subtitle = t(fd, "subtitle", 250) || null;
   const body = String(fd.get("body") || "").trim().slice(0, 40000);
@@ -57,11 +60,42 @@ export async function createTask(fd) {
   };
   const [p] = await sql`
     INSERT INTO posts (author_id, club_id, kind, title, subtitle, body, status, image_id, meta)
-    VALUES (${user.id}, ${club.id}, ${TASK_KIND}, ${title}, ${subtitle}, ${body}, 'pending', ${image}, ${JSON.stringify(meta)}::jsonb)
+    VALUES (${user.id}, ${club.id}, ${TASK_KIND}, ${title}, ${subtitle}, ${body}, ${toLeader ? LEADER_WAIT : "pending"}, ${image}, ${JSON.stringify(meta)}::jsonb)
     RETURNING id`;
-  revalidatePath("/review", "layout");
+  if (toLeader) {
+    await notify({ userId: club.leader_id, kind: "task_club", actorId: user.id, postId: p.id, clubId: club.id });
+    revalidatePath(`/club/${club.id}`);
+  } else revalidatePath("/review", "layout");
   await celebrate(user, { kind: TASK_KIND, status: "pending", title, href: `/post/${p.id}`, later: [["Редакц батлахад клубт", TASK_APPROVE_REWARD]] });
-  redirect(`/post/${p.id}?ok=${encodeURIComponent("Даалгавар редакц руу илгээгдлээ. Батлагдмагц «Даалгавар» хуудсанд нийтлэгдэнэ.")}`);
+  redirect(`/post/${p.id}?ok=${encodeURIComponent(toLeader
+    ? "Даалгавар клубийн удирдагч руу илгээгдлээ. Удирдагч зөвшөөрвөл редакц руу очиж, батлагдмагц «Даалгавар» хуудсанд нийтлэгдэнэ."
+    : "Даалгавар редакц руу илгээгдлээ. Батлагдмагц «Даалгавар» хуудсанд нийтлэгдэнэ.")}`);
+}
+
+// Клубийн удирдагч гишүүний нэмсэн даалгаврыг зөвшөөрч редакц руу илгээх, эсвэл засвар хийхээр буцаах
+export async function leaderDecideTask(fd) {
+  const postId = Number(fd.get("post_id")) || 0;
+  const go = (k, msg) => redirect(`/post/${postId}?${k}=${encodeURIComponent(msg)}`);
+  const user = await getUser();
+  if (!user) redirect("/login");
+  if (user.restricted_at) go("error", "Таны эрх хязгаарлагдсан байна");
+  await ensureSchema();
+  const club = await leaderClub(user.id);
+  const [p] = await sql`SELECT id, author_id, club_id, title, status FROM posts WHERE id = ${postId} AND kind = ${TASK_KIND}`;
+  if (!p || !club || p.club_id !== club.id) go("error", "Энэ даалгаврыг зөвхөн клубийн удирдагч шийднэ");
+  if (p.status !== LEADER_WAIT) go("error", "Энэ даалгаврыг аль хэдийн шийдсэн байна");
+  const ok = fd.get("decision") === "ok";
+  const note = String(fd.get("note") || "").trim().replace(/\s+/g, " ").slice(0, 500) || null;
+  if (!ok && !note) go("error", "Юуг засах хэрэгтэйг тайлбарлаж бичнэ үү");
+  // Хүлээгдэж буй хэвээр байвал л шийднэ (давхар дарахаас сэргийлнэ)
+  const done = ok
+    ? await sql`UPDATE posts SET status = 'pending', review_note = NULL, created_at = now() WHERE id = ${postId} AND status = ${LEADER_WAIT} RETURNING id`
+    : await sql`UPDATE posts SET status = ${LEADER_NO}, review_note = ${note} WHERE id = ${postId} AND status = ${LEADER_WAIT} RETURNING id`;
+  if (!done.length) go("error", "Энэ даалгаврыг аль хэдийн шийдсэн байна");
+  await notify({ userId: p.author_id, kind: ok ? "task_club_ok" : "task_club_no", actorId: user.id, postId, clubId: club.id, note: ok ? null : note });
+  revalidatePath("/review", "layout");
+  revalidatePath(`/club/${club.id}`);
+  go("ok", ok ? "Даалгаврыг зөвшөөрч редакц руу илгээлээ. Редакц батлахад «Даалгавар» хуудсанд нийтлэгдэнэ." : "Даалгаврыг засвар хийхээр гишүүнд буцаалаа.");
 }
 
 // Клуб биелүүлсэн даалгавраа тайлагнана. Редакц баталбал нийтлэл шиг нийтлэгдэж, клубүүд оч авна.

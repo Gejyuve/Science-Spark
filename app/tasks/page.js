@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { ensureSchema } from "@/lib/db";
-import { listTasks, taskTypes, leaderClub, taskCount, reportCount } from "@/lib/tasks";
+import { listTasks, taskTypes, memberClub, taskCount, reportCount } from "@/lib/tasks";
 import Shell from "../components/Shell";
 import PageHero from "../components/PageHero";
 import TaskCard, { ClubTabs } from "../components/TaskCard";
@@ -18,7 +18,7 @@ export default async function Tasks({ searchParams }) {
     user = await getUser();
     await ensureSchema();
     let nt, nr;
-    [tasks, types, club, nt, nr] = await Promise.all([listTasks({ type, limit: 60 }), taskTypes(), leaderClub(user?.id), taskCount(), reportCount()]);
+    [tasks, types, club, nt, nr] = await Promise.all([listTasks({ type, limit: 60 }), taskTypes(), memberClub(user?.id), taskCount(), reportCount()]);
     counts = { tasks: nt, reports: nr };
   } catch (e) {}
   const href = (t) => (t ? `/tasks?t=${encodeURIComponent(t)}` : "/tasks");
