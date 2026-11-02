@@ -257,6 +257,9 @@ async function RightRail({ user, acting }) {
       <div className="ss-rfoot">
         <Link href="/help" className="ss-rhelp">{I("help", 14)}Тусламж</Link>
         <span>© 2019-2026 Гэж Юу Вэ?</span>
+        <a href="https://launchpad.mn/products/science-spark" target="_blank" rel="noopener" className="ss-launchpad">
+          <img src="https://launchpad.mn/badge/science-spark" alt="Science Spark on Launchpad.mn" width={232} height={54} loading="lazy" />
+        </a>
       </div>
     </aside>
   );
