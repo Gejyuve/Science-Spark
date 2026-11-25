@@ -9,6 +9,7 @@ import { requestWithdrawal } from "../san/actions";
 import Shell from "../components/Shell";
 import SupportModal from "../components/SupportModal";
 import { supportModalProps } from "@/lib/supportModal";
+import { merchantOpenFor } from "@/lib/merchant";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Миний хэтэвч · Science Spark" };
@@ -36,6 +37,7 @@ export default async function Wallet({ searchParams }) {
   const pending = withdrawals.find((w) => w.status === "pending");
   const [given] = await sql`SELECT COALESCE(SUM(amount), 0)::bigint AS n FROM payment_requests WHERE user_id = ${user.id} AND status = 'confirmed' AND kind <> 'topup'`;
   const toGo = Math.max(0, WITHDRAW_MIN - balance);
+  const sell = !user.is_bot && (await merchantOpenFor(user));
   const lv = levelFor(user.points || 0);
   const nx = nextLevel(user.points || 0);
   const feeNote = `Уншигчдын урамшуулал, асуултын шагналаас сайтыг ажиллуулахад ${Math.round(TIP_FEE * 100)}% шимтгэл суутгадаг.`;
@@ -74,6 +76,7 @@ export default async function Wallet({ searchParams }) {
           <SupportModal kind="topup" label="Хэтэвч цэнэглэх" className="ss-pill ghost" autoOpen={sp.topup === "1"} {...supportModalProps(user)} />
           <Link href="/san" className="ss-pill ghost">Шагналын сан</Link>
         </div>
+        {sell && <p className="och-hint"><Link href="/merchant">Бараа, ном, тасалбар зарах уу? Мерчант болж Science Spark-аар борлуулаарай →</Link></p>}
 
         <h2 id="withdraw">Мөнгө татах</h2>
         {pending ? (
