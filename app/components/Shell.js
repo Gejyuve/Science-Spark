@@ -98,7 +98,7 @@ async function Header({ user, compact, compose, composeError, active, acting }) 
   return (
     <header className={"ss-header" + (compact ? " compact" : "")}>
       <NavRow active={active} menu me={user ? <Avatar user={user} size={34} /> : <img src="/icons/flamew.svg" width={20} height={20} alt="" />} />
-      {!compact && <Composer loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} wallet={wallet}
+      {!compact && <Composer market={MERCHANT_OPEN || isSuperAdmin(user)} loggedIn={!!user} me={user ? <Avatar user={user} size={32} /> : null} initial={compose} error={composeError} wallet={wallet}
         as={acting?.as || null} club={ent ? { name: ent.name } : null} clubAv={ent ? <ClubAv c={ent} size={32} /> : null} />}
     </header>
   );

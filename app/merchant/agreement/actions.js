@@ -15,6 +15,9 @@ import { AGREEMENT_VERSION as TERMS_VERSION } from "@/lib/agreement";
 const OTP_TTL_MIN = 10;
 const OTP_TRIES = 5;
 const codeHash = (id, code) => crypto.createHash("sha256").update(`${id}:${code}`).digest("hex");
+const SIGNABLE = ["approved", "pending_review"];
+// Буцах хаяг: зөвхөн сайт доторх маркетын засварын хуудас
+const nextOf = (f) => { const n = String(f.get("next") || ""); return /^\/market\/\d+\/edit$/.test(n) ? n : null; };
 const maskMail = (e) => String(e).replace(/^(.)(.*)(.@.*)$/, (_, a, b, c) => a + "•".repeat(Math.min(6, b.length)) + c);
 
 async function context() {
@@ -36,7 +39,7 @@ async function openAgreement(m, id) {
 export async function sendAgreementCode(prev, formData) {
   const { user, m } = await context();
   const a = await openAgreement(m, formData.get("aid"));
-  if (!a || a.status !== "pending_merchant" || m.status !== "approved") return { error: "Энэ гэрээг баталгаажуулах боломжгүй" };
+  if (!a || a.status !== "pending_merchant" || !SIGNABLE.includes(m.status)) return { error: "Энэ гэрээг баталгаажуулах боломжгүй" };
   if (!user.email) return { error: "Таны бүртгэлд и-мэйл хаяг алга" };
   const [recent] = await sql`SELECT COUNT(*) FILTER (WHERE created_at > now() - interval '1 minute')::int AS m1,
                                     COUNT(*) FILTER (WHERE created_at > now() - interval '1 hour')::int AS h1
@@ -74,7 +77,7 @@ export async function sendAgreementCode(prev, formData) {
 export async function signAgreement(prev, formData) {
   const { user, m } = await context();
   const a = await openAgreement(m, formData.get("aid"));
-  if (!a || a.status !== "pending_merchant" || m.status !== "approved") return { error: "Энэ гэрээг баталгаажуулах боломжгүй", sent: true };
+  if (!a || a.status !== "pending_merchant" || !SIGNABLE.includes(m.status)) return { error: "Энэ гэрээг баталгаажуулах боломжгүй", sent: true };
   if (formData.get("agree") !== "on") return { error: "Гэрээ болон хэрэглэгчийн гэрээг зөвшөөрнө үү", sent: true };
   if (formData.get("hash") !== a.content_hash || hashContent(a.content) !== a.content_hash) return { error: "Гэрээний агуулга шинэчлэгдсэн байна. Хуудсаа шинэчлээд дахин уншина уу", sent: true };
   const code = String(formData.get("code") || "").replace(/\D/g, "");
@@ -104,5 +107,7 @@ export async function signAgreement(prev, formData) {
   await audit({ actorId: user.id, category: "merchant", action: `Мерчант гэрээ ${a.number} (хувилбар ${a.version}) баталгаажуулсан`, targetType: "merchant", targetId: m.id });
   revalidatePath("/merchant");
   revalidatePath("/admin/merchants");
+  const next = nextOf(formData);
+  if (next) { revalidatePath(next); redirect(`${next}?ok=${encodeURIComponent("Гэрээг баталгаажууллаа. Одоо редакц руу илгээнэ үү")}#send`); }
   redirect(`/merchant/agreement?ok=${encodeURIComponent("Баталгаажууллаа. Платформын төлөөлөгч баталгаажуулмагц гэрээ хүчин төгөлдөр болно")}`);
 }

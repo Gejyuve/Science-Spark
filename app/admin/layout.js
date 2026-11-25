@@ -22,6 +22,7 @@ export default async function AdminLayout({ children }) {
   let del = 0;
   let mag = 0;
   let merch = 0;
+  let prod = 0;
   try {
     const [c] = await sql`SELECT (SELECT COUNT(*) FROM posts WHERE status = 'pending')::int AS p,
       (SELECT COUNT(*) FROM reviewer_requests WHERE status = 'pending')::int AS r,
@@ -31,7 +32,8 @@ export default async function AdminLayout({ children }) {
       ((SELECT COUNT(*) FROM magazine_orders WHERE status = 'paid') + (SELECT COUNT(*) FROM magazine_requests WHERE status = 'new'))::int AS m,
       ((SELECT COUNT(*) FROM merchants WHERE status = 'pending_review')
         + (SELECT COUNT(DISTINCT b.merchant_id) FROM merchant_bank_accounts b JOIN merchants x ON x.id = b.merchant_id
-           WHERE b.status = 'pending' AND x.status IN ('approved', 'suspended')))::int AS mc`;
+           WHERE b.status = 'pending' AND x.status IN ('approved', 'suspended')))::int AS mc,
+      (SELECT COUNT(*) FROM products WHERE status = 'pending_review')::int AS pr`;
     pending = c.p;
     requests = c.r;
     logic = c.l;
@@ -39,10 +41,11 @@ export default async function AdminLayout({ children }) {
     del = c.d;
     mag = c.m;
     merch = c.mc;
+    prod = c.pr;
   } catch (e) {}
   const sup = user.role === "superadmin";
   // Санхүү, устгах дарааллын тоо зөвхөн шийдэх эрхтэй супер админд
-  const badges = { content: pending, requests, logic, finance: sup ? finance : 0, users: sup ? del : 0, magazine: sup ? mag : 0, merchants: sup ? merch : 0 };
+  const badges = { content: pending, requests, logic, finance: sup ? finance : 0, users: sup ? del : 0, magazine: sup ? mag : 0, merchants: sup ? merch : 0, products: prod };
   const items = visibleSections(user).map((s) => ({ ...s, badge: badges[s.key] || null }));
   return (
     <div className="adm">

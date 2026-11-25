@@ -6,7 +6,7 @@ import { sendAgreementCode, signAgreement } from "./actions";
 import Spark from "../../components/Spark";
 
 // Мерчант гэрээг баталгаажуулах: зөвшөөрөл + и-мэйлээр ирсэн нэг удаагийн код
-export default function SignPanel({ aid, hash }) {
+export default function SignPanel({ aid, hash, next = null, title = "Гэрээ баталгаажуулах" }) {
   const [sent, sendAction, sending] = useActionState(sendAgreementCode, null);
   const [signed, signAction, signing] = useActionState(signAgreement, null);
   const [agree, setAgree] = useState(false);
@@ -21,7 +21,7 @@ export default function SignPanel({ aid, hash }) {
 
   return (
     <section className="pf-card ag-sign">
-      <h2>Гэрээ баталгаажуулах</h2>
+      {title && <h2>{title}</h2>}
       {st?.error && <p className="mc-flash bad">{st.error}</p>}
       {!signed?.error && sent?.ok && <p className="mc-flash ok">{sent.ok}</p>}
       <label className="ag-check">
@@ -36,6 +36,7 @@ export default function SignPanel({ aid, hash }) {
         <form onSubmit={submit(signAction)} className="ag-row">
           <input type="hidden" name="aid" value={aid} />
           <input type="hidden" name="hash" value={hash} />
+          {next && <input type="hidden" name="next" value={next} />}
           <input type="hidden" name="agree" value={agree ? "on" : ""} />
           <div className="pf-input ag-code">
             <input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="6 оронтой код" value={code}

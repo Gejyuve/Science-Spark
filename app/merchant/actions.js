@@ -11,6 +11,8 @@ import {
 } from "@/lib/merchant-shared";
 
 const back = (key, msg) => redirect(`/merchant?${key}=${encodeURIComponent(msg)}`);
+// Маркетаас ирсэн бол бүтээгдэхүүний засварын хуудас руу буцаана
+const nextOf = (f) => { const n = String(f.get("next") || ""); return /^\/market\/\d+\/edit$/.test(n) ? n : null; };
 
 async function me() {
   const user = await getUser();
@@ -43,7 +45,8 @@ export async function startMerchant(formData) {
   }
   await audit({ actorId: user.id, category: "merchant", action: `Мерчантын бүртгэл эхлүүлсэн (${MERCHANT_TYPES[type]})`, targetType: "merchant", targetId: id });
   revalidatePath("/merchant");
-  redirect("/merchant");
+  const next = nextOf(formData);
+  redirect(next ? `${next}#agreement` : "/merchant");
 }
 
 // Маягтын утгуудыг уншиж, алдааг талбар бүрээр цуглуулна
@@ -155,6 +158,8 @@ export async function saveMerchant(prev, formData) {
   await notifySupers("merchant_new", m.id, user.id, f.shop || f.profile.legal_name || [f.profile.parent_name, f.profile.first_name].filter(Boolean).join(" "));
   await audit({ actorId: user.id, category: "merchant", action: "Мерчантын бүртгэлээ шалгуулахаар илгээсэн", targetType: "merchant", targetId: m.id });
   revalidatePath("/admin/merchants");
+  const next = nextOf(formData);
+  if (next) { revalidatePath(next); redirect(`${next}?ok=${encodeURIComponent("Мерчантын мэдээллээ илгээлээ. Одоо гэрээгээ баталгаажуулна уу")}#agreement`); }
   redirect("/merchant?ok=" + encodeURIComponent("Шалгуулахаар илгээлээ. Шийдвэр гармагц мэдэгдэл очно"));
 }
 

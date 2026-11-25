@@ -6,7 +6,7 @@ import { PREMIUM_PLANS, fmtMnt } from "@/lib/money";
 import { qpayOn } from "@/lib/qpay";
 import { realUser } from "@/lib/auth";
 import { resetPreview } from "@/lib/reset";
-import { updateSettings, resetSiteAction, updateCompany } from "./actions";
+import { updateSettings, resetSiteAction, updateCompany, updateMongolPost } from "./actions";
 import { COMPANY_FIELDS, companyMissing } from "@/lib/company";
 import Head, { Flash } from "../_c/Head";
 
@@ -109,6 +109,19 @@ export default async function Settings({ searchParams }) {
           ))}
         </div>
         {sup && <button className="adm-btn dark" style={{ justifySelf: "start" }}>Компанийн мэдээлэл хадгалах</button>}
+      </form>
+
+      <form action={updateMongolPost} className="adm-card adm-set" id="mongolpost">
+        <div className="adm-card-head"><b>Монгол шуудан</b></div>
+        <p className="adm-muted small">Маркетын хүргэлтийн үнийг Монгол шуудангийн албан ёсны тарифаар бөглөнө. Хоосон бол худалдан авагчид «тарифаар тооцно» гэж харагдана.</p>
+        <div className="adm-co-grid">
+          {[["ub", "Улаанбаатар дотор, 1 кг хүртэл (₮)"], ["aimag", "Орон нутаг руу, 1 кг хүртэл (₮)"], ["perKg", "Нэмэлт кг тутам (₮)"], ["ubDays", "Хүргэх хугацаа, Улаанбаатар (өдөр)"], ["aimagDays", "Хүргэх хугацаа, орон нутаг (өдөр)"]].map(([k, label]) => (
+            <label key={k}>{label}
+              <input type="text" inputMode="numeric" name={`mp_${k}`} defaultValue={s.mongolPost?.[k] || ""} maxLength={9} disabled={!sup} />
+            </label>
+          ))}
+        </div>
+        {sup && <button className="adm-btn dark" style={{ justifySelf: "start" }}>Тариф хадгалах</button>}
       </form>
 
       {pv && (
