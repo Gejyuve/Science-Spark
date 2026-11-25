@@ -6,7 +6,8 @@ import { PREMIUM_PLANS, fmtMnt } from "@/lib/money";
 import { qpayOn } from "@/lib/qpay";
 import { realUser } from "@/lib/auth";
 import { resetPreview } from "@/lib/reset";
-import { updateSettings, resetSiteAction } from "./actions";
+import { updateSettings, resetSiteAction, updateCompany } from "./actions";
+import { COMPANY_FIELDS, companyMissing } from "@/lib/company";
 import Head, { Flash } from "../_c/Head";
 
 // Супер админы тохиргоо: оч ба түвшин, санхүү, сайт
@@ -95,6 +96,19 @@ export default async function Settings({ searchParams }) {
           </div>
         </div>
         {sup && <button className="adm-btn dark" style={{ justifySelf: "start" }}>Тохиргоог хадгалах</button>}
+      </form>
+
+      <form action={updateCompany} className="adm-card adm-set" id="company">
+        <div className="adm-card-head"><b>Компанийн мэдээлэл</b></div>
+        <p className="adm-muted small">Мерчантын гэрээ, тооцоо нийлэх актын «Платформ» талд орно. {companyMissing(s.company).length ? `Дутуу: ${companyMissing(s.company).join(", ")}.` : "Гэрээнд шаардлагатай мэдээлэл бүрэн."}</p>
+        <div className="adm-co-grid">
+          {COMPANY_FIELDS.map(([k, label, req]) => (
+            <label key={k}>{label}{req ? " *" : ""}
+              <input type="text" name={`c_${k}`} defaultValue={s.company?.[k] || ""} maxLength={200} disabled={!sup} />
+            </label>
+          ))}
+        </div>
+        {sup && <button className="adm-btn dark" style={{ justifySelf: "start" }}>Компанийн мэдээлэл хадгалах</button>}
       </form>
 
       {pv && (
