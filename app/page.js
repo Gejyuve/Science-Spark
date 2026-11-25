@@ -6,7 +6,6 @@ import Shell from "./components/Shell";
 import PostCard from "./components/PostCard";
 import { followingSet } from "./components/Bits";
 import { clubFollowSet } from "@/lib/clubs";
-import TimeMenu from "./components/TimeMenu";
 import ScrollActive from "./components/ScrollActive";
 import { fmtMnt } from "@/lib/money";
 import { withTopComments } from "@/lib/top-comments";
@@ -14,15 +13,13 @@ import { withVideos, mixVideos } from "@/lib/video";
 
 export const dynamic = "force-dynamic";
 
-// [утга, нэр, цаг]
-const PERIODS = [["24h", "24 цаг", 24], ["7d", "7 хоног", 168], ["1m", "1 сар", 720], ["6m", "6 сар", 4320], ["1y", "1 жил", 8760], ["all", "Бүх хугацаа", null]];
+// Шүүлтүүрүүд сүүлийн 7 хоногийг харуулна. «Хамгийн сүүлийн» (цагийн товч) хугацааны хязгааргүй.
+const HOURS = 168;
 
 export default async function Home({ searchParams }) {
-  const { tab, compose, error, f, t, b } = await searchParams;
-  // Цагийн шүүлтүүр: анхдагч 7 хоног
-  const period = PERIODS.find((x) => x[0] === t) || PERIODS[1];
-  const hours = period[2];
-  const tq = period[0] === "7d" ? "" : `t=${period[0]}`;
+  const { tab, compose, error, f, b } = await searchParams;
+  const latest = f === "new"; // Цагийн товч: бүх контент, хамгийн сүүлд орсноор
+  const hours = latest ? null : HOURS;
   const qa = f === "qa"; // Асуулт ба бодрол · сүүлд орсноор
   // «Хэн юу гэв?» доторх шүүлтүүр: open = хариулт хүлээж буй шагналтай асуулт, big = бүх шагналтай асуулт дүнгээр нь
   const bq = qa && ["open", "big"].includes(b) ? b : "";
@@ -73,7 +70,7 @@ export default async function Home({ searchParams }) {
         AND (NOT ${club}::boolean OR p.kind IN ('Даалгавар', 'Тайлан'))
         AND (${bq} = '' OR bq.status = 'open' OR (${bq} = 'big' AND bq.status IS NOT NULL))
         -- Цагийн шүүлтүүр (санамсаргүй, шагналтай асуултад хамаарахгүй). Хамгийн тод: тухайн хугацаанд оч авсан
-        AND (${rand}::boolean OR ${bq} <> '' OR (CASE WHEN ${top}::boolean
+        AND (${rand}::boolean OR ${latest}::boolean OR ${bq} <> '' OR (CASE WHEN ${top}::boolean
              THEN win.post_id IS NOT NULL
              ELSE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) END))
         AND (${!following || !user}::boolean OR p.author_id IN
@@ -90,22 +87,22 @@ export default async function Home({ searchParams }) {
     await withTopComments(posts);
     await withVideos(posts, user);
     // «Бүгд» урсгалд хэрэглэгчийн үзээгүй видеог 5 карт тутамд санал болгоно
-    if (!qa && !top && !ann && !art && !news && !club && !following && !rand) posts = await mixVideos(posts, user).catch(() => posts);
-    // Шүүлтүүр бүрийн сонгосон хугацааны контентын тоо
+    if (!qa && !top && !ann && !art && !news && !club && !following && !rand && !latest) posts = await mixVideos(posts, user).catch(() => posts);
+    // Шүүлтүүр бүрийн сүүлийн 7 хоногийн контентын тоо
     const [c] = await sql`
       SELECT
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)))::int AS all,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int))
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int)))::int AS all,
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int))
           AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = ${user ? user.id : 0}))::int AS following,
         -- Хугацаандаа оч авсан контент: бүх нийтлэлийг нэг бүрчлэн шалгахын оронд тухайн хугацааны очноос эхэлж тоолно
         (SELECT COUNT(DISTINCT s.post_id) FROM sparks s JOIN posts sp ON sp.id = s.post_id
          WHERE sp.status = 'published' AND sp.kind <> 'Үг'
-           AND (${hours}::int IS NULL OR s.created_at > now() - make_interval(hours => ${hours}::int)))::int AS top,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Зарлал')::int AS ann,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Нийтлэл')::int AS art,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind = 'Мэдээ')::int AS news,
-        COUNT(*) FILTER (WHERE (${hours}::int IS NULL OR p.created_at > now() - make_interval(hours => ${hours}::int)) AND p.kind IN ('Даалгавар', 'Тайлан'))::int AS club
+           AND (${HOURS}::int IS NULL OR s.created_at > now() - make_interval(hours => ${HOURS}::int)))::int AS top,
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int)) AND p.kind IN ('Асуулт', 'Бодрол'))::int AS qa,
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int)) AND p.kind = 'Зарлал')::int AS ann,
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int)) AND p.kind = 'Нийтлэл')::int AS art,
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int)) AND p.kind = 'Мэдээ')::int AS news,
+        COUNT(*) FILTER (WHERE (${HOURS}::int IS NULL OR p.created_at > now() - make_interval(hours => ${HOURS}::int)) AND p.kind IN ('Даалгавар', 'Тайлан'))::int AS club
       FROM posts p WHERE p.status = 'published' AND p.kind <> 'Үг'`;
     counts = c;
     if (qa) {
@@ -122,7 +119,7 @@ export default async function Home({ searchParams }) {
   const followSet = await followingSet(user);
   const clubFollows = posts.some((p) => p.club_id) ? await clubFollowSet(user) : null;
   return (
-    <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
+    <Shell user={user} active={qa ? "qa" : top ? "top" : rand ? "rand" : latest ? "new" : "/"} compose={["Асуулт", "share", "Бодрол", "Эвент", "Зарлал"].includes(compose) ? compose : null} composeError={error}>
       {(
         <nav className="ss-filters" aria-label="Шүүлтүүр">
           <div className="ss-fscroll">
@@ -136,9 +133,8 @@ export default async function Home({ searchParams }) {
               ["club", "f=club", "Клуб", counts.club],
               ["following", user ? "tab=following" : null, "Дагаж буй", user ? counts.following : null],
             ].map(([k, q, label, n]) => {
-              const on = k === "all" ? !qa && !top && !rand && !ann && !art && !news && !club && !following : k === "following" ? following && !!user : k === "top" ? top : k === "ann" ? ann : k === "art" ? art : k === "news" ? news : k === "club" ? club : qa;
-              const qs = q === null ? null : [q, tq].filter(Boolean).join("&");
-              const href = qs === null ? "/login" : qs ? `/?${qs}` : "/";
+              const on = k === "all" ? !qa && !top && !rand && !latest && !ann && !art && !news && !club && !following : k === "following" ? following && !!user : k === "top" ? top : k === "ann" ? ann : k === "art" ? art : k === "news" ? news : k === "club" ? club : qa;
+              const href = q === null ? "/login" : q ? `/?${q}` : "/";
               return (
                 <Link key={k} href={href} className={on ? "on" : ""}>
                   {label}{n !== null && <em>{n}</em>}
@@ -150,13 +146,9 @@ export default async function Home({ searchParams }) {
           <Link href={`/?f=rand&r=${seed.slice(0, 8)}`} prefetch={false} className={"ss-dice" + (rand ? " on" : "")} title="Сэгсрээд өг" aria-label="Сэгсрээд өг">
             <img className={rand ? "" : "ic"} src="/icons/dice.svg" width={20} height={20} alt="" />
           </Link>
-          <TimeMenu
-            label={period[1]}
-            options={PERIODS.map(([v, name]) => {
-              const q = [following && user ? "tab=following" : top ? "f=top" : qa ? "f=qa" : ann ? "f=ann" : art ? "f=art" : news ? "f=news" : club ? "f=club" : "", v === "7d" ? "" : `t=${v}`].filter(Boolean).join("&");
-              return { name, href: q ? `/?${q}` : "/", on: v === period[0] };
-            })}
-          />
+          <Link href={latest ? "/" : "/?f=new"} className={"ss-dice ss-latest" + (latest ? " on" : "")} title="Хамгийн сүүлийн" aria-label="Хамгийн сүүлийн" aria-pressed={latest}>
+            <img className={latest ? "" : "ic"} src="/icons/f_clock.svg" width={19} height={19} alt="" />
+          </Link>
         </nav>
       )}
       {qa && (
@@ -172,8 +164,8 @@ export default async function Home({ searchParams }) {
       {posts.length === 0 && (
         <div className="ss-card">
           <p className="ss-empty">
-            {hours && !rand && posts.length === 0 && (qa || top || following || ann || art || news || club)
-              ? `Сонгосон хугацаанд (${period[1]}) энд контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
+            {hours && !rand && (qa || top || following || ann || art || news || club) && !bq
+              ? "Сүүлийн 7 хоногт энд контент алга. Баруун талын цагийн товчийг дарж хамгийн сүүлийн контентыг үзээрэй."
               : bq
               ? "Одоохондоо хариулт хүлээж буй шагналтай асуулт алга. Асуултаа шагналтай асууж, мэдлэгтэй хүмүүсийг урамшуулаарай 🏆"
               : qa
@@ -181,7 +173,7 @@ export default async function Home({ searchParams }) {
               : following && user
               ? "Дагаж буй хүмүүсийн нийтлэл алга. Сонирхолтой хүмүүсийг дагаарай."
               : hours && !rand
-              ? `Сүүлийн ${period[1]}т шинэ контент алга. Баруун талын цагийн шүүлтүүрээр хугацаагаа сунгаад үзээрэй.`
+              ? "Сүүлийн 7 хоногт шинэ контент алга. Баруун талын цагийн товчийг дарж хамгийн сүүлийн контентыг үзээрэй."
               : "Одоохондоо нийтлэл алга. Эхний очийг та асаагаарай ✦"}
           </p>
         </div>
