@@ -4399,8 +4399,6 @@ a.as-row { text-decoration: none; }
 .mc-note { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .mc-note a { color: #00a89b; font-weight: 600; }
 .mc-foot { gap: 12px; flex-wrap: wrap; }
-.mc-foot .mc-note { flex: 1 1 260px; }
-.mc-foot .ss-pill, .mc-foot .pf-save { display: inline-flex; align-items: center; gap: 8px; }
 .mc-docs { display: flex; flex-direction: column; gap: 10px; }
 .mc-doclist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .mc-doclist li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-2); min-width: 0; }
@@ -4416,20 +4414,6 @@ a.as-row { text-decoration: none; }
 .mc-file { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .mc-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .mc-file.busy { opacity: .7; pointer-events: none; }
-.mc-intro h1 { margin: 0; font-size: 24px; line-height: 1.3; color: var(--ink); }
-.mc-intro > p { margin: 0; color: var(--text); line-height: 1.65; font-size: 14.5px; }
-.mc-intro h2 { margin-top: 12px; }
-.mc-kicker { align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: var(--teal-bg); color: #008075; font-size: 11.5px; font-weight: 700; }
-.mc-steps { list-style: none; counter-reset: s; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.mc-steps li { counter-increment: s; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border); }
-.mc-steps li::before { content: counter(s); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #37c3b3; color: #fff; font-size: 12px; font-weight: 800; margin-bottom: 6px; }
-.mc-steps b { font-size: 13.5px; color: var(--ink); }
-.mc-steps small { font-size: 12px; color: var(--muted); }
-.mc-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.mc-type { display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: 18px; border: 1px solid var(--border); background: var(--surface-2); }
-.mc-type b { font-size: 15px; color: var(--ink); }
-.mc-type small { flex: 1; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
-.mc-type .ss-pill { align-self: flex-start; }
 .mc-status-top { display: flex; align-items: center; gap: 14px; }
 .mc-status-top > div { flex: 1; min-width: 0; }
 .mc-status-top small { color: var(--muted); font-size: 12px; }
@@ -4458,17 +4442,12 @@ a.as-row { text-decoration: none; }
 .mc-hist li { display: flex; flex-direction: column; gap: 1px; padding-left: 14px; border-left: 2px solid var(--border); }
 .mc-hist b { font-size: 13px; color: var(--ink); }
 .mc-hist small { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-:root[data-theme="dark"] .mc-flash.ok, :root[data-theme="dark"] .mc-pill.ok, :root[data-theme="dark"] .mc-kicker, :root[data-theme="dark"] .mc-docic { color: #73f2d9; }
 :root[data-theme="dark"] .mc-flash.bad, :root[data-theme="dark"] .mc-pill.bad { background: #3a1d20; color: #ff9ca1; }
 :root[data-theme="dark"] .mc-pill.warn, :root[data-theme="dark"] .mc-review { background: #3a2a14; color: #f5c48a; }
 :root[data-theme="dark"] .mc-bank { border-color: #2a5a54; }
 :root[data-theme="dark"] .mc-bank.pending { border-color: #5a4320; }
 @media (max-width: 760px) {
-  .mc-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mc-types { grid-template-columns: 1fr; }
-  .mc-intro h1 { font-size: 20px; }
   .mc-status-top { flex-wrap: wrap; }
-  .mc-foot .ss-pill, .mc-foot .pf-save { flex: 1 1 auto; justify-content: center; }
 }
 
 /* Админ > Мерчант */
@@ -4493,4 +4472,34 @@ a.as-row { text-decoration: none; }
 .mca-doc small { color: var(--muted); font-size: 12px; }
 .mca-doc a { color: #00a89b; font-weight: 600; overflow-wrap: anywhere; }
 .mca-banks .adm-pill { flex: none; }
-.mc-type .ss-pill { border: 0; cursor: pointer; }
+
+/* Мерчант: албан, товч хэв маяг (2026-11-25, хэрэглэгчийн хүсэлтээр) */
+:root[data-theme="dark"] .mc-flash.ok, :root[data-theme="dark"] .mc-pill.ok, :root[data-theme="dark"] .mc-docic { color: #73f2d9; }
+.mc-page .pf-card { border-radius: 14px; box-shadow: none; border: 1px solid var(--border); padding: 24px 28px; gap: 8px; }
+.mc-page .pf-card h2 { font-size: 15px; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+.mc-page .pf-input, .mc-page .pf-select { border-radius: 8px; min-height: 42px; }
+.mc-page .pf-select select { height: 40px; }
+.mc-page .pf-label { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.mc-page .pf-chip span { border-radius: 8px; padding: 8px 12px; font-size: 12.5px; }
+.mc-page .mc-check { border-radius: 8px; }
+.mc-intro h1 { margin: 0; font-size: 20px; color: var(--ink); }
+.mc-lead { margin: 0 0 8px; font-size: 13.5px; color: var(--muted); }
+.mc-types { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.mc-types form + form { border-top: 1px solid var(--border); }
+.mc-type { width: 100%; display: flex; align-items: center; gap: 12px; padding: 16px 18px; border: 0; background: var(--surface); text-align: left; font: inherit; cursor: pointer; }
+.mc-type:hover { background: var(--surface-2); }
+.mc-type span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.mc-type b { font-size: 14.5px; color: var(--ink); }
+.mc-type small { font-size: 12.5px; color: var(--muted); }
+.mc-type img { transform: rotate(-90deg); opacity: .6; }
+.mc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 20px; border: 1px solid #0f8f84; border-radius: 8px; background: #0f8f84; color: #fff; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.mc-btn:hover { background: #0b7a71; }
+.mc-btn.ghost { background: transparent; color: var(--ink); border-color: var(--border); }
+.mc-btn.ghost:hover { background: var(--surface-2); }
+.mc-btn:disabled { opacity: .6; cursor: default; }
+.mc-status-top h1 { font-size: 18px; }
+@media (max-width: 760px) {
+  .mc-page .pf-card { padding: 18px 16px; }
+  .mc-foot .mc-btn { flex: 1 1 auto; }
+}
+.mc-page .mc-foot { position: static; box-shadow: none; }

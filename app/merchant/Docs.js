@@ -70,14 +70,14 @@ export default function Docs({ kinds, initial = [], only = null, readOnly = fals
           {!only && (
             <div className="pf-select">
               <select value={kind} onChange={(e) => setKind(e.target.value)} aria-label="Баримтын төрөл">
-                <option value="">Баримтын төрөл сонгох</option>
+                <option value="">Баримтын төрөл</option>
                 {kinds.map(([k, d]) => <option key={k} value={k}>{d.label}{d.need ? " (заавал)" : ""}</option>)}
               </select>
               <img src="/icons/chev16.svg" width={16} height={16} alt="" />
             </div>
           )}
-          <label className={"ss-pill ghost mc-file" + (busy ? " busy" : "")}>
-            {busy ? <Spark mono size={16} /> : null}{busy ? "Оруулж байна…" : "+ Файл сонгох"}
+          <label className={"mc-btn ghost mc-file" + (busy ? " busy" : "")}>
+            {busy ? <Spark mono size={16} /> : null}{busy ? "Оруулж байна…" : "Файл хавсаргах"}
             <input type="file" accept="application/pdf,image/jpeg,image/png" onChange={upload} disabled={busy} />
           </label>
         </div>

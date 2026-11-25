@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureSchema } from "@/lib/db";
 import { getUser, needsName } from "@/lib/auth";
@@ -32,11 +31,11 @@ export default async function MerchantPage({ searchParams }) {
       <div className="mc-page">
         {sp.error && <p className="mc-flash bad">{sp.error}</p>}
         {sp.ok && <p className="mc-flash ok">{sp.ok}</p>}
-        {!m ? <Intro /> : <Status m={m} />}
+        {!m ? <Intro /> : m.status !== "draft" && <Status m={m} />}
         {m && EDITABLE.includes(m.status) && <MerchantForm m={m} />}
         {m && !EDITABLE.includes(m.status) && m.status !== "rejected" && <Summary m={m} />}
         {m && m.status === "rejected" && <Intro again />}
-        {m && m.log.length > 0 && <History log={m.log} />}
+        {m && m.log.length > 1 && <History log={m.log} />}
       </div>
     </Shell>
   );
@@ -45,27 +44,16 @@ export default async function MerchantPage({ searchParams }) {
 function Intro({ again }) {
   return (
     <section className="pf-card mc-intro">
-      {!again && (
-        <>
-          <span className="mc-kicker">Science Spark маркет</span>
-          <h1>Мерчант болж, бүтээгдэхүүнээ шинжлэх ухаан сонирхогчдод хүргээрэй</h1>
-          <p>Ном, туршилтын иж бүрдэл, сургалт, арга хэмжээний тасалбараа Science Spark-аар дамжуулан зарна. Борлуулалт бүрээс 4% зуучлалын шимтгэл суутгаж, үлдсэн 96%-ийг сар бүр таны баталгаажсан дансанд шилжүүлнэ.</p>
-          <ol className="mc-steps">
-            <li><b>Мэдээллээ бөглөнө</b><small>Хувь хүн эсвэл байгууллагаар</small></li>
-            <li><b>Ажилтан шалгана</b><small>Баримт, банкны данс</small></li>
-            <li><b>Гэрээ байгуулна</b><small>Цахимаар баталгаажуулна</small></li>
-            <li><b>Борлуулж эхэлнэ</b><small>Бүтээгдэхүүн, тасалбар нийтэлнэ</small></li>
-          </ol>
-        </>
-      )}
-      <h2>{again ? "Дахин өргөдөл гаргах" : "Мерчантын төрлөө сонгоно уу"}</h2>
+      <h1>{again ? "Дахин өргөдөл гаргах" : "Мерчантын бүртгэл"}</h1>
+      <p className="mc-lead">Бараа, тасалбар борлуулах эрх. Зуучлалын шимтгэл 4%.</p>
       <div className="mc-types">
         {Object.entries(MERCHANT_TYPES).map(([k, label]) => (
-          <form key={k} action={startMerchant} className="mc-type">
+          <form key={k} action={startMerchant}>
             <input type="hidden" name="type" value={k} />
-            <b>{label}</b>
-            <small>{k === "individual" ? "Өөрийн нэрээр борлуулна. Регистр, банкны данс таны нэр дээр байна." : "ХХК, ТББ, сургууль зэрэг хуулийн этгээд. Улсын бүртгэлийн гэрчилгээ, эрх бүхий төлөөлөгч шаардлагатай."}</small>
-            <button className="ss-pill">{k === "individual" ? "Хувь хүнээр эхлэх" : "Байгууллагаар эхлэх"}</button>
+            <button className="mc-type">
+              <span><b>{k === "individual" ? "Хувь хүн" : "Хуулийн этгээд"}</b><small>{k === "individual" ? "Иргэн" : "ХХК, ТББ, сургууль"}</small></span>
+              <img className="ic" src="/icons/chev16.svg" width={16} height={16} alt="" />
+            </button>
           </form>
         ))}
       </div>
@@ -76,13 +64,13 @@ function Intro({ again }) {
 function Status({ m }) {
   const [label, tone] = MERCHANT_STATUS[m.status] || [m.status, "gray"];
   const TEXT = {
-    draft: "Мэдээллээ бөглөөд «Шалгуулахаар илгээх» товч дарна уу. Ноорог хадгалж, дараа үргэлжлүүлж болно.",
-    pending_review: "Таны бүртгэлийг ажилтан шалгаж байна. Шийдвэр гармагц мэдэгдэл очно.",
-    revision_required: "Шалгах ажилтан зарим мэдээллийг засахыг хүслээ. Доорх тайлбарын дагуу засаад дахин илгээнэ үү.",
-    approved: "Таны мерчантын бүртгэл баталгаажлаа. Дараагийн алхамд мерчантын гэрээг цахимаар байгуулж, бүтээгдэхүүн нийтэлнэ.",
-    rejected: "Таны өргөдлийг энэ удаад хүлээн авах боломжгүй боллоо. Шалтгааныг уншаад дахин өргөдөл гаргаж болно.",
-    suspended: "Таны борлуулах эрхийг түр түдгэлзүүлсэн. Өмнөх борлуулалтын тооцоо хэвээр үргэлжилнэ.",
-    terminated: "Мерчантын гэрээ дуусгавар болсон. Өмнөх борлуулалтын тооцоо, шилжүүлэг хэвээр хийгдэнэ.",
+    draft: "",
+    pending_review: "Шалгаж байна. Шийдвэр гармагц мэдэгдэнэ.",
+    revision_required: "Засвар шаардлагатай.",
+    approved: "Дараагийн алхам: мерчантын гэрээ.",
+    rejected: "",
+    suspended: "Өмнөх борлуулалтын тооцоо хэвээр.",
+    terminated: "Өмнөх борлуулалтын тооцоо хэвээр.",
   };
   return (
     <section className={"pf-card mc-status " + tone}>
@@ -94,12 +82,12 @@ function Status({ m }) {
         </div>
         <span className={"mc-pill " + tone}>{label}</span>
       </div>
-      <p>{TEXT[m.status]}</p>
+      {TEXT[m.status] && <p>{TEXT[m.status]}</p>}
       {m.review_note && ["revision_required", "rejected", "suspended", "terminated"].includes(m.status) && (
-        <p className="mc-review"><b>Ажилтны тайлбар:</b> {m.review_note}</p>
+        <p className="mc-review">{m.review_note}</p>
       )}
       {m.status === "pending_review" && (
-        <form action={withdrawMerchant}><button className="ss-pill ghost">Буцааж авч засах</button></form>
+        <form action={withdrawMerchant}><button className="mc-btn ghost">Буцааж авч засах</button></form>
       )}
     </section>
   );
@@ -120,7 +108,6 @@ function Summary({ m }) {
           <div><dt>НӨАТ төлөгч</dt><dd>{m.vat_payer ? "Тийм" : "Үгүй"}</dd></div>
           {m.tax_id && <div><dt>Татвар төлөгчийн дугаар</dt><dd>{m.tax_id}</dd></div>}
         </dl>
-        {m.status === "approved" && <p className="mc-note">Бүртгэлийн мэдээллээ өөрчлөх шаардлагатай бол Тусламж хэсгээр бидэнд хандана уу.</p>}
       </section>
 
       <section className="pf-card" id="bank">
@@ -150,11 +137,11 @@ function Summary({ m }) {
         {canChange && (
           <details className="mc-more" open={false}>
             <summary>{m.pendingBank ? "Шалгуулж буй дансаа засах" : "Данс солих"}</summary>
-            <p className="mc-note">Шинэ дансыг ажилтан дахин баталгаажуулна. Батлагдсан төлбөрийн багцын дансыг автоматаар солихгүй.</p>
+            <p className="mc-note">Шинэ данс баталгаажих хүртэл одоогийн данс хүчинтэй.</p>
             <Docs kinds={[["bank_proof", DOC_KINDS.bank_proof]]} only="bank_proof" initial={m.docs} />
             <form action={changeBank} className="mc-col tight">
               <BankFields bank={m.pendingBank} biz={m.type === "business"} docs={m.docs} />
-              <div><button className="pf-save">Шалгуулахаар илгээх</button></div>
+              <div><button className="mc-btn">Илгээх</button></div>
             </form>
           </details>
         )}
@@ -180,7 +167,6 @@ function History({ log }) {
           </li>
         ))}
       </ul>
-      <p className="mc-note"><Link href="/help">Асуулт байвал Тусламж хэсгээр хандаарай</Link></p>
     </section>
   );
 }
