@@ -1624,44 +1624,31 @@ a.ss-kind:hover { text-decoration: underline; }
 }
 .ss-fscroll { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
 .ss-fscroll::-webkit-scrollbar { display: none; }
-.ss-filters a, .ss-time-btn {
+.ss-filters a {
   position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px;
   border-radius: 999px; color: #0b5f58; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
   transition: background .2s, color .2s, transform .2s;
 }
-.ss-filters a:hover, .ss-time-btn:hover { background: rgba(255, 255, 255, .75); transform: translateY(-1px); }
+.ss-filters a:hover { background: rgba(255, 255, 255, .75); transform: translateY(-1px); }
 .ss-filters a em {
   font-style: normal; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; display: inline-grid; place-items: center;
   background: rgba(0, 168, 155, .16); color: #00796f; font-size: 11.5px; font-weight: 700;
 }
 .ss-filters a.on { background: linear-gradient(135deg, #00a89b, #37c3b3); color: #fff; box-shadow: 0 4px 12px rgba(0, 168, 155, .4); }
 .ss-filters a.on em { background: rgba(255, 255, 255, .25); color: #fff; }
-.ss-time { position: relative; z-index: 2; flex: none; }
-.ss-time-btn { border: 1px solid rgba(0, 168, 155, .35); background: rgba(255, 255, 255, .85); cursor: pointer; font-family: inherit; }
-.ss-time-btn.open { background: #fff; }
-.ss-time-btn svg { transition: transform .2s; }
-.ss-time-btn.open svg { transform: rotate(180deg); }
-.ss-time-menu {
-  position: absolute; right: 0; top: calc(100% + 8px); min-width: 170px; padding: 6px; border-radius: 16px; background: var(--surface);
-  border: 1px solid var(--border); box-shadow: 0 12px 28px rgba(16, 61, 72, .18); display: flex; flex-direction: column; gap: 2px;
-}
-.ss-filters .ss-time-menu a { justify-content: space-between; height: 36px; border-radius: 10px; color: var(--ink); font-weight: 500; }
-.ss-filters .ss-time-menu a:hover { background: var(--surface-2); transform: none; }
-.ss-filters .ss-time-menu a.on { background: rgba(0, 168, 155, .12); color: #00796f; box-shadow: none; font-weight: 700; }
 @keyframes ssf-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 @keyframes ssf-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 168, 155, .1); } 50% { box-shadow: 0 0 20px 3px rgba(0, 168, 155, .42); } }
 @keyframes ssf-shine { 0% { background-position: 100% 0; } 60%, 100% { background-position: 0% 0; } }
 :root[data-theme="dark"] .ss-filters { background: linear-gradient(100deg, #0d3b36, #12463f 28%, #0b5a51 52%, #12463f 76%, #0d3b36); background-size: 300% 100%; border-color: rgba(94, 230, 208, .35); }
 :root[data-theme="dark"] .ss-filters::after { background-image: linear-gradient(90deg, transparent 0 42%, rgba(94, 230, 208, .22) 50%, transparent 58% 100%); }
-:root[data-theme="dark"] .ss-filters a, :root[data-theme="dark"] .ss-time-btn { color: #9ff0e2; }
+:root[data-theme="dark"] .ss-filters a { color: #9ff0e2; }
 :root[data-theme="dark"] .ss-filters a:hover { background: rgba(255, 255, 255, .06); }
 :root[data-theme="dark"] .ss-filters a em { background: rgba(94, 230, 208, .15); color: #9ff0e2; }
-:root[data-theme="dark"] .ss-time-btn { background: rgba(0, 0, 0, .25); }
-:root[data-theme="dark"] .ss-filters .ss-time-menu a { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .ss-filters, .ss-filters::after { animation: none; } }
-/* Сэгсрээд өг: текстгүй шоо товч, цагийн шүүлтүүрийн зүүн талд */
+/* Сэгсрээд өг (шоо), Хамгийн сүүлийн (цаг): текстгүй дугуй товчнууд */
 .ss-filters a.ss-dice { width: 34px; padding: 0; justify-content: center; border: 1px solid rgba(0, 168, 155, .35); background: rgba(255, 255, 255, .85); }
 .ss-filters a.ss-dice:hover img { transform: rotate(-18deg); }
+.ss-filters a.ss-latest:hover img { transform: rotate(30deg); }
 .ss-filters a.ss-dice img { transition: transform .25s; }
 .ss-filters a.ss-dice.on img { filter: brightness(0) invert(1); }
 :root[data-theme="dark"] .ss-filters a.ss-dice:not(.on) { background: rgba(0, 0, 0, .25); }
@@ -1968,8 +1955,7 @@ button.wr-insert { font: inherit; cursor: pointer; background: none; width: 100%
 .sr-tdef { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ss-filters a em { min-width: 18px; padding: 0 5px; }
 .ss-filters { gap: 4px; }
-.ss-filters a, .ss-time-btn { font-size: 12.5px; }
-.ss-time-btn { padding: 0 10px; gap: 5px; }
+.ss-filters a { font-size: 12.5px; }
 /* Шүүлтүүр олон болсон тул баруун захад бүдгэрэлт: гүйлгэж болохыг илтгэнэ */
 .ss-fscroll { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); padding-right: 24px; scroll-behavior: smooth; }
 
