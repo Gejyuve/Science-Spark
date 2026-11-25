@@ -61,6 +61,7 @@ export async function updateSettings(f) {
   s.magazinePublic = !!prev.magazinePublic;
   s.merchantOpen = !!prev.merchantOpen;
   s.company = prev.company || {};
+  s.mongolPost = prev.mongolPost || {};
   await saveSettings(s);
   const changed = Object.keys(s).filter((k) => JSON.stringify(s[k]) !== JSON.stringify(prev[k]));
   if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Тохиргоо өөрчилсөн: ${changed.join(", ")}` });
@@ -78,6 +79,23 @@ export async function updateCompany(f) {
   const changed = COMPANY_FIELDS.filter(([k]) => (prev.company || {})[k] !== company[k]).map(([, l]) => l);
   if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Компанийн мэдээлэл өөрчилсөн: ${changed.join(", ")}` });
   back(changed.length ? "Компанийн мэдээлэл хадгалагдлаа" : "Өөрчлөлт алга", true);
+}
+
+// Монгол шуудангийн тариф (маркетын хүргэлтийн үнэ). Хоосон бол «тарифаар тооцно» гэж харагдана.
+export async function updateMongolPost(f) {
+  const me = await requireSection("settings");
+  if (me.role !== "superadmin") back("Зөвхөн супер админ");
+  const prev = await loadSettings();
+  const num = (k, max) => {
+    const v = Math.round(Number(String(f.get(k) || "").replace(/[^\d]/g, "")) || 0);
+    return v > 0 && v <= max ? v : null;
+  };
+  const mongolPost = { ub: num("mp_ub", 1000000), aimag: num("mp_aimag", 1000000), perKg: num("mp_perKg", 1000000), ubDays: num("mp_ubDays", 60), aimagDays: num("mp_aimagDays", 60) };
+  await saveSettings({ ...prev, mongolPost });
+  const changed = JSON.stringify(prev.mongolPost || {}) !== JSON.stringify(mongolPost);
+  if (changed) await audit({ actorId: me.id, category: "settings", action: "Монгол шуудангийн тариф өөрчилсөн" });
+  revalidatePath("/market", "layout");
+  back(changed ? "Монгол шуудангийн тариф хадгалагдлаа" : "Өөрчлөлт алга", true);
 }
 
 // Супер админ: нээлтийн өмнө сайтыг шинээр эхлүүлнэ. «УСТГА» гэж бичсэн үед л ажиллана.

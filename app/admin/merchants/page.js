@@ -48,14 +48,14 @@ export default async function AdminMerchants({ searchParams }) {
       <section className={"adm-card vd-pub" + (settings.merchantOpen ? " on" : "")}>
         <span className="vd-pub-dot" aria-hidden="true" />
         <div>
-          <b>{settings.merchantOpen ? "Мерчантын бүртгэл бүх хэрэглэгчид нээлттэй" : "Мерчантын бүртгэл одоогоор зөвхөн танд харагдаж байна"}</b>
-          <p className="adm-muted">{settings.merchantOpen ? "Нэвтэрсэн хэрэглэгч бүр «Мерчант болох» хуудаснаас өргөдөл гаргана." : "Гэрээ, нөхцөл бэлэн болмогц нээгээрэй. Тэр хүртэл та /merchant хуудсыг туршиж болно."}</p>
+          <b>{settings.merchantOpen ? "Маркет, мерчантын бүртгэл бүх хэрэглэгчид нээлттэй" : "Маркет, мерчантын бүртгэл одоогоор зөвхөн танд харагдаж байна"}</b>
+          <p className="adm-muted">{settings.merchantOpen ? "Хүн бүр маркетыг үзэж, нэвтэрсэн хэрэглэгч бүтээгдэхүүн байршуулна." : "Нээхэд цэсэнд «Маркет», нүүр хуудсанд «Бүтээгдэхүүн байршуулах» товч гарна."}</p>
         </div>
         <span className="ss-grow" />
         <Link href="/merchant" className="adm-btn">Мерчантын хуудас</Link>
         <form action={setMerchantOpen}>
           <input type="hidden" name="on" value={settings.merchantOpen ? "0" : "1"} />
-          <button className={"adm-btn " + (settings.merchantOpen ? "danger" : "teal")}>{settings.merchantOpen ? "Бүртгэлийг хаах" : "Бүртгэлийг нээх"}</button>
+          <button className={"adm-btn " + (settings.merchantOpen ? "danger" : "teal")}>{settings.merchantOpen ? "Маркетыг хаах" : "Маркетыг нийтэд нээх"}</button>
         </form>
       </section>
 

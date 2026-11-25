@@ -86,7 +86,7 @@ function Head({ icon, title, right }) {
 
 const Req = () => <i className="cp-req">*</i>;
 
-export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, as = null }) {
+export default function Composer({ loggedIn, me, initial, error, wallet = 0, club = null, clubAv = null, as = null, market = false }) {
   const [mode, setMode] = useState(initial || null);
   // Баруун цэсээр клуб («club») эсвэл байгууллагын («org») хаяг руу шилжсэн бол тэдний нэрээр нийтэлнэ.
   // Клуб: Даалгавар · Тайлан · Хуваалцъя, байгууллага: Хуваалцъя
@@ -282,7 +282,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
           <span>Өнөөдөр ямар оч асаах гэж байна даа?</span>
         </Link>
       )}
-      <div className="ss-tabs">
+      <div className={"ss-tabs" + (market ? " four" : "")}>
         <Link href={loggedIn ? "/write" : "/login"}><Ic n="write" s={22} /><span>Бичье</span></Link>
         {loggedIn ? (
           <button type="button" className={mode === "Асуулт" ? "on" : ""} onClick={() => toggle("Асуулт")}><Ic n="asktab" s={22} /><span>Асууя</span></button>
@@ -294,6 +294,7 @@ export default function Composer({ loggedIn, me, initial, error, wallet = 0, clu
         ) : (
           <Link href="/login"><Ic n="share" s={22} /><span>Хуваалцъя</span></Link>
         )}
+        {market && <Link href={loggedIn ? "/market/new" : "/login?next=/market/new"} className="ss-sell"><Ic n="market" s={22} /><span>Бүтээгдэхүүн байршуулах</span></Link>}
       </div>
     </>
   );

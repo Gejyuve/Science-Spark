@@ -49,13 +49,13 @@ export default async function MerchantAgreementPage({ searchParams }) {
             </div>
             {a && <span className={"mc-pill " + tone}>{label}</span>}
           </div>
-          {!a && <p className="mc-note">{m.status !== "approved" ? "Бүртгэл баталгаажсаны дараа гэрээ байгуулна." : !m.bank ? "Баталгаажсан банкны данс шаардлагатай." : "Гэрээ бэлтгэгдэж байна. Бэлэн болмогц мэдэгдэнэ."}</p>}
+          {!a && <p className="mc-note">{!["approved", "pending_review"].includes(m.status) ? "Бүртгэлээ илгээсний дараа гэрээ байгуулна." : !(m.bank || m.pendingBank) ? "Баталгаажсан банкны данс шаардлагатай." : "Гэрээ бэлтгэгдэж байна. Бэлэн болмогц мэдэгдэнэ."}</p>}
           {a?.status === "pending_platform" && <p className="mc-note">Платформын төлөөлөгч баталгаажуулмагц гэрээ хүчин төгөлдөр болно.</p>}
           {a && <div className="ag-tools"><PrintButton /></div>}
         </section>
 
         {a && <AgreementDoc a={a} />}
-        {a?.status === "pending_merchant" && m.status === "approved" && <SignPanel aid={a.id} hash={a.content_hash} />}
+        {a?.status === "pending_merchant" && ["approved", "pending_review"].includes(m.status) && <SignPanel aid={a.id} hash={a.content_hash} />}
 
         {list.length > 1 && (
           <section className="pf-card">

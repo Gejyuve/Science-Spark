@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, startTransition } from "react";
+import { useActionState, useEffect, useRef, useState, startTransition } from "react";
 import { saveMerchant } from "./actions";
 import Docs from "./Docs";
 import BankFields from "./BankFields";
@@ -42,7 +42,7 @@ function Field({ f, value, error }) {
 }
 
 // Мерчантын мэдээлэл бөглөх маягт (ноорог хадгалах, шалгуулахаар илгээх)
-export default function MerchantForm({ m }) {
+export default function MerchantForm({ m, next = null }) {
   const [state, action, pending] = useActionState(saveMerchant, null);
   const [intent, setIntent] = useState("");
   const [vat, setVat] = useState(m.vat_payer ? "yes" : m.submitted_at || m.tax_id ? "no" : "");
@@ -50,17 +50,19 @@ export default function MerchantForm({ m }) {
   const biz = m.type === "business";
   const fields = biz ? BUSINESS_FIELDS : INDIVIDUAL_FIELDS;
   const p = biz ? m.business : m.individual;
-  useEffect(() => { if (state) window.scrollTo({ top: 0, behavior: "smooth" }); }, [state]);
+  const top = useRef(null);
+  useEffect(() => { if (state) top.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [state]);
   const docKinds = Object.entries(DOC_KINDS).filter(([, d]) => d.types.includes(m.type));
 
   return (
     // Маягтыг React-аар автоматаар цэвэрлүүлэхгүйн тулд (алдаатай утга алга болохгүй) гараар илгээнэ
-    <form className="mc-col" onSubmit={(e) => {
+    <form className="mc-col" ref={top} onSubmit={(e) => {
       e.preventDefault();
       const fd = new FormData(e.currentTarget, e.nativeEvent.submitter);
       setIntent(String(fd.get("intent") || ""));
       startTransition(() => action(fd));
     }}>
+      {next && <input type="hidden" name="next" value={next} />}
       {state?.error && <p className="mc-flash bad">{state.error}</p>}
       {state?.ok && <p className="mc-flash ok">{state.ok}</p>}
 

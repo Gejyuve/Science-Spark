@@ -9,8 +9,8 @@ export const NAV = [
   { icon: "video", label: "Видео", href: "/video", superOnly: "video" },
   { icon: "magazine", label: "Сэтгүүл", href: "/magazine", superOnly: "magazine" },
   { icon: "game", label: "Тоглоом" },
-  // Маркет: одоогоор мерчантын бүртгэл (Админ > Мерчант-аас нээтэл зөвхөн супер админд)
-  { icon: "market", label: "Маркет", href: "/merchant", superOnly: "market" },
+  // Маркет: бүтээгдэхүүн (Админ > Мерчант-аас нийтэд нээтэл зөвхөн супер админд)
+  { icon: "market", label: "Маркет", href: "/market", superOnly: "market" },
 ];
 
 export const LIVE_NAV = NAV.filter((n) => n.href && !n.superOnly);
