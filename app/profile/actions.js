@@ -9,6 +9,8 @@ import { checkName, nameCase, POINTS, OPTIONS, COUNTRIES, MN_CITIES, SOCIALS, co
 import { celebrate } from "@/lib/celebrate";
 import { saveReferral } from "@/lib/referral";
 import { notify } from "@/lib/notify";
+import { headers } from "next/headers";
+import { AGREEMENT_VERSION } from "@/lib/agreement";
 
 const back = (msg) => redirect(`/profile/edit?error=${encodeURIComponent(msg)}`);
 const text = (fd, k, max = 120) => String(fd.get(k) || "").trim().slice(0, max) || null;
@@ -122,6 +124,13 @@ export async function saveProfile(formData) {
 
   // Шинэ профайл анх удаа үүсэхэд баярын цонх гарч, «Хаанаас сонссон бэ?» гэж асууна
   if (!prof?.agreed_at) {
+    // Хэрэглэгчийн гэрээг зөвшөөрсөн баримт: хувилбар, цаг, IP
+    try {
+      const h = await headers();
+      const ip = (h.get("x-forwarded-for") || "").split(",")[0].trim() || h.get("x-real-ip") || null;
+      await sql`INSERT INTO agreement_acceptances (doc_kind, user_id, party, version, method, ip, user_agent)
+                VALUES ('terms', ${user.id}, 'user', ${AGREEMENT_VERSION}, 'session', ${ip}, ${(h.get("user-agent") || "").slice(0, 300) || null})`;
+    } catch (e) {}
     await celebrate(user, { kind: "Профайл", status: "published", href: `/u/${user.id}`, earned: gained ? [["Профайлаа бөглөсөн", gained]] : [] });
     await notify({ userId: user.id, kind: "welcome", once: true });
     revalidatePath("/");

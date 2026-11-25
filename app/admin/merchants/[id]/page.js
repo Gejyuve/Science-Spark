@@ -5,6 +5,9 @@ import { loadMerchant } from "@/lib/merchant";
 import { MERCHANT_TYPES, MERCHANT_STATUS, BANK_STATUS, DOC_KINDS, DOC_MIME, INDIVIDUAL_FIELDS, BUSINESS_FIELDS, merchantName } from "@/lib/merchant-shared";
 import Head, { Chip, Flash } from "../../_c/Head";
 import { decideMerchant, decideBank } from "../actions";
+import { listAgreements, AGREEMENT_STATUS } from "@/lib/merchant-agreement";
+import { loadSettings } from "@/lib/settings";
+import { companyMissing } from "@/lib/company";
 
 const when = (d) => (d ? new Date(d).toLocaleString("sv-SE", { timeZone: "Asia/Ulaanbaatar" }).slice(0, 16).replaceAll("-", ".") : "—");
 const kb = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}MB` : `${Math.max(1, Math.round(n / 1000))}KB`);
@@ -31,6 +34,8 @@ export default async function AdminMerchant({ params, searchParams }) {
   const p = m.type === "business" ? m.business : m.individual;
   const acts = ACTS.filter(([, , , st]) => st.includes(m.status));
   const docOf = (k) => m.docs.filter((d) => d.kind === k);
+  const agreements = await listAgreements(m.id);
+  const missing = companyMissing((await loadSettings()).company);
 
   return (
     <>
@@ -83,6 +88,21 @@ export default async function AdminMerchant({ params, searchParams }) {
               <p className="adm-muted small">Данс эзэмшигчийн нэр {m.type === "business" ? "байгууллагын албан ёсны нэр" : "мерчантын овог, нэр"}тэй таарч байгааг шалгана уу. Гуравдагч этгээдийн данс зөвшөөрөхгүй.</p>
             </form>
           )}
+        </section>
+
+        <section className="adm-card">
+          <div className="adm-card-head"><b>Гэрээ</b></div>
+          {missing.length > 0 && <p className="adm-muted">Гэрээ үүсгэхэд <Link href="/admin/settings#company">компанийн мэдээлэл</Link> дутуу: {missing.join(", ")}.</p>}
+          {agreements.length === 0 && <p className="adm-empty">{m.status === "approved" ? "Мерчант гэрээгээ нээгээгүй байна." : "Бүртгэл баталгаажсаны дараа гэрээ үүснэ."}</p>}
+          <ul className="mca-banks">
+            {agreements.map((g) => (
+              <li key={g.id} className={g.status}>
+                <span><b><Link href={`/admin/merchants/${m.id}/agreement/${g.id}`}>{g.number}</Link> · хувилбар {g.version}{g.is_draft ? " (DRAFT)" : ""}</b>
+                  <small>Мерчант: {when(g.merchant_signed_at)} · Платформ: {when(g.platform_signed_at)}{g.ended_at ? ` · Дууссан ${when(g.ended_at)}` : ""}</small></span>
+                <Chip tone={AGREEMENT_STATUS[g.status]?.[1]}>{AGREEMENT_STATUS[g.status]?.[0]}</Chip>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="adm-card">

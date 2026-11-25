@@ -19,9 +19,9 @@ const ICON = {
   welcome: ["pts", "ok"], pw_changed: ["shield", "warn"],
   merchant_ok: ["f_shield", "ok"], merchant_fix: ["logic", "warn"], merchant_no: ["logic", "gray"], merchant_suspended: ["logic", "bad"],
   merchant_reinstated: ["f_shield", "ok"], merchant_terminated: ["logic", "gray"], merchant_bank_ok: ["wallet", "ok"], merchant_bank_no: ["wallet", "gray"],
-  merchant_new: ["wallet", "ok"], merchant_bank: ["wallet", "warn"],
+  merchant_new: ["wallet", "ok"], merchant_bank: ["wallet", "warn"], agreement_signed: ["f_shield", "warn"], agreement_active: ["f_shield", "ok"],
 };
-const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "club_lead_offer", "club_lead_ok", "club_lead_no", "task_new", "task_done", "task_club", "task_club_ok", "task_club_no", "help_new", "mag_order", "mag_req", "merchant_new", "merchant_bank"];
+const AVATAR_KINDS = ["follow", "comment", "reply", "spark", "comment_spark", "club_invite", "club_join", "club_left", "club_request", "club_ok", "club_no", "club_removed", "club_lead_offer", "club_lead_ok", "club_lead_no", "task_new", "task_done", "task_club", "task_club_ok", "task_club_no", "help_new", "mag_order", "mag_req", "merchant_new", "merchant_bank", "agreement_signed"];
 
 // Улаанбаатарын өдрөөр бүлэглэнэ: Шинэ (уншаагүй) · Өнөөдөр · Өчигдөр · Энэ долоо хоног · Өмнө
 function groupOf(n) {

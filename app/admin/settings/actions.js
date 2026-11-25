@@ -8,6 +8,7 @@ import { LEVELS } from "@/lib/levels";
 import { ACT_REWARD, LIMIT_KEYS } from "@/lib/limits";
 import { realUser } from "@/lib/auth";
 import { resetSite } from "@/lib/reset";
+import { COMPANY_FIELDS } from "@/lib/company";
 
 const back = (msg, ok) => redirect(`/admin/settings?${ok ? "ok" : "error"}=${encodeURIComponent(msg)}`);
 const int = (f, k) => {
@@ -59,11 +60,24 @@ export async function updateSettings(f) {
   s.videoPublic = !!prev.videoPublic;
   s.magazinePublic = !!prev.magazinePublic;
   s.merchantOpen = !!prev.merchantOpen;
+  s.company = prev.company || {};
   await saveSettings(s);
   const changed = Object.keys(s).filter((k) => JSON.stringify(s[k]) !== JSON.stringify(prev[k]));
   if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Тохиргоо өөрчилсөн: ${changed.join(", ")}` });
   revalidatePath("/", "layout");
   back(changed.length ? "Тохиргоо хадгалагдлаа" : "Өөрчлөлт алга", true);
+}
+
+// Супер админ: платформыг эзэмшигч компанийн мэдээлэл (мерчантын гэрээ, тооцооны актад орно)
+export async function updateCompany(f) {
+  const me = await requireSection("settings");
+  if (me.role !== "superadmin") back("Зөвхөн супер админ");
+  const prev = await loadSettings();
+  const company = Object.fromEntries(COMPANY_FIELDS.map(([k]) => [k, String(f.get(`c_${k}`) || "").trim().replace(/\s+/g, " ").slice(0, 200)]));
+  await saveSettings({ ...prev, company });
+  const changed = COMPANY_FIELDS.filter(([k]) => (prev.company || {})[k] !== company[k]).map(([, l]) => l);
+  if (changed.length) await audit({ actorId: me.id, category: "settings", action: `Компанийн мэдээлэл өөрчилсөн: ${changed.join(", ")}` });
+  back(changed.length ? "Компанийн мэдээлэл хадгалагдлаа" : "Өөрчлөлт алга", true);
 }
 
 // Супер админ: нээлтийн өмнө сайтыг шинээр эхлүүлнэ. «УСТГА» гэж бичсэн үед л ажиллана.

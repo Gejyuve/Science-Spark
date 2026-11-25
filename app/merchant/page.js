@@ -5,6 +5,7 @@ import { merchantOpenFor, loadMerchant } from "@/lib/merchant";
 import {
   MERCHANT_TYPES, MERCHANT_STATUS, BANK_STATUS, EDITABLE, INDIVIDUAL_FIELDS, BUSINESS_FIELDS, DOC_KINDS, merchantName,
 } from "@/lib/merchant-shared";
+import Link from "next/link";
 import Shell from "../components/Shell";
 import MerchantForm from "./MerchantForm";
 import BankFields from "./BankFields";
@@ -82,7 +83,7 @@ function Status({ m }) {
         </div>
         <span className={"mc-pill " + tone}>{label}</span>
       </div>
-      {TEXT[m.status] && <p>{TEXT[m.status]}</p>}
+      {m.status === "approved" ? <AgreementLine m={m} /> : TEXT[m.status] && <p>{TEXT[m.status]}</p>}
       {m.review_note && ["revision_required", "rejected", "suspended", "terminated"].includes(m.status) && (
         <p className="mc-review">{m.review_note}</p>
       )}
@@ -91,6 +92,15 @@ function Status({ m }) {
       )}
     </section>
   );
+}
+
+// Баталгаажсан мерчантын гэрээний төлөв, холбоос
+function AgreementLine({ m }) {
+  const o = m.agreementOpen;
+  if (o?.status === "pending_merchant") return <p>Мерчантын гэрээг баталгаажуулна уу. <Link href="/merchant/agreement" className="mc-link">Гэрээ унших</Link></p>;
+  if (o?.status === "pending_platform") return <p>Гэрээг платформ баталгаажуулахыг хүлээж байна. <Link href="/merchant/agreement" className="mc-link">Гэрээ</Link></p>;
+  if (m.agreement) return <p>Гэрээ {m.agreement.number} хүчинтэй. <Link href="/merchant/agreement" className="mc-link">Гэрээ</Link></p>;
+  return <p>Дараагийн алхам: мерчантын гэрээ. <Link href="/merchant/agreement" className="mc-link">Гэрээ</Link></p>;
 }
 
 function Summary({ m }) {
